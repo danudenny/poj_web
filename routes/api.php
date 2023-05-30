@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,6 +13,17 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::group(['prefix' => 'v1'], function () {
+    require __DIR__.'/auth.php';
+
+    require __DIR__.'/admin.php';
+
+    require __DIR__.'/mobile.php';
+
+
+    Route::group(['prefix' => 'public'], function () {
+        Route::get('tes', function () {
+            return response()->json(['message' => 'tes endpoint API public']);
+        });
+    });
 });
