@@ -1,0 +1,39 @@
+image: docker:stable
+
+stages:
+  - build
+  - deploy-staging
+  - deploy-production
+
+variables:
+  DOCKER_DRIVER: overlay2
+
+before_script:
+  - docker info
+
+build:
+  stage: build
+  script:
+    - docker build -t poj_web .
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker tag poj_web $CI_REGISTRY_IMAGE/poj_web:$CI_COMMIT_REF_SLUG
+    - docker push $CI_REGISTRY_IMAGE/poj_web:$CI_COMMIT_REF_SLUG
+
+deploy-staging:
+  stage: deploy-staging
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker pull $CI_REGISTRY_IMAGE/poj_web:$CI_COMMIT_REF_SLUG
+    - docker-compose -f docker-compose.yml up -d
+  only:
+    - staging
+
+deploy-production:
+  stage: deploy-production
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker pull $CI_REGISTRY_IMAGE/poj_web:$CI_COMMIT_TAG
+    - docker-compose -f docker-compose.yml up -d
+  only:
+    - tags
+    - master
