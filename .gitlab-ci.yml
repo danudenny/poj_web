@@ -1,4 +1,4 @@
-image: docker:dind
+image: docker:stable
 
 stages:
   - build
@@ -11,7 +11,7 @@ variables:
   DOCKER_TLS_CERTDIR: ""
 
 services:
-    - name: docker:dind
+    - name: docker:18.09-dind
       alias: docker
       command: ["--tls=false"]
 
