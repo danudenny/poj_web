@@ -1,4 +1,4 @@
-image: docker:stable
+image: docker:18-git
 
 stages:
   - build
@@ -6,6 +6,7 @@ stages:
   - deploy-production
 
 variables:
+  DOCKER_HOST: tcp://docker:2375/
   DOCKER_DRIVER: overlay2
 
 before_script:
