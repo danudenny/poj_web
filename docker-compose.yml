@@ -44,9 +44,26 @@ services:
     environment:
       - POSTGRES_PASSWORD=slavepass
     ports:
-      - "5433:5432"
+      - "5433:5433"
     networks:
       - backend
+
+  sqlpad:
+      container_name: sqlpad
+      image: "sqlpad/sqlpad:6"
+      restart: always
+      ports:
+          - 3003:3000
+      environment:
+          - SQLPAD_ADMIN=admin@sqlpad.com
+          - SQLPAD_ADMIN_PASSWORD=83Wrw50
+      depends_on:
+          - db-master
+          - db-slave
+      volumes:
+          - /mnt/sqlpad:/var/lib/sqlpad
+      networks:
+          - backend
 
   nginx:
     image: nginx:stable-alpine
