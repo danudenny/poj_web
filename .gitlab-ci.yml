@@ -1,25 +1,21 @@
-before_script:
-  - echo "Before script"
-  - cd /var/www/html
-building:
+stages:
+  - build
+  - deploy
+
+build:
   stage: build
+  image: node:latest
   script:
-    - git reset --hard
-    - git pull origin staging
-    - composer install
-    - cp .env.example .env
-    - php artisan key:generate
-    - php artisan migrate --seed
-    - php artisan cache:clear
-    - php artisan config:clear
-    - php artisan storage:link
-    - sudo chown -R atten:www-data /var/www/html/
-    - find /var/www/html -type f -exec chmod 664 {} \;
-    - find /var/www/html -type d -exec chmod 775 {} \;
-    - chgrp -R www-data storage bootstrap/cache
-    - chmod -R ug+rwx storage bootstrap/cache
-deploying:
+    - npm install
+    - npm run build
+
+deploy:
   stage: deploy
+  image: docker:latest
+  services:
+    - docker:dind
   script:
-    - echo "Deployed"
-    - php artisan queue:restart
+    - docker build -t poj-web-app-app .
+    - docker run --rm poj-web-app-app php artisan migrate --force
+    - docker run --rm poj-web-app-app chmod -R 777 storage bootstrap/cache
+    - docker run --rm poj-web-app-app php artisan optimize
