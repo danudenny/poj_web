@@ -21,8 +21,6 @@ COPY . /var/www/html
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 RUN chmod -R 775 storage/logs
 
-RUN php artisan optimize
-
 # Install Composer
 ENV COMPOSER_HOME /composer
 ENV PATH $PATH:/composer/vendor/bin
@@ -37,8 +35,6 @@ RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
 RUN apt-get install -y nodejs
 RUN npm install
 RUN npm run build
-
-RUN php artisan migrate
 
 EXPOSE 8000
 
