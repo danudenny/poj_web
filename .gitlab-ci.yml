@@ -5,7 +5,7 @@ building:
   stage: build
   script:
     - git reset --hard
-    - git pull origin develop
+    - git pull origin staging
     - composer install
     - cp .env.example .env
     - php artisan key:generate
@@ -13,7 +13,7 @@ building:
     - php artisan cache:clear
     - php artisan config:clear
     - php artisan storage:link
-    - sudo chown -R deployer:www-data /var/www/html/
+    - sudo chown -R atten:www-data /var/www/html/
     - find /var/www/html -type f -exec chmod 664 {} \;
     - find /var/www/html -type d -exec chmod 775 {} \;
     - chgrp -R www-data storage bootstrap/cache
