@@ -1,8 +1,5 @@
 services:
   - name: docker:dind
-
-before_script:
-  - service docker restart
   
 stages:
   - build
