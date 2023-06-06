@@ -19,5 +19,5 @@ deploy:
     - docker:dind
   script:
     - docker build -t poj-web-app .
-    - docker run --rm poj-web-app php artisan migrate --force
+    - docker compose up -d
     - docker run --rm poj-web-app chmod -R 777 storage bootstrap/cache
