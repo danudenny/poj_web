@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\FileUploadSampleController;
 use App\Http\Controllers\API\SyncController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,4 +30,8 @@ Route::group(['prefix' => 'v1'], function () {
     });
 
     Route::post('/sync/employees', [SyncController::class, 'syncEmployees']);
+    Route::post('/upload-files', [FileUploadSampleController::class, 'upload']);
+    Route::post('/upload-multi-files', [FileUploadSampleController::class, 'uploadMulti']);
+    Route::get('/files', [FileUploadSampleController::class, 'getImages']);
+
 });

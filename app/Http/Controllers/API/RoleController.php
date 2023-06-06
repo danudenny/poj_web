@@ -6,6 +6,7 @@ use App\Http\Controllers\BaseController;
 use App\Http\Requests\Role\RoleSaveRequest;
 use App\Http\Requests\Role\RoleUpdateRequest;
 use App\Services\Core\RoleService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class RoleController extends BaseController
@@ -20,9 +21,9 @@ class RoleController extends BaseController
     /**
      * Display a listing of the resource.
      * @param Request $request
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         try {
             $result = $this->roleService->index($request);
@@ -35,9 +36,9 @@ class RoleController extends BaseController
 
     /**
      * Get all data permissions
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
-    public function getPermissions()
+    public function getPermissions(): JsonResponse
     {
         try {
             $result = $this->roleService->getPermissions();
@@ -50,11 +51,11 @@ class RoleController extends BaseController
     }
 
     /**
-     * view spesific resource
+     * view specific resource
      * @param Request $request
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
-    public function view(Request $request)
+    public function view(Request $request): JsonResponse
     {
         try {
             $id = $request->only('id')['id'];
@@ -70,9 +71,9 @@ class RoleController extends BaseController
     /**
      * store resource
      * @param RoleSaveRequest $request
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
-    public function save(RoleSaveRequest $request)
+    public function save(RoleSaveRequest $request): JsonResponse
     {
         try {
             $result = $this->roleService->save($request);
@@ -84,11 +85,11 @@ class RoleController extends BaseController
     }
 
     /**
-     * Update spesific resource
+     * Update specific resource
      * @param RoleUpdateRequest $request
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
-    public function update(RoleUpdateRequest $request)
+    public function update(RoleUpdateRequest $request): JsonResponse
     {
         try {
             $result = $this->roleService->update($request);
@@ -101,9 +102,10 @@ class RoleController extends BaseController
 
     /**
      * @param Request $request
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
-    public function toggleRoleStatus(Request $request) {
+    public function toggleRoleStatus(Request $request): JsonResponse
+    {
         try {
             $result = $this->roleService->toggleRoleStatus($request);
             return $this->sendSuccess($result, self::SUCCESS_UPDATED);
@@ -114,11 +116,11 @@ class RoleController extends BaseController
     }
 
     /**
-     * Softdelete data role
+     * Soft-delete data role
      * @param Request $request
-     * @return \Illuminate\Http\Response|void
+     * @return JsonResponse
      */
-    public function delete(Request $request)
+    public function delete(Request $request): JsonResponse
     {
         try {
             $result = $this->roleService->delete($request);
@@ -132,9 +134,9 @@ class RoleController extends BaseController
     /**
      * Restore data role
      * @param Request $request
-     * @return \Illuminate\Http\Response|void
+     * @return JsonResponse
      */
-    public function restore(Request $request)
+    public function restore(Request $request): JsonResponse
     {
         try {
             $result = $this->roleService->restore($request);
@@ -148,9 +150,9 @@ class RoleController extends BaseController
     /**
      * Destroy data role
      * @param Request $request
-     * @return \Illuminate\Http\Response|void
+     * @return JsonResponse
      */
-    public function destroy(Request $request)
+    public function destroy(Request $request): JsonResponse
     {
         try {
             $result = $this->roleService->destroy($request);
