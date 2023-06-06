@@ -21,4 +21,3 @@ deploy:
     - docker build -t poj-web-app .
     - docker run --rm poj-web-app php artisan migrate --force
     - docker run --rm poj-web-app chmod -R 777 storage bootstrap/cache
-    - docker run --rm poj-web-app php artisan optimize
