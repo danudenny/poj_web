@@ -1,7 +1,9 @@
 services:
   - name: docker:dind
-    command: ["dockerd-entrypoint.sh", "--host=unix:///var/run/docker.sock"]
 
+before_script:
+  - service docker restart
+  
 stages:
   - build
   - deploy
