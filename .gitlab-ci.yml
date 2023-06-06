@@ -1,3 +1,7 @@
+services:
+  - name: docker:dind
+    command: ["dockerd-entrypoint.sh", "--host=unix:///var/run/docker.sock"]
+
 stages:
   - build
   - deploy
@@ -15,7 +19,7 @@ deploy:
   services:
     - docker:dind
   script:
-    - docker build -t poj-web-app-app .
-    - docker run --rm poj-web-app-app php artisan migrate --force
-    - docker run --rm poj-web-app-app chmod -R 777 storage bootstrap/cache
-    - docker run --rm poj-web-app-app php artisan optimize
+    - docker build -t poj-web-app .
+    - docker run --rm poj-web-app php artisan migrate --force
+    - docker run --rm poj-web-app chmod -R 777 storage bootstrap/cache
+    - docker run --rm poj-web-app php artisan optimize
