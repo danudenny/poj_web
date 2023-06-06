@@ -1,46 +1,25 @@
-image: docker:stable
-
-stages:
-  - build
-  - deploy-staging
-  - deploy-production
-
-variables:
-  DOCKER_HOST: tcp://docker:2375/
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
-
-services:
-    - name: docker:18.09-dind
-      alias: docker
-      command: ["--tls=false"]
-
 before_script:
-  - docker info
-
-build:
+  - echo "Before script"
+  - cd /var/www/html
+building:
   stage: build
   script:
-    - docker build -t poj_web .
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker tag poj_web $CI_REGISTRY_IMAGE/poj_web:$CI_COMMIT_REF_SLUG
-    - docker push $CI_REGISTRY_IMAGE/poj_web:$CI_COMMIT_REF_SLUG
-
-deploy-staging:
-  stage: deploy-staging
+    - git reset --hard
+    - git pull origin develop
+    - composer install
+    - cp .env.example .env
+    - php artisan key:generate
+    - php artisan migrate --seed
+    - php artisan cache:clear
+    - php artisan config:clear
+    - php artisan storage:link
+    - sudo chown -R deployer:www-data /var/www/html/
+    - find /var/www/html -type f -exec chmod 664 {} \;
+    - find /var/www/html -type d -exec chmod 775 {} \;
+    - chgrp -R www-data storage bootstrap/cache
+    - chmod -R ug+rwx storage bootstrap/cache
+deploying:
+  stage: deploy
   script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker pull $CI_REGISTRY_IMAGE/poj_web:$CI_COMMIT_REF_SLUG
-    - docker-compose -f docker-compose.yml up -d
-  only:
-    - staging
-
-deploy-production:
-  stage: deploy-production
-  script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker pull $CI_REGISTRY_IMAGE/poj_web:$CI_COMMIT_TAG
-    - docker-compose -f docker-compose.yml up -d
-  only:
-    - tags
-    - master
+    - echo "Deployed"
+    - php artisan queue:restart
