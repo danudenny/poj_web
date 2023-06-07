@@ -1,6 +1,6 @@
 services:
   - name: docker:dind
-  
+
 stages:
   - build
   - deploy
@@ -18,7 +18,5 @@ deploy:
   services:
     - docker:dind
   script:
-    - docker build -t poj-web-app .
     - docker compose up -d
     - docker run --rm poj-web-app chmod -R 777 storage bootstrap/cache
-    - docker run --rm poj-web-app php artisan optimize
