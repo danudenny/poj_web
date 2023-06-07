@@ -1,0 +1,38 @@
+{
+    "data": [
+      {
+        "title": "Dashboard",
+        "icon": "home",
+        "iconf":"fill-home",
+        "type": "link",
+        "active": false,
+        "path": "/"
+
+      },
+      {
+        "headTitle1": "USER MANAGEMENT",
+        "headTitle2": "User and roles management",
+        "type": "headtitle"
+      },
+      {
+        "title": "Users",
+        "icon": "users",
+        "iconf":"fill-user",
+        "type": "link",
+        "active": false,
+        "path": "/management/users"
+      },
+      {
+        "title": "Roles",
+        "icon": "shield",
+        "iconf":"fill-learning",
+        "type": "link",
+        "active": false,
+        "path": "/management/roles"
+      },
+      {
+        "headTitle1": "CONFIGURATION",
+        "headTitle2": "Configuration management",
+        "type": "headtitle"
+      }
+    ]}
