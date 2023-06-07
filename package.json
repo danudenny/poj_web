@@ -75,17 +75,10 @@
         "@vitejs/plugin-vue": "^4.2.3",
         "vite": "^4.0.0"
     },
-<<<<<<< HEAD
-    "dependencies": {
-        "@vitejs/plugin-vue": "^4.2.3",
-        "vue": "^3.3.4"
-    }
-=======
     "browserslist": [
         "> 1%",
         "last 2 versions",
         "not dead",
         "not ie 11"
     ]
->>>>>>> 4bf2d52 (added authentication pages and sample master data management)
 }
