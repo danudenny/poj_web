@@ -1,4 +1,4 @@
-<template>
+<template xmlns="http://www.w3.org/1999/html">
 
     <div class="container-fluid">
         <Breadcrumbs main="Users Management"/>
@@ -9,7 +9,7 @@
             </div>
         </div>
     </div>
-    
+
 </template>
 
 <script>

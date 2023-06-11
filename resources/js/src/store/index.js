@@ -4,26 +4,22 @@ import {createStore} from 'vuex'
 import layout from './modules/layout';
 import menu from './modules/menu';
 import bootsrap from "./modules/bootsrap"
-// import chat from './modules/chat';
-// import product from './modules/product';
-// import email from './modules/email';
 // import todo from './modules/todo';
 // import firebase_todo from './modules/firebase_todo';
-// import contact from './modules/contact';
-// import jobs from './modules/jobs';
-// import courses from './modules/courses';
 // import common from './modules/common';
-// import tags from './modules/tags';
-// import calendar from './modules/calendar'
-// import { alert } from './modules/alert';
-// import { authentication } from './modules/authentication';
 // import { users } from './modules/users';
+import authentication from '@/helpers/authentication';
+
+const TOKEN_STORAGE_KEY = 'my_app_token';
 
 export default createStore({
-  state:{langIcon: '',langLangauge: '',isActive:false},
+  state:{langIcon: '',langLangauge: '',isActive:false, token:localStorage.getItem(TOKEN_STORAGE_KEY) || null},
   getters:{
     langIcon: (state)=>{ return state.langIcon},
-    langLangauge:(state)=>{return state.langLangauge}
+    langLangauge:(state)=>{return state.langLangauge},
+    isAuthenticated(state){
+        return state.token != null;
+    }
   },
   mutations: {
       changeLang (state, payload) {
@@ -35,13 +31,42 @@ export default createStore({
       },
       change(state){
         state.isActive = !state.isActive
-      }
+      },
+
+      setToken(state, token){
+        state.token = token;
+        localStorage.setItem(TOKEN_STORAGE_KEY, token);
+      },
+      clearToken(state){
+        state.token = null;
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+      },
     },
     actions: {
       setLang ({ commit }, payload) {
         commit('changeLang', payload);
 
-      }
+      },
+      async login ({ commit }, credentials) {
+          try {
+            const { token } = await authentication.login(credentials);
+            commit('setToken', token);
+          } catch (e) {
+            commit('clearToken');
+            localStorage.removeItem(TOKEN_STORAGE_KEY);
+          }
+      },
+      async logout({ commit }) {
+          try {
+              // await authentication.logout();
+              commit('clearToken');
+              localStorage.removeItem(TOKEN_STORAGE_KEY);
+
+              console.log('Logout successfully');
+          } catch (e) {
+              console.log('Logout error:', e);
+          }
+      },
     },
     modules: {
       layout,

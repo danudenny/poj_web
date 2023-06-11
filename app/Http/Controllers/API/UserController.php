@@ -53,6 +53,22 @@ class UserController extends BaseController
     }
 
     /**
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getRoles()
+    {
+        try {
+            $result = $this->userService->getRoles();
+
+            return $this->sendSuccess($result, self::SUCCESS_FETCH);
+
+        } catch (\Exception | \InvalidArgumentException $error) {
+
+            return $this->sendError($error->getMessage(), [], 500);
+        }
+    }
+
+    /**
      * store resource
      * @param UserSaveRequest $request
      * @return \Illuminate\Http\Response
