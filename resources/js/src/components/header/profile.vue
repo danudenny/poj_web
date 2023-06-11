@@ -1,11 +1,11 @@
 <template>
     <li class="profile-nav onhover-dropdown pe-0 py-0">
       <div class="media profile-media">
-        <img class="b-r-10" src="@/assets/images/dashboard/profile.png" alt="" />
+        <img class="b-r-10" :src="avatars" alt="" />
         <div class="media-body">
-          <span>Acoder Dev</span>
+          <span>{{ user.name }}</span>
           <p class="mb-0 font-roboto">
-            Admin <i class="middle fa fa-angle-down"></i>
+            {{ user.email}} <i class="middle fa fa-angle-down"></i>
           </p>
         </div>
       </div>
@@ -36,10 +36,23 @@
   </template>
 
   <script>
-  import {mapActions} from "vuex";
+  import {mapActions, mapState} from "vuex";
 
   export default {
     name: 'Profile',
+    data() {
+        return {
+            user: {
+                name: '',
+                email: ''
+            },
+            avatars: ''
+        }
+    },
+    mounted() {
+      this.getUser;
+      this.avatars = `https://ui-avatars.com/api/?name=${this.user.name}&background=0A5640&color=fff&length=2&rounded=false&size=32`
+    },
     methods: {
         ...mapActions(['logout']),
         async handleLogout() {
@@ -50,6 +63,15 @@
                 console.log('Logout error:', error);
             }
         },
+
     },
+      computed: {
+          getUser() {
+              const getUser = localStorage.getItem('USER_STORAGE_KEY');
+              this.user = JSON.parse(getUser)
+              console.log(this.user.name)
+              return this.user
+          }
+      }
   };
   </script>
