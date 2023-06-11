@@ -13,7 +13,13 @@ import authentication from '../helpers/authentication';
 const TOKEN_STORAGE_KEY = 'my_app_token';
 
 export default createStore({
-  state:{langIcon: '',langLangauge: '',isActive:false, token:localStorage.getItem(TOKEN_STORAGE_KEY) || null},
+  state:{
+      langIcon: '',
+      langLangauge: '',
+      isActive:false,
+      token:localStorage.getItem(TOKEN_STORAGE_KEY) || null,
+      user: null,
+  },
   getters:{
     langIcon: (state)=>{ return state.langIcon},
     langLangauge:(state)=>{return state.langLangauge},
@@ -37,9 +43,17 @@ export default createStore({
         state.token = token;
         localStorage.setItem(TOKEN_STORAGE_KEY, token);
       },
+      setUser(state, user){
+          state.user = user;
+          localStorage.setItem('USER_STORAGE_KEY', JSON.stringify(user));
+      },
       clearToken(state){
         state.token = null;
         localStorage.removeItem(TOKEN_STORAGE_KEY);
+      },
+      clearUser(state){
+          state.user = null;
+          localStorage.removeItem('USER_STORAGE_KEY');
       },
     },
     actions: {
@@ -49,8 +63,9 @@ export default createStore({
       },
       async login ({ commit }, credentials) {
           try {
-            const { token } = await authentication.login(credentials);
+            const { token, user } = await authentication.login(credentials);
             commit('setToken', token);
+            commit('setUser', user);
           } catch (e) {
             commit('clearToken');
             localStorage.removeItem(TOKEN_STORAGE_KEY);
@@ -60,8 +75,9 @@ export default createStore({
           try {
               // await authentication.logout();
               commit('clearToken');
+              commit('clearUser');
               localStorage.removeItem(TOKEN_STORAGE_KEY);
-
+              localStorage.removeItem('USER_STORAGE_KEY');
               console.log('Logout successfully');
           } catch (e) {
               console.log('Logout error:', e);
