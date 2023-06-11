@@ -8,9 +8,6 @@ services:
       args:
           - COMPOSER_ALLOW_SUPERUSER=1
     container_name: app
-    depends_on:
-      - db-master
-      - db-slave
     ports:
       - 8000:8000
     restart: unless-stopped
@@ -20,58 +17,7 @@ services:
       - .:/var/www/html
     networks:
       - backend
-      - frontend
-
-  db-master:
-    image: postgres:13
-    container_name: db-master
-    environment:
-      - POSTGRES_PASSWORD=masterpass
-    restart: unless-stopped
-    ports:
-        - "5434:5432"
-    volumes:
-      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf
-      - ./postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf
-    networks:
-      - backend
-
-  db-slave:
-    build:
-        context: .
-        dockerfile: pg.Dockerfile
-    image: postgres-replica
-    container_name: db-slave
-    restart: unless-stopped
-    environment:
-      - POSTGRES_PASSWORD=slavepass
-    ports:
-      - "5433:5433"
-    networks:
-      - backend
-
-  sqlpad:
-      container_name: sqlpad
-      image: "sqlpad/sqlpad:6"
-      restart: always
-      ports:
-          - 3003:3000
-      environment:
-          - SQLPAD_ADMIN=admin@sqlpad.com
-          - SQLPAD_ADMIN_PASSWORD=83Wrw50
-      depends_on:
-          - db-master
-          - db-slave
-      volumes:
-          - /mnt/sqlpad:/var/lib/sqlpad
-      networks:
-          - backend
-
-volumes:
-  db_data:
 
 networks:
     backend:
-        driver: bridge
-    frontend:
         driver: bridge

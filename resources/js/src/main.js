@@ -36,6 +36,12 @@ axios.interceptors.request.use(config => {
     return Promise.reject(error);
 });
 
-const app = createApp(App).use(router).use(store).use(VueSweetalert2).component('multiselect', Multiselect).component(VueFeather.name, VueFeather).component('Breadcrumbs', Breadcrumbs);
+const app = createApp(App)
+    .use(router)
+    .use(store)
+    .use(VueSweetalert2)
+    .component('multiselect', Multiselect)
+    .component(VueFeather.name, VueFeather)
+    .component('Breadcrumbs', Breadcrumbs);
 app.config.globalProperties.$axios = axios;
 app.mount('#app');
