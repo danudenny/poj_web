@@ -33,7 +33,10 @@ export default defineConfig({
         },
     },
     build: {
-        transpile: ['vue', 'vite']
+        transpile: ['vue', 'vite'],
+        rollupOptions: {
+            external: ['vue-feather']
+        }
     },
     // server : {
     //     hmr: {
