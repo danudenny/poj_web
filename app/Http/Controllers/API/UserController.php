@@ -6,6 +6,7 @@ use App\Http\Controllers\BaseController;
 use App\Http\Requests\User\UserSaveRequest;
 use App\Http\Requests\User\UserUpdateRequest;
 use App\Services\Core\UserService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class UserController extends BaseController
@@ -20,9 +21,9 @@ class UserController extends BaseController
     /**
      * Display a listing of the resource.
      * @param Request $request
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         try {
             $result = $this->userService->index($request);
@@ -53,7 +54,7 @@ class UserController extends BaseController
     }
 
     /**
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function getRoles()
     {
