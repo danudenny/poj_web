@@ -17,7 +17,21 @@ services:
       - .:/var/www/html
     networks:
       - backend
+      - frontend
+
+  nginx:
+      image: nginx:stable-alpine
+      container_name: nginx
+      ports:
+          - "82:80"
+      restart: unless-stopped
+      volumes:
+          - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      networks:
+          - frontend
 
 networks:
     backend:
+        driver: bridge
+    frontend:
         driver: bridge
