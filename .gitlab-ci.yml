@@ -11,6 +11,8 @@ build:
   script:
     - npm install
     - npm run build
+  only:
+    - tags
 
 deploy:
   stage: deploy
@@ -20,3 +22,5 @@ deploy:
   script:
     - docker compose up -d
     - docker run --rm poj-web-app chmod -R 777 storage bootstrap/cache
+  only:
+    - tags

@@ -8,7 +8,7 @@ import bootsrap from "./modules/bootsrap"
 // import firebase_todo from './modules/firebase_todo';
 // import common from './modules/common';
 // import { users } from './modules/users';
-import authentication from '@/helpers/authentication';
+import authentication from '../helpers/authentication';
 
 const TOKEN_STORAGE_KEY = 'my_app_token';
 
