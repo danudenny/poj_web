@@ -4,7 +4,7 @@ import router from './router';
 import store from './store'
 import 'bootstrap/dist/js/bootstrap.bundle'
 import './assets/scss/app.scss'
-// import VueFeather from 'vue-feather';
+import VueFeather from 'vue-feather';
 // import { createI18n } from 'vue-i18n'
 import en from './locales/en.json';
 import pt from './locales/fr.json';
@@ -41,7 +41,7 @@ const app = createApp(App)
     .use(store)
     .use(VueSweetalert2)
     .component('multiselect', Multiselect)
-    // .component(VueFeather.name, VueFeather)
+    .component(VueFeather.name, VueFeather)
     .component('Breadcrumbs', Breadcrumbs);
 app.config.globalProperties.$axios = axios;
 app.mount('#app');
