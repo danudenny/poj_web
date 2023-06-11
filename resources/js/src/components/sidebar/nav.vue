@@ -2,7 +2,7 @@
       <nav class="sidebar-main" id="sidebar-main">
         <li
           class="left-arrow"
-          :class="{'d-none': layout.settings.layout_type =='rtl'? hideLeftArrowRTL: hideLeftArrow }"
+          :class="{'d-none': layout.settings.layout_type ==='rtl'? hideLeftArrowRTL: hideLeftArrow }"
           @click="(layoutobject.split(' ').includes('horizontal-wrapper') && layout.settings.layout_type==='rtl') ? scrollToLeftRTL() : scrollToLeft()"
         >
           <vue-feather type="arrow-left"></vue-feather>
@@ -10,8 +10,8 @@
         <Navmenu />
         <li
           class="right-arrow"
-          :class="{'d-none': layout.settings.layout_type=='rtl'? hideRightArrowRTL : hideRightArrow }"
-          @click="(layoutobject == 'horizontal_sidebar' && layout.settings.layout_type=='rtl') ? scrollToRightRTL() : scrollToRight()"
+          :class="{'d-none': layout.settings.layout_type==='rtl'? hideRightArrowRTL : hideRightArrow }"
+          @click="(layoutobject === 'horizontal_sidebar' && layout.settings.layout_type==='rtl') ? scrollToRightRTL() : scrollToRight()"
         >
           <vue-feather type="arrow-right"></vue-feather>
         </li>
@@ -22,7 +22,7 @@
   import { layoutClasses } from '../../constants/layout';
   import Navmenu from './navmenu.vue';
 
-  
+
   export default {
     name: 'Nav',
     components : {
@@ -30,7 +30,7 @@
     },
     data() {
       return {
-        layoutobj:{}	
+        layoutobj:{}
       };
     },
     computed: {
@@ -45,17 +45,17 @@
         margin: (state) => state.menu.margin,
         menuWidth: (state) => state.menu.menuWidth,
       }),
-      layoutobject: {	
-        get: function () {	
-          return JSON.parse(JSON.stringify(layoutClasses.find((item) => Object.keys(item).pop() === this.layout.settings.layout)))[this.layout.settings.layout];	
-        },	
-        set: function () {	
-          this.layoutobj = layoutClasses.find((item) => Object.keys(item).pop() === this.layout.settings.layout);	
-          this.layoutobj = JSON.parse(JSON.stringify(this.layoutobj))[this.layout.settings.layout];	
-          return this.layoutobj;	
-        }	
+      layoutobject: {
+        get: function () {
+          return JSON.parse(JSON.stringify(layoutClasses.find((item) => Object.keys(item).pop() === this.layout.settings.layout)))[this.layout.settings.layout];
+        },
+        set: function () {
+          this.layoutobj = layoutClasses.find((item) => Object.keys(item).pop() === this.layout.settings.layout);
+          this.layoutobj = JSON.parse(JSON.stringify(this.layoutobj))[this.layout.settings.layout];
+          return this.layoutobj;
+        }
       }
-    }, 
+    },
     watch: {
       layoutobject() {
         setTimeout(()=> {
@@ -70,21 +70,21 @@
         // Checking condition for remaing margin
         if (this.temp === 0) {
           this.$store.state.menu.margin = this.temp;
-          this.$store.state.menu.hideRightArrowRTL = false; 
+          this.$store.state.menu.hideRightArrowRTL = false;
         } else {
           this.$store.state.menu.margin += this.$store.state.menu.width;
-          this.$store.state.menu.hideRightArrowRTL = false; 
-          this.$store.state.menu.hideLeftArrowRTL = false; 
+          this.$store.state.menu.hideRightArrowRTL = false;
+          this.$store.state.menu.hideLeftArrowRTL = false;
         }
       },
       scrollToLeftRTL() {
         // If Margin is reach between screen resolution
         if (this.$store.state.menu.margin <= -this.$store.state.menu.width) {
           this.$store.state.menu.margin += -this.$store.state.menu.width;
-          this.$store.state.menu.hideLeftArrowRTL = true; 
+          this.$store.state.menu.hideLeftArrowRTL = true;
         } else {
           this.$store.state.menu.margin += -this.$store.state.menu.width;
-          this.$store.state.menu.hideRightArrowRTL = false; 
+          this.$store.state.menu.hideRightArrowRTL = false;
           this.$store.state.menu.activeoverlay = false;
         }
       },
@@ -92,10 +92,10 @@
         // If Margin is reach between screen resolution
         if (this.$store.state.menu.margin >= -this.$store.state.menu.width) {
           this.$store.state.menu.margin = 0;
-          this.$store.state.menu.hideLeftArrow = true; 
+          this.$store.state.menu.hideLeftArrow = true;
         } else {
           this.$store.state.menu.margin += this.$store.state.menu.width;
-          this.$store.state.menu.hideRightArrow = false; 
+          this.$store.state.menu.hideRightArrow = false;
         }
       },
       //   scrollToRight() {
@@ -116,9 +116,9 @@
       //     this.$store.state.menu.margin = -this.temp;
       //   } else {
       //     this.$store.state.menu.margin += -this.$store.state.menu.width;
-      //     this.$store.state.menu.hideLeftArrow = false; 
+      //     this.$store.state.menu.hideLeftArrow = false;
       //     if(this.$store.state.menu.margin <= -4689) {
-      //       this.$store.state.menu.hideRightArrow = true; 
+      //       this.$store.state.menu.hideRightArrow = true;
       //     }
       //   }
       // }
