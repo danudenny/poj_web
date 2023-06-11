@@ -5,6 +5,7 @@ import store from './store'
 import 'bootstrap/dist/js/bootstrap.bundle'
 import './assets/scss/app.scss'
 import VueFeather from 'vue-feather';
+
 // import { createI18n } from 'vue-i18n'
 import en from './locales/en.json';
 import pt from './locales/fr.json';

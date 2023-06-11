@@ -29861,6 +29861,7 @@ button[data-toggle=dropdown]:hover ~ .dropdown-menu {
   font-family: Roboto, sans-serif;
   border-radius: 10px;
 }
+
 .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links .simplebar-wrapper .simplebar-mask .simplebar-content-wrapper .simplebar-content > li.sidebar-list:hover > a:hover {
   background-color: rgba(115, 102, 255, 0.07);
   transition: all 0.3s ease;

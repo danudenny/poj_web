@@ -29,14 +29,12 @@ export default defineConfig({
         alias: {
             '@': '/resources/js/src',
             '@components': '/resources/js/src/components',
-            '@assets': '/resources/js/src/assets',
+            '@assets': '/resources/js/src/assets'
         },
     },
     build: {
-        transpile: ['vue', 'vite'],
-        rollupOptions: {
-            external: ['vue-feather']
-        }
+        transpile: ['vue', 'vite']
+
     },
     // server : {
     //     hmr: {
