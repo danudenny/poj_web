@@ -1,6 +1,7 @@
 import {createRouter, createWebHistory} from "vue-router"
 import Body from '../components/body.vue';
 import Default from '../pages/dashboard/defaultPage.vue';
+import store from '../store';
 
 /* Auth */
 import login from '../auth/login.vue';
@@ -11,6 +12,7 @@ import resetPassword from '../auth/reset_password.vue';
 import Users from '../pages/users/index.vue';
 import UserEdit from '../pages/users/edit.vue';
 import UserDetail from '../pages/users/details.vue';
+import UserAdd from '../pages/users/create.vue';
 
 // Roles Management
 import Roles from '../pages/roles/index.vue';
@@ -31,6 +33,7 @@ const routes =[
             component: Default,
             meta: {
               title: 'POJ - Dashboard',
+              requiresAuth: true,
             }
           },
 
@@ -76,22 +79,34 @@ const routes =[
             component: Users,
             meta: {
                 title: 'POJ - Users Management',
+                requiresAuth: true,
             },
         },
         {
-            path: 'users/detail',
+              path: 'users/create',
+              name: 'User Create',
+              component: UserAdd,
+              meta: {
+                  title: 'POJ - User Create',
+                  requiresAuth: true,
+              }
+        },
+        {
+            path: 'users/detail/:id',
             name: 'User Detail',
             component: UserDetail,
             meta: {
                 title: 'POJ - User Detail',
+                requiresAuth: true,
             }
         },
         {
-            path: 'users/edit',
+            path: 'users/edit/:id',
             name: 'User Edit',
             component: UserEdit,
             meta: {
                 title: 'POJ - User Edit',
+                requiresAuth: true,
             }
         },
         {
@@ -100,22 +115,34 @@ const routes =[
             component: Roles,
             meta: {
                 title: 'POJ - Roles Management',
+                requiresAuth: true,
             }
         },
         {
-            path: 'roles/detail',
+              path: 'roles/create',
+              name: 'Role Create',
+              component: RoleAdd,
+              meta: {
+                  title: 'POJ - Role Create',
+                  requiresAuth: true,
+              }
+        },
+        {
+            path: 'roles/detail/:id',
             name: 'Role Detail',
             component: RoleDetail,
             meta: {
                 title: 'POJ - Role Detail',
+                requiresAuth: true,
             }
         },
         {
-            path: 'roles/edit',
+            path: 'roles/edit/:id',
             name: 'Role Edit',
             component: RoleEdit,
             meta: {
                 title: 'POJ - Role Edit',
+                requiresAuth: true,
             }
         },
 
@@ -127,13 +154,14 @@ const router=createRouter({
     routes,
 })
 router.beforeEach((to, from, next) => {
-  if(to.meta.title)
-    document.title = to.meta.title;
-
-  const path = ['/auth/login','/auth/register', '/auth/forget_password', '/auth/reset_password'];
-  if(path.includes(to.path) || localStorage.getItem('User')){
-    return next();
-  }
-  next('/auth/login');
+    if (to.matched.some(record => record.meta.requiresAuth)) {
+      if (!store.getters.isAuthenticated) {
+        next('/auth/login');
+      } else {
+        next();
+      }
+    } else {
+      next();
+    }
 });
 export default router

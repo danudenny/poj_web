@@ -2,6 +2,8 @@
 
 namespace App\Services\Core;
 
+use App\Http\Resources\RoleResource;
+use App\Models\Role;
 use App\Models\User;
 use App\Services\BaseService;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +19,7 @@ class UserService extends BaseService
     public function index($data): mixed
     {
         try {
-            $users = User::query()->with(['roles']);
+            $users = User::query()->with(['roles:name']);
             if (!is_null($data->name)) {
                 $users->where('name', 'like', '%' . $data->name . '%');
             }
@@ -43,7 +45,7 @@ class UserService extends BaseService
     public function view($data): mixed
     {
         try {
-            $user = User::firstWhere('id', $data['id']);
+            $user = User::with(['roles:id,name'])->firstWhere('id', $data['id']);
 
             if (!$user) {
                 throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
@@ -55,6 +57,28 @@ class UserService extends BaseService
         } catch (\Exception $e) {
             throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
+    }
+
+    /**
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @throws \Exception
+     */
+    public function getRoles()
+    {
+        try {
+            $roles = Role::where('is_active', '=', 1)->get();
+
+            if (empty($roles)) {
+                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+            }
+            return RoleResource::collection($roles);
+
+        } catch (\InvalidArgumentException $e) {
+            throw new \InvalidArgumentException($e->getMessage());
+        } catch (\Exception $e) {
+            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+        }
+
     }
 
     /**
@@ -71,6 +95,8 @@ class UserService extends BaseService
             $user->email = $request->email;
             $user->password = Hash::make($request->password);
             $user->authkey = Hash::make($request->email.'-'.$request->password);
+            $user->username = $request->username;
+            $user->employee_id = $request->employee_id;
             $user->created_at = date('Y-m-d H:i:s');
 
             if (!$user->save()) {
@@ -115,6 +141,8 @@ class UserService extends BaseService
 
             $user->name = $request->name;
             $user->email = $request->email;
+            $user->username = $request->username;
+            $user->employee_id = $request->employee_id;
             $user->updated_at = date('Y-m-d H:i:s');
 
             if (!$user->save()) {

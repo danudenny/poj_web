@@ -27,7 +27,7 @@
           </router-link>
         </li>
         <li>
-          <a @click="logout">
+          <a @click="handleLogout">
             <vue-feather type="log-in"></vue-feather><span>Log out</span>
           </a>
         </li>
@@ -36,22 +36,20 @@
   </template>
 
   <script>
-  // import firebase from 'firebase';
-  // import UserAuth from '../../auth/js/index';
+  import {mapActions} from "vuex";
 
   export default {
     name: 'Profile',
     methods: {
-      logout: function () {
-        // firebase
-        //   .auth()
-        //   .signOut()
-        //   .then(() => {
-        //     UserAuth.Logout();
-        this.$router.replace('/auth/login');
-        localStorage.removeItem('User')
-      }
-      // },
+        ...mapActions(['logout']),
+        async handleLogout() {
+            try {
+                await this.logout();
+                this.$router.push('/auth/login');
+            } catch (error) {
+                console.log('Logout error:', error);
+            }
+        },
     },
   };
   </script>

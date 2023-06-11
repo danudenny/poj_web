@@ -19,7 +19,7 @@ const get = async (url, token = null, params = {}) => {
         params,
         headers: setRequestHeaders(token),
       });
-  
+
       return response.data;
     } catch (error) {
       throw new Error(error.message);
@@ -31,7 +31,7 @@ const post = async (url, data = {}, token = null) => {
       const response = await axios.post(url, data, {
         headers: setRequestHeaders(token),
       });
-  
+
       return response.data;
     } catch (error) {
       throw new Error(error.message);

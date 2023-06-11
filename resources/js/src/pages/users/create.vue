@@ -2,7 +2,7 @@
     <div class="container-fluid">
         <Breadcrumbs :main="$route.name"/>
         <div class="col-sm-12">
-            <form class="card" @submit.prevent="updateUser">
+            <form class="card" @submit.prevent="addUser">
 
                 <div class="card-body">
                     <div class="row">
@@ -35,7 +35,7 @@
                     </div>
                 </div>
                 <div class="card-footer text-start">
-                    <button class="btn btn-primary m-r-10" type="submit">Update</button>
+                    <button class="btn btn-primary m-r-10" type="submit">Save</button>
                     <button class="btn btn-secondary" @click="$router.push('/management/users')">Cancel</button>
                 </div>
             </form>
@@ -63,26 +63,9 @@ export default {
         }
     },
     mounted() {
-        this.getUser();
         this.getRoles();
     },
     methods: {
-        async getUser() {
-            const route = useRoute();
-            await axios
-                .get(`/api/v1/admin/user/view?id=`+ route.params.id)
-                .then(response => {
-                    this.user.id = response.data.data.id;
-                    this.user.name = response.data.data.name;
-                    this.user.username = response.data.data.username;
-                    this.user.employee_id = response.data.data.employee_id;
-                    this.user.email = response.data.data.email;
-                    this.user.roles = response.data.data.roles;
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-        },
         async getRoles() {
             await axios.get(`/api/v1/admin/user/roles`)
                 .then(res => {
@@ -92,7 +75,7 @@ export default {
                     console.log(e);
                 });
         },
-        async updateUser() {
+        async addUser() {
             let id = this.user.id;
             let name = this.user.name;
             let username = this.user.username;
@@ -101,7 +84,7 @@ export default {
             let roles = this.user.roles.map(value => value.id);
             let employee_id = this.user.employee_id;
 
-            await axios.post(`/api/v1/admin/user/update`, {
+            await axios.post(`/api/v1/admin/user/save`, {
                 id: id,
                 name: name,
                 username: username,
@@ -111,6 +94,7 @@ export default {
                 employee_id: employee_id
             })
                 .then(res => {
+                    this.$router.push('/management/users');
                     console.log(res);
                 })
                 .catch(e => {

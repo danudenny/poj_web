@@ -26,7 +26,7 @@ class UserUpdateRequest extends BaseRequest
         return [
             'id' => 'required',
             'name' => 'required',
-            'email' => 'required|email|unique:users,email,'.$this->user()->id,
+            'email' => 'required|email',
             'roles' => 'required',
         ];
     }
@@ -38,7 +38,6 @@ class UserUpdateRequest extends BaseRequest
             'name.required' => 'name '.self::REQUIRED,
             'email.required' => 'email '.self::REQUIRED,
             'email.email' => 'email '.self::NOT_VALID,
-            'email.unique' => 'email '.self::ALREADY_EXIST,
             'roles.required' => 'roles '.self::REQUIRED,
         ];
     }
