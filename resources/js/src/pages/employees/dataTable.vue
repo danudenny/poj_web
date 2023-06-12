@@ -17,8 +17,8 @@
 
 <script>
 
-import DataTable from "@/components/dataTable.vue";
-import DataTableHeader from "@/components/dataTableHeader.vue";
+import DataTable from "../../components/dataTable.vue";
+import DataTableHeader from "../../components/dataTableHeader.vue";
 
 export default {
     components: {
@@ -28,10 +28,13 @@ export default {
     data() {
         return {
             tableColumns: [
-                { key: 'odoo_employee_id', label: 'Employee ID' },
+                { key: 'id', label: 'Id' },
                 { key: 'name', label: 'Name' },
                 { key: 'status', label: 'Status' },
                 { key: 'gender', label: 'Gender' },
+                { key: 'mobile_phone', label: 'Phone' },
+                { key: 'work_email', label: 'Email' },
+                { key: 'company.name', label: 'Comp' },
             ],
         };
     },

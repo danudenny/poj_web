@@ -20,7 +20,7 @@
 
                             <div class="media-body icon-state switch-outline" v-else-if="column.key === 'is_active'">
                                 <label class="switch">
-                                    <input type="checkbox" :checked="item[column.key] == 1 ? true : false" @click="updateIsActive(item.id)">
+                                    <input type="checkbox" :checked="item[column.key] === 1" @click="updateIsActive(item.id)">
                                     <span class="switch-state bg-primary"></span>
                                 </label>
                             </div>
