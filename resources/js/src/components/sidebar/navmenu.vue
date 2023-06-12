@@ -2,7 +2,7 @@
     <div id="sidebar-menu">
 
       <ul class="sidebar-links custom-scrollbar" id="myDIV"
-      :style="[layoutobject.split(' ').includes('horizontal-wrapper')  ? layout.settings.layout_type=='rtl'? {'  -right': margin+'px'} : {'margin-left': margin+'px'} :  { margin : '0px'}]"
+      :style="[layoutobject.split(' ').includes('horizontal-wrapper')  ? layout.settings.layout_type==='rtl'? {'  -right': margin+'px'} : {'margin-left': margin+'px'} :  { margin : '0px'}]"
       >
         <li class="back-btn">
           <router-link to="/">
@@ -18,9 +18,9 @@
         </li>
 
         <li v-for="(menuItem, index) in menuItems" :key="index" class="sidebar-list"
-        :class="{ ' sidebar-main-title': menuItem.type == 'headtitle', }, menuItem.showPin ? 'pined' : ''">
+        :class="{ ' sidebar-main-title': menuItem.type === 'headtitle', }, menuItem.showPin ? 'pined' : ''">
 
-          <div v-if="menuItem.type == 'headtitle'">
+          <div v-if="menuItem.type === 'headtitle'">
             <h6 class="lan-1">{{ (menuItem.headTitle1) }}</h6>
           </div>
 
