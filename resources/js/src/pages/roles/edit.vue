@@ -8,7 +8,7 @@
                         <div class="col-sm-6 col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Role Name</label>
-                                <input class="form-control" type="text" placeholder="Name" v-model="role.name">
+                                <input class="form-control" type="text" placeholder="Name" v-model="this.role.name">
                             </div>
                         </div>
                     </div>
@@ -21,7 +21,7 @@
                                         <thead class="table bg-primary">
                                             <tr>
                                                 <th scope="col">
-                                                    <input class="form-check-input checkbox-solid-light" v-model="selectAll" @click="toggleSelectAll()" type="checkbox">
+                                                    <input class="form-check-input checkbox-solid-light" v-model="selectAll" @input="toggleSelectAll()" type="checkbox">
                                                 </th>
                                                 <th scope="col">Permission</th>
                                             </tr>
@@ -30,7 +30,7 @@
                                             <tr v-for="permission in permissions" :key="permission.id">
                                                 <td><input type="checkbox" class="form-check-input checkbox-solid-light" v-bind:value="permission"
                                                                       v-model="role.permissions"
-                                                            :checked="isChecked(permission)" @change="updateCheckall()" /></td>
+                                                            :checked="isChecked(permission)" @click="updateCheckall()" /></td>
                                                 <td>{{ permission.name }}</td>
                                             </tr>
                                         </tbody>
@@ -123,6 +123,7 @@ export default {
                 permission: permission
             })
                 .then(res => {
+                    this.$router.push('/management/roles');
                     console.log(res);
                 })
                 .catch(e => {

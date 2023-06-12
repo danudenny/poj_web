@@ -51,7 +51,6 @@
 </template>
 
 <script>
-import {useRoute} from "vue-router";
 import axios from "axios";
 
 export default {
@@ -117,12 +116,6 @@ export default {
             let check = await this.role.permissions.map(val => val.id === permission.id) !== false;
             return check;
         },
-        watch: {
-            selectedItems() {
-                console.log('Selected items:', this.role.permissions);
-            }
-        },
-
     },
 };
 </script>

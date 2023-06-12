@@ -31,6 +31,22 @@
         "path": "/management/roles"
       },
       {
+        "title": "Permissions",
+        "icon": "lock",
+        "iconf":"fill-learning",
+        "type": "link",
+        "active": false,
+        "path": "/management/permissions"
+      },
+      {
+        "title": "Employee",
+        "icon": "user",
+        "iconf":"fill-learning",
+        "type": "link",
+        "active": false,
+        "path": "/management/employees"
+      },
+      {
         "headTitle1": "CONFIGURATION",
         "headTitle2": "Configuration management",
         "type": "headtitle"

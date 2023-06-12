@@ -4,10 +4,10 @@ namespace App\Services\Core;
 
 use App\Http\Resources\PermissionResource;
 use App\Http\Resources\RoleResource;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Services\BaseService;
 use Illuminate\Support\Facades\DB;
-use Spatie\Permission\Models\Permission;
 
 class RoleService extends BaseService
 {
@@ -89,7 +89,7 @@ class RoleService extends BaseService
         DB::beginTransaction();
         try {
             $role = new Role();
-            $role->name = $request->name;
+            $role->name = strtolower(str_replace(' ', '_', $request->name));
             $role->created_at = date('Y-m-d H:i:s');
 
             if (!$role->save()) {
@@ -127,7 +127,7 @@ class RoleService extends BaseService
                 throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
 
-            $role->name = $request->name;
+            $role->name = strtolower(str_replace(' ', '_', $request->name));
             $role->updated_at = date('Y-m-d H:i:s');
 
             if (!$role->save()) {
