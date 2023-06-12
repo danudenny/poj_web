@@ -20,6 +20,15 @@ import RoleAdd from '../pages/roles/create.vue';
 import RoleEdit from '../pages/roles/edit.vue';
 import RoleDetail from '../pages/roles/details.vue';
 
+// Permission Management
+import Permissions from '../pages/permissions/index.vue';
+import PermissionAdd from '../pages/permissions/create.vue';
+import PermissionEdit from '../pages/permissions/edit.vue';
+import PermissionDetail from '../pages/permissions/details.vue';
+
+// Employee Management
+import Employees from '../pages/employees/index.vue';
+import EmployeeDetail from '../pages/employees/details.vue';
 
 const routes =[
     {
@@ -145,7 +154,60 @@ const routes =[
                 requiresAuth: true,
             }
         },
-
+        {
+          path: 'permissions',
+          name: 'Permissions Management',
+          component: Permissions,
+          meta: {
+              title: 'POJ - Permissions Management',
+              requiresAuth: true,
+          }
+        },
+        {
+          path: 'permissions/create',
+          name: 'Permission Create',
+          component: PermissionAdd,
+          meta: {
+              title: 'POJ - Permission Create',
+              requiresAuth: true,
+          }
+        },
+        {
+          path: 'permissions/detail/:id',
+          name: 'Permission Detail',
+          component: PermissionDetail,
+          meta: {
+              title: 'POJ - Permission Detail',
+              requiresAuth: true,
+          }
+        },
+        {
+          path: 'permissions/edit/:id',
+          name: 'Permission Edit',
+          component: PermissionEdit,
+          meta: {
+              title: 'POJ - Permission Edit',
+              requiresAuth: true,
+          }
+        },
+        {
+          path: 'employees',
+          name: 'Employee Management',
+          component: Employees,
+          meta: {
+              title: 'POJ - Employee Management',
+              requiresAuth: true,
+          }
+        },
+        {
+          path: 'employees/detail/:id',
+          name: 'Employee Detail',
+          component: EmployeeDetail,
+          meta: {
+              title: 'POJ - Employee Detail',
+              requiresAuth: true,
+          }
+        },
       ]
     },
 ]

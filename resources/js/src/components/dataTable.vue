@@ -39,10 +39,10 @@
                             <router-link :to="detail+`detail/`+item.id">
                               <button class="btn btn-xs btn-outline-info" type="button" title="detail"><i class="fa fa-eye"></i></button>
                             </router-link>
-                            <router-link :to="detail+`edit/`+item.id">
+                            <router-link v-if="isEdit" :to="detail+`edit/`+item.id">
                               <button class="btn btn-xs btn-outline-warning" title="update"><i class="fa fa-edit"></i></button>
                             </router-link>
-                            <button @click="deleteData(item.id)" class="btn btn-xs btn-outline-danger" title="delete"><i class="fa fa-trash"></i></button>
+                            <button v-if="isDelete" @click="deleteData(item.id)" class="btn btn-xs btn-outline-danger" title="delete"><i class="fa fa-trash"></i></button>
                         </td>
                     </tr>
                     </tbody>
@@ -84,6 +84,16 @@ export default {
         detail: {
             type: String,
             required: false,
+        },
+        isEdit: {
+            type: Boolean,
+            required: false,
+            default: true,
+        },
+        isDelete: {
+            type: Boolean,
+            required: false,
+            default: true,
         }
     },
     data() {

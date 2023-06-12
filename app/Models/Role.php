@@ -19,4 +19,9 @@ class Role extends SpatieRole
             return "In Active";
         }
     }
+
+    public function getNameAttribute($value)
+    {
+        return ucwords(str_replace('_', ' ', $value));
+    }
 }

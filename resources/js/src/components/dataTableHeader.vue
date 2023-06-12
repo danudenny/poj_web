@@ -3,9 +3,9 @@
         <div class="card">
             <div class="row">
                 <div class="col-md-6 d-flex">
-                    <button class="btn btn-xs btn-secondary"> <vue-feather type="filter" title="Filter Data"> </vue-feather></button>
+                    <button class="btn btn-xs btn-secondary"> <vue-feather class="mt-1 mb-sm-1" type="filter" title="Filter Data"> </vue-feather></button>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6" v-if="isCreate">
                     <div class="form-group mb-0 me-0"></div><router-link class="btn btn-primary" :to="create"> <vue-feather class="me-1" type="plus-square"> </vue-feather>Create</router-link>
                 </div>
             </div>
@@ -19,6 +19,11 @@ export default {
         create: {
             type: String,
             required: false,
+        },
+        isCreate: {
+            type: Boolean,
+            required: false,
+            default: true,
         }
     },
 }

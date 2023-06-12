@@ -1,7 +1,6 @@
 <template>
-
     <div class="container-fluid">
-        <Breadcrumbs main="Users Management"/>
+        <Breadcrumbs main="Permission Management"/>
 
         <div class="container-fluid basic_table">
             <div class="row">
@@ -9,7 +8,6 @@
             </div>
         </div>
     </div>
-
 </template>
 
 <script>

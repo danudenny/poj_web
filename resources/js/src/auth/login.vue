@@ -8,7 +8,7 @@
             <div>
               <div>
                 <a class="logo">
-                  <img class="img-fluid for-light" src="../assets/images/logo/logo.png" alt="looginpage" />
+                  <img style="height: 61px;" class="img-fluid for-light" src="http://192.168.100.73:9000/att-poj-bucket/logo/logo_poj-removebg-preview.png" alt="looginpage" />
                   <img class="img-fluid for-dark" src="../assets/images/logo/logo_dark.png" alt="looginpage" />
                 </a>
               </div>
