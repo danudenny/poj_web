@@ -2,17 +2,14 @@
 
 namespace App\Services;
 
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 class MinioService
 {
-    public static function uploadFile(UploadedFile $file, $path): string
+    public function uploadFile($file, $path): string
     {
-        $bucket = config('filesystems.disks.minio.bucket');
-        $url = config('filesystems.disks.minio.url');
-
-        $tempPath = Storage::cloud()->putFileAs($path, $file, uniqid() .'_'. $file->getClientOriginalName());
-        return $url . '/' . $bucket . '/' . $tempPath;
+        $fullFilePath = $path . '/' . uniqid() . '_' . $file->getClientOriginalName();
+        Storage::disk('s3')->put($fullFilePath, file_get_contents($file));
+        return Storage::disk('s3')->url($fullFilePath);
     }
 }
