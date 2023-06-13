@@ -1,25 +1,21 @@
 <template>
-    <DataTableHeader
-        :create="`/management/roles/create`"
-    >
-    </DataTableHeader>
     <DataTable
         :apiUrl="`/api/v1/admin/role`"
         :perPage="10"
         :columns="tableColumns"
         :detail="`/management/roles/`"
+        :create="`/management/roles/create`"
+        :filters="tableFilter"
     >
     </DataTable>
 </template>
 <script >
 
 import DataTable from "@/components/dataTable.vue";
-import DataTableHeader from "@/components/dataTableHeader.vue";
 
 export default {
     components: {
         DataTable,
-        DataTableHeader,
     },
     data() {
         return {
@@ -27,6 +23,10 @@ export default {
                 { key: 'name', label: 'Name' },
                 { key: 'status', label: 'Status' },
                 { key: 'is_active', label: 'Is Active' },
+            ],
+            tableFilter: [
+                { key: 'name', label: 'Name', type: 'text' },
+                { key: 'is_active', label: 'Is Active', type: 'selectbox' },
             ],
         };
     },

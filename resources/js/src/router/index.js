@@ -57,6 +57,7 @@ const routes =[
           component: login,
           meta: {
             title: 'POJ - Login',
+            requiresAuth: false,
           }
         },
         {
@@ -65,6 +66,7 @@ const routes =[
           component: forgetPassword,
           meta: {
             title: 'POJ - Forget Password',
+            requiresAuth: false,
           }
         },
         {
@@ -73,6 +75,7 @@ const routes =[
           component: resetPassword,
           meta: {
             title: 'POJ - Reset Password',
+            requiresAuth: false,
           }
         }
 
@@ -222,6 +225,8 @@ router.beforeEach((to, from, next) => {
       } else {
         next();
       }
+    } else if (!to.meta.requiresAuth && store.getters.isAuthenticated) {
+        next({ name: 'defaultRoot' });
     } else {
       next();
     }

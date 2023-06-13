@@ -1,13 +1,11 @@
 <template>
-    <DataTableHeader
-        :create="`/management/users/create`"
-    >
-    </DataTableHeader>
     <DataTable
         :apiUrl="`/api/v1/admin/user`"
         :perPage="10"
         :columns="tableColumns"
         :detail="`/management/users/`"
+        :create="`/management/users/create`"
+        :filters="tableFilter"
     >
     </DataTable>
 </template>
@@ -15,11 +13,9 @@
 <script>
 
 import DataTable from "@/components/dataTable.vue";
-import DataTableHeader from "@/components/dataTableHeader.vue";
 
 export default {
   components: {
-      DataTableHeader,
       DataTable,
   },
   data() {
@@ -29,6 +25,12 @@ export default {
               { key: 'username', label: 'Username' },
               { key: 'email', label: 'Email' },
               { key: 'roles', label: 'Role' },
+          ],
+          tableFilter: [
+              { key: 'name', label: 'Name', type: 'text' },
+              { key: 'username', label: 'Username', type: 'text' },
+              { key: 'email', label: 'Email', type: 'text' },
+              { key: 'is_active', label: 'Is Active', type: 'selectbox' },
           ],
       };
   },

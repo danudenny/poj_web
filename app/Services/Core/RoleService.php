@@ -21,10 +21,10 @@ class RoleService extends BaseService
         try {
             $roles = Role::query();
             if (!is_null($data['name'])) {
-                $roles->where('name', 'like', '%' . $data['name'] . '%');
+                $roles->where('name', 'like', '%' . $data->name . '%');
             }
             if (!is_null($data['is_active'])) {
-                $roles->where('is_active', '=', $data['is_active']);
+                $roles->where('is_active', '=', $data->is_active);
             }
             return $this->list($roles, $data);
 
