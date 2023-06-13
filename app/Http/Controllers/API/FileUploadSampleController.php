@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Validator;
 
 class FileUploadSampleController extends Controller
 {
+    private $minioService;
+
+    public function __construct(MinioService $minioService)
+    {
+        $this->minioService = $minioService;
+    }
     /**
      * Handle the file upload and store it in Minio.
      *
@@ -20,24 +26,17 @@ class FileUploadSampleController extends Controller
     public function upload(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'file' => 'required|image',
+            'file' => 'required|image|max:2048',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()], 400);
+            return response()->json(['error' => $validator->errors()], 422);
         }
 
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            $path = 'uploads';
-
-            $storeUrl = MinioService::uploadFile($file, $path);
-
-            return response()->json(['url' => $storeUrl], 200);
-        }
-
-
-        return response()->json(['error' => 'File not found'], 400);
+        $file = $request->file('file');
+        $path = 'uploads';
+        $uploadedPath = $this->minioService->uploadFile($file, $path);
+        return response()->json(['path' => $uploadedPath]);
     }
 
     public function uploadMulti(Request $request): JsonResponse
@@ -59,8 +58,10 @@ class FileUploadSampleController extends Controller
             $uploadedUrls = [];
 
             foreach ($files as $file) {
-                $storeUrl = MinioService::uploadFile($file, $path);
-                $uploadedUrls[] = $storeUrl;
+                $fullFilePath = 'uploads' . '/'. uniqid() .'_'. $file->getClientOriginalName();
+                Storage::disk('s3')->put($fullFilePath, file_get_contents($file));
+                $path = Storage::disk('s3')->url($fullFilePath);
+                $uploadedUrls[] = $path;
             }
 
             return response()->json(['urls' => $uploadedUrls], 200);
