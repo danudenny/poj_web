@@ -49,3 +49,9 @@
     },
   };
 </script>
+
+<style>
+.page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links li:last-child {
+    margin-bottom: 40px;
+}
+</style>
