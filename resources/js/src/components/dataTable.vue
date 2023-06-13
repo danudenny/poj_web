@@ -1,4 +1,39 @@
 <template>
+    <div class="col-md-12 project-list">
+        <div class="card" v-if="isFilter === false">
+            <div class="row">
+                <div class="col-md-6 d-flex">
+                    <button class="btn btn-xs btn-secondary" @click="filterCheck()"> <vue-feather class="mt-1 mb-sm-1" type="filter" title="Filter Data"> </vue-feather></button>
+                </div>
+                <div class="col-md-6" v-if="isCreate">
+                    <div class="form-group mb-0 me-0"></div><router-link class="btn btn-primary" :to="create"> <vue-feather class="me-1" type="plus-square"> </vue-feather>Create</router-link>
+                </div>
+            </div>
+        </div>
+        <form class="card" v-else @submit.prevent="fetchData()">
+            <div class="card-body">
+                <div class="row">
+                    <div v-for="filter in filters" :key="filter.key" class="col-md-4">
+                        <div class="mb-1" v-if="filter.type === 'text'">
+                            <input class="form-control" v-model="this.params[filter.key]" type="text" :placeholder="filter.label" v-if="filter.type === 'text'">
+                        </div>
+                        <div class="mb-1" v-else>
+                            <select class="form-control" v-model="this.params[filter.key]">
+                                <option value="">All</option>
+                                <option value="1">Active</option>
+                                <option value="0">In-Active</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer text-start">
+                <button class="btn btn-secondary m-l-10" @click="filterCheck()"> <vue-feather type="x" title="Filter Data"> </vue-feather></button>
+                <button class="btn btn-primary"> <vue-feather type="search"> </vue-feather>Filter</button>
+            </div>
+        </form>
+    </div>
     <div class="col-sm-12">
         <div class="card">
             <div class="table-responsive signal-table">
@@ -50,11 +85,11 @@
                 <div class="card-body pagination-padding">
                     <nav aria-label="...">
                       <ul class="pagination pagination-sm pagination-primary">
-                        <li class="page-item" :class="{'disabled' : page === 1}" @click="prevPage"><a class="page-link" href="javascript:void(0)" tabindex="-1">Prev</a></li>
-                        <li class="page-item active"><a class="page-link" href="javascript:void(0)">{{ page }}</a></li>
+                        <li class="page-item" :class="{'disabled' : this.params.page === 1}" @click="prevPage"><a class="page-link" href="javascript:void(0)" tabindex="-1">Prev</a></li>
+                        <li class="page-item active"><a class="page-link" href="javascript:void(0)">{{ this.params.page }}</a></li>
     <!--                            <li class="page-item"><a class="page-link" href="javascript:void(0)">2 <span class="sr-only">(current)</span></a></li>-->
     <!--                            <li class="page-item"><a class="page-link" href="javascript:void(0)">3</a></li>-->
-                        <li class="page-item" :class="{'disabled' : page === totalPages}">
+                        <li class="page-item" :class="{'disabled' : this.params.page === this.params.totalPages}">
                             <a class="page-link" href="javascript:void(0)" @click="nextPage">Next</a>
                         </li>
                       </ul>
@@ -94,13 +129,34 @@ export default {
             type: Boolean,
             required: false,
             default: true,
-        }
+        },
+        create: {
+            type: String,
+            required: false,
+        },
+        isCreate: {
+            type: Boolean,
+            required: false,
+            default: true,
+        },
+        filters: {
+            type: Array,
+            required: true,
+        },
     },
     data() {
         return {
             items: [],
-            page: 1,
-            totalPages: 1,
+            isFilter: false,
+            params : {
+                page: 1,
+                per_page: this.$props.perPage,
+                totalPages: 1,
+                name: null,
+                is_active: "",
+                email: null,
+                username: null
+            }
         };
     },
     mounted() {
@@ -109,24 +165,24 @@ export default {
     methods: {
         fetchData() {
             axios
-                .get(this.apiUrl, { params: { per_page: this.perPage, page: this.page } })
+                .get(this.apiUrl, { params: this.params })
                 .then(response => {
                     this.items = response.data.data.data;
-                    this.totalPages = response.data.data.last_page;
+                    this.params.totalPages = response.data.data.last_page;
                 })
                 .catch(error => {
                     console.error(error);
                 });
         },
         nextPage() {
-            if (this.page < this.totalPages) {
-                this.page++;
+            if (this.params.page < this.params.totalPages) {
+                this.params.page++;
                 this.fetchData();
             }
         },
         prevPage() {
-            if (this.page > 1) {
-                this.page--;
+            if (this.params.page > 1) {
+                this.params.page--;
                 this.fetchData();
             }
         },
@@ -160,7 +216,14 @@ export default {
                 .catch(error => {
                     console.error(error);
                 });
-        }
+        },
+        filterCheck() {
+            if (this.isFilter) {
+                this.isFilter = false;
+            } else {
+                this.isFilter = true;
+            }
+        },
     },
 };
 </script>

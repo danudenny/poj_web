@@ -11,8 +11,8 @@ class EmployeeService extends BaseService
     {
         try {
             $employee = Employee::query();
-            if (!is_null($data['name'])) {
-                $employee->where('name', 'like', '%' . $data['name'] . '%');
+            if (!is_null($data->name)) {
+                $employee->where('name', 'like', '%' . $data->name . '%');
             }
             return $this->list($employee, $data);
 

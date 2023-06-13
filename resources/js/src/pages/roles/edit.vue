@@ -21,16 +21,15 @@
                                         <thead class="table bg-primary">
                                             <tr>
                                                 <th scope="col">
-                                                    <input class="form-check-input checkbox-solid-light" v-model="selectAll" @input="toggleSelectAll()" type="checkbox">
+                                                    <input class="form-check-input checkbox-solid-light" v-model="selectAll" @input="toggleSelectAll" type="checkbox">
                                                 </th>
                                                 <th scope="col">Permission</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr v-for="permission in permissions" :key="permission.id">
-                                                <td><input type="checkbox" class="form-check-input checkbox-solid-light" v-bind:value="permission"
-                                                                      v-model="role.permissions"
-                                                            :checked="isChecked(permission)" @click="updateCheckall()" /></td>
+                                                <td><input type="checkbox" class="form-check-input checkbox-solid-light" :v-bind:value="permission"
+                                                                      v-model="role.permissions" :checked="isChecked(permission.id)" /></td>
                                                 <td>{{ permission.name }}</td>
                                             </tr>
                                         </tbody>
@@ -68,27 +67,10 @@ export default {
         }
     },
     mounted() {
-        this.getRole();
         this.getPermissions();
+        this.getRole();
     },
     methods: {
-        toggleSelectAll: function () {
-            this.selectAll = !this.selectAll;
-            this.role.permissions = [];
-            if (this.selectAll) {
-                // this.role.permissions = this.permissions.map(item => item.id);
-                for (var key in this.permissions) {
-                    this.role.permissions.push(this.permissions[key]);
-                }
-            }
-        },
-        updateCheckall: function(){
-            if(this.role.permissions.length == this.permissions.length) {
-                this.selectAll = true;
-            } else {
-                this.selectAll = false;
-            }
-        },
         async getRole() {
             const route = useRoute();
             await axios
@@ -115,7 +97,6 @@ export default {
             let id = this.role.id;
             let name = this.role.name;
             let permission = this.role.permissions.map(value => value.id);
-            console.log(permission);
 
             await axios.post(`/api/v1/admin/role/update`, {
                 id: id,
@@ -130,16 +111,19 @@ export default {
                     console.log(e);
                 });
         },
-        async isChecked(permission) {
-            let check = await this.role.permissions.map(val => val.id === permission.id) !== false;
-            return check;
-        },
-        watch: {
-            selectedItems() {
-                console.log('Selected items:', this.role.permissions);
+        toggleSelectAll() {
+            this.selectAll = !this.selectAll;
+            this.role.permissions = [];
+            if(this.selectAll){
+                for (var key in this.permissions) {
+                    this.role.permissions.push(this.permissions[key]);
+                }
             }
         },
-
+        isChecked(id) {
+            let result = this.role.permissions.map(v => v.id);
+            return result.includes(id);
+        },
     },
 };
 </script>

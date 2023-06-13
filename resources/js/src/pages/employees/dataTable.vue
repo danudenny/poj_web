@@ -1,9 +1,4 @@
 <template>
-    <DataTableHeader
-        :isCreate="false"
-    >
-    </DataTableHeader>
-
     <DataTable
         :apiUrl="`/api/v1/admin/employee`"
         :perPage="10"
@@ -11,6 +6,8 @@
         :detail="`/management/employees/`"
         :isEdit="false"
         :isDelete="false"
+        :isCreate="false"
+        :filters="tableFilter"
     >
     </DataTable>
 </template>
@@ -18,12 +15,10 @@
 <script>
 
 import DataTable from "@/components/dataTable.vue";
-import DataTableHeader from "@/components/dataTableHeader.vue";
 
 export default {
     components: {
         DataTable,
-        DataTableHeader,
     },
     data() {
         return {
@@ -32,6 +27,12 @@ export default {
                 { key: 'name', label: 'Name' },
                 { key: 'status', label: 'Status' },
                 { key: 'gender', label: 'Gender' },
+            ],
+            tableFilter: [
+                { key: 'name', label: 'Name', type: 'text' },
+                { key: 'work_email', label: 'Work Email', type: 'text' },
+                { key: 'odoo_employee_id', label: 'Employee ID', type: 'text' },
+
             ],
         };
     },
