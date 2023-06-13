@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\Core\AuthService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AuthController extends BaseController
@@ -18,9 +19,9 @@ class AuthController extends BaseController
 
     /**
      * @param LoginRequest $request
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
-    public function login(LoginRequest $request)
+    public function login(LoginRequest $request): JsonResponse
     {
         try {
             $data = $request->only(['email', 'password']);
@@ -84,7 +85,7 @@ class AuthController extends BaseController
 
     /**
      * @param Request $request
-     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response
+     * @return JsonResponse|\Illuminate\Http\Response
      */
     public function forget_password(Request $request)
     {

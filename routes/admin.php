@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\CabangController;
 use App\Http\Controllers\API\CompanyController;
 use App\Http\Controllers\API\CorporateController;
+use App\Http\Controllers\API\SettingController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\RoleController;
@@ -80,4 +81,13 @@ Route::group(['prefix' => 'admin'], function () {
         Route::get('view', [CabangController::class, 'show']);
     });
     // End Cabang
+
+    // Begin Setting
+    Route::group(['prefix' => 'setting'], function () {
+        Route::get('/', [SettingController::class, 'index']);
+        Route::post('save', [SettingController::class, 'save']);
+        Route::put('update/{id}', [SettingController::class, 'update']);
+        Route::delete('delete/{id}', [SettingController::class, 'delete']);
+    });
+    // End Setting
 });
