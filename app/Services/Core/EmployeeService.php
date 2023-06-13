@@ -4,22 +4,27 @@ namespace App\Services\Core;
 
 use App\Models\Employee;
 use App\Services\BaseService;
+use Exception;
 
 class EmployeeService extends BaseService
 {
+    /**
+     * @throws Exception
+     */
     public function index($data)
     {
         try {
-            $employee = Employee::query();
-            if (!is_null($data->name)) {
-                $employee->where('name', 'like', '%' . $data->name . '%');
-            }
-            return $this->list($employee, $data);
+            $employees = Employee::with('company');
+            $employees->when(request('name'), function ($query) {
+                $query->where('name', 'like', '%' . request('name') . '%');
+            });
+
+            return $this->list($employees, $data);
 
         } catch (\InvalidArgumentException $e) {
             throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 
@@ -35,8 +40,8 @@ class EmployeeService extends BaseService
 
         } catch (\InvalidArgumentException $e) {
             throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 }
