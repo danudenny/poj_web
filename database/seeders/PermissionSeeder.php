@@ -18,52 +18,52 @@ class PermissionSeeder extends Seeder
         $permission = [
             [
                 'name' => 'user_list',
-                'guard_name' => 'sanctum',
+                'guard_name' => 'web',
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'user_create',
-                'guard_name' => 'sanctum',
+                'guard_name' => 'web',
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'user_view',
-                'guard_name' => 'sanctum',
+                'guard_name' => 'web',
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'user_edit',
-                'guard_name' => 'sanctum',
+                'guard_name' => 'web',
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'user_delete',
-                'guard_name' => 'sanctum',
+                'guard_name' => 'web',
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'role_list',
-                'guard_name' => 'sanctum',
+                'guard_name' => 'web',
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'role_create',
-                'guard_name' => 'sanctum',
+                'guard_name' => 'web',
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'role_view',
-                'guard_name' => 'sanctum',
+                'guard_name' => 'web',
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'role_edit',
-                'guard_name' => 'sanctum',
+                'guard_name' => 'web',
                 'created_at' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'role_delete',
-                'guard_name' => 'sanctum',
+                'guard_name' => 'web',
                 'created_at' => date('Y-m-d H:i:s'),
             ],
         ];
