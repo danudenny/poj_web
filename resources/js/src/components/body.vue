@@ -18,7 +18,9 @@
 
       <div class="page-body-wrapper">
         <!-- <div class="bg-overlay" :class="{active: activeoverlay }" @click="removeoverlay()"></div> -->
-        <div class="sidebar-wrapper" :class="[{ close_icon : !togglesidebar }]" :sidebar-layout="svg=='stroke-svg'?'stroke-svg':'fill-svg'">
+        <div class="sidebar-wrapper"
+             :class="[{ close_icon : !togglesidebar }]"
+             :sidebar-layout="svg=='stroke-svg'?'stroke-svg':'fill-svg'">
           <Sidebar @clicked="sidebar_toggle" />
         </div>
         <div class="page-body" @click="hidesecondmenu()">

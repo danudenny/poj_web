@@ -87,7 +87,7 @@ export default createStore({
     modules: {
       layout,
       menu,
-      bootsrap,
+      bootsrap
     }
 });
 

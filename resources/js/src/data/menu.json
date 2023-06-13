@@ -38,6 +38,11 @@
         "active": false,
         "path": "/management/permissions"
       },
+        {
+            "headTitle1": "MASTER DATA",
+            "headTitle2": "Master data management",
+            "type": "headtitle"
+        },
       {
         "title": "Employee",
         "icon": "user",
@@ -46,9 +51,37 @@
         "active": false,
         "path": "/management/employees"
       },
+        {
+            "headTitle1": "ATTENDANCE",
+            "headTitle2": "Attendance management",
+            "type": "headtitle"
+        },
+        {
+            "headTitle1": "ASSESMENT",
+            "headTitle2": "Assesment management",
+            "type": "headtitle"
+        },
+        {
+            "headTitle1": "CONTENT",
+            "headTitle2": "Content management",
+            "type": "headtitle"
+        },
+        {
+            "headTitle1": "REPORT",
+            "headTitle2": "Master data management",
+            "type": "headtitle"
+        },
       {
         "headTitle1": "CONFIGURATION",
         "headTitle2": "Configuration management",
         "type": "headtitle"
-      }
+      },
+    {
+        "title": "General Settings",
+        "icon": "settings",
+        "iconf":"fill-learning",
+        "type": "link",
+        "active": false,
+        "path": "/general-settings"
+    }
     ]}

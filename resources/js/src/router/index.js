@@ -30,6 +30,9 @@ import PermissionDetail from '../pages/permissions/details.vue';
 import Employees from '../pages/employees/index.vue';
 import EmployeeDetail from '../pages/employees/details.vue';
 
+// General Settings
+import GeneralSettings from '../pages/settings/index.vue';
+
 const routes =[
     {
         path: '/',
@@ -213,11 +216,28 @@ const routes =[
         },
       ]
     },
+    {
+        path: '/general-settings',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'General Settings',
+                component: GeneralSettings,
+                meta: {
+                    title: 'POJ - General Settings',
+                    requiresAuth: true,
+                },
+            },
+        ]
+    },
 ]
 const router=createRouter({
     history: createWebHistory(),
     routes,
 })
+
+
 router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
       if (!store.getters.isAuthenticated) {
