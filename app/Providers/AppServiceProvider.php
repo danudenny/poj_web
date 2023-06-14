@@ -49,8 +49,26 @@ class AppServiceProvider extends ServiceProvider
             if ($value->key == 'MINIO_URL') {
                 config(['filesystems.disks.s3.url' => $value->value]);
             }
-            if ($value->key == 'SITE_NAME') {
+            if ($value->key == 'app_name') {
                 config(['app.name' => $value->value]);
+            }
+            if ($value->key == 'MAIL_MAILER') {
+                config(['mail.mailers.smtp.transport' => $value->value]);
+            }
+            if ($value->key == 'MAIL_HOST') {
+                config(['mail.mailers.smtp.host' => $value->value]);
+            }
+            if ($value->key == 'MAIL_USERNAME') {
+                config(['mail.mailers.smtp.username' => $value->value]);
+            }
+            if ($value->key == 'MAIL_PASSWORD') {
+                config(['mail.mailers.smtp.password' => $value->value]);
+            }
+            if ($value->key == 'MAIL_ENCRYPTION') {
+                config(['mail.mailers.smtp.encryption' => $value->value]);
+            }
+            if ($value->key == 'MAIL_PORT') {
+                config(['mail.mailers.smtp.port' => $value->value]);
             }
         }
 
