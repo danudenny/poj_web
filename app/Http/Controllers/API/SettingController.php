@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\BaseController;
+use App\Http\Requests\Setting\SettingBulkUpdateRequest;
 use App\Http\Requests\Setting\SettingSaveRequest;
-use App\Http\Requests\SettingUpdateRequest;
+use App\Http\Requests\Setting\SettingUpdateRequest;
 use App\Models\Setting;
 use App\Services\Core\SettingService;
 use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Request;
 use InvalidArgumentException;
 
 class SettingController extends BaseController
@@ -46,6 +46,17 @@ class SettingController extends BaseController
     {
         try {
             $result = $this->settingSvc->update($request, $id);
+            return $this->sendSuccess($result, self::SUCCESS_UPDATED);
+
+        } catch (\Exception | \InvalidArgumentException $error) {
+            return $this->sendError($error->getMessage());
+        }
+    }
+
+    public function bulkUpdate(SettingBulkUpdateRequest $request): JsonResponse
+    {
+        try {
+            $result = $this->settingSvc->bulkUpdate($request);
             return $this->sendSuccess($result, self::SUCCESS_UPDATED);
 
         } catch (\Exception | \InvalidArgumentException $error) {

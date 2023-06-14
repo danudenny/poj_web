@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Setting;
 
+
+use App\Http\Requests\BaseRequest;
 
 class SettingUpdateRequest extends BaseRequest
 {
