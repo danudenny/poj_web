@@ -87,6 +87,7 @@ Route::group(['prefix' => 'admin'], function () {
         Route::get('/', [SettingController::class, 'index']);
         Route::post('save', [SettingController::class, 'save']);
         Route::put('update/{id}', [SettingController::class, 'update']);
+        Route::put('bulk-update', [SettingController::class, 'bulkUpdate']);
         Route::delete('delete/{id}', [SettingController::class, 'delete']);
     });
     // End Setting

@@ -90,6 +90,42 @@ class SettingService extends BaseService
     /**
      * @throws Exception
      */
+    public function bulkUpdate($request): mixed
+    {
+        DB::beginTransaction();
+        try {
+            $settings = $request->all();
+
+            foreach ($settings as $settingData) {
+                $setting = Setting::firstWhere('id', $settingData['id']);
+
+                if (!$setting) {
+                    throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+                }
+
+                $setting->key = $settingData['key'];
+                $setting->value = $settingData['value'];
+
+                if (!$setting->save()) {
+                    throw new \Exception(self::DB_FAILED, 500);
+                }
+            }
+
+            DB::commit();
+            return $settings;
+
+        } catch (\InvalidArgumentException $e) {
+            DB::rollBack();
+            throw new \InvalidArgumentException($e->getMessage());
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+        }
+    }
+
+    /**
+     * @throws Exception
+     */
     public function delete($id): mixed
     {
         DB::beginTransaction();
