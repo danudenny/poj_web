@@ -103,7 +103,7 @@ class AuthController extends BaseController
 
     /**
      * @param Request $request
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function has_token(Request $request)
     {
@@ -121,12 +121,12 @@ class AuthController extends BaseController
 
     /**
      * @param Request $request
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
     public function reset_password(Request $request)
     {
         try {
-            $data = $request->only(['email', 'password']);
+            $data = $request->only(['token', 'password', 'confirmationPassword']);
             $result = $this->authService->reset_password($data);
 
             return $this->sendSuccess($result, self::SUCCESS_UPDATED);
