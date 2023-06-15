@@ -52,7 +52,7 @@ class AppServiceProvider extends ServiceProvider
             if ($value->key == 'app_name') {
                 config(['app.name' => $value->value]);
             }
-            if ($value->key == 'MAIL_MAILER') {
+            if ($value->key == 'MAIL_TYPE') {
                 config(['mail.mailers.smtp.transport' => $value->value]);
             }
             if ($value->key == 'MAIL_HOST') {

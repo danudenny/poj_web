@@ -8,6 +8,7 @@ use App\Jobs\PasswordResetMailJob;
 use App\Models\PasswordReset;
 use App\Models\User;
 use App\Services\BaseService;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -137,6 +138,7 @@ class AuthService extends BaseService
             if (!$user) {
                 throw new \InvalidArgumentException(self::DATA_NOTFOUND, 401);
             }
+
             $password_reset = [
                 'email' => $user->email,
                 'token' => Str::random(),
@@ -144,10 +146,11 @@ class AuthService extends BaseService
             ];
             PasswordReset::updateOrCreate(['email' => $user->email], $password_reset);
 
+            $baseUrl = config('app.url');
             $templateData['email'] = $password_reset['email'];
             $templateData['token'] = $password_reset['token'];
             $templateData['markdown'] = 'emails.password-reset';
-            $templateData['link'] = 'http://127.0.0.1:8000/auth/reset-password/?token=' . $templateData['token'];
+            $templateData['link'] =  $baseUrl. '/auth/reset_password?token=' . $templateData['token'];
             dispatch(new PasswordResetMailJob($templateData, $templateData['email']));
 
             DB::commit();
@@ -196,27 +199,26 @@ class AuthService extends BaseService
         DB::beginTransaction();
         try {
             $this->validateData($data, [
-                'email' => 'email',
-                'password' => 'required'
+                'token' => 'string',
+                'password' => 'required',
+                'confirmationPassword' => 'same:password'
             ]);
 
-            $user = User::firstWhere('email', $data['email']);
+            $dataToken = $this->has_token(['token' => $data['token']]);
 
-            if (!$user) {
+            if (!$dataToken) {
                 throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
 
-            if (!empty($request->password)) {
-                $user->password = Hash::make($data['password']);
-                $user->authkey = Hash::make($data['email'].'-'.$data['password']);
-            }
+            $user = User::where('email', $dataToken)->first();
+            $user->password = Hash::make($data['password']);
             $user->updated_at = date('Y-m-d H:i:s');
 
             if (!$user->save()) {
                 throw new \InvalidArgumentException(self::DB_FAILED, 500);
             }
 
-            DB::table('password_resets')->where('email', $data['email'])->delete();
+            DB::table('password_resets')->where('email', $dataToken)->delete();
             DB::commit();
 
             return $user;
