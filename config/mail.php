@@ -35,7 +35,7 @@ return [
 
     'mailers' => [
         'smtp' => [
-            'transport' => '',
+            'transport' => 'smtp',
             'host' =>'',
             'port' => '',
             'encryption' => '',
