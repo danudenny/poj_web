@@ -26,12 +26,10 @@ class EmployeeController extends BaseController
         }
     }
 
-    public function view(Request $request)
+    public function view($id): JsonResponse
     {
         try {
-            $id = $request->only('id')['id'];
             $result = $this->employeeService->view($id);
-
             return $this->sendSuccess($result, self::SUCCESS_FETCH);
 
         } catch (\Exception | \InvalidArgumentException $error) {

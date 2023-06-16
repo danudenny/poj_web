@@ -1,56 +1,100 @@
 {
     "data": [
-      {
-        "title": "Dashboard",
-        "icon": "home",
-        "iconf":"fill-home",
-        "type": "link",
-        "active": false,
-        "path": "/"
-
-      },
-      {
-        "headTitle1": "USER MANAGEMENT",
-        "headTitle2": "User and roles management",
-        "type": "headtitle"
-      },
-      {
-        "title": "Users",
-        "icon": "users",
-        "iconf":"fill-user",
-        "type": "link",
-        "active": false,
-        "path": "/management/users"
-      },
-      {
-        "title": "Roles",
-        "icon": "shield",
-        "iconf":"fill-learning",
-        "type": "link",
-        "active": false,
-        "path": "/management/roles"
-      },
-      {
-        "title": "Permissions",
-        "icon": "lock",
-        "iconf":"fill-learning",
-        "type": "link",
-        "active": false,
-        "path": "/management/permissions"
-      },
+        {
+            "title": "Dashboard",
+            "icon": "home",
+            "iconf": "fill-home",
+            "type": "link",
+            "active": false,
+            "path": "/"
+        },
+        {
+            "headTitle1": "USER MANAGEMENT",
+            "headTitle2": "User and roles management",
+            "type": "headtitle"
+        },
+        {
+            "title": "Users",
+            "icon": "users",
+            "iconf": "fill-user",
+            "type": "link",
+            "active": false,
+            "path": "/management/users"
+        },
+        {
+            "title": "Roles",
+            "icon": "shield",
+            "iconf": "fill-learning",
+            "type": "link",
+            "active": false,
+            "path": "/management/roles"
+        },
+        {
+            "title": "Permissions",
+            "icon": "lock",
+            "iconf": "fill-learning",
+            "type": "link",
+            "active": false,
+            "path": "/management/permissions"
+        },
         {
             "headTitle1": "MASTER DATA",
             "headTitle2": "Master data management",
             "type": "headtitle"
         },
-      {
-        "title": "Employee",
-        "icon": "user",
-        "iconf":"fill-learning",
-        "type": "link",
-        "active": false,
-        "path": "/management/employees"
-      },
+        {
+            "title": "Employee",
+            "icon": "user",
+            "iconf": "fill-learning",
+            "type": "link",
+            "active": false,
+            "path": "/management/employees"
+        },
+        {
+            "title": "Working Area",
+            "icon": "user",
+            "iconf": "fill-learning",
+            "type": "sub",
+            "active": false,
+            "children": [
+                {
+                    "path": "",
+                    "title": "Corporate",
+                    "type": "link",
+                    "active": false
+                },
+                {
+                    "path": "",
+                    "title": "Kantor Wilayah",
+                    "type": "link",
+                    "active": false
+                },
+                {
+                    "path": "",
+                    "title": "Area",
+                    "type": "link",
+                    "active": false
+                },
+                {
+                    "path": "cabang",
+                    "title": "Cabang",
+                    "type": "link",
+                    "active": false
+                },
+                {
+                    "path": "",
+                    "title": "Outlet",
+                    "type": "link",
+                    "active": false
+                },
+                {
+                    "path": "",
+                    "title": "Subsidiary",
+                    "type": "link",
+                    "active": false
+                }
+            ]
+        },
         {
             "headTitle1": "ATTENDANCE",
             "headTitle2": "Attendance management",
@@ -71,17 +115,18 @@
             "headTitle2": "Master data management",
             "type": "headtitle"
         },
-      {
-        "headTitle1": "CONFIGURATION",
-        "headTitle2": "Configuration management",
-        "type": "headtitle"
-      },
-    {
-        "title": "General Settings",
-        "icon": "settings",
-        "iconf":"fill-learning",
-        "type": "link",
-        "active": false,
-        "path": "/general-settings"
-    }
-    ]}
+        {
+            "headTitle1": "CONFIGURATION",
+            "headTitle2": "Configuration management",
+            "type": "headtitle"
+        },
+        {
+            "title": "General Settings",
+            "icon": "settings",
+            "iconf": "fill-learning",
+            "type": "link",
+            "active": false,
+            "path": "/general-settings"
+        }
+    ]
+}

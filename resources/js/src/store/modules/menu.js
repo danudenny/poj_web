@@ -28,26 +28,16 @@ const getters = {
 const mutations = {
   opensidebar: (state) => {
     state.togglesidebar = !state.togglesidebar;
-    if (window.innerWidth < 991) {
-      state.activeoverlay = true;
-    } else {
-      state.activeoverlay = false;
-    }
+    state.activeoverlay = window.innerWidth < 991;
   },
   resizetoggle: (state) => {
-    if (window.innerWidth < 1007) {
-      state.togglesidebar = false;
-      // state.activeoverlay = true
-    } else {
-      state.togglesidebar = true;
-      // state.activeoverlay = false
-    }
+    state.togglesidebar = window.innerWidth >= 1007;
   },
   searchTerm: (state, term) => {
     let items = [];
-    var searchval = term.toLowerCase();
-    state.data.filter(menuItems => {
-      
+      const searchval = term.toLowerCase();
+      state.data.filter(menuItems => {
+
       if (menuItems.title) {
         if (menuItems.title.toLowerCase().includes(searchval) && menuItems.type === 'link') {
           items.push(menuItems);
@@ -86,7 +76,7 @@ const mutations = {
     item.active = !item.active;
   },
   setNavActive: (state, item) => {
-   
+
     if (!item.active) {
       state.data.forEach(a => {
         if (state.data.includes(item))

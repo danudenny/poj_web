@@ -21,14 +21,13 @@ export default {
   data() {
       return {
           tableColumns: [
+              { key: '', label: 'No' },
               { key: 'name', label: 'Name' },
-              { key: 'username', label: 'Username' },
               { key: 'email', label: 'Email' },
               { key: 'roles', label: 'Role' },
           ],
           tableFilter: [
               { key: 'name', label: 'Name', type: 'text' },
-              { key: 'username', label: 'Username', type: 'text' },
               { key: 'email', label: 'Email', type: 'text' },
               { key: 'is_active', label: 'Is Active', type: 'selectbox' },
           ],
