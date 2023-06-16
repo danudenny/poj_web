@@ -18,7 +18,7 @@
                             <input class="form-control" v-model="this.params[filter.key]" type="text" :placeholder="filter.label" v-if="filter.type === 'text'">
                         </div>
                         <div class="mb-1" v-else>
-                            <select class="form-control" v-model="this.params[filter.key]">
+                            <select class="form-select" v-model="this.params[filter.key]">
                                 <option value="">All</option>
                                 <option value="1">Active</option>
                                 <option value="0">In-Active</option>
@@ -82,18 +82,23 @@
                     </tr>
                     </tbody>
                 </table>
-                <div class="card-body pagination-padding">
-                    <nav aria-label="...">
-                      <ul class="pagination pagination-sm pagination-primary">
-                        <li class="page-item" :class="{'disabled' : this.params.page === 1}" @click="prevPage"><a class="page-link" href="javascript:void(0)" tabindex="-1">Prev</a></li>
-                        <li class="page-item active"><a class="page-link" href="javascript:void(0)">{{ this.params.page }}</a></li>
-    <!--                            <li class="page-item"><a class="page-link" href="javascript:void(0)">2 <span class="sr-only">(current)</span></a></li>-->
-    <!--                            <li class="page-item"><a class="page-link" href="javascript:void(0)">3</a></li>-->
-                        <li class="page-item" :class="{'disabled' : this.params.page === this.params.totalPages}">
-                            <a class="page-link" href="javascript:void(0)" @click="nextPage">Next</a>
-                        </li>
-                      </ul>
-                </nav>
+                <div class="row row-cols-sm-6 theme-form form-control-sm mt-5 form-bottom">
+                    <div class="mb-3 d-flex">
+                        <select v-model="params.per_page" class="form-select form-control-sm" @change="fetchData()">
+                            <option v-for="option in options" :value="option" :key="option">{{option}}</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 d-flex">
+                        <ul class="pagination pagination-sm pagination-primary">
+                            <li class="page-item" :class="{'disabled' : this.params.page === 1}" @click="prevPage"><a class="page-link" href="javascript:void(0)" tabindex="-1"> &lt;&lt; </a></li>
+                            <li class="page-item active"><a class="page-link" href="javascript:void(0)">{{ this.params.page }}</a></li>
+                            <!--                            <li class="page-item"><a class="page-link" href="javascript:void(0)">2 <span class="sr-only">(current)</span></a></li>-->
+                            <!--                            <li class="page-item"><a class="page-link" href="javascript:void(0)">3</a></li>-->
+                            <li class="page-item" :class="{'disabled' : this.params.page === this.params.totalPages}">
+                                <a class="page-link" href="javascript:void(0)" @click="nextPage"> &gt;&gt; </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -101,6 +106,7 @@
 </template>
 <script>
 import axios from 'axios';
+import {useToast} from "vue-toastification";
 
 export default {
     props: {
@@ -147,6 +153,7 @@ export default {
     data() {
         return {
             items: [],
+            totalItems: 0,
             isFilter: false,
             params : {
                 page: 1,
@@ -156,18 +163,28 @@ export default {
                 is_active: "",
                 email: null,
                 username: null
-            }
+            },
+            options: [10, 25, 50],
         };
     },
     mounted() {
         this.fetchData();
+    },
+    computed: {
+        totalPages() {
+            return Math.ceil(this.totalItems / this.params.per_page)
+        },
     },
     methods: {
         fetchData() {
             axios
                 .get(this.apiUrl, { params: this.params })
                 .then(response => {
+                    console.log(response);
+                    console.log(response.data.data.current_page);
                     this.items = response.data.data.data;
+                    this.totalItems = response.data.data.total;
+                    this.params.page = response.data.data.current_page;
                     this.params.totalPages = response.data.data.last_page;
                 })
                 .catch(error => {
@@ -198,7 +215,11 @@ export default {
                     reverseButtons: true
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        this.$axios.delete(this.apiUrl+`/delete`, {params: {id: id}});
+                        this.$axios.delete(this.apiUrl+`/delete`, {params: {id: id}}).then(res => {
+                            useToast().success(res.data.message , { position: 'bottom-right' });
+                        }).catch(err => {
+                            useToast().error(err.response.data.message , { position: 'bottom-right' });
+                        });
                         this.items = this.items.filter((item) => item.id !== id);
                     }
                 });
@@ -211,9 +232,11 @@ export default {
             axios
                 .post(this.apiUrl+`/toggle-status`, {id: id} )
                 .then(response => {
+                    useToast().success(response.data.message , { position: 'bottom-right' });
                     console.log(response)
                 })
                 .catch(error => {
+                    useToast().error(error.response.data.message , { position: 'bottom-right' });
                     console.error(error);
                 });
         },

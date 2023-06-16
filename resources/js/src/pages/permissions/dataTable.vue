@@ -4,7 +4,7 @@
         :perPage="10"
         :columns="tableColumns"
         :detail="`/management/permissions/`"
-        :create="`/management/roles/create`"
+        :create="`/management/permissions/create`"
         :filters="tableFilter"
     >
     </DataTable>

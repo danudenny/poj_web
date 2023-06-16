@@ -26,6 +26,7 @@
 
 <script>
 import axios from "axios";
+import {useToast} from "vue-toastification";
 
 export default {
     data() {
@@ -46,11 +47,11 @@ export default {
                 name: name,
             })
                 .then(res => {
+                    useToast().success(res.data.message , { position: 'bottom-right' });
                     this.$router.push('/management/permissions');
-                    console.log(res);
                 })
                 .catch(e => {
-                    console.log(e);
+                    useToast().error(e.response.data.message , { position: 'bottom-right' });
                 });
         },
     },

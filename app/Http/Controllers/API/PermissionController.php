@@ -43,7 +43,7 @@ class PermissionController extends BaseController
     {
         try {
             $result = $this->permissionService->save($request);
-            return $this->sendSuccess($result, self::SUCCESS_FETCH);
+            return $this->sendSuccess($result, self::SUCCESS_CREATED);
 
         } catch (\Exception | \InvalidArgumentException $error) {
             return $this->sendError($error->getMessage());
@@ -54,7 +54,7 @@ class PermissionController extends BaseController
     {
         try {
             $result = $this->permissionService->update($request);
-            return $this->sendSuccess($result, self::SUCCESS_FETCH);
+            return $this->sendSuccess($result, self::SUCCESS_UPDATED);
 
         } catch (\Exception | \InvalidArgumentException $error) {
             return $this->sendError($error->getMessage());
@@ -65,7 +65,7 @@ class PermissionController extends BaseController
     {
         try {
             $result = $this->permissionService->destroy($request);
-            return $this->sendSuccess($result, self::SUCCESS_FETCH);
+            return $this->sendSuccess($result, self::SUCCESS_DESTROYED);
 
         } catch (\Exception | \InvalidArgumentException $error) {
             return $this->sendError($error->getMessage());
