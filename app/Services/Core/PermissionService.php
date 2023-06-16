@@ -51,6 +51,10 @@ class PermissionService extends BaseService
             $permission->name = strtolower(str_replace(' ', '_', $request->name));
             $permission->created_at = date('Y-m-d H:i:s');
 
+            if (count(Permission::where('name', $permission->name)->get()) > 0) {
+                throw new \InvalidArgumentException("name and gurad name already exist", 403);
+            }
+
             if (!$permission->save()) {
                 throw new \Exception(self::DB_FAILED, 500);
             }

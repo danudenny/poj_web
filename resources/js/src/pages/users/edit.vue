@@ -46,6 +46,7 @@
 <script>
 import {useRoute} from "vue-router";
 import axios from "axios";
+import {useToast} from "vue-toastification";
 
 export default {
     data() {
@@ -111,9 +112,12 @@ export default {
                 employee_id: employee_id
             })
                 .then(res => {
+                    useToast().success(res.data.message , { position: 'bottom-right' });
+                    this.$router.push('/management/users');
                     console.log(res);
                 })
                 .catch(e => {
+                    useToast().error(e.response.data.message , { position: 'bottom-right' });
                     console.log(e);
                 });
         },

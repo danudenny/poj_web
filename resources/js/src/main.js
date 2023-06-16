@@ -5,6 +5,8 @@ import store from './store'
 import 'bootstrap/dist/js/bootstrap.bundle'
 import './assets/scss/app.scss'
 import VueFeather from 'vue-feather';
+import Toast, {POSITION, useToast} from "vue-toastification";
+import "vue-toastification/dist/index.css";
 
 // import { createI18n } from 'vue-i18n'
 import en from './locales/en.json';
@@ -40,6 +42,7 @@ axios.interceptors.request.use(config => {
 const app = createApp(App)
     .use(router)
     .use(store)
+    .use(Toast)
     .use(VueSweetalert2)
     .component('multiselect', Multiselect)
     .component(VueFeather.name, VueFeather)

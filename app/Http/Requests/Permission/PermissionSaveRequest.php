@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Permission;
 
 use App\Http\Requests\BaseRequest;
+use Illuminate\Validation\Rule;
 
 class PermissionSaveRequest extends BaseRequest
 {

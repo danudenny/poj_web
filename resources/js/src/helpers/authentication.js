@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useToast } from "vue-toastification";
 
 const apiClient = axios.create({
     baseURL: '/api/v1/auth',
@@ -19,6 +20,7 @@ export default {
             const response = await apiClient.post('/login', credentials);
             return response.data.data;
         } catch (e) {
+            useToast().error(e.response.data.message , { position: 'bottom-right' });
             throw new Error(e.response.data.message);
         }
     },

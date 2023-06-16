@@ -54,7 +54,7 @@ Route::group(['prefix' => 'admin'], function () {
         Route::get('view', [PermissionController::class, 'view']);
         Route::post('save', [PermissionController::class, 'save']);
         Route::post('update', [PermissionController::class, 'update']);
-        Route::delete('destroy', [PermissionController::class, 'destroy']);
+        Route::delete('delete', [PermissionController::class, 'destroy']);
     });
     // End Permission
 
