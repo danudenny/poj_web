@@ -3,8 +3,11 @@
 namespace App\Services\Core;
 
 use App\Models\Employee;
+use App\Models\WorkLocation;
 use App\Services\BaseService;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class EmployeeService extends BaseService
 {
@@ -14,7 +17,7 @@ class EmployeeService extends BaseService
     public function index($data)
     {
         try {
-            $employees = Employee::with('company');
+            $employees = Employee::with('company', 'employeeTimesheet', 'employeeTimesheet.employeeDetails');
             $employees->when(request('name'), function ($query) {
                 $query->where('name', 'like', '%' . request('name') . '%');
             });
@@ -28,10 +31,10 @@ class EmployeeService extends BaseService
         }
     }
 
-    public function view($id)
+    public function view($id): Model|Builder
     {
         try {
-            $employee = Employee::firstWhere('id', $id);
+            $employee = Employee::with('company', 'company.workLocation', 'employeeDetail', 'employeeDetail.employeeTimesheet')->find($id);
 
             if (!$employee) {
                 throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);

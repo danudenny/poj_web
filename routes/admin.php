@@ -3,15 +3,19 @@
 use App\Http\Controllers\API\CabangController;
 use App\Http\Controllers\API\CompanyController;
 use App\Http\Controllers\API\CorporateController;
-use App\Http\Controllers\API\SettingController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\API\UserController;
-use App\Http\Controllers\API\RoleController;
-use App\Http\Controllers\API\EventController;
-use App\Http\Controllers\API\EventCategoryController;
-use App\Http\Controllers\API\EventRecurringController;
+use App\Http\Controllers\API\EmployeeAttendanceController;
 use App\Http\Controllers\API\EmployeeController;
+use App\Http\Controllers\API\EmployeeDetailController;
+use App\Http\Controllers\API\EmployeeTimesheetController;
+use App\Http\Controllers\API\EventCategoryController;
+use App\Http\Controllers\API\EventController;
+use App\Http\Controllers\API\EventRecurringController;
 use App\Http\Controllers\API\PermissionController;
+use App\Http\Controllers\API\RoleController;
+use App\Http\Controllers\API\SettingController;
+use App\Http\Controllers\API\UserController;
+use App\Http\Controllers\API\WorkLocationController;
+use Illuminate\Support\Facades\Route;
 
 
 //Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () {
@@ -57,7 +61,7 @@ Route::group(['prefix' => 'admin'], function () {
     // Begin Employee
     Route::group(['prefix' => 'employee'], function () {
         Route::get('/', [EmployeeController::class, 'index']);
-        Route::get('view', [EmployeeController::class, 'view']);
+        Route::get('view/{id}', [EmployeeController::class, 'view']);
     });
     // End Employee
 
@@ -91,4 +95,41 @@ Route::group(['prefix' => 'admin'], function () {
         Route::delete('delete/{id}', [SettingController::class, 'delete']);
     });
     // End Setting
+
+    // Begin employee timesheet
+    Route::group(['prefix' => 'employee-timesheet'], function() {
+        Route::get('/', [EmployeeTimesheetController::class, 'index']);
+        Route::get('view/{id}', [EmployeeTimesheetController::class, 'view']);
+        Route::post('create', [EmployeeTimesheetController::class, 'save']);
+        Route::put('update/{id}', [EmployeeTimesheetController::class, 'edit']);
+        Route::delete('delete/{id}', [EmployeeTimesheetController::class, 'delete']);
+    });
+    // End employee timesheet
+
+    // Begin employee detail
+    Route::group(['prefix' => 'employee-detail'], function() {
+//        Route::get('/', [EmployeeTimesheetController::class, 'index']);
+//        Route::get('view/{id}', [EmployeeTimesheetController::class, 'view']);
+        Route::post('create', [EmployeeDetailController::class, 'create']);
+//        Route::put('update/{id}', [EmployeeTimesheetController::class, 'edit']);
+//        Route::delete('delete/{id}', [EmployeeTimesheetController::class, 'delete']);
+    });
+    // End employee detail
+
+    // Begin employee timesheet
+    Route::group(['prefix' => 'work-locations'], function() {
+        Route::get('/', [WorkLocationController::class, 'index']);
+        Route::get('view/{id}', [WorkLocationController::class, 'view']);
+        Route::post('create', [WorkLocationController::class, 'save']);
+        Route::put('update/{id}', [WorkLocationController::class, 'update']);
+        Route::delete('delete/{id}', [WorkLocationController::class, 'delete']);
+    });
+    // End employee timesheet
+
+    // Begin employee attendance
+    Route::group(['prefix' => 'attendance'], function() {
+        Route::post('check-in/{id}', [EmployeeAttendanceController::class, 'checkIn']);
+        Route::post('check-out/{id}', [EmployeeAttendanceController::class, 'checkOut']);
+    });
+    // End employee attendance
 });

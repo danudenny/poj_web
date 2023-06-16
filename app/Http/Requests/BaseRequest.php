@@ -9,4 +9,6 @@ class BaseRequest extends FormRequest
     public const REQUIRED = 'tidak boleh kosong';
     public const NOT_VALID = 'tidak valid';
     public const ALREADY_EXIST = 'sudah digunakan';
+    public const STRING = 'harus berupa string';
+    public const BOOLEAN = 'harus berupa boolean';
 }

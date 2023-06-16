@@ -33,6 +33,9 @@ import EmployeeDetail from '../pages/employees/details.vue';
 // General Settings
 import GeneralSettings from '../pages/settings/index.vue';
 
+// Work Area Settings
+import Cabang from '../pages/cabang/index.vue';
+
 const routes =[
     {
         path: '/',
@@ -226,6 +229,21 @@ const routes =[
                 component: GeneralSettings,
                 meta: {
                     title: 'POJ - General Settings',
+                    requiresAuth: true,
+                },
+            },
+        ]
+    },
+    {
+        path: '/cabang',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Cabang',
+                component: Cabang,
+                meta: {
+                    title: 'POJ - Cabang',
                     requiresAuth: true,
                 },
             },

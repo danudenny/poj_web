@@ -32,10 +32,10 @@
             v-if="menuItem.type == 'sub'" @click="setNavActive(menuItem, index)">
 
             <svg class="stroke-icon">
-              <use :xlink:href="require('@/assets/svg/icon-sprite.svg') + `#${menuItem.icon}`"></use>
+              <use :xlink:href="`#${menuItem.icon}`"></use>
             </svg>
             <svg class="fill-icon">
-              <use :xlink:href="require('@/assets/svg/icon-sprite.svg') + `#${menuItem.iconf}`"></use>
+              <use :xlink:href="'@/assets/svg/icon-sprite.svg' + `#${menuItem.iconf}`"></use>
             </svg>
             <span class="lan-3">
               {{ (menuItem.title) }}
@@ -63,12 +63,12 @@
 
           <a :href="menuItem.path" class="sidebar-link sidebar-title" v-if="menuItem.type == 'extLink'"
             @click="setNavActive(menuItem, index)">
-            <svg class="stroke-icon">
-                <use :xlink:href="require('@/assets/svg/icon-sprite.svg') + `#${menuItem.icon}`"></use>
-            </svg>
-            <svg class="fill-icon">
-                <use :xlink:href="require('@/assets/svg/icon-sprite.svg') + `#${menuItem.iconf}`"></use>
-            </svg>
+<!--            <svg class="stroke-icon">-->
+<!--                <use :xlink:href="iconSprite + `#${menuItem.icon}`"></use>-->
+<!--            </svg>-->
+<!--            <svg class="fill-icon">-->
+<!--                <use :xlink:href="iconSprite + `#${menuItem.iconf}`"></use>-->
+<!--            </svg>-->
             <span>
                 {{ (menuItem.title) }}
             </span>
@@ -76,7 +76,7 @@
           </a>
 
           <a :href="menuItem.path" target="_blank" class="sidebar-link sidebar-title"
-            v-if="menuItem.type == 'extTabLink'" @click="setNavActive(menuItem, index)">
+             v-if="menuItem.type === 'extTabLink'" @click="setNavActive(menuItem, index)">
             <svg class="stroke-icon">
                 <use :xlink:href="require('@/assets/svg/icon-sprite.svg') + `#${menuItem.icon}`"></use>
             </svg>
@@ -95,7 +95,7 @@
             <li v-for="(childrenItem, index) in menuItem.children" :key="index">
 
                 <a class="lan-4" :class="{ 'active': childrenItem.active }" href="javascript:void(0)"
-                    v-if="childrenItem.type == 'sub'" @click="setNavActive(childrenItem, index)">
+                   v-if="childrenItem.type === 'sub'" @click="setNavActive(childrenItem, index)">
                     {{ (childrenItem.title) }}
                     <label :class="'badge badge-' + childrenItem.badgeType + ' pull-right'"
                         v-if="childrenItem.badgeType">{{ childrenItem.badgeValue }}</label>
@@ -105,8 +105,8 @@
                 </a>
 
                 <router-link class="lan-4" :class="{ 'active': childrenItem.active }" :to="childrenItem.path"
-                    v-if="childrenItem.type == 'link'" @click="setNavActive(childrenItem, index)"
-                    v-on:click="hidesecondmenu()">
+                             v-if="childrenItem.type === 'link'" @click="setNavActive(childrenItem, index)"
+                             v-on:click="hidesecondmenu()">
                     {{ (childrenItem.title) }}
                     <label :class="'badge badge-' + childrenItem.badgeType + ' pull-right'"
                         v-if="childrenItem.badgeType">{{ (childrenItem.badgeValue) }}</label>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\EmployeeAttendanceController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\Mobile\AuthController;
 use App\Http\Controllers\API\Mobile\UserController;
