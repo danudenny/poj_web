@@ -37,4 +37,9 @@ class Employee extends Model
     {
         return $this->hasOne(EmployeeDetail::class);
     }
+
+    public function user(): HasOne
+    {
+        return $this->HasOne(User::class);
+    }
 }

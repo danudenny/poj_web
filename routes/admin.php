@@ -31,6 +31,7 @@ Route::group(['prefix' => 'admin'], function () {
         Route::delete('delete', [UserController::class, 'delete']);
         Route::post('restore', [UserController::class, 'restore']);
         Route::delete('destroy', [UserController::class, 'destroy']);
+        Route::post('{id}/avatar', [UserController::class, 'updateAvatar']);
     });
     // End User
 

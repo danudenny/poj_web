@@ -19,6 +19,7 @@ export default createStore({
       isActive:false,
       token:localStorage.getItem(TOKEN_STORAGE_KEY) || null,
       user: null,
+      avatar: '',
   },
   getters:{
     langIcon: (state)=>{ return state.langIcon},
@@ -47,6 +48,10 @@ export default createStore({
           state.user = user;
           localStorage.setItem('USER_STORAGE_KEY', JSON.stringify(user));
       },
+      setAvatar(state, user) {
+          state.avatar = user.avatar;
+          localStorage.setItem('USER_AVATAR', user.avatar);
+      },
       clearToken(state){
         state.token = null;
         localStorage.removeItem(TOKEN_STORAGE_KEY);
@@ -54,6 +59,10 @@ export default createStore({
       clearUser(state){
           state.user = null;
           localStorage.removeItem('USER_STORAGE_KEY');
+      },
+      clearAvatar(state) {
+          state.avatar = '';
+          localStorage.removeItem('USER_AVATAR');
       },
     },
     actions: {
@@ -64,8 +73,10 @@ export default createStore({
       async login ({ commit }, credentials) {
           try {
             const { token, user } = await authentication.login(credentials);
+            // console.log(user.avatar);
             commit('setToken', token);
             commit('setUser', user);
+            commit('setAvatar', user);
           } catch (e) {
             commit('clearToken');
             localStorage.removeItem(TOKEN_STORAGE_KEY);
@@ -76,8 +87,10 @@ export default createStore({
               // await authentication.logout();
               commit('clearToken');
               commit('clearUser');
+              commit('clearAvatar');
               localStorage.removeItem(TOKEN_STORAGE_KEY);
               localStorage.removeItem('USER_STORAGE_KEY');
+              localStorage.removeItem('USER_AVATAR');
               console.log('Logout successfully');
           } catch (e) {
               console.log('Logout error:', e);

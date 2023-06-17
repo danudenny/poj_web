@@ -101,6 +101,17 @@ class UserController extends BaseController
         }
     }
 
+    public function updateAvatar(Request $request, $id)
+    {
+        try {
+            $result = $this->userService->updateAvatar($request, $id);
+            return $this->sendSuccess($result, self::SUCCESS_UPDATED. ' '. 'profile image');
+
+        } catch (\Exception | \InvalidArgumentException $error) {
+            return $this->sendError($error->getMessage());
+        }
+    }
+
     /**
      * Softdelete data user
      * @param Request $request
