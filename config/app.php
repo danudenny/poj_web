@@ -194,6 +194,7 @@ return [
         // App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
+        App\Providers\TelescopeServiceProvider::class,
 //        App\Providers\MinioStorageServiceProvider::class
 
     ],
@@ -212,13 +213,5 @@ return [
     'aliases' => Facade::defaultAliases()->merge([
         // 'ExampleClass' => App\Example\ExampleClass::class,
     ])->toArray(),
-
-    'odoo' => [
-        'odooUri' => env('ODOO_URI', ''),
-        'odooUrl' => env('ODOO_URL', 'http://localhost'),
-        'database' => env('ODOO_DATABASE', ''),
-        'username' => env('ODOO_USERNAME', ''),
-        'password' => env('ODOO_PASSWORD', '')
-    ]
 
 ];
