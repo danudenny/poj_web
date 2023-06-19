@@ -1,7 +1,7 @@
 <template>
     <li class="profile-nav onhover-dropdown pe-0 py-0">
       <div class="media profile-media">
-        <img class="b-r-10" :src="avatars" alt="" />
+        <img class="b-r-10 img-40" :src="this.profileImg ?? avatars" alt="" />
         <div class="media-body">
           <span>{{ user.name }}</span>
           <p class="mb-0 font-roboto">
@@ -11,7 +11,7 @@
       </div>
       <ul class="profile-dropdown onhover-show-div">
         <li>
-          <router-link to="/">
+          <router-link to="/profile">
             <vue-feather type="user"></vue-feather><span>Account </span>
           </router-link>
         </li>
@@ -46,11 +46,13 @@
                 name: '',
                 email: ''
             },
-            avatars: ''
+            avatars: '',
+            profileImg: '',
         }
     },
     mounted() {
       this.getUser;
+      this.getUserAvatar;
       this.avatars = `https://ui-avatars.com/api/?name=${this.user.name}&background=0A5640&color=fff&length=2&rounded=false&size=32`
     },
     methods: {
@@ -71,7 +73,14 @@
               this.user = JSON.parse(getUser)
               console.log(this.user.name)
               return this.user
-          }
+          },
+          getUserAvatar() {
+              const getUserAvatar = localStorage.getItem('USER_AVATAR');
+              this.profileImg = getUserAvatar;
+
+              // console.log(this.profileImg)
+              return this.profileImg;
+          },
       }
   };
   </script>

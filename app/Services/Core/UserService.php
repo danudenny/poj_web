@@ -6,11 +6,19 @@ use App\Http\Resources\RoleResource;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\BaseService;
+use App\Services\MinioService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class UserService extends BaseService
 {
+    private MinioService $minioService;
+
+    public function __construct(MinioService $minioService)
+    {
+        $this->minioService = $minioService;
+    }
+
     /**
      * @param $data
      * @return mixed
@@ -236,6 +244,44 @@ class UserService extends BaseService
                 throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
             $user->forceDelete();
+
+            DB::commit();
+            return $user;
+
+        } catch (\InvalidArgumentException $e) {
+            DB::rollBack();
+            throw new \InvalidArgumentException($e->getMessage());
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Update user profile image / avatar
+     * @param $request
+     * @param $id
+     * @return mixed
+     * @throws \Exception
+     */
+    public function updateAvatar($request, $id) {
+        DB::beginTransaction();
+        try {
+            $user = User::firstWhere('id', $id);
+
+            if (!$user) {
+                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+            }
+
+            $path = 'uploads/avatar';
+            $uploadedPath = $this->minioService->uploadFile($this->fromBase64($request->avatar), $path);
+
+            $user->avatar = $uploadedPath;
+            $user->updated_at = date('Y-m-d H:i:s');
+
+            if (!$user->save()) {
+                throw new \Exception(self::DB_FAILED, 500);
+            }
 
             DB::commit();
             return $user;

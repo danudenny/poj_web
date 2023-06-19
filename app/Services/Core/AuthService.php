@@ -25,7 +25,7 @@ class AuthService extends BaseService
     {
         try {
 
-            $user = User::with(['roles.permissions'])->where('email', $data['email'])
+            $user = User::with(['roles.permissions', 'employee.employeeDetail.employeeTimesheet'])->where('email', $data['email'])
                 ->first();
 
             if (!$user) {

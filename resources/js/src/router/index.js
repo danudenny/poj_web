@@ -36,6 +36,10 @@ import GeneralSettings from '../pages/settings/index.vue';
 // Work Area Settings
 import Cabang from '../pages/cabang/index.vue';
 
+
+// Profile
+import Profile from '../pages/profiles/index.vue';
+
 const routes =[
     {
         path: '/',
@@ -249,6 +253,21 @@ const routes =[
             },
         ]
     },
+    {
+        path: '/profile',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Profile',
+                component: Profile,
+                meta: {
+                    title: 'POJ - Profile',
+                    requiresAuth: true,
+                }
+            }
+        ]
+    }
 ]
 const router=createRouter({
     history: createWebHistory(),
