@@ -37,4 +37,15 @@ class EmployeeController extends BaseController
         }
     }
 
+    public function syncToUser(): JsonResponse
+    {
+        try {
+            $result = $this->employeeService->syncToUser();
+            return $this->sendSuccess($result, self::SUCCESS_FETCH);
+
+        } catch (\Exception | \InvalidArgumentException $error) {
+            return $this->sendError($error->getMessage());
+        }
+    }
+
 }

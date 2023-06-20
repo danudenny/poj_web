@@ -63,6 +63,7 @@ Route::group(['prefix' => 'admin'], function () {
     Route::group(['prefix' => 'employee'], function () {
         Route::get('/', [EmployeeController::class, 'index']);
         Route::get('view/{id}', [EmployeeController::class, 'view']);
+        Route::get('sync-to-users', [EmployeeController::class, 'syncToUser']);
     });
     // End Employee
 
