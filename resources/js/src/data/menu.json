@@ -76,7 +76,7 @@
                     "active": false
                 },
                 {
-                    "path": "cabang",
+                    "path": "/working-area/cabang",
                     "title": "Cabang",
                     "type": "link",
                     "active": false
@@ -94,6 +94,14 @@
                     "active": false
                 }
             ]
+        },
+        {
+            "title": "Timesheet",
+            "icon": "clock",
+            "iconf": "fill-clock",
+            "type": "link",
+            "active": false,
+            "path": "/timesheet"
         },
         {
             "headTitle1": "ATTENDANCE",
