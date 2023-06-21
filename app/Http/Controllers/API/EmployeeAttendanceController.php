@@ -17,6 +17,11 @@ class EmployeeAttendanceController extends BaseController
         $this->employeeAttendanceService = $employeeAttendanceService;
     }
 
+    public function index(Request $request): JsonResponse
+    {
+        return $this->employeeAttendanceService->index($request);
+    }
+
     /**
      * @throws Exception
      */

@@ -43,6 +43,9 @@ import ApprovalModule from '../pages/approval-modules/index.vue';
 import CreateApproval from '../pages/approvals/Create.vue';
 import EditApproval from '../pages/approvals/Edit.vue';
 
+//  Attendances
+import Attendances from '../pages/attendances/index.vue';
+
 // Profile
 import Profile from '../pages/profiles/index.vue';
 
@@ -302,6 +305,21 @@ const routes =[
                 component: EditApproval,
                 meta: {
                     title: 'POJ - Edit Approvals',
+                    requiresAuth: true,
+                },
+            },
+        ]
+    },
+    {
+        path: '/attendance',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Attendances',
+                component: Attendances,
+                meta: {
+                    title: 'POJ - Attendances',
                     requiresAuth: true,
                 },
             },

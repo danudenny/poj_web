@@ -130,6 +130,14 @@
             "type": "headtitle"
         },
         {
+            "title": "Attendance",
+            "icon": "watch",
+            "iconf": "fill-watch",
+            "type": "link",
+            "active": false,
+            "path": "/attendance"
+        },
+        {
             "headTitle1": "ASSESMENT",
             "headTitle2": "Assesment management",
             "type": "headtitle"

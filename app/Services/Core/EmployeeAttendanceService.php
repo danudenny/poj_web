@@ -14,6 +14,45 @@ use InvalidArgumentException;
 
 class EmployeeAttendanceService extends BaseService {
 
+
+    public function index($request): JsonResponse
+    {
+        try {
+            $attendances = EmployeeAttendance::query();
+            $attendances->with(['employee', 'employee.company', 'employee.employeeDetail', 'employee.employeeDetail.employeeTimesheet']);
+            $attendances->when($request->name, function ($query) use ($request) {
+                $query->whereHas('employee', function ($query) use ($request) {
+                    $query->where('name', 'like', '%'.$request->name.'%');
+                });
+            });
+            $attendances->when($request->check_in, function ($query) use ($request) {
+                $query->whereDate('real_check_in', '>=', $request->check_in);
+            });
+            $attendances->when($request->check_out, function ($query) use ($request) {
+                $query->whereDate('real_check_out', '<=', $request->check_out);
+            });
+            $attendances->when($request->attendance_types, function ($query) use ($request) {
+                $query->where('attendance_types', $request->attendance_types);
+            });
+            $attendances->when($request->checkin_type, function ($query) use ($request) {
+                $query->where('checkin_type', $request->checkin_type);
+            });
+            $attendances->when($request->is_need_approval, function ($query) use ($request) {
+                $query->where('is_need_approval', $request->is_need_approval);
+            });
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success get data!',
+                'data' => $attendances->paginate($request->get('limit', 10))
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => self::SOMETHING_WRONG.' : '.$e->getMessage()
+            ], 500);
+        }
+    }
     /**
      * @throws Exception
      */

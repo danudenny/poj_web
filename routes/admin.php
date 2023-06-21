@@ -132,6 +132,7 @@ Route::group(['prefix' => 'admin'], function () {
 
     // Begin employee attendance
     Route::group(['prefix' => 'attendance'], function() {
+        Route::get('/', [EmployeeAttendanceController::class, 'index']);
         Route::post('check-in/{id}', [EmployeeAttendanceController::class, 'checkIn']);
         Route::post('check-out/{id}', [EmployeeAttendanceController::class, 'checkOut']);
     });
