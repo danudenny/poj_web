@@ -17,7 +17,7 @@ class EmployeeTimesheetService extends BaseService {
      * @throws ContainerExceptionInterface
      * @throws Exception
      */
-    public function index($request)
+    public function index($request): JsonResponse
     {
         try {
             $data = EmployeeTimesheet::query();

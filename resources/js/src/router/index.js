@@ -38,6 +38,7 @@ import Cabang from '../pages/cabang/index.vue';
 
 // Master Data
 import Timesheet from '../pages/timesheet/index.vue';
+import Approval from '../pages/approvals/index.vue';
 
 // Profile
 import Profile from '../pages/profiles/index.vue';
@@ -265,6 +266,21 @@ const routes =[
                 component: Timesheet,
                 meta: {
                     title: 'POJ - Timesheet',
+                    requiresAuth: true,
+                },
+            },
+        ]
+    },
+    {
+        path: '/approvals',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Approvals',
+                component: Approval,
+                meta: {
+                    title: 'POJ - Approvals',
                     requiresAuth: true,
                 },
             },
