@@ -40,6 +40,8 @@ import Cabang from '../pages/cabang/index.vue';
 import Timesheet from '../pages/timesheet/index.vue';
 import Approval from '../pages/approvals/index.vue';
 import ApprovalModule from '../pages/approval-modules/index.vue';
+import CreateApproval from '../pages/approvals/Create.vue';
+import EditApproval from '../pages/approvals/Edit.vue';
 
 // Profile
 import Profile from '../pages/profiles/index.vue';
@@ -282,6 +284,24 @@ const routes =[
                 component: Approval,
                 meta: {
                     title: 'POJ - Approvals',
+                    requiresAuth: true,
+                },
+            },
+            {
+                path: 'create',
+                name: 'Create Approvals',
+                component: CreateApproval,
+                meta: {
+                    title: 'POJ - Create Approvals',
+                    requiresAuth: true,
+                },
+            },
+            {
+                path: 'edit/:id',
+                name: 'Edit Approvals',
+                component: EditApproval,
+                meta: {
+                    title: 'POJ - Edit Approvals',
                     requiresAuth: true,
                 },
             },
