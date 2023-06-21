@@ -14,6 +14,7 @@ class ApprovalUser extends Model
     protected $fillable = [
         'approval_id',
         'user_id',
+        'level'
     ];
 
     public function approval()
