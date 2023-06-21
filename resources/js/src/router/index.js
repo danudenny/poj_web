@@ -36,6 +36,8 @@ import GeneralSettings from '../pages/settings/index.vue';
 // Work Area Settings
 import Cabang from '../pages/cabang/index.vue';
 
+// Master Data
+import Timesheet from '../pages/timesheet/index.vue';
 
 // Profile
 import Profile from '../pages/profiles/index.vue';
@@ -239,15 +241,30 @@ const routes =[
         ]
     },
     {
-        path: '/cabang',
+        path: '/wokring-area',
         component: Body,
         children: [
             {
-                path: '',
+                path: 'cabang',
                 name: 'Cabang',
                 component: Cabang,
                 meta: {
                     title: 'POJ - Cabang',
+                    requiresAuth: true,
+                },
+            },
+        ]
+    },
+    {
+        path: '/timesheet',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Timesheet',
+                component: Timesheet,
+                meta: {
+                    title: 'POJ - Timesheet',
                     requiresAuth: true,
                 },
             },
