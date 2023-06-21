@@ -104,12 +104,25 @@
             "path": "/timesheet"
         },
         {
-            "title": "Approval",
-            "icon": "user-check",
-            "iconf": "fill-user-check",
-            "type": "link",
+            "title": "Approvals",
+            "icon": "user",
+            "iconf": "fill-learning",
+            "type": "sub",
             "active": false,
-            "path": "/approvals"
+            "children": [
+                {
+                    "path": "approval",
+                    "title": "Approval",
+                    "type": "link",
+                    "active": false
+                },
+                {
+                    "path": "approval-module",
+                    "title": "Approval Module",
+                    "type": "link",
+                    "active": false
+                }
+            ]
         },
         {
             "headTitle1": "ATTENDANCE",

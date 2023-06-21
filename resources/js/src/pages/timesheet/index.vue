@@ -246,7 +246,7 @@ export default {
                         });
                 }else{
                     this.$swal({
-                        text:'Your imaginary file is safe!'
+                        text:'Your data is safe!'
                     });
                 }
             });

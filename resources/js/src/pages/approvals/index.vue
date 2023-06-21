@@ -1,3 +1,3 @@
 <template>
-    <Breadcrumbs title="Approval" />
+    <Breadcrumbs title="Approvals / Approval" />
 </template>
