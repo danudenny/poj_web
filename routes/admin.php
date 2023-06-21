@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\API\ApprovalController;
+use App\Http\Controllers\API\ApprovalModuleController;
 use App\Http\Controllers\API\CabangController;
 use App\Http\Controllers\API\CompanyController;
 use App\Http\Controllers\API\CorporateController;
@@ -134,4 +136,25 @@ Route::group(['prefix' => 'admin'], function () {
         Route::post('check-out/{id}', [EmployeeAttendanceController::class, 'checkOut']);
     });
     // End employee attendance
+
+
+    // Begin Approval Module
+    Route::group(['prefix' => 'approval-module'], function() {
+        Route::get('', [ApprovalModuleController::class, 'index']);
+        Route::post('create', [ApprovalModuleController::class, 'save']);
+        Route::get('view/{id}', [ApprovalModuleController::class, 'show']);
+        Route::put('update/{id}', [ApprovalModuleController::class, 'update']);
+        Route::delete('delete/{id}', [ApprovalModuleController::class, 'delete']);
+    });
+    // End Approval Module
+
+    // Begin Approval
+    Route::group(['prefix' => 'approval'], function() {
+        Route::get('', [ApprovalController::class, 'index']);
+        Route::post('create', [ApprovalController::class, 'save']);
+        Route::get('view/{id}', [ApprovalController::class, 'show']);
+        Route::put('update/{id}', [ApprovalController::class, 'update']);
+        Route::delete('delete/{id}', [ApprovalController::class, 'delete']);
+    });
+    // End Approval
 });

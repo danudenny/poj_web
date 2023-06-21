@@ -104,6 +104,14 @@
             "path": "/timesheet"
         },
         {
+            "title": "Approval",
+            "icon": "user-check",
+            "iconf": "fill-user-check",
+            "type": "link",
+            "active": false,
+            "path": "/approvals"
+        },
+        {
             "headTitle1": "ATTENDANCE",
             "headTitle2": "Attendance management",
             "type": "headtitle"
