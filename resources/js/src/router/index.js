@@ -39,6 +39,7 @@ import Cabang from '../pages/cabang/index.vue';
 // Master Data
 import Timesheet from '../pages/timesheet/index.vue';
 import Approval from '../pages/approvals/index.vue';
+import ApprovalModule from '../pages/approval-modules/index.vue';
 
 // Profile
 import Profile from '../pages/profiles/index.vue';
@@ -272,7 +273,7 @@ const routes =[
         ]
     },
     {
-        path: '/approvals',
+        path: '/approval',
         component: Body,
         children: [
             {
@@ -281,6 +282,21 @@ const routes =[
                 component: Approval,
                 meta: {
                     title: 'POJ - Approvals',
+                    requiresAuth: true,
+                },
+            },
+        ]
+    },
+    {
+        path: '/approval-module',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Approvals Module',
+                component: ApprovalModule,
+                meta: {
+                    title: 'POJ - Approval Modules',
                     requiresAuth: true,
                 },
             },
