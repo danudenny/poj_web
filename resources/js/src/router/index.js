@@ -265,11 +265,11 @@ const routes =[
         ]
     },
     {
-        path: '/wokring-area',
+        path: '/cabang',
         component: Body,
         children: [
             {
-                path: 'cabang',
+                path: '',
                 name: 'Cabang',
                 component: Cabang,
                 meta: {
@@ -278,7 +278,7 @@ const routes =[
                 },
             },
             {
-                path: '/cabang/detail/:id',
+                path: '/detail/:id',
                 name: 'Cabang Detail',
                 component: CabangDetail,
                 meta: {

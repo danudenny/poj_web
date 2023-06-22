@@ -1,6 +1,6 @@
 <template>
     <DataTable
-        :apiUrl="`/api/v1/admin/unit?level_name=Regional`"
+        :apiUrl="`/api/v1/admin/unit?level_name=Kanwil`"
         :perPage="10"
         :columns="tableColumns"
         :detail="`/kanwils/`"

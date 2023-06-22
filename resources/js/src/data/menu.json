@@ -76,7 +76,7 @@
                     "active": false
                 },
                 {
-                    "path": "/working-area/cabang",
+                    "path": "cabang",
                     "title": "Cabang",
                     "type": "link",
                     "active": false
