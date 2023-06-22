@@ -72,14 +72,8 @@
                                             <span class="badge badge-danger" v-else>No</span>
                                         </td>
                                         <td>
-                                            <button class="button-icon button-success" @click="editData(item.id)">
+                                            <button class="button-icon button-info" @click="viewData(item.id)">
                                                 <i class="fa fa-eye text-center"></i>
-                                            </button>
-                                            <button class="button-icon button-info" @click="editData(item.id)">
-                                                <i class="fa fa-pencil text-center"></i>
-                                            </button>
-                                            <button class="button-icon button-danger">
-                                                <i class="fa fa-trash text-center" @click="deleteData(item.id)"></i>
                                             </button>
                                         </td>
                                     </tr>
@@ -150,7 +144,10 @@ export default {
                 .catch(error => {
                     console.log(error)
                 })
-        }
+        },
+        viewData(id) {
+            this.$router.push(`/admin/attendance/${id}`)
+        },
     }
 }
 </script>

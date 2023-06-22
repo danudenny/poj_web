@@ -1,19 +1,18 @@
 <?php
 
+use GuzzleHttp\Client;
+
 function calculateDistance($lat1, $lon1, $lat2, $lon2): float|int
 {
-    $earthRadius = 6371000;
+    $originLat = $lat1;
+    $originLon = $lon1;
+    $destinationLat = $lat2;
+    $destinationLon = $lon2;
 
-    $lat1Rad = deg2rad($lat1);
-    $lon1Rad = deg2rad($lon1);
-    $lat2Rad = deg2rad($lat2);
-    $lon2Rad = deg2rad($lon2);
+    $client = new Client();
+    $response = $client->get('https://router.project-osrm.org/route/v1/driving/' . $originLon . ',' . $originLat . ';' . $destinationLon . ',' . $destinationLat . '?overview=false');
+    $data = json_decode($response->getBody(), true);
 
-    $deltaLat = $lat2Rad - $lat1Rad;
-    $deltaLon = $lon2Rad - $lon1Rad;
-
-    $a = sin($deltaLat / 2) ** 2 + cos($lat1Rad) * cos($lat2Rad) * sin($deltaLon / 2) ** 2;
-    $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-
-    return $earthRadius * $c;
+    $distanceInKilometers = $data['routes'][0]['distance'] / 1000;
+    return $distanceInKilometers * 1000;
 }
