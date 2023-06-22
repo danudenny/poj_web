@@ -16,6 +16,11 @@ use App\Http\Controllers\API\SettingController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\WorkLocationController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\API\SubsidiaryController;
+use App\Http\Controllers\API\AreaController;
+use App\Http\Controllers\API\KanwilController;
+use App\Http\Controllers\API\OutletController;
+use App\Http\Controllers\API\UnitController;
 
 
 //Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () {
@@ -28,6 +33,7 @@ Route::group(['prefix' => 'admin'], function () {
         Route::get('/roles', [UserController::class, 'getRoles']);
         Route::post('save', [UserController::class, 'save']);
         Route::post('update', [UserController::class, 'update']);
+        Route::post('toggle-status', [UserController::class, 'toggleRoleStatus']);
         Route::delete('delete', [UserController::class, 'delete']);
         Route::post('restore', [UserController::class, 'restore']);
         Route::delete('destroy', [UserController::class, 'destroy']);
@@ -133,4 +139,47 @@ Route::group(['prefix' => 'admin'], function () {
         Route::post('check-out/{id}', [EmployeeAttendanceController::class, 'checkOut']);
     });
     // End employee attendance
+
+    // Begin Subsidiary
+    Route::group(['prefix' => 'subsidiary'], function () {
+        Route::get('/', [SubsidiaryController::class, 'index']);
+        Route::get('view', [SubsidiaryController::class, 'view']);
+        Route::get('/outlets', [SubsidiaryController::class, 'getOutlet']);
+        Route::post('save', [SubsidiaryController::class, 'save']);
+        Route::post('update', [SubsidiaryController::class, 'update']);
+        Route::delete('delete', [SubsidiaryController::class, 'destroy']);
+    });
+    // End Subsidiary
+
+    // Begin Area
+    Route::group(['prefix' => 'area'], function () {
+        Route::get('/', [AreaController::class, 'index']);
+        Route::get('view', [AreaController::class, 'view']);
+        Route::get('/kanwils', [AreaController::class, 'getKanwil']);
+        Route::post('save', [AreaController::class, 'save']);
+        Route::post('update', [AreaController::class, 'update']);
+        Route::delete('delete', [AreaController::class, 'destroy']);
+    });
+    // End Area
+
+    // Begin Kanwil
+    Route::group(['prefix' => 'kanwil'], function () {
+        Route::get('/', [KanwilController::class, 'index']);
+        Route::get('view', [KanwilController::class, 'view']);
+    });
+    // End Kanwil
+
+    // Begin Outlet
+    Route::group(['prefix' => 'outlet'], function () {
+        Route::get('/', [OutletController::class, 'index']);
+        Route::get('view', [OutletController::class, 'view']);
+    });
+    // End Outlet
+
+    // Begin Unit
+    Route::group(['prefix' => 'unit'], function () {
+        Route::get('/', [UnitController::class, 'index']);
+        Route::get('view', [UnitController::class, 'view']);
+    });
+    // End Unit
 });

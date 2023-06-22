@@ -1,16 +1,19 @@
 <template>
     <DataTable
-        :apiUrl="`/api/v1/admin/permission`"
+        :apiUrl="`/api/v1/admin/unit?level_name=Corporate`"
         :perPage="10"
         :columns="tableColumns"
-        :detail="`/management/permissions/`"
-        :create="`/management/permissions/create`"
+        :detail="`/corporates/`"
+        :isEdit="false"
+        :isDelete="false"
+        :isCreate="false"
+        :isSync="true"
         :filters="tableFilter"
     >
     </DataTable>
 </template>
-<script>
 
+<script>
 import DataTable from "@/components/dataTable.vue";
 
 export default {
@@ -22,9 +25,11 @@ export default {
             tableColumns: [
                 { key: 'no', label: 'No' },
                 { key: 'name', label: 'Name' },
+                { key: 'create_date', label: 'Create Date' },
+                { key: 'write_date', label: 'Write Date' },
             ],
             tableFilter: [
-                { key: 'name', label: 'Name', type: 'text' }
+                { key: 'name', label: 'Name', type: 'text' },
             ],
         };
     },

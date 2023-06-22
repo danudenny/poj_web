@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs title="Working Area / Corporate" />
+        <Breadcrumbs title="Working Area / Outlet" />
 
         <div class="container-fluid basic_table">
             <div class="row">

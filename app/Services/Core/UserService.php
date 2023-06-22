@@ -180,6 +180,37 @@ class UserService extends BaseService
      * @return mixed
      * @throws \Exception
      */
+    public function toggleRoleStatus($request): mixed
+    {
+        DB::beginTransaction();
+        try {
+
+            $user = User::find($request->id);
+            if (!$user) {
+                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+            }
+
+            if(!$this->toggleDataStatus($user)) {
+                throw new \Exception(self::DB_FAILED, 500);
+            }
+
+            DB::commit();
+            return $user;
+
+        } catch (\InvalidArgumentException $e) {
+            DB::rollBack();
+            throw new \InvalidArgumentException($e->getMessage());
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+        }
+    }
+
+    /**
+     * @param $request
+     * @return mixed
+     * @throws \Exception
+     */
     public function delete($request): mixed
     {
         DB::beginTransaction();

@@ -58,19 +58,19 @@
             "active": false,
             "children": [
                 {
-                    "path": "",
+                    "path": "corporates",
                     "title": "Corporate",
                     "type": "link",
                     "active": false
                 },
                 {
-                    "path": "",
+                    "path": "kanwils",
                     "title": "Kantor Wilayah",
                     "type": "link",
                     "active": false
                 },
                 {
-                    "path": "",
+                    "path": "areas",
                     "title": "Area",
                     "type": "link",
                     "active": false
@@ -82,14 +82,8 @@
                     "active": false
                 },
                 {
-                    "path": "",
+                    "path": "outlets",
                     "title": "Outlet",
-                    "type": "link",
-                    "active": false
-                },
-                {
-                    "path": "",
-                    "title": "Subsidiary",
                     "type": "link",
                     "active": false
                 }

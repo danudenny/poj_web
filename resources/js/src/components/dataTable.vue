@@ -5,8 +5,11 @@
                 <div class="col-md-6 d-flex">
                     <button class="btn btn-xs btn-secondary" @click="filterCheck()"> <vue-feather class="mt-1 mb-sm-1" type="filter" title="Filter Data"> </vue-feather></button>
                 </div>
-                <div class="col-md-6" v-if="isCreate">
-                    <div class="form-group mb-0 me-0"></div><router-link class="btn btn-primary" :to="create"> <vue-feather class="me-1" type="plus-square"> </vue-feather>Create</router-link>
+                <div class="col-md-6">
+                    <div v-if="isSync" class="form-group mb-0 me-0" title="Sync Data"></div><button v-if="isSync" class="btn btn-primary m-l-10" style="width: auto;" title="Sync Data"> <vue-feather class="me-1" type="refresh-ccw"> </vue-feather></button>
+                    <div v-if="isCreate" class="form-group mb-0 me-0" title="Create Data"></div>
+                    <router-link v-if="isCreate" class="btn btn-primary" :to="create">
+                        <vue-feather class="me-1" type="plus-square"> </vue-feather>Create</router-link>
                 </div>
             </div>
         </div>
@@ -15,7 +18,8 @@
                 <div class="row">
                     <div v-for="filter in filters" :key="filter.key" class="col-md-4">
                         <div class="mb-1" v-if="filter.type === 'text'">
-                            <input class="form-control" v-model="this.params[filter.key]" type="text" :placeholder="filter.label" v-if="filter.type === 'text'">
+                            <label class="form-label" :for="filter.key">{{filter.label}}</label>
+                            <input class="form-control" id="{{filter.key}}" @input="searchQuery(this.params[filter.key])" v-model="this.params[filter.key]" type="text" :placeholder="filter.label" v-if="filter.type === 'text'">
                         </div>
                         <div class="mb-1" v-else>
                             <select class="form-select" v-model="this.params[filter.key]">
@@ -67,7 +71,7 @@
                             </div>
 
                             <div v-else>
-                                {{ item[column.key] }}
+                                {{ item[column.key] ?? '-' }}
                             </div>
                         </td>
                           <td class="btn-showcase">
@@ -84,12 +88,10 @@
                 </table>
                 <div class="row row-cols-sm-6 theme-form form-control-sm mt-5 form-bottom">
                     <div class="mb-3 d-flex">
-                        <select v-model="params.per_page" class="form-select form-control-sm" @change="fetchData()">
+                        <select v-model="params.per_page" style="width:53px;" class="form-select form-control-sm" @change="fetchData()">
                             <option v-for="option in options" :value="option" :key="option">{{option}}</option>
                         </select>
-                    </div>
-                    <div class="mb-3 d-flex">
-                        <ul class="pagination pagination-sm pagination-primary">
+                        <ul class="pagination pagination-sm pagination-primary m-l-3">
                             <li class="page-item" :class="{'disabled' : this.params.page === 1}" @click="prevPage"><a class="page-link" href="javascript:void(0)" tabindex="-1"> &lt;&lt; </a></li>
                             <li class="page-item active"><a class="page-link" href="javascript:void(0)">{{ this.params.page }}</a></li>
                             <!--                            <li class="page-item"><a class="page-link" href="javascript:void(0)">2 <span class="sr-only">(current)</span></a></li>-->
@@ -145,6 +147,11 @@ export default {
             required: false,
             default: true,
         },
+        isSync: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
         filters: {
             type: Array,
             required: true,
@@ -182,7 +189,7 @@ export default {
                 .then(response => {
                     console.log(response);
                     console.log(response.data.data.current_page);
-                    this.items = response.data.data.data;
+                    this.items = response.data.data.data.map((data, index) => ({...data, no: index + 1}));
                     this.totalItems = response.data.data.total;
                     this.params.page = response.data.data.current_page;
                     this.params.totalPages = response.data.data.last_page;
@@ -245,6 +252,15 @@ export default {
                 this.isFilter = false;
             } else {
                 this.isFilter = true;
+            }
+        },
+        searchQuery(query) {
+            if (query.length >= 3) {
+                this.fetchData();
+            }
+
+            if (query === '') {
+                this.fetchData();
             }
         },
     },

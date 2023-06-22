@@ -101,6 +101,21 @@ class UserController extends BaseController
         }
     }
 
+    /**
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function toggleRoleStatus(Request $request): JsonResponse
+    {
+        try {
+            $result = $this->userService->toggleRoleStatus($request);
+            return $this->sendSuccess($result, self::SUCCESS_UPDATED);
+
+        } catch (\Exception | \InvalidArgumentException $error) {
+            return $this->sendError($error->getMessage());
+        }
+    }
+
     public function updateAvatar(Request $request, $id)
     {
         try {

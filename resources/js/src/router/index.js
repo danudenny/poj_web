@@ -35,10 +35,27 @@ import GeneralSettings from '../pages/settings/index.vue';
 
 // Work Area Settings
 import Cabang from '../pages/cabang/index.vue';
+import CabangDetail from '../pages/cabang/details.vue';
 
 
 // Profile
 import Profile from '../pages/profiles/index.vue';
+
+//Corporate
+import Corporates from '../pages/corporate/index.vue';
+import CorporateDetail from '../pages/corporate/details.vue';
+
+//Kanwil
+import Kanwils from '../pages/kanwil/index.vue';
+import KanwilDetail from '../pages/kanwil/details.vue';
+
+//Area
+import Areas from '../pages/area/index.vue';
+import AreaDetail from '../pages/area/details.vue';
+
+//Outlet
+import Outlets from '../pages/outlet/index.vue';
+import OutletDetail from '../pages/outlet/details.vue';
 
 const routes =[
     {
@@ -251,6 +268,15 @@ const routes =[
                     requiresAuth: true,
                 },
             },
+            {
+                path: '/cabang/detail/:id',
+                name: 'Cabang Detail',
+                component: CabangDetail,
+                meta: {
+                    title: 'POJ - Cabang Detail',
+                    requiresAuth: true,
+                }
+            },
         ]
     },
     {
@@ -267,7 +293,103 @@ const routes =[
                 }
             }
         ]
-    }
+    },
+    {
+        path: '/corporates',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Corporate',
+                component: Corporates,
+                meta: {
+                    title: 'POJ - Corporate',
+                    requiresAuth: true,
+                },
+            },
+            {
+                path: '/corporates/detail/:id',
+                name: 'Corporate Detail',
+                component: CorporateDetail,
+                meta: {
+                    title: 'POJ - Corporate Detail',
+                    requiresAuth: true,
+                }
+            },
+        ]
+    },
+    {
+        path: '/kanwils',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Kanwil',
+                component: Kanwils,
+                meta: {
+                    title: 'POJ - Kantor Wilayah',
+                    requiresAuth: true,
+                },
+            },
+            {
+                path: '/kanwils/detail/:id',
+                name: 'Kanwil Detail',
+                component: KanwilDetail,
+                meta: {
+                    title: 'POJ - Kantor Wilayah Detail',
+                    requiresAuth: true,
+                }
+            },
+        ]
+    },
+    {
+        path: '/areas',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Area',
+                component: Areas,
+                meta: {
+                    title: 'POJ - Area',
+                    requiresAuth: true,
+                },
+            },
+            {
+                path: '/areas/detail/:id',
+                name: 'Area Detail',
+                component: AreaDetail,
+                meta: {
+                    title: 'POJ - Area Detail',
+                    requiresAuth: true,
+                }
+            },
+        ]
+    },
+    {
+        path: '/outlets',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Outlet',
+                component: Outlets,
+                meta: {
+                    title: 'POJ - Outlet',
+                    requiresAuth: true,
+                },
+            },
+            {
+                path: '/outlets/detail/:id',
+                name: 'Outlet Detail',
+                component: OutletDetail,
+                meta: {
+                    title: 'POJ - Outlet Detail',
+                    requiresAuth: true,
+                }
+            },
+        ]
+    },
 ]
 const router=createRouter({
     history: createWebHistory(),
