@@ -20,6 +20,11 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'avatar' => $this->avatar,
             'is_new' => $this->is_new,
+            'is_normal_checkin' => $this->is_normal_checkin,
+            'is_event_checkin' => $this->is_event_checkin,
+            'is_backup_checkin' => $this->is_backup_checkin,
+            'is_overtime_checkin' => $this->is_overtime_checkin,
+            'is_longshift_checkin' => $this->is_longshift_checkin,
             'roles' => RoleResource::collection($this->whenLoaded('roles')),
         ];
     }
