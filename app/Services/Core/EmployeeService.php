@@ -18,7 +18,7 @@ class EmployeeService extends BaseService
     public function index($data)
     {
         try {
-            $employees = Employee::with('company', 'employeeTimesheet', 'employeeTimesheet.employeeDetails');
+            $employees = Employee::with('company', 'employeeDetail', 'employeeDetail.employeeTimesheet');
             $employees->when(request('name'), function ($query) {
                 $query->where('name', 'like', '%' . request('name') . '%');
             });

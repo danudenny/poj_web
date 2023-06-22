@@ -65,7 +65,7 @@ export default {
         getEmployee() {
             const route = useRoute();
             axios
-                .get(`/api/v1/admin/employee/view?id=`+ route.params.id)
+                .get(`/api/v1/admin/employee/view/`+ route.params.id)
                 .then(response => {
                     this.item = response.data.data;
                 })

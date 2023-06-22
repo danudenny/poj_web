@@ -20,6 +20,7 @@ export default {
     data() {
         return {
             tableColumns: [
+                { key: 'no', label: 'No' },
                 { key: 'name', label: 'Name' },
                 { key: 'status', label: 'Status' },
                 { key: 'is_active', label: 'Is Active' },

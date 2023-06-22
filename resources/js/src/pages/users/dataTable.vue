@@ -21,10 +21,11 @@ export default {
   data() {
       return {
           tableColumns: [
-              { key: '', label: 'No' },
+              { key: 'no', label: 'No' },
               { key: 'name', label: 'Name' },
               { key: 'email', label: 'Email' },
               { key: 'roles', label: 'Role' },
+              { key: 'is_active', label: 'Is Active' },
           ],
           tableFilter: [
               { key: 'name', label: 'Name', type: 'text' },
