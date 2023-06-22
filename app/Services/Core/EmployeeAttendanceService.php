@@ -4,6 +4,7 @@ namespace App\Services\Core;
 
 use App\Models\Employee;
 use App\Models\EmployeeAttendance;
+use App\Models\EmployeeAttendanceHistory;
 use App\Rules\UniqueCheckInToday;
 use App\Services\BaseService;
 use Carbon\Carbon;
@@ -14,6 +15,45 @@ use InvalidArgumentException;
 
 class EmployeeAttendanceService extends BaseService {
 
+
+    public function index($request): JsonResponse
+    {
+        try {
+            $attendances = EmployeeAttendance::query();
+            $attendances->with(['employee', 'employee.company', 'employee.employeeDetail', 'employee.employeeDetail.employeeTimesheet']);
+            $attendances->when($request->name, function ($query) use ($request) {
+                $query->whereHas('employee', function ($query) use ($request) {
+                    $query->where('name', 'like', '%'.$request->name.'%');
+                });
+            });
+            $attendances->when($request->check_in, function ($query) use ($request) {
+                $query->whereDate('real_check_in', '>=', $request->check_in);
+            });
+            $attendances->when($request->check_out, function ($query) use ($request) {
+                $query->whereDate('real_check_out', '<=', $request->check_out);
+            });
+            $attendances->when($request->attendance_types, function ($query) use ($request) {
+                $query->where('attendance_types', $request->attendance_types);
+            });
+            $attendances->when($request->checkin_type, function ($query) use ($request) {
+                $query->where('checkin_type', $request->checkin_type);
+            });
+            $attendances->when($request->is_need_approval, function ($query) use ($request) {
+                $query->where('is_need_approval', $request->is_need_approval);
+            });
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success get data!',
+                'data' => $attendances->paginate($request->get('limit', 10))
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => self::SOMETHING_WRONG.' : '.$e->getMessage()
+            ], 500);
+        }
+    }
     /**
      * @throws Exception
      */
@@ -43,11 +83,12 @@ class EmployeeAttendanceService extends BaseService {
         // Check if time is in range
 
         // Check if employee has checked in today
-        $eightHoursAgo = Carbon::now()->addHours(8)->toDateTimeString();
+        $eightHoursAgo = Carbon::now()->addHours(5)->toDateTimeString();
         $checkInData = EmployeeAttendance::where('employee_id', $id)->first();
 
         if ($checkInData) {
-            if ($checkInData->real_check_in <= $eightHoursAgo && $request->attendance_types == 'normal') {
+            //if check_in in same day
+            if (($checkInData->real_check_in <= $eightHoursAgo && $request->attendance_types == 'normal') && Carbon::parse($checkInData->real_check_in)->isSameDay($request->real_check_in)) {
                 return response()->json([
                     'message' => 'The employee has already checked in today.'
                 ], 400);
@@ -79,6 +120,9 @@ class EmployeeAttendanceService extends BaseService {
             $checkIn->is_need_approval = $isNeedApproval;
             $checkIn->attendance_types = $request->attendance_types;
             $checkIn->checkin_real_radius = $distance;
+            $checkIn->approved = !$isNeedApproval;
+            $checkIn->is_late = $requestedTime->greaterThan($employeeTimesheetCheckin);
+            $checkIn->late_duration = $requestedTime->diffInMinutes($employeeTimesheetCheckin);
 
             if (!$checkIn->save()) {
                 throw new Exception('Failed save data!');
@@ -107,7 +151,7 @@ class EmployeeAttendanceService extends BaseService {
 
         $workLocation = $empData->company->workLocation;
 
-        $checkInData = EmployeeAttendance::where('employee_id', $id)->first();
+        $checkInData = EmployeeAttendance::where('employee_id', $id)->whereNull('real_check_out')->first();
         if (!$checkInData) {
             return response()->json([
                 'message' => 'The employee has not checked in today.'
@@ -127,9 +171,20 @@ class EmployeeAttendanceService extends BaseService {
             $checkInData->checkout_lat = $request->lat;
             $checkInData->checkout_long = $request->long;
             $checkInData->checkout_real_radius = $distance;
+            $checkInData->is_early = Carbon::parse($request->real_check_out)->lessThan(Carbon::parse($checkInData->employee->employeeDetail->employeeTimesheet->end_time));
+            $checkInData->early_duration = Carbon::parse($checkInData->employee->employeeDetail->employeeTimesheet->end_time)->subMinutes(16)->diffInMinutes(Carbon::parse($request->real_check_out));
 
             if (!$checkInData->save()) {
-                throw new Exception('Failed save data!');
+                throw new Exception('Failed save checkout data!');
+            }
+
+            $attHistory = new EmployeeAttendanceHistory();
+            $attHistory->employee_id = $id;
+            $attHistory->employee_attendances_id = $checkInData->id;
+            $attHistory->status = $checkInData->approved ? 'approved' : 'pending';
+
+            if (!$attHistory->save()) {
+                throw new Exception('Failed save attendance histories data!');
             }
 
             DB::commit();

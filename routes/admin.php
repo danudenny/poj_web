@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\API\ApprovalController;
+use App\Http\Controllers\API\ApprovalModuleController;
 use App\Http\Controllers\API\CabangController;
 use App\Http\Controllers\API\CompanyController;
 use App\Http\Controllers\API\CorporateController;
@@ -69,6 +71,7 @@ Route::group(['prefix' => 'admin'], function () {
     Route::group(['prefix' => 'employee'], function () {
         Route::get('/', [EmployeeController::class, 'index']);
         Route::get('view/{id}', [EmployeeController::class, 'view']);
+        Route::get('sync-to-users', [EmployeeController::class, 'syncToUser']);
     });
     // End Employee
 
@@ -135,6 +138,7 @@ Route::group(['prefix' => 'admin'], function () {
 
     // Begin employee attendance
     Route::group(['prefix' => 'attendance'], function() {
+        Route::get('/', [EmployeeAttendanceController::class, 'index']);
         Route::post('check-in/{id}', [EmployeeAttendanceController::class, 'checkIn']);
         Route::post('check-out/{id}', [EmployeeAttendanceController::class, 'checkOut']);
     });
@@ -182,4 +186,25 @@ Route::group(['prefix' => 'admin'], function () {
         Route::get('view', [UnitController::class, 'view']);
     });
     // End Unit
+
+    // Begin Approval Module
+    Route::group(['prefix' => 'approval-module'], function() {
+        Route::get('', [ApprovalModuleController::class, 'index']);
+        Route::post('create', [ApprovalModuleController::class, 'save']);
+        Route::get('view/{id}', [ApprovalModuleController::class, 'show']);
+        Route::put('update/{id}', [ApprovalModuleController::class, 'update']);
+        Route::delete('delete/{id}', [ApprovalModuleController::class, 'delete']);
+    });
+    // End Approval Module
+
+    // Begin Approval
+    Route::group(['prefix' => 'approval'], function() {
+        Route::get('', [ApprovalController::class, 'index']);
+        Route::post('create', [ApprovalController::class, 'save']);
+        Route::get('view/{id}', [ApprovalController::class, 'show']);
+        Route::put('update/{id}', [ApprovalController::class, 'update']);
+        Route::delete('delete/{id}', [ApprovalController::class, 'delete']);
+    });
+    // End Approval
+
 });

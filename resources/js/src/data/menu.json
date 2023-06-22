@@ -76,7 +76,7 @@
                     "active": false
                 },
                 {
-                    "path": "cabang",
+                    "path": "/working-area/cabang",
                     "title": "Cabang",
                     "type": "link",
                     "active": false
@@ -90,9 +90,46 @@
             ]
         },
         {
+            "title": "Timesheet",
+            "icon": "clock",
+            "iconf": "fill-clock",
+            "type": "link",
+            "active": false,
+            "path": "/timesheet"
+        },
+        {
+            "title": "Approvals",
+            "icon": "user",
+            "iconf": "fill-learning",
+            "type": "sub",
+            "active": false,
+            "children": [
+                {
+                    "path": "approval",
+                    "title": "Approval",
+                    "type": "link",
+                    "active": false
+                },
+                {
+                    "path": "approval-module",
+                    "title": "Approval Module",
+                    "type": "link",
+                    "active": false
+                }
+            ]
+        },
+        {
             "headTitle1": "ATTENDANCE",
             "headTitle2": "Attendance management",
             "type": "headtitle"
+        },
+        {
+            "title": "Attendance",
+            "icon": "watch",
+            "iconf": "fill-watch",
+            "type": "link",
+            "active": false,
+            "path": "/attendance"
         },
         {
             "headTitle1": "ASSESMENT",

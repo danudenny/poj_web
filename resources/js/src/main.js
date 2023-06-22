@@ -3,10 +3,12 @@ import App from './App.vue'
 import router from './router';
 import store from './store'
 import 'bootstrap/dist/js/bootstrap.bundle'
+import VueDatePicker from '@vuepic/vue-datepicker';
 import './assets/scss/app.scss'
 import VueFeather from 'vue-feather';
 import Toast, {POSITION, useToast} from "vue-toastification";
 import "vue-toastification/dist/index.css";
+import '@vuepic/vue-datepicker/dist/main.css'
 
 // import { createI18n } from 'vue-i18n'
 import en from './locales/en.json';
@@ -46,6 +48,7 @@ const app = createApp(App)
     .use(VueSweetalert2)
     .component('multiselect', Multiselect)
     .component(VueFeather.name, VueFeather)
+    .component('VueDatePicker', VueDatePicker)
     .component('Breadcrumbs', Breadcrumbs);
 app.config.globalProperties.$axios = axios;
 app.mount('#app');
