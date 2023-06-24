@@ -15,13 +15,12 @@ class UnitService extends BaseService
     public function index($data): mixed
     {
         try {
-            $unit = Unit::query()->with(['parent', 'child', 'level'])
-            ->whereHas('level', function($query) use($data) {
-                $query->where('name', $data->level_name);
-            });
-
-            $unit->when(request()->filled('name'), function ($query) {
-                $query->where('name', 'like',  '%'.request()->query('name').'%');
+            $unit = Unit::query();
+            $unit->with(['child']);
+            $unit->when(request()->filled('level_name'), function ($query) {
+                $query->whereHas('level', function($query) {
+                    $query->where('desc', request()->query('level_name'));
+                });
             });
 
             return $this->list($unit, $data);

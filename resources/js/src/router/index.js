@@ -37,6 +37,15 @@ import GeneralSettings from '../pages/settings/index.vue';
 import Cabang from '../pages/cabang/index.vue';
 import CabangDetail from '../pages/cabang/details.vue';
 
+// Master Data
+import Timesheet from '../pages/timesheet/index.vue';
+import Approval from '../pages/approvals/index.vue';
+import ApprovalModule from '../pages/approval-modules/index.vue';
+import CreateApproval from '../pages/approvals/Create.vue';
+import EditApproval from '../pages/approvals/Edit.vue';
+
+//  Attendances
+import Attendances from '../pages/attendances/index.vue';
 
 // Profile
 import Profile from '../pages/profiles/index.vue';
@@ -288,7 +297,7 @@ const routes =[
                 },
             },
             {
-                path: '/cabang/detail/:id',
+                path: '/detail/:id',
                 name: 'Cabang Detail',
                 component: CabangDetail,
                 meta: {
@@ -296,6 +305,84 @@ const routes =[
                     requiresAuth: true,
                     permission: 'cabang_list',
                 }
+            },
+        ]
+    },
+    {
+        path: '/timesheet',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Timesheet',
+                component: Timesheet,
+                meta: {
+                    title: 'POJ - Timesheet',
+                    requiresAuth: true,
+                },
+            },
+        ]
+    },
+    {
+        path: '/approval',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Approvals',
+                component: Approval,
+                meta: {
+                    title: 'POJ - Approvals',
+                    requiresAuth: true,
+                },
+            },
+            {
+                path: 'create',
+                name: 'Create Approvals',
+                component: CreateApproval,
+                meta: {
+                    title: 'POJ - Create Approvals',
+                    requiresAuth: true,
+                },
+            },
+            {
+                path: 'edit/:id',
+                name: 'Edit Approvals',
+                component: EditApproval,
+                meta: {
+                    title: 'POJ - Edit Approvals',
+                    requiresAuth: true,
+                },
+            },
+        ]
+    },
+    {
+        path: '/attendance',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Attendances',
+                component: Attendances,
+                meta: {
+                    title: 'POJ - Attendances',
+                    requiresAuth: true,
+                },
+            },
+        ]
+    },
+    {
+        path: '/approval-module',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Approvals Module',
+                component: ApprovalModule,
+                meta: {
+                    title: 'POJ - Approval Modules',
+                    requiresAuth: true,
+                },
             },
         ]
     },
