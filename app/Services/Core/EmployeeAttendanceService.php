@@ -90,10 +90,12 @@ class EmployeeAttendanceService extends BaseService {
         // Check if employee has checked in today
         $checkInData = EmployeeAttendance::where('employee_id', $id)->orderBy('id', 'desc')->first();
 
-        if ($request->attendance_types == 'normal' && Carbon::parse($checkInData->real_check_in)->format('Y-m-d') == Carbon::parse($parseRequestedTime)->format('Y-m-d')) {
-            return response()->json([
-                'message' => 'You have checked in today!'
-            ], 400);
+        if (!$request->real_check_in) {
+            if ($request->attendance_types == 'normal' && Carbon::parse($checkInData->real_check_in)->format('Y-m-d') == Carbon::parse($parseRequestedTime)->format('Y-m-d')) {
+                return response()->json([
+                    'message' => 'You have checked in today!'
+                ], 400);
+            }
         }
         // Check if employee has checked in today
 
