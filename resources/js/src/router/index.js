@@ -57,6 +57,9 @@ import AreaDetail from '../pages/area/details.vue';
 import Outlets from '../pages/outlet/index.vue';
 import OutletDetail from '../pages/outlet/details.vue';
 
+//Error page
+import Error from  '../components/error.vue';
+
 const routes =[
     {
         path: '/',
@@ -70,6 +73,7 @@ const routes =[
             meta: {
               title: 'POJ - Dashboard',
               requiresAuth: true,
+              permission : 'dashboard'
             }
           },
 
@@ -119,6 +123,7 @@ const routes =[
             meta: {
                 title: 'POJ - Users Management',
                 requiresAuth: true,
+                permission : 'user_list',
             },
         },
         {
@@ -128,6 +133,7 @@ const routes =[
               meta: {
                   title: 'POJ - User Create',
                   requiresAuth: true,
+                  permission : 'user_list',
               }
         },
         {
@@ -137,6 +143,7 @@ const routes =[
             meta: {
                 title: 'POJ - User Detail',
                 requiresAuth: true,
+                permission : 'user_list',
             }
         },
         {
@@ -146,6 +153,7 @@ const routes =[
             meta: {
                 title: 'POJ - User Edit',
                 requiresAuth: true,
+                permission : 'user_list',
             }
         },
         {
@@ -155,6 +163,7 @@ const routes =[
             meta: {
                 title: 'POJ - Roles Management',
                 requiresAuth: true,
+                permission : 'role_list',
             }
         },
         {
@@ -164,6 +173,7 @@ const routes =[
               meta: {
                   title: 'POJ - Role Create',
                   requiresAuth: true,
+                  permission : 'role_list',
               }
         },
         {
@@ -173,6 +183,7 @@ const routes =[
             meta: {
                 title: 'POJ - Role Detail',
                 requiresAuth: true,
+                permission : 'role_list',
             }
         },
         {
@@ -182,6 +193,7 @@ const routes =[
             meta: {
                 title: 'POJ - Role Edit',
                 requiresAuth: true,
+                permission : 'role_list',
             }
         },
         {
@@ -191,6 +203,7 @@ const routes =[
           meta: {
               title: 'POJ - Permissions Management',
               requiresAuth: true,
+              permission : 'permission_list',
           }
         },
         {
@@ -200,6 +213,7 @@ const routes =[
           meta: {
               title: 'POJ - Permission Create',
               requiresAuth: true,
+              permission : 'permission_list',
           }
         },
         {
@@ -209,6 +223,7 @@ const routes =[
           meta: {
               title: 'POJ - Permission Detail',
               requiresAuth: true,
+              permission : 'permission_list',
           }
         },
         {
@@ -227,6 +242,7 @@ const routes =[
           meta: {
               title: 'POJ - Employee Management',
               requiresAuth: true,
+              permission : 'employee_list',
           }
         },
         {
@@ -236,6 +252,7 @@ const routes =[
           meta: {
               title: 'POJ - Employee Detail',
               requiresAuth: true,
+              permission : 'employee_list',
           }
         },
       ]
@@ -251,6 +268,7 @@ const routes =[
                 meta: {
                     title: 'POJ - General Settings',
                     requiresAuth: true,
+                    permission : 'general_setting',
                 },
             },
         ]
@@ -266,6 +284,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Cabang',
                     requiresAuth: true,
+                    permission: 'cabang_list',
                 },
             },
             {
@@ -275,6 +294,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Cabang Detail',
                     requiresAuth: true,
+                    permission: 'cabang_list',
                 }
             },
         ]
@@ -290,6 +310,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Profile',
                     requiresAuth: true,
+                    permission: 'profile',
                 }
             }
         ]
@@ -305,6 +326,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Corporate',
                     requiresAuth: true,
+                    permission: 'corporate_list',
                 },
             },
             {
@@ -314,6 +336,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Corporate Detail',
                     requiresAuth: true,
+                    permission: 'corporate_list',
                 }
             },
         ]
@@ -329,6 +352,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Kantor Wilayah',
                     requiresAuth: true,
+                    permission: 'kanwil_list',
                 },
             },
             {
@@ -338,6 +362,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Kantor Wilayah Detail',
                     requiresAuth: true,
+                    permission: 'kanwil_list',
                 }
             },
         ]
@@ -353,6 +378,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Area',
                     requiresAuth: true,
+                    permission: 'area_list',
                 },
             },
             {
@@ -362,6 +388,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Area Detail',
                     requiresAuth: true,
+                    permission: 'area_list',
                 }
             },
         ]
@@ -377,6 +404,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Outlet',
                     requiresAuth: true,
+                    permission: 'outlet_list',
                 },
             },
             {
@@ -386,21 +414,35 @@ const routes =[
                 meta: {
                     title: 'POJ - Outlet Detail',
                     requiresAuth: true,
+                    permission: 'outlet_list',
                 }
             },
         ]
     },
+    {
+        path: '/error',
+        name: 'errorPage',
+        component: Error,
+        meta: {
+            title: 'POJ - Error Page',
+            requiresAuth: true,
+            permission: 'dashboard',
+        }
+    }
 ]
 const router=createRouter({
     history: createWebHistory(),
     routes,
 })
 
+const permissions = JSON.parse(localStorage.getItem('USER_PERMISSIONS'));
 
 router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
       if (!store.getters.isAuthenticated) {
         next('/auth/login');
+      } else if (!permissions.includes(to.meta.permission)) {
+        next('/error');
       } else {
         next();
       }

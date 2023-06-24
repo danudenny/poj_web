@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Permission;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class PermissionSeeder extends Seeder
 {
@@ -18,56 +17,89 @@ class PermissionSeeder extends Seeder
         $permission = [
             [
                 'name' => 'user_list',
-                'guard_name' => 'web',
-                'created_at' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'user_create',
-                'guard_name' => 'web',
-                'created_at' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'user_view',
-                'guard_name' => 'web',
-                'created_at' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'user_edit',
-                'guard_name' => 'web',
-                'created_at' => date('Y-m-d H:i:s'),
-            ],
-            [
-                'name' => 'user_delete',
-                'guard_name' => 'web',
-                'created_at' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'role_list',
-                'guard_name' => 'web',
-                'created_at' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'role_create',
-                'guard_name' => 'web',
-                'created_at' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'role_view',
-                'guard_name' => 'web',
-                'created_at' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'role_edit',
-                'guard_name' => 'web',
-                'created_at' => date('Y-m-d H:i:s'),
             ],
             [
                 'name' => 'role_delete',
-                'guard_name' => 'web',
-                'created_at' => date('Y-m-d H:i:s'),
             ],
+            [
+                'name' => 'employee_detail',
+            ],
+            [
+                'name' => 'dashboard',
+            ],
+            [
+                'name' => 'permission_list',
+            ],
+            [
+                'name' => 'master_data',
+            ],
+            [
+                'name' => 'employee_list',
+            ],
+            [
+                'name' => 'working_area',
+            ],
+            [
+                'name' => 'corporate_list',
+            ],
+            [
+                'name' => 'kanwil_list',
+            ],
+            [
+                'name' => 'area_list',
+            ],
+            [
+                'name' => 'cabang_list',
+            ],
+            [
+                'name' => 'outlet_list',
+            ],
+            [
+                'name' => 'attendance_list',
+            ],
+            [
+                'name' => 'assesment_list',
+            ],
+            [
+                'name' => 'content_list',
+            ],
+            [
+                'name' => 'report_list',
+            ],
+            [
+                'name' => 'configuration_list',
+            ],
+            [
+                'name' => 'general_setting',
+            ]
         ];
 
-        DB::table('permissions')->insert($permission);
+        foreach ($permission as $data) {
+            Permission::create(
+              ['name' => $data['name'],
+               'guard_name' => 'sanctum']);
+        }
+        //DB::table('permissions')->insert($permission);
     }
 }

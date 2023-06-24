@@ -28,12 +28,18 @@ class UserService extends BaseService
     {
         try {
             $users = User::query()->with(['roles:name']);
-            if (!is_null($data->name)) {
-                $users->where('name', 'like', '%' . $data->name . '%');
-            }
-            if (!is_null($data->email)) {
-                $users->where('email', 'like', '%' . $data->email . '%');
-            }
+
+            $users->when(request()->filled('name'), function ($query) {
+                $query->where('name', 'like',  '%'.request()->query('name').'%');
+            });
+
+            $users->when(request()->filled('email'), function ($query) {
+                $query->where('email', 'like',  '%'.request()->query('email').'%');
+            });
+
+            $users->when(request()->filled('is_active'), function ($query) {
+                $query->where('is_active', '=', request()->query('is_active'));
+            });
 
             return $this->list($users, $data);
 

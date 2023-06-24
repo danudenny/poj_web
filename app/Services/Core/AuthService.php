@@ -2,6 +2,7 @@
 
 namespace App\Services\Core;
 
+use App\Http\Resources\UserRolePermissionResource;
 use App\Http\Resources\UserMobileResource;
 use App\Http\Resources\UserResource;
 use App\Jobs\PasswordResetMailJob;
@@ -45,7 +46,7 @@ class AuthService extends BaseService
 
             $token = $user->createToken('authToken')->plainTextToken;
             if (!$data['mobile']) {
-                $user = UserResource::make($user);
+                $user = UserRolePermissionResource::make($user);
             } else {
                 $user = UserMobileResource::make($user);
             }
@@ -101,7 +102,7 @@ class AuthService extends BaseService
      * @return UserResource
      * @throws \Exception
      */
-    public function permission(): UserResource
+    public function permission(): UserRolePermissionResource
     {
         try {
             $user_id = Auth::user()->id;
@@ -112,7 +113,7 @@ class AuthService extends BaseService
                 throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
 
-            return UserResource::make($user);
+            return UserRolePermissionResource::make($user);
 
         } catch (\InvalidArgumentException $e) {
             throw new \InvalidArgumentException($e->getMessage());
