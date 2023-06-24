@@ -6,12 +6,14 @@
             "iconf": "fill-home",
             "type": "link",
             "active": false,
-            "path": "/"
+            "path": "/",
+            "permission" : "dashboard"
         },
         {
             "headTitle1": "USER MANAGEMENT",
             "headTitle2": "User and roles management",
-            "type": "headtitle"
+            "type": "headtitle",
+            "permission" : "user_list"
         },
         {
             "title": "Users",
@@ -19,7 +21,8 @@
             "iconf": "fill-user",
             "type": "link",
             "active": false,
-            "path": "/management/users"
+            "path": "/management/users",
+            "permission" : "user_list"
         },
         {
             "title": "Roles",
@@ -27,7 +30,8 @@
             "iconf": "fill-learning",
             "type": "link",
             "active": false,
-            "path": "/management/roles"
+            "path": "/management/roles",
+            "permission" : "role_list"
         },
         {
             "title": "Permissions",
@@ -35,12 +39,14 @@
             "iconf": "fill-learning",
             "type": "link",
             "active": false,
-            "path": "/management/permissions"
+            "path": "/management/permissions",
+            "permission" : "permission_list"
         },
         {
             "headTitle1": "MASTER DATA",
             "headTitle2": "Master data management",
-            "type": "headtitle"
+            "type": "headtitle",
+            "permission" : "master_data"
         },
         {
             "title": "Employee",
@@ -48,7 +54,8 @@
             "iconf": "fill-learning",
             "type": "link",
             "active": false,
-            "path": "/management/employees"
+            "path": "/management/employees",
+                "permission" : "employee_list"
         },
         {
             "title": "Working Area",
@@ -56,36 +63,42 @@
             "iconf": "fill-learning",
             "type": "sub",
             "active": false,
+            "permission" : "working_area",
             "children": [
                 {
-                    "path": "corporates",
+                    "path": "/corporates",
                     "title": "Corporate",
                     "type": "link",
-                    "active": false
+                    "active": false,
+                    "permission" : "corporate_list"
                 },
                 {
-                    "path": "kanwils",
+                    "path": "/kanwils",
                     "title": "Kantor Wilayah",
                     "type": "link",
-                    "active": false
+                    "active": false,
+                    "permission" : "kanwil_list"
                 },
                 {
-                    "path": "areas",
+                    "path": "/areas",
                     "title": "Area",
                     "type": "link",
-                    "active": false
+                    "active": false,
+                    "permission" : "area_list"
                 },
                 {
-                    "path": "cabang",
+                    "path": "/cabang",
                     "title": "Cabang",
                     "type": "link",
-                    "active": false
+                    "active": false,
+                    "permission" : "cabang_list"
                 },
                 {
-                    "path": "outlets",
+                    "path": "/outlets",
                     "title": "Outlet",
                     "type": "link",
-                    "active": false
+                    "active": false,
+                    "permission" : "outlet_list"
                 }
             ]
         },
@@ -121,7 +134,8 @@
         {
             "headTitle1": "ATTENDANCE",
             "headTitle2": "Attendance management",
-            "type": "headtitle"
+            "type": "headtitle",
+            "permission" : "attendance_list"
         },
         {
             "title": "Attendance",
@@ -134,22 +148,26 @@
         {
             "headTitle1": "ASSESMENT",
             "headTitle2": "Assesment management",
-            "type": "headtitle"
+            "type": "headtitle",
+            "permission" : "assesment_list"
         },
         {
             "headTitle1": "CONTENT",
             "headTitle2": "Content management",
-            "type": "headtitle"
+            "type": "headtitle",
+            "permission" : "content_list"
         },
         {
             "headTitle1": "REPORT",
             "headTitle2": "Master data management",
-            "type": "headtitle"
+            "type": "headtitle",
+            "permission" : "report_list"
         },
         {
             "headTitle1": "CONFIGURATION",
             "headTitle2": "Configuration management",
-            "type": "headtitle"
+            "type": "headtitle",
+            "permission" : "configuration_list"
         },
         {
             "title": "General Settings",
@@ -157,7 +175,8 @@
             "iconf": "fill-learning",
             "type": "link",
             "active": false,
-            "path": "/general-settings"
+            "path": "/general-settings",
+            "permission" : "general_setting"
         }
     ]
 }

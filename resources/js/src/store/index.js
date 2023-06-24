@@ -20,13 +20,21 @@ export default createStore({
       token:localStorage.getItem(TOKEN_STORAGE_KEY) || null,
       user: null,
       avatar: '',
+      roles: [],
+      permissions: []
   },
   getters:{
     langIcon: (state)=>{ return state.langIcon},
     langLangauge:(state)=>{return state.langLangauge},
     isAuthenticated(state){
         return state.token != null;
-    }
+    },
+    roles: (state) => {
+        return state.roles
+    },
+    permissions: (state) => {
+        return state.permissions
+    },
   },
   mutations: {
       changeLang (state, payload) {
@@ -48,6 +56,14 @@ export default createStore({
           state.user = user;
           localStorage.setItem('USER_STORAGE_KEY', JSON.stringify(user));
       },
+      setRoles(state, roles) {
+          state.roles = roles;
+          localStorage.setItem('USER_ROLES', JSON.stringify(roles));
+      },
+      setPermissions(state, permissions) {
+          state.permissions = permissions;
+          localStorage.setItem('USER_PERMISSIONS', JSON.stringify(permissions));
+      },
       setAvatar(state, user) {
           state.avatar = user.avatar;
           localStorage.setItem('USER_AVATAR', user.avatar);
@@ -59,6 +75,16 @@ export default createStore({
       clearUser(state){
           state.user = null;
           localStorage.removeItem('USER_STORAGE_KEY');
+      },
+      clearRoles (state)
+      {
+          state.roles = null;
+          localStorage.removeItem('USER_ROLES');
+      },
+      clearPermissions (state)
+      {
+          state.permissions = null;
+          localStorage.removeItem('USER_PERMISSIONS');
       },
       clearAvatar(state) {
           state.avatar = '';
@@ -73,9 +99,10 @@ export default createStore({
       async login ({ commit }, credentials) {
           try {
             const { token, user } = await authentication.login(credentials);
-            // console.log(user.avatar);
             commit('setToken', token);
             commit('setUser', user);
+            commit('setRoles', user.roles);
+            commit('setPermissions', user.permissions);
             commit('setAvatar', user);
           } catch (e) {
             commit('clearToken');
@@ -87,6 +114,8 @@ export default createStore({
               // await authentication.logout();
               commit('clearToken');
               commit('clearUser');
+              commit('clearRoles');
+              commit('clearPermissions');
               commit('clearAvatar');
               localStorage.removeItem(TOKEN_STORAGE_KEY);
               localStorage.removeItem('USER_STORAGE_KEY');

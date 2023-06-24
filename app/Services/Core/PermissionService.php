@@ -13,9 +13,9 @@ class PermissionService extends BaseService
     {
         try {
             $permission = Permission::query();
-            if (!is_null($data['name'])) {
-                $permission->where('name', 'like', '%' . $data['name'] . '%');
-            }
+            $permission->when(request()->filled('name'), function ($query) {
+                $query->where('name', 'like', '%' . request()->query('name') . '%');
+            });
 
             return $this->list($permission, $data);
 

@@ -20,12 +20,13 @@ class RoleService extends BaseService
     {
         try {
             $roles = Role::query();
-            if (!is_null($data['name'])) {
-                $roles->where('name', 'like', '%' . $data->name . '%');
-            }
-            if (!is_null($data['is_active'])) {
-                $roles->where('is_active', '=', $data->is_active);
-            }
+            $roles->when(request()->filled('name'), function ($query) {
+                $query->where('name', 'like', '%' . request()->query('name') . '%');
+            });
+            $roles->when(request()->filled('is_active'), function ($query) {
+                $query->where('is_active', '=', request()->query('is_active'));
+            });
+
             return $this->list($roles, $data);
 
         } catch (\InvalidArgumentException $e) {

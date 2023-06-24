@@ -19,10 +19,11 @@
                     <div v-for="filter in filters" :key="filter.key" class="col-md-4">
                         <div class="mb-1" v-if="filter.type === 'text'">
                             <label class="form-label" :for="filter.key">{{filter.label}}</label>
-                            <input class="form-control" id="{{filter.key}}" @input="searchQuery(this.params[filter.key])" v-model="this.params[filter.key]" type="text" :placeholder="filter.label" v-if="filter.type === 'text'">
+                            <input class="form-control" id="{{filter.key}}" @input="searchQuery(this.params[filter.key])" v-model="this.params[filter.key]" type="text" :placeholder="'Enter '+filter.label" v-if="filter.type === 'text'">
                         </div>
                         <div class="mb-1" v-else>
-                            <select class="form-select" v-model="this.params[filter.key]">
+                            <label class="form-label" :for="filter.key">{{filter.label}}</label>
+                            <select class="form-select" @change="fetchData" id="{{filter.key}}" v-model="this.params[filter.key]">
                                 <option value="">All</option>
                                 <option value="1">Active</option>
                                 <option value="0">In-Active</option>
