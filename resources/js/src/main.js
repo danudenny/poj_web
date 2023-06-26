@@ -8,7 +8,6 @@ import './assets/scss/app.scss'
 import VueFeather from 'vue-feather';
 import Toast, {POSITION, useToast} from "vue-toastification";
 import "vue-toastification/dist/index.css";
-import '@vuepic/vue-datepicker/dist/main.css'
 
 // import { createI18n } from 'vue-i18n'
 import en from './locales/en.json';
@@ -22,6 +21,8 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 import Multiselect from 'vue-multiselect';
 import "vue-multiselect/dist/vue-multiselect.css";
 import axios from 'axios';
+import '@vuepic/vue-datepicker/dist/main.css';
+import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css';
 
 const messages = { en: en, es: es, pt: pt, fr: fr};
 const locale = (localStorage.getItem('currentLanguage') && localeOptions.filter(x => x.id === localStorage.getItem('currentLanguage')).length > 0) ? localStorage.getItem('currentLanguage') : defaultLocale;

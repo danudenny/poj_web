@@ -8,37 +8,15 @@
                         <div class="col-sm-6 col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Role Name</label>
-                                <input class="form-control" type="text" placeholder="Name" v-model="this.role.name">
+                                <input class="form-control" type="text" placeholder="Name" v-model="roles.name">
                             </div>
                         </div>
                     </div>
-                    <dv class="row">
+                    <div class="row">
                         <div class="col-sm-6">
-                            <div class="card-block row">
-                                <div class="col-sm-12 col-lg-12 col-xl-12">
-                                    <div class="table-responsive">
-                                    <table class="table">
-                                        <thead class="table bg-primary">
-                                            <tr>
-                                                <th scope="col">
-                                                    <input class="form-check-input checkbox-solid-light" v-model="selectAll" @input="toggleSelectAll" type="checkbox">
-                                                </th>
-                                                <th scope="col">Permission</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="permission in permissions" :key="permission.id">
-                                                <td><input type="checkbox" class="form-check-input checkbox-solid-light" :v-bind:value="permission"
-                                                                      v-model="role.permissions" :checked="isChecked(permission.id)" /></td>
-                                                <td>{{ permission.name }}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    </div>
-                                </div>
-                            </div>
+                            <div ref="permissionsTable"></div>
                         </div>
-                    </dv>
+                    </div>
                 </div>
 
                 <div class="card-footer text-start">
@@ -53,56 +31,50 @@
 <script>
 import {useRoute} from "vue-router";
 import axios from "axios";
+import {TabulatorFull as Tabulator} from 'tabulator-tables';
 import {useToast} from "vue-toastification";
 
 export default {
     data() {
         return {
-            role: {
-                id: null,
-                name: null,
-                permissions: []
-            },
+            roles: {},
             permissions: [],
             selectAll: false,
+            selectedPermission: []
         }
     },
-    mounted() {
-        this.getPermissions();
-        this.getRole();
+    async mounted() {
+        await this.getRole();
+        await this.getPermissions();
+        this.initializePermissionsTable();
     },
     methods: {
-        async getRole() {
-            const route = useRoute();
+        async getPermissions() {
             await axios
-                .get(`/api/v1/admin/role/view?id=`+ route.params.id)
+                .get(`/api/v1/admin/permission?per_page=1000`)
                 .then(response => {
-                    this.role.id = response.data.data.id;
-                    this.role.name = response.data.data.name;
-                    this.role.permissions = response.data.data.permissions;
+                    this.permissions = response.data.data.data;
                 })
                 .catch(error => {
                     console.error(error);
                 });
         },
-        async getPermissions() {
-            await axios.get(`/api/v1/admin/role/permissions`)
-                .then(res => {
-                    this.permissions = res.data.data;
+        async getRole() {
+            const route = useRoute();
+            await axios
+                .get(`/api/v1/admin/role/view?id=`+ route.params.id)
+                .then(response => {
+                    this.roles = response.data.data;
                 })
-                .catch(e => {
-                    console.log(e);
+                .catch(error => {
+                    console.error(error);
                 });
         },
-        async updateRole() {
-            let id = this.role.id;
-            let name = this.role.name;
-            let permission = this.role.permissions.map(value => value.id);
-
+        async updateRole(){
             await axios.post(`/api/v1/admin/role/update`, {
-                id: id,
-                name: name,
-                permission: permission
+                id: this.roles.id,
+                name: this.roles.name,
+                permission: this.roles.permission
             })
                 .then(res => {
                     useToast().success(res.data.message , { position: 'bottom-right' });
@@ -112,19 +84,42 @@ export default {
                 .catch(e => {
                     console.log(e);
                 });
+
         },
-        toggleSelectAll() {
-            this.selectAll = !this.selectAll;
-            this.role.permissions = [];
-            if(this.selectAll){
-                for (var key in this.permissions) {
-                    this.role.permissions.push(this.permissions[key]);
+        initializePermissionsTable() {
+            const table = new Tabulator(this.$refs.permissionsTable, {
+                data: this.permissions,
+                layout: 'fitDataStretch',
+                columns: [
+                    {
+                        formatter: "rowSelection",
+                        titleFormatter: "rowSelection",
+                        hozAlign: "center",
+                        headerSort: false,
+                        cellClick: function (e, cell) {
+                            cell.getRow().toggleSelect();
+                        },
+                    },
+                    {
+                        title: 'Permission',
+                        field: 'name'
+                    }
+                ],
+                pagination: 'local',
+                paginationSize: 20,
+                paginationSizeSelector: [10, 20, 50, 100],
+                headerFilter: true,
+                rowFormatter: (row) => {
+                    const permission = row.getData();
+                    const matchedPermissionIds = this.roles.permissions.map(p => p.id);
+                    permission.allow = matchedPermissionIds.includes(permission.id);
+                    if (permission.allow) {
+                        row.getElement().classList.add("highlight");
+                        row.select();
+                        console.log(row.select());
+                    }
                 }
-            }
-        },
-        isChecked(id) {
-            let result = this.role.permissions.map(v => v.id);
-            return result.includes(id);
+            });
         },
     },
 };

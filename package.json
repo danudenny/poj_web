@@ -41,6 +41,7 @@
         "sass": "^1.57.0",
         "sass-loader": "^13.2.0",
         "swiper": "^8.4.5",
+        "tabulator-tables": "^5.5.0",
         "vite-svg-loader": "^4.0.0",
         "vue": "^3.2.13",
         "vue-chartist": "^3.0.0",

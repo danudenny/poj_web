@@ -36,7 +36,7 @@
   </template>
 
   <script>
-  import {mapActions, mapState} from "vuex";
+  import {mapActions} from "vuex";
 
   export default {
     name: 'Profile',
@@ -71,14 +71,10 @@
           getUser() {
               const getUser = localStorage.getItem('USER_STORAGE_KEY');
               this.user = JSON.parse(getUser)
-              console.log(this.user.name)
               return this.user
           },
           getUserAvatar() {
-              const getUserAvatar = localStorage.getItem('USER_AVATAR');
-              this.profileImg = getUserAvatar;
-
-              // console.log(this.profileImg)
+              this.profileImg = localStorage.getItem('USER_AVATAR');
               return this.profileImg;
           },
       }

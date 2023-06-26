@@ -17,10 +17,10 @@
           </div>
         </li>
 
-        <li v-for="(menuItem, index) in menuItems" :key="index" class="sidebar-list"
-        :class="{ ' sidebar-main-title': menuItem.type === 'headtitle', }, menuItem.showPin ? 'pined' : ''" :hidden="!this.permissions.includes(menuItem.permission)">
+          <li v-for="(menuItem, index) in menuItems" :key="index" class="sidebar-list"
+              :class="{ 'sidebar-main-title': menuItem.type === 'headtitle', pined: menuItem.showPin }" v-if="hasPermission(menuItems)">
 
-          <div v-if="menuItem.type === 'headtitle' && this.permissions.includes(menuItem.permission)">
+          <div v-if="menuItem.type === 'headtitle' && hasPermission(menuItems)">
             <h6 class="lan-1">{{ (menuItem.headTitle1) }}</h6>
           </div>
 
@@ -29,13 +29,12 @@
           </label>
 
           <a class="sidebar-link sidebar-title" href="javascript:void(0)" :class="{ 'active': menuItem.active }"
-            v-if="menuItem.type == 'sub' && this.permissions.includes(menuItem.permission)" @click="setNavActive(menuItem, index)">
-
+            v-if="menuItem.type === 'sub' && hasPermission(menuItems)" @click="setNavActive(menuItem, index)">
             <svg class="stroke-icon">
-              <use :xlink:href="`#${menuItem.icon}`"></use>
+                <use :href="`/assets/svg/icon-sprite.svg#${menuItem.icon}`"></use>
             </svg>
             <svg class="fill-icon">
-              <use :xlink:href="'@/assets/svg/icon-sprite.svg' + `#${menuItem.iconf}`"></use>
+                <use :href="`/assets/svg/icon-sprite.svg#${menuItem.iconf}`"></use>
             </svg>
             <span class="lan-3">
               {{ (menuItem.title) }}
@@ -44,16 +43,15 @@
               <i class="fa fa-angle-right pull-right"></i>
             </div>
           </a>
-
-          <router-link :to="menuItem.path" class="sidebar-link sidebar-title" v-if="menuItem.type == 'link' && this.permissions.includes(menuItem.permission)"
+          <router-link :to="menuItem.path" class="sidebar-link sidebar-title" v-if="menuItem.type === 'link' && hasPermission(menuItems)"
             :class="{ 'active': menuItem.active }" v-on:click="hidesecondmenu()"
             @click="setNavActive(menuItem, index)">
-            <!-- <svg class="stroke-icon">
-                <use :xlink:href="require('@/assets/svg/icon-sprite.svg') + `#${menuItem.icon}`"></use>
+            <svg class="stroke-icon">
+                <use :href="`/assets/svg/icon-sprite.svg#${menuItem.icon}`"></use>
             </svg>
             <svg class="fill-icon">
-                <use :xlink:href="require('@/assets/svg/icon-sprite.svg') + `#${menuItem.iconf}`"></use>
-            </svg> -->
+                <use :href="`/assets/svg/icon-sprite.svg#${menuItem.iconf}`"></use>
+            </svg>
             <vue-feather :type="menuItem.icon"></vue-feather>
             <span>
                 {{ (menuItem.title) }}
@@ -61,14 +59,14 @@
             <i class="fa fa-angle-right pull-right" v-if="menuItem.children"></i>
           </router-link>
 
-          <a :href="menuItem.path" class="sidebar-link sidebar-title" v-if="menuItem.type == 'extLink' && this.permissions.includes(menuItem.permission)"
+          <a :href="menuItem.path" class="sidebar-link sidebar-title" v-if="menuItem.type === 'extLink' && hasPermission(menuItems)"
             @click="setNavActive(menuItem, index)">
-<!--            <svg class="stroke-icon">-->
-<!--                <use :xlink:href="iconSprite + `#${menuItem.icon}`"></use>-->
-<!--            </svg>-->
-<!--            <svg class="fill-icon">-->
-<!--                <use :xlink:href="iconSprite + `#${menuItem.iconf}`"></use>-->
-<!--            </svg>-->
+            <svg class="stroke-icon">
+                <use :xlink:href="iconSprite + `#${menuItem.icon}`"></use>
+            </svg>
+            <svg class="fill-icon">
+                <use :xlink:href="iconSprite + `#${menuItem.iconf}`"></use>
+            </svg>
             <span>
                 {{ (menuItem.title) }}
             </span>
@@ -76,7 +74,7 @@
           </a>
 
           <a :href="menuItem.path" target="_blank" class="sidebar-link sidebar-title"
-             v-if="menuItem.type === 'extTabLink' && this.permissions.includes(menuItem.permission)" @click="setNavActive(menuItem, index)">
+             v-if="menuItem.type === 'extTabLink' && hasPermission(menuItems)" @click="setNavActive(menuItem, index)">
             <svg class="stroke-icon">
                 <use :xlink:href="require('@/assets/svg/icon-sprite.svg') + `#${menuItem.icon}`"></use>
             </svg>
@@ -89,13 +87,13 @@
             <i class="fa fa-angle-right pull-right" v-if="menuItem.children"></i>
           </a>
 
-          <ul class="sidebar-submenu" v-if="menuItem.children && this.permissions.includes(menuItem.permission)" :class="{ 'menu-open': menuItem.active }"
+          <ul class="sidebar-submenu" v-if="menuItem.children && hasPermission(menuItems)" :class="{ 'menu-open': menuItem.active }"
             :style="{ display: menuItem.active ? '' : 'none' }">
 
             <li v-for="(childrenItem, index) in menuItem.children" :key="index">
 
                 <a class="lan-4" :class="{ 'active': childrenItem.active }" href="javascript:void(0)"
-                   v-if="childrenItem.type === 'sub' && this.permissions.includes(childrenItem.permission)" @click="setNavActive(childrenItem, index)">
+                   v-if="childrenItem.type === 'sub' && permissions.includes(childrenItem.permission)" @click="setNavActive(childrenItem, index)">
                     {{ (childrenItem.title) }}
                     <label :class="'badge badge-' + childrenItem.badgeType + ' pull-right'"
                         v-if="childrenItem.badgeType">{{ childrenItem.badgeValue }}</label>
@@ -105,7 +103,7 @@
                 </a>
 
                 <router-link class="lan-4" :class="{ 'active': childrenItem.active }" :to="childrenItem.path"
-                             v-if="childrenItem.type === 'link' && this.permissions.includes(childrenItem.permission)" @click="setNavActive(childrenItem, index)"
+                             v-if="childrenItem.type === 'link' && (!Array.isArray(permissions) || permissions.includes(childrenItem.permission))" @click="setNavActive(childrenItem, index)"
                              v-on:click="hidesecondmenu()">
                     {{ (childrenItem.title) }}
                     <label :class="'badge badge-' + childrenItem.badgeType + ' pull-right'"
@@ -113,14 +111,14 @@
                     <i class="fa fa-angle-right pull-right mt-1" v-if="childrenItem.children"></i>
                 </router-link>
 
-                <a :href="childrenItem.path" v-if="childrenItem.type == 'extLink' && this.permissions.includes(childrenItem.permission)" class="submenu-title">
+                <a :href="childrenItem.path" v-if="childrenItem.type == 'extLink' && permissions.includes(childrenItem.permission)" class="submenu-title">
                     {{ (childrenItem.title) }}
                     <label :class="'badge badge-' + childrenItem.badgeType + ' pull-right'"
                         v-if="childrenItem.badgeType">{{ (childrenItem.badgeValue) }}</label>
                     <i class="fa fa-angle-right pull-right mt-1" v-if="childrenItem.children"></i>
                 </a>
 
-                <a class="submenu-title" :href="childrenItem.path && this.permissions.includes(childrenItem.permission)" target="_blank"
+                <a class="submenu-title" :href="childrenItem.path && permissions.includes(childrenItem.permission)" target="_blank"
                     v-if="childrenItem.type == 'extTabLink'">
                     {{ (childrenItem.title) }}
                     <label :class="'badge badge-' + childrenItem.badgeType + ' pull-right'"
@@ -128,12 +126,12 @@
                     <i class="fa fa-angle-right pull-right mt-1" v-if="childrenItem.children"></i>
                 </a>
 
-                <ul class="nav-sub-childmenu submenu-content" v-if="childrenItem.children && this.permissions.includes(childrenItem.permission)"
+                <ul class="nav-sub-childmenu submenu-content" v-if="childrenItem.children && permissions.includes(childrenItem.permission)"
                     :class="{ 'opensubchild': childrenItem.active }">
                     <li v-for="(childrenSubItem, index) in childrenItem.children" :key="index">
 
                         <router-link :class="{ 'active': childrenSubItem.active }" :to="childrenSubItem.path"
-                            v-if="childrenSubItem.type == 'link' && this.permissions.includes(childrenSubItem.permission)" v-on:click="hidesecondmenu()"
+                            v-if="childrenSubItem.type == 'link' && permissions.includes(childrenSubItem.permission)" v-on:click="hidesecondmenu()"
                             @click="setNavActive(childrenSubItem, index)">
                             {{ (childrenSubItem.title) }}
                             <label :class="'badge badge-' + childrenSubItem.badgeType + ' pull-right'"
@@ -141,14 +139,14 @@
                             <i class="fa fa-angle-right pull-right" v-if="childrenSubItem.children"></i>
                         </router-link>
 
-                        <router-link :to="childrenSubItem.path" v-if="childrenSubItem.type == 'extLink' && this.permissions.includes(childrenSubItem.permission)">
+                        <router-link :to="childrenSubItem.path" v-if="childrenSubItem.type == 'extLink' && permissions.includes(childrenSubItem.permission)">
                             {{ (childrenSubItem.title) }}
                             <label :class="'badge badge-' + childrenSubItem.badgeType + ' pull-right'"
                                 v-if="childrenSubItem.badgeType">{{ (childrenSubItem.badgeValue) }}</label>
                             <i class="fa fa-angle-right pull-right" v-if="childrenSubItem.children"></i>
                         </router-link>
 
-                        <router-link :to="childrenSubItem.path" v-if="childrenSubItem.type == 'extLink' && this.permissions.includes(childrenSubItem.permission)">
+                        <router-link :to="childrenSubItem.path" v-if="childrenSubItem.type == 'extLink' && permissions.includes(childrenSubItem.permission)">
                             {{ (childrenSubItem.title) }}
                             <label :class="'badge badge-' + childrenSubItem.badgeType + ' pull-right'"
                                 v-if="childrenSubItem.badgeType">{{ (childrenSubItem.badgeValue) }}</label>
@@ -165,7 +163,7 @@
 </template>
 <script>
 import { mapState } from 'vuex';
-import { layoutClasses } from '../../constants/layout';
+import { layoutClasses } from '@/constants/layout';
 
 export default {
 name: 'Navmenu',
@@ -210,11 +208,6 @@ computed: {
       return this.layoutobj;
     }
   },
-  getPermission() {
-    const getPermission = localStorage.getItem('USER_PERMISSIONS');
-    this.permissions = JSON.parse(getPermission)
-    return this.permissions
-  },
 },
 watch: {
   width() {
@@ -238,7 +231,6 @@ watch: {
   }
 },
 created() {
-
   window.addEventListener('resize', this.handleResize);
   this.handleResize();
   if (this.$store.state.menu.width < 991) {
@@ -249,8 +241,8 @@ created() {
     const elmnt = document.getElementById('myDIV');
     this.$store.state.menu.menuWidth = elmnt.offsetWidth;
     this.$store.state.menu.menuWidth > window.innerWidth  ?
-      (this.$store.state.menu.hideRightArrow = false,this.$store.state.menu.hideLeftArrowRTL = false) :
-      (this.$store.state.menu.hideRightArrow = false,this.$store.state.menu.hideLeftArrowRTL = true);
+      (this.$store.state.menu.hideRightArrow = false, this.$store.state.menu.hideLeftArrowRTL = false) :
+      (this.$store.state.menu.hideRightArrow = false, this.$store.state.menu.hideLeftArrowRTL = true);
   }, 500);
   this.layoutobject = layoutClasses.find((item) => Object.keys(item).pop() === this.layout.settings.layout);
   this.layoutobject = JSON.parse(JSON.stringify(this.layoutobject))[this.layout.settings.layout];
@@ -259,7 +251,8 @@ destroyed() {
   window.removeEventListener('resize', this.handleResize);
 },
 mounted() {
-    this.getPermission;
+    this.hasPermission();
+    this.getPermission()
     this.menuItems.filter(items => {
     if (items.path === this.$route.path)
       this.$store.dispatch('menu/setActiveRoute', items);
@@ -276,6 +269,18 @@ mounted() {
   });
 },
 methods: {
+    hasPermission(menuItem) {
+        const requiredPermission = menuItem?.permission;
+        if (requiredPermission) {
+            return this.$store.state.permissions.includes(requiredPermission);
+        }
+        return true;
+    },
+    getPermission() {
+        const getPermission = localStorage.getItem('USER_PERMISSIONS');
+        this.permissions = JSON.parse(getPermission);
+        return this.permissions
+    },
   HandleUnload() {
       let pinsArray = [];
       this.menuItems.forEach(item => {
@@ -304,11 +309,7 @@ methods: {
   setNavActive(item) {
     this.$store.dispatch('menu/setNavActive', item);
     if(this.layoutobject.split(' ').includes('compact-sidebar') && window.innerWidth > 991) {
-      if(this.menuItems.some(menuItem => menuItem.active === true)) {
-        this.$store.state.menu.activeoverlay = true;
-      } else {
-        this.$store.state.menu.activeoverlay = false;
-      }
+      this.$store.state.menu.activeoverlay = !!this.menuItems.some(menuItem => menuItem.active === true);
     }
   },
   hidesecondmenu() {

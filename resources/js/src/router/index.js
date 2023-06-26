@@ -2,6 +2,7 @@ import {createRouter, createWebHistory} from "vue-router"
 import Body from '../components/body.vue';
 import Default from '../pages/dashboard/defaultPage.vue';
 import store from '../store';
+import {useToast} from "vue-toastification";
 
 /* Auth */
 import login from '../auth/login.vue';
@@ -242,6 +243,7 @@ const routes =[
           meta: {
               title: 'POJ - Permission Edit',
               requiresAuth: true,
+              permission : 'permissions_edit'
           }
         },
         {
@@ -319,6 +321,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Timesheet',
                     requiresAuth: true,
+                    permission: 'timesheet_list',
                 },
             },
         ]
@@ -334,6 +337,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Approvals',
                     requiresAuth: true,
+                    permission: 'approval_list',
                 },
             },
             {
@@ -343,6 +347,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Create Approvals',
                     requiresAuth: true,
+                    permission: 'approval_create',
                 },
             },
             {
@@ -352,6 +357,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Edit Approvals',
                     requiresAuth: true,
+                    permission: 'approval_edit',
                 },
             },
         ]
@@ -367,6 +373,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Attendances',
                     requiresAuth: true,
+                    permission: 'attendance_list',
                 },
             },
         ]
@@ -382,6 +389,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Approval Modules',
                     requiresAuth: true,
+                    permission: 'approval_module_list',
                 },
             },
         ]
@@ -528,8 +536,9 @@ router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
       if (!store.getters.isAuthenticated) {
         next('/auth/login');
-      } else if (!permissions.includes(to.meta.permission)) {
-        next('/error');
+      } else if (!permissions && !permissions.includes(to.meta.permission)) {
+        next('/');
+        useToast().error('You are not authorized to access this page', { position: 'bottom-right' });
       } else {
         next();
       }
