@@ -4,15 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Job extends Model
+class EmployeeUnit extends Model
 {
     use HasFactory;
 
-    public function employees(): BelongsTo
+    protected $table = 'employee_units';
+
+    public function employee(): HasMany
     {
-        return $this->belongsTo(Employee::class, 'job_id', 'odoo_job_id');
+        return $this->hasMany(Employee::class);
     }
 }

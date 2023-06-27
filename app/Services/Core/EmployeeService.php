@@ -4,26 +4,42 @@ namespace App\Services\Core;
 
 use App\Jobs\SyncEmployeesJob;
 use App\Models\Employee;
+use App\Models\Unit;
 use App\Services\BaseService;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class EmployeeService extends BaseService
 {
     /**
      * @throws Exception
      */
-    public function index($data)
+    public function index($request)
     {
         try {
-            $employees = Employee::with('company', 'employeeDetail', 'employeeDetail.employeeTimesheet');
+            $employees = Employee::with('employeeDetail', 'employeeDetail.employeeTimesheet', 'job', 'unit');
             $employees->when(request('name'), function ($query) {
                 $query->where('name', 'like', '%' . request('name') . '%');
             });
 
-            return $this->list($employees, $data);
+            $employees->where('unit_id', '=', $request->unit_id);
+
+            $employees->orderBy('id', 'asc');
+
+            if (!$request->has('page')) {
+                $employees = $employees->get();
+            } else {
+                $employees = $employees->paginate(10);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data retrieved successfully',
+                'data' => $employees
+            ]);
 
         } catch (\InvalidArgumentException $e) {
             throw new \InvalidArgumentException($e->getMessage());
@@ -38,7 +54,7 @@ class EmployeeService extends BaseService
     public function view($id): Model|Builder
     {
         try {
-            $employee = Employee::with('company', 'company.workLocation', 'employeeDetail', 'employeeDetail.employeeTimesheet')->find($id);
+            $employee = Employee::with( 'employeeDetail', 'employeeDetail.employeeTimesheet', 'job', 'unit.workLocations')->find($id);
 
             if (!$employee) {
                 throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
@@ -58,4 +74,49 @@ class EmployeeService extends BaseService
         return response()->json(['message' => 'Success']);
 
     }
-}
+
+    public function update($request, $id) {
+        $empExists = Employee::find($id);
+        if (!$empExists) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Employee not found'
+            ]);
+        }
+
+        $unitExists = Unit::find($request->unit_id);
+        if (!$unitExists) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unit not found'
+            ]);
+        }
+
+        DB::beginTransaction();
+        try {
+            $empExists->update($request->all());
+            $empExists->unit_id = $request->unit_id;
+
+            if (!$empExists->save()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Employee failed to update'
+                ]);
+            }
+
+            DB::commit();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Employee updated successfully',
+                'data' => $empExists
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Employee failed to update',
+                'data' => $e->getMessage()
+            ]);
+        }
+    }
+ }

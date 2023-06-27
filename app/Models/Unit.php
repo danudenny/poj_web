@@ -45,4 +45,13 @@ class Unit extends Model
     {
         return $this->hasMany(Unit::class, 'parent_unit_id', 'id')->with('child');
     }
+
+    public function workLocations()  {
+        return $this->hasMany(WorkLocation::class, 'reference_id', 'id');
+    }
+
+    public function employees(): HasMany
+    {
+        return $this->hasMany(Employee::class, 'id', 'unit_key');
+    }
 }

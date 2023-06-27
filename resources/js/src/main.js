@@ -41,6 +41,7 @@ axios.interceptors.request.use(config => {
 }, error => {
     return Promise.reject(error);
 });
+axios.defaults.baseURL = 'http://127.0.0.1:8000'
 
 const app = createApp(App)
     .use(router)
