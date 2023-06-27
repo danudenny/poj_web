@@ -40,7 +40,8 @@ export default {
             roles: {},
             permissions: [],
             selectAll: false,
-            selectedPermission: []
+            selectedPermission: [],
+            selectedIds: []
         }
     },
     async mounted() {
@@ -97,12 +98,13 @@ export default {
                         hozAlign: "center",
                         headerSort: false,
                         cellClick: function (e, cell) {
-                            cell.getRow().toggleSelect();
+                            cell.getRow()
                         },
                     },
                     {
                         title: 'Permission',
-                        field: 'name'
+                        field: 'name',
+                        headerFilter:"input"
                     }
                 ],
                 pagination: 'local',

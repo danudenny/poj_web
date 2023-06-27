@@ -258,7 +258,7 @@ const routes =[
         },
         {
           path: 'employees/detail/:id',
-          name: 'Employee Detail',
+          name: 'employee_detail',
           component: EmployeeDetail,
           meta: {
               title: 'POJ - Employee Detail',

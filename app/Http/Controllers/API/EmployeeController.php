@@ -18,8 +18,7 @@ class EmployeeController extends BaseController
     public function index(Request $request): JsonResponse
     {
         try {
-            $result = $this->employeeService->index($request);
-            return $this->sendSuccess($result, self::SUCCESS_FETCH);
+            return $this->employeeService->index($request);
 
         } catch (\Exception | \InvalidArgumentException $error) {
             return $this->sendError($error->getMessage());

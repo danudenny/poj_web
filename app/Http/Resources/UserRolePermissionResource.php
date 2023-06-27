@@ -25,6 +25,7 @@ class UserRolePermissionResource extends JsonResource
             'email' => $this->email,
             'avatar' => $this->avatar,
             'is_new' => $this->is_new,
+            'unit_id' => $this->employee->unit_id,
             'roles' => $role,
             'permissions' => $permission
         ];
