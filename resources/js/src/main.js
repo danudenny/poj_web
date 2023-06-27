@@ -23,7 +23,6 @@ import "vue-multiselect/dist/vue-multiselect.css";
 import axios from 'axios';
 import '@vuepic/vue-datepicker/dist/main.css';
 import 'tabulator-tables/dist/css/tabulator_bootstrap5.min.css';
-import process from "vue-masonry/.eslintrc";
 
 const messages = { en: en, es: es, pt: pt, fr: fr};
 const locale = (localStorage.getItem('currentLanguage') && localeOptions.filter(x => x.id === localStorage.getItem('currentLanguage')).length > 0) ? localStorage.getItem('currentLanguage') : defaultLocale;
@@ -42,7 +41,9 @@ axios.interceptors.request.use(config => {
 }, error => {
     return Promise.reject(error);
 });
-axios.defaults.baseURL = process.env.APP_URL;
+axios.defaults.baseURL = import.meta.env.VITE_API_URL;
+
+console.log(axios.defaults.baseURL)
 
 const app = createApp(App)
     .use(router)
