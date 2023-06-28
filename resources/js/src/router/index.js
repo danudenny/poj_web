@@ -44,6 +44,7 @@ import Approval from '../pages/approvals/index.vue';
 import ApprovalModule from '../pages/approval-modules/index.vue';
 import CreateApproval from '../pages/approvals/Create.vue';
 import EditApproval from '../pages/approvals/Edit.vue';
+import Department from '../pages/departments/index.vue';
 
 //  Attendances
 import Attendances from '../pages/attendances/index.vue';
@@ -266,6 +267,16 @@ const routes =[
               permission : 'employee_list',
           }
         },
+      {
+          path: '/management/department',
+          name: 'department-list',
+          component: Department,
+          meta: {
+              title: 'POJ - Department List',
+              requiresAuth: true,
+              permission : 'department_list',
+          }
+      },
       ]
     },
     {

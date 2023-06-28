@@ -5,6 +5,8 @@ use App\Http\Controllers\API\ApprovalModuleController;
 use App\Http\Controllers\API\CabangController;
 use App\Http\Controllers\API\CompanyController;
 use App\Http\Controllers\API\CorporateController;
+use App\Http\Controllers\API\DepartmentController;
+use App\Http\Controllers\API\DepartmentControllert;
 use App\Http\Controllers\API\EmployeeAttendanceController;
 use App\Http\Controllers\API\EmployeeController;
 use App\Http\Controllers\API\EmployeeDetailController;
@@ -206,5 +208,13 @@ Route::group(['prefix' => 'admin'], function () {
         Route::delete('delete/{id}', [ApprovalController::class, 'delete']);
     });
     // End Approval
+
+    // Begin Department
+    Route::group(['prefix' => 'department'], function() {
+        Route::get('', [DepartmentController::class, 'index']);
+        Route::put('create/{id}', [DepartmentController::class, 'assign']);
+        Route::get('view/{id}', [DepartmentController::class, 'show']);
+    });
+    // End Department
 
 });

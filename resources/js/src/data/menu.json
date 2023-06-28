@@ -55,7 +55,16 @@
             "type": "link",
             "active": false,
             "path": "/management/employees",
-                "permission" : "employee_list"
+            "permission" : "employee_list"
+        },
+        {
+            "title": "Department",
+            "icon": "briefcase",
+            "iconf": "fill-briefcase",
+            "type": "link",
+            "active": false,
+            "path": "/management/department",
+            "permission" : "department_list"
         },
         {
             "title": "Working Area",
