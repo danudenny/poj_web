@@ -48,6 +48,7 @@ import Department from '../pages/departments/index.vue';
 
 //  Attendances
 import Attendances from '../pages/attendances/index.vue';
+import Backup from '../pages/backups/index.vue';
 
 // Profile
 import Profile from '../pages/profiles/index.vue';
@@ -385,6 +386,16 @@ const routes =[
                     title: 'POJ - Attendances',
                     requiresAuth: true,
                     permission: 'attendance_list',
+                },
+            },
+            {
+                path: 'backup',
+                name: 'Backup',
+                component: Backup,
+                meta: {
+                    title: 'POJ - Backup',
+                    requiresAuth: true,
+                    permission: 'backup_list',
                 },
             },
         ]

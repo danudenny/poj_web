@@ -19,6 +19,7 @@ use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\SettingController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\WorkLocationController;
+use App\Http\Controllers\BackupController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\SubsidiaryController;
 use App\Http\Controllers\API\AreaController;
@@ -216,5 +217,11 @@ Route::group(['prefix' => 'admin'], function () {
         Route::get('view/{id}', [DepartmentController::class, 'show']);
     });
     // End Department
+
+    // Begin Backups
+    Route::group(['prefix' => 'backup'], function() {
+        Route::get('', [BackupController::class, 'index']);
+    });
+    // End Backups
 
 });
