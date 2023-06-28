@@ -69,7 +69,7 @@ export default {
                     },
                     {
                         title: 'Name',
-                        field: 'asignee.name',
+                        field: 'assignee.name',
                         headerFilter:"input"
                     },
                     {
@@ -80,12 +80,12 @@ export default {
                     {
                         title: 'Start Date',
                         field: 'start_date',
-                        headerFilter:"input"
+                        headerFilter:"date"
                     },
                     {
                         title: 'End Date',
                         field: 'end_date',
-                        headerFilter:"input"
+                        headerFilter:"date"
                     },
                     {
                         title: '',

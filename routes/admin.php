@@ -221,6 +221,8 @@ Route::group(['prefix' => 'admin'], function () {
     // Begin Backups
     Route::group(['prefix' => 'backup'], function() {
         Route::get('', [BackupController::class, 'index']);
+        Route::get('view/{id}', [BackupController::class, 'show']);
+        Route::post('create', [BackupController::class, 'create']);
     });
     // End Backups
 
