@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Mobile;
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\User\UpdateProfileRequest;
 use App\Services\Core\UserService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class UserController extends BaseController
@@ -38,9 +39,9 @@ class UserController extends BaseController
     /**
      * Update user profile
      * @param UpdateProfileRequest $request
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
-    public function update(UpdateProfileRequest $request)
+    public function update(UpdateProfileRequest $request): JsonResponse
     {
         try {
             $request['id'] = $request->user()->id;
@@ -50,5 +51,10 @@ class UserController extends BaseController
         } catch (\Exception | \InvalidArgumentException $error) {
             return $this->sendError($error->getMessage());
         }
+    }
+
+    public function updateToken(Request $request, $id): JsonResponse
+    {
+        return $this->userService->updateToken($request, $id);
     }
 }

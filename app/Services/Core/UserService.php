@@ -7,6 +7,8 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\BaseService;
 use App\Services\MinioService;
+use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -22,7 +24,7 @@ class UserService extends BaseService
     /**
      * @param $data
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function index($data): mixed
     {
@@ -45,8 +47,8 @@ class UserService extends BaseService
 
         } catch (\InvalidArgumentException $e) {
             throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
 
     }
@@ -54,7 +56,7 @@ class UserService extends BaseService
     /**
      * @param $id
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function view($data): mixed
     {
@@ -68,14 +70,14 @@ class UserService extends BaseService
 
         } catch (\InvalidArgumentException $e) {
             throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 
     /**
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
-     * @throws \Exception
+     * @throws Exception
      */
     public function getRoles()
     {
@@ -89,8 +91,8 @@ class UserService extends BaseService
 
         } catch (\InvalidArgumentException $e) {
             throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
 
     }
@@ -98,7 +100,7 @@ class UserService extends BaseService
     /**
      * @param $request
      * @return User
-     * @throws \Exception
+     * @throws Exception
      */
     public function save($request): User
     {
@@ -114,7 +116,7 @@ class UserService extends BaseService
             $user->created_at = date('Y-m-d H:i:s');
 
             if (!$user->save()) {
-                throw new \Exception(self::DB_FAILED, 500);
+                throw new Exception(self::DB_FAILED, 500);
             }
 
             if(!$user->roles()->sync($request->roles)){
@@ -127,16 +129,16 @@ class UserService extends BaseService
         } catch (\InvalidArgumentException $e) {
             DB::rollBack();
             throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 
     /**
      * @param $request
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function update($request): mixed
     {
@@ -160,7 +162,7 @@ class UserService extends BaseService
             $user->updated_at = date('Y-m-d H:i:s');
 
             if (!$user->save()) {
-                throw new \Exception(self::DB_FAILED, 500);
+                throw new Exception(self::DB_FAILED, 500);
             }
 
             if (!empty($request->roles)) {
@@ -175,16 +177,16 @@ class UserService extends BaseService
         } catch (\InvalidArgumentException $e) {
             DB::rollBack();
             throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 
     /**
      * @param $request
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function toggleRoleStatus($request): mixed
     {
@@ -197,7 +199,7 @@ class UserService extends BaseService
             }
 
             if(!$this->toggleDataStatus($user)) {
-                throw new \Exception(self::DB_FAILED, 500);
+                throw new Exception(self::DB_FAILED, 500);
             }
 
             DB::commit();
@@ -206,16 +208,16 @@ class UserService extends BaseService
         } catch (\InvalidArgumentException $e) {
             DB::rollBack();
             throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 
     /**
      * @param $request
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function delete($request): mixed
     {
@@ -233,16 +235,16 @@ class UserService extends BaseService
         } catch (\InvalidArgumentException $e) {
             DB::rollBack();
             throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 
     /**
      * @param $request
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function restore($request): mixed
     {
@@ -250,7 +252,7 @@ class UserService extends BaseService
         try {
             $user = User::onlyTrashed()->find($request->id);
             if(!$user) {
-                throw new \Exception(self::DATA_NOTFOUND, 400);
+                throw new Exception(self::DATA_NOTFOUND, 400);
             }
             $user->restore();
 
@@ -260,16 +262,16 @@ class UserService extends BaseService
         } catch (\InvalidArgumentException $e) {
             DB::rollBack();
             throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 
     /**
      * @param $request
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function destroy($request): mixed
     {
@@ -288,9 +290,9 @@ class UserService extends BaseService
         } catch (\InvalidArgumentException $e) {
             DB::rollBack();
             throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 
@@ -299,7 +301,7 @@ class UserService extends BaseService
      * @param $request
      * @param $id
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function updateAvatar($request, $id) {
         DB::beginTransaction();
@@ -317,7 +319,7 @@ class UserService extends BaseService
             $user->updated_at = date('Y-m-d H:i:s');
 
             if (!$user->save()) {
-                throw new \Exception(self::DB_FAILED, 500);
+                throw new Exception(self::DB_FAILED, 500);
             }
 
             DB::commit();
@@ -326,9 +328,36 @@ class UserService extends BaseService
         } catch (\InvalidArgumentException $e) {
             DB::rollBack();
             throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+        }
+    }
+
+    public function updateToken($request, $id): JsonResponse
+    {
+        $userExists = User::where('id', $id)->exists();
+        if(!$userExists) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        try {
+            $user = User::find($id);
+            $user->fcm_token = $request->fcm_token;
+            $user->save();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Token updated successfully'
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to update token'
+            ], 500);
         }
     }
 }

@@ -29,6 +29,7 @@ class User extends Authenticatable
         'is_active',
         'employee_id',
         'avatar',
+        'fcm_token'
     ];
 
     /**

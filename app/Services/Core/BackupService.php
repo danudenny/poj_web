@@ -11,10 +11,12 @@ use App\Models\EmployeeTimesheet;
 use App\Models\Job;
 use App\Models\Unit;
 use App\Models\User;
+use App\Notifications\AssignBackupRequestNotification;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class BackupService
 {
@@ -143,6 +145,17 @@ class BackupService
             $backupHistory->save();
 
             DB::commit();
+
+            $getUser = User::where('employee_id', $request->assignee_id)->first();
+            try {
+                Notification::send(null,new AssignBackupRequestNotification($getUser->fcm_token));
+            } catch (Exception $e) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $e->getMessage(),
+                ], 500);
+            }
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Success create backup',
