@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Unit extends Model
 {
@@ -53,5 +54,10 @@ class Unit extends Model
     public function employees(): HasMany
     {
         return $this->hasMany(Employee::class, 'id', 'unit_key');
+    }
+
+    public function department(): HasOne
+    {
+        return $this->hasOne(Department::class, 'company_id', 'id');
     }
 }
