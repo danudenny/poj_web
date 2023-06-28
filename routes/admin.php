@@ -43,6 +43,7 @@ Route::group(['prefix' => 'admin'], function () {
         Route::post('restore', [UserController::class, 'restore']);
         Route::delete('destroy', [UserController::class, 'destroy']);
         Route::post('{id}/avatar', [UserController::class, 'updateAvatar']);
+        Route::put('update-token/{id}', [UserController::class, 'updateToken']);
     });
     // End User
 

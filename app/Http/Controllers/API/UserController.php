@@ -175,4 +175,9 @@ class UserController extends BaseController
         }
     }
 
+    public function updateToken(Request $request, $id): JsonResponse
+    {
+        return $this->userService->updateToken($request, $id);
+    }
+
 }
