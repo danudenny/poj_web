@@ -29,4 +29,14 @@ class BackupController extends Controller
     {
         return $this->backupService->create($request);
     }
+
+    public function approve($id): JsonResponse
+    {
+        return $this->backupService->approve($id);
+    }
+
+    public function checkIn(Request $request, $id): JsonResponse
+    {
+        return $this->backupService->checkIn($request, $id);
+    }
 }

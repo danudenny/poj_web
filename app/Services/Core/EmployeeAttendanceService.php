@@ -40,6 +40,7 @@ class EmployeeAttendanceService extends BaseService {
             $attendances->when($request->is_need_approval, function ($query) use ($request) {
                 $query->where('is_need_approval', $request->is_need_approval);
             });
+            $attendances->orderBy('created_at', 'desc');
 
             return response()->json([
                 'status' => true,
