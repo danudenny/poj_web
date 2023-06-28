@@ -20,7 +20,7 @@ class Backup extends Model
         'shift_type',
         'timesheet_id',
         'duration',
-        'asignee_id',
+        'assignee_id',
     ];
 
     public function unit(): BelongsTo
@@ -38,9 +38,9 @@ class Backup extends Model
         return $this->belongsTo(EmployeeTimesheet::class);
     }
 
-    public function asignee(): BelongsTo
+    public function assignee(): BelongsTo
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(Employee::class, 'assignee_id', 'id');
     }
 
     public function backupHistory(): HasMany

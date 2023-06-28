@@ -10,7 +10,12 @@ class BackupHistory extends Model
 {
     use HasFactory;
 
-    protected $table = 'backup_history';
+    protected $table = 'backup_histories';
+
+    protected $fillable = [
+        'backup_id',
+        'status'
+    ];
 
     public function backups(): BelongsTo
     {
