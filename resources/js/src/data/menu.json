@@ -155,6 +155,14 @@
             "path": "/attendance"
         },
         {
+            "title": "Backup",
+            "icon": "copy",
+            "iconf": "fill-copy",
+            "type": "link",
+            "active": false,
+            "path": "/attendance/backup"
+        },
+        {
             "headTitle1": "ASSESMENT",
             "headTitle2": "Assesment management",
             "type": "headtitle",
