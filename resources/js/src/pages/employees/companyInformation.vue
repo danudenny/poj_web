@@ -43,6 +43,7 @@
                                 <input class="form-control" :value="employee.job.name" readonly type="text">
                             </div>
                         </div>
+                        <div id="map"></div>
                     </div>
                 </div>
             </div>
@@ -51,12 +52,56 @@
 </template>
 
 <script>
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 export default {
     props: {
         employee: {
             type: Object,
             required: true
         }
+    },
+    data() {
+        return {
+            mapContainer: null,
+            map: null,
+            marker: null,
+            lat: 0,
+            long: 0
+        };
+    },
+    mounted() {
+        this.lat = this.employee.unit.work_locations[0].lat;
+        this.long = this.employee.unit.work_locations[0].long;
+
+        console.log(this.lat, this.long);
+        this.mapContainer = this.$el.querySelector('#map');
+        this.map = L.map(this.mapContainer, {
+            scrollWheelZoom: false
+        }).setView([this.lat, this.long], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(this.map);
+
+        this.marker = L.marker([this.lat, this.long]).addTo(this.map);
+
+        window.addEventListener('resize', this.handleMapResize);
+    },
+    beforeUnmount() {
+        window.removeEventListener('resize', this.handleMapResize);
+    },
+    methods: {
+        handleMapResize() {
+            if (this.map) {
+                this.map.invalidateSize();
+            }
+        }
     }
 }
 </script>
+
+<style>
+#map {
+    height: 400px;
+}
+</style>
