@@ -8,7 +8,6 @@ import './assets/scss/app.scss'
 import VueFeather from 'vue-feather';
 import Toast from "vue-toastification";
 import "vue-toastification/dist/index.css";
-import {messaging} from './utils/firebase';
 
 import Breadcrumbs from './components/bread_crumbs.vue';
 import VueSweetalert2 from 'vue-sweetalert2';
@@ -47,5 +46,4 @@ const app = createApp(App)
     .component('Breadcrumbs', Breadcrumbs);
 
 app.config.globalProperties.$axios = axios;
-app.config.globalProperties.$messaging = messaging
 app.mount('#app');
