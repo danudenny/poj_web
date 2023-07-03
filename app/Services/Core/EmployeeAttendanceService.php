@@ -66,7 +66,7 @@ class EmployeeAttendanceService extends BaseService {
             ], 400);
         }
 
-        $workLocation = $empData->company->workLocation;
+        $workLocation = $empData->unit->workLocations[0];
         $employeeDetail = $empData->employeeDetail;
 
         // Check if time is in range

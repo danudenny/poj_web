@@ -87,9 +87,6 @@ export default {
             type: Object,
             required: true
         }
-    },
-    mounted() {
-        console.log(this.employee);
     }
 }
 </script>
