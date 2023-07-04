@@ -66,23 +66,26 @@
                                                             label="name"
                                                             track-by="id"
                                                             :options="organization"
-                                                            :multiple="false">
+                                                            :multiple="false"
+                                                            @input="onOrganizationSelect(index)">
+                                                        >
                                                         </multiselect>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
-                                                <div v-for="(divElement, index) in appendedApprover" :key="divElement.id">
+                                                <div v-for="(divElement, index) in appendedApprover" :key="divElement">
                                                     <div class="mb-3">
-                                                        <label class="form-label" for="name">Approver {{index+1}}</label>
+                                                        <label class="form-label" :for="'approver-' + index">Approver {{ index + 1 }}</label>
                                                         <multiselect
                                                             v-model="appendedApprover[index]"
+                                                            :id="'approver-' + index"
                                                             placeholder="Select User"
                                                             label="name"
                                                             track-by="id"
-                                                            :options="users"
-                                                            :multiple="false">
-                                                        </multiselect>
+                                                            :options="filteredUsers[index]"
+                                                            :multiple="false"
+                                                        ></multiselect>
                                                     </div>
                                                 </div>
                                             </div>
@@ -129,18 +132,44 @@ export default {
             selectedLevel: 0,
             appendedMultiselects: [],
             appendedMultiselectModels: [],
+            filteredUsers: [],
+            ls: JSON.parse(localStorage.getItem('USER_STORAGE_KEY'))
         }
     },
     created() {
         this.getApprovalModules()
-        this.loadCabang()
+        this.loadOrg()
         this.getUsers()
+   },
+    watch: {
+        appendedOrganization: {
+            handler() {
+                this.appendedOrganization.forEach((organization, index) => {
+                    this.filteredUsers[index] = this.users.filter(
+                        (user) =>  {
+                            console.log(user.unit_id, organization.id)
+                            return user.unit_id === organization.id
+                        }
+                    );
+                });
+                console.log(this.filteredUsers)
+            },
+            deep: true,
+        },
     },
     methods: {
-        async loadCabang() {
-            await axios.get('/api/v1/admin/cabang')
+        onOrganizationSelect(index) {
+            this.appendedApprover[index] = null;
+
+            const selectedOrganization = this.appendedOrganization[index];
+            this.filteredUsers[index] = this.users.filter(
+                (user) => user.organizationId === selectedOrganization.id
+            );
+        },
+        async loadOrg() {
+            await axios.get(`/api/v1/admin/approval/get-unit?id=${this.ls.unit_id}`)
                 .then(response => {
-                    this.organization = response.data.data.data
+                    this.organization = response.data.data
                 })
                 .catch(error => {
                     console.error(error)
@@ -150,6 +179,15 @@ export default {
             await axios.get('/api/v1/admin/approval-module')
                 .then(response => {
                     this.approvalModules = response.data.data.data
+                })
+                .catch(error => {
+                    console.error(error)
+                })
+        },
+        async getUsers() {
+            await axios.get(`/api/v1/admin/employee?unit_id=${this.ls.unit_id}`)
+                .then(response => {
+                    this.users = response.data.data
                 })
                 .catch(error => {
                     console.error(error)
@@ -173,15 +211,6 @@ export default {
             this.appendedMultiselectModels.push(null);
             return document.createElement('div');
         },
-        async getUsers() {
-            await axios.get('/api/v1/admin/user')
-                .then(response => {
-                    this.users = response.data.data.data
-                })
-                .catch(error => {
-                    console.error(error)
-                })
-        },
         generateMultiselect() {
             return {
                 id: Math.random()
@@ -192,8 +221,6 @@ export default {
             this.appendedApprover.forEach((element, index) => {
                 userIds.push(element.id)
             })
-            // console.log(this.approval.name, this.approval.approval_module_id, this.approval.active, this.approval.user_id)
-
             await axios.post('/api/v1/admin/approval/create', {
                 name: this.approval.name,
                 approval_module_id: this.approval.approval_module_id.id,

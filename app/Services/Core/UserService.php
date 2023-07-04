@@ -29,19 +29,23 @@ class UserService extends BaseService
     public function index($data): mixed
     {
         try {
-            $users = User::query()->with(['roles:name']);
-
+            $users = User::query();
+            $users->with(['roles:name', 'employee']);
             $users->when(request()->filled('name'), function ($query) {
                 $query->where('name', 'like',  '%'.request()->query('name').'%');
             });
-
+            $users->when(request()->filled('unit_id'), function ($query) {
+                $query->whereHas('employee', function ($query) {
+                    $query->where('unit_id', '=', request()->query('unit_id'));
+                });
+            });
             $users->when(request()->filled('email'), function ($query) {
                 $query->where('email', 'like',  '%'.request()->query('email').'%');
             });
-
             $users->when(request()->filled('is_active'), function ($query) {
                 $query->where('is_active', '=', request()->query('is_active'));
             });
+            $users->orderBy('name', 'asc');
 
             return $this->list($users, $data);
 

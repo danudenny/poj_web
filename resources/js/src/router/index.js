@@ -150,7 +150,7 @@ const routes =[
         },
         {
             path: 'users/detail/:id',
-            name: 'User Detail',
+            name: 'user-detail',
             component: UserDetail,
             meta: {
                 title: 'POJ - User Detail',
@@ -160,12 +160,12 @@ const routes =[
         },
         {
             path: 'users/edit/:id',
-            name: 'User Edit',
+            name: 'user-edit',
             component: UserEdit,
             meta: {
                 title: 'POJ - User Edit',
                 requiresAuth: true,
-                permission : 'user_list',
+                permission : 'user_edit',
             }
         },
         {
