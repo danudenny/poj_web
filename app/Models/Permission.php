@@ -9,7 +9,9 @@ class Permission extends SpatiePermission
 {
     use HasFactory;
 
-    public function getNameAttribute($value)
+    protected $hidden = ['pivot'];
+
+    public function getNameAttribute($value): string
     {
         return ucwords(str_replace('_', ' ', $value));
     }

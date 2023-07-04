@@ -18,7 +18,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="card-footer text-start">
                     <button class="btn btn-primary m-r-10" type="submit">Update</button>
                     <button class="btn btn-secondary" @click="$router.push('/management/roles')">Cancel</button>
@@ -47,7 +46,7 @@ export default {
     async mounted() {
         await this.getRole();
         await this.getPermissions();
-        this.initializePermissionsTable();
+        await this.initializePermissionsTable();
     },
     methods: {
         async getPermissions() {
@@ -71,24 +70,8 @@ export default {
                     console.error(error);
                 });
         },
-        async updateRole(){
-            await axios.post(`/api/v1/admin/role/update`, {
-                id: this.roles.id,
-                name: this.roles.name,
-                permission: this.roles.permission
-            })
-                .then(res => {
-                    useToast().success(res.data.message , { position: 'bottom-right' });
-                    this.$router.push('/management/roles');
-                    console.log(res);
-                })
-                .catch(e => {
-                    console.log(e);
-                });
-
-        },
-        initializePermissionsTable() {
-            const table = new Tabulator(this.$refs.permissionsTable, {
+        async initializePermissionsTable() {
+            const table = await new Tabulator(this.$refs.permissionsTable, {
                 data: this.permissions,
                 layout: 'fitDataStretch',
                 columns: [
@@ -118,10 +101,29 @@ export default {
                     if (permission.allow) {
                         row.getElement().classList.add("highlight");
                         row.select();
-                        console.log(row.select());
                     }
-                }
+                },
             });
+            table.on("rowSelectionChanged", function(data, rows, selected, deselected)  {
+                this.selectedPermission = rows.map(row => row.getData().id);
+                localStorage.setItem('selectedPermission', JSON.stringify(this.selectedPermission));
+            })
+        },
+        async updateRole(){
+            const getData = JSON.parse(localStorage.getItem('selectedPermission'))
+            await axios.post(`/api/v1/admin/role/update`, {
+                id: this.roles.id,
+                name: this.roles.name,
+                permission: getData
+            })
+            .then(res => {
+                useToast().success(res.data.message , { position: 'bottom-right' });
+                this.$router.push('/management/roles');
+            })
+            .catch(e => {
+                console.log(e);
+            });
+
         },
     },
 };

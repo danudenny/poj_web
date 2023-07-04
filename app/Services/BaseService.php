@@ -53,7 +53,11 @@ abstract class BaseService
             $model->orderBy($order_column, $order_type);
         }
 
-        return $model->paginate($request->per_page);
+        if ($request->per_page) {
+            return $model->paginate($request->per_page);
+        } else {
+            return $model->get();
+        }
     }
 
     /**

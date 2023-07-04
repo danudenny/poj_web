@@ -39,4 +39,9 @@ class ApprovalController extends Controller
     {
         return $this->approvalSvc->delete($id);
     }
+
+    public function getOrg(Request $request): JsonResponse
+    {
+        return $this->approvalSvc->getOrg($request->id);
+    }
 }

@@ -2,8 +2,10 @@
 
 namespace App\Services\Core;
 
+use App\Helpers\UnitHelper;
 use App\Models\Approval;
 use App\Models\ApprovalModule;
+use App\Models\Unit;
 use App\Models\User;
 use App\Services\BaseService;
 use Exception;
@@ -166,7 +168,9 @@ class ApprovalService extends BaseService
     public function show($id): JsonResponse
     {
         try {
-            $approval = Approval::with(['approvalModule', 'users'])->find($id);
+            $approval = Approval::with(['approvalModule', 'users.employee', 'users.employee.unit'])
+                ->orderBy('id', 'desc')
+                ->find($id);
             if (!$approval) {
                 return response()->json([
                     'status' => 'error',
@@ -220,5 +224,16 @@ class ApprovalService extends BaseService
                 'data' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function getOrg($id) {
+        $getUnit = Unit::where('id', $id)->get();
+        $flattenedUnits = UnitHelper::flattenUnits($getUnit);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data retrieved successfully.',
+            'data' => $flattenedUnits,
+        ]);
     }
 }

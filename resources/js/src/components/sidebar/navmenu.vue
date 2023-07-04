@@ -18,9 +18,9 @@
         </li>
 
           <li v-for="(menuItem, index) in menuItems" :key="index" class="sidebar-list"
-              :class="{ 'sidebar-main-title': menuItem.type === 'headtitle', pined: menuItem.showPin }" v-if="hasPermission(menuItems)">
+              :class="{ ' sidebar-main-title': menuItem.type === 'headtitle', }, menuItem.showPin ? 'pined' : ''" :hidden="!this.permissions.includes(menuItem.permission)">
 
-          <div v-if="menuItem.type === 'headtitle' && hasPermission(menuItems)">
+          <div v-if="menuItem.type === 'headtitle' && this.permissions.includes(menuItem.permission)">
             <h6 class="lan-1">{{ (menuItem.headTitle1) }}</h6>
           </div>
 
@@ -29,7 +29,7 @@
           </label>
 
           <a class="sidebar-link sidebar-title" href="javascript:void(0)" :class="{ 'active': menuItem.active }"
-            v-if="menuItem.type === 'sub' && hasPermission(menuItems)" @click="setNavActive(menuItem, index)">
+             v-if="menuItem.type === 'sub' && this.permissions.includes(menuItem.permission)" @click="setNavActive(menuItem, index)">
             <svg class="stroke-icon">
                 <use :href="`/assets/svg/icon-sprite.svg#${menuItem.icon}`"></use>
             </svg>

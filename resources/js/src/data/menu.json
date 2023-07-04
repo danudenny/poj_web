@@ -117,7 +117,8 @@
             "iconf": "fill-clock",
             "type": "link",
             "active": false,
-            "path": "/timesheet"
+            "path": "/timesheet",
+            "permission" : "timesheet_list"
         },
         {
             "title": "Approvals",
@@ -125,18 +126,21 @@
             "iconf": "fill-learning",
             "type": "sub",
             "active": false,
+            "permission" : "approval_list",
             "children": [
                 {
                     "path": "approval",
                     "title": "Approval",
                     "type": "link",
-                    "active": false
+                    "active": false,
+                    "permission" : "approval_list"
                 },
                 {
                     "path": "approval-module",
                     "title": "Approval Module",
                     "type": "link",
-                    "active": false
+                    "active": false,
+                    "permission" : "approval_module_list"
                 }
             ]
         },
@@ -152,7 +156,8 @@
             "iconf": "fill-watch",
             "type": "link",
             "active": false,
-            "path": "/attendance"
+            "path": "/attendance",
+            "permission" : "attendance_list"
         },
         {
             "title": "Backup",
@@ -160,7 +165,8 @@
             "iconf": "fill-copy",
             "type": "link",
             "active": false,
-            "path": "/attendance/backup"
+            "path": "/attendance/backup",
+            "permission" : "backup_list"
         },
         {
             "headTitle1": "ASSESMENT",

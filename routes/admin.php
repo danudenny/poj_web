@@ -6,14 +6,10 @@ use App\Http\Controllers\API\CabangController;
 use App\Http\Controllers\API\CompanyController;
 use App\Http\Controllers\API\CorporateController;
 use App\Http\Controllers\API\DepartmentController;
-use App\Http\Controllers\API\DepartmentControllert;
 use App\Http\Controllers\API\EmployeeAttendanceController;
 use App\Http\Controllers\API\EmployeeController;
 use App\Http\Controllers\API\EmployeeDetailController;
 use App\Http\Controllers\API\EmployeeTimesheetController;
-use App\Http\Controllers\API\EventCategoryController;
-use App\Http\Controllers\API\EventController;
-use App\Http\Controllers\API\EventRecurringController;
 use App\Http\Controllers\API\PermissionController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\SettingController;
@@ -21,8 +17,6 @@ use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\WorkLocationController;
 use App\Http\Controllers\BackupController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\API\SubsidiaryController;
-use App\Http\Controllers\API\AreaController;
 use App\Http\Controllers\API\KanwilController;
 use App\Http\Controllers\API\OutletController;
 use App\Http\Controllers\API\UnitController;
@@ -148,28 +142,6 @@ Route::group(['prefix' => 'admin'], function () {
     });
     // End employee attendance
 
-    // Begin Subsidiary
-    Route::group(['prefix' => 'subsidiary'], function () {
-        Route::get('/', [SubsidiaryController::class, 'index']);
-        Route::get('view', [SubsidiaryController::class, 'view']);
-        Route::get('/outlets', [SubsidiaryController::class, 'getOutlet']);
-        Route::post('save', [SubsidiaryController::class, 'save']);
-        Route::post('update', [SubsidiaryController::class, 'update']);
-        Route::delete('delete', [SubsidiaryController::class, 'destroy']);
-    });
-    // End Subsidiary
-
-    // Begin Area
-    Route::group(['prefix' => 'area'], function () {
-        Route::get('/', [AreaController::class, 'index']);
-        Route::get('view', [AreaController::class, 'view']);
-        Route::get('/kanwils', [AreaController::class, 'getKanwil']);
-        Route::post('save', [AreaController::class, 'save']);
-        Route::post('update', [AreaController::class, 'update']);
-        Route::delete('delete', [AreaController::class, 'destroy']);
-    });
-    // End Area
-
     // Begin Kanwil
     Route::group(['prefix' => 'kanwil'], function () {
         Route::get('/', [KanwilController::class, 'index']);
@@ -194,8 +166,8 @@ Route::group(['prefix' => 'admin'], function () {
     // Begin Approval Module
     Route::group(['prefix' => 'approval-module'], function() {
         Route::get('', [ApprovalModuleController::class, 'index']);
-        Route::post('create', [ApprovalModuleController::class, 'save']);
         Route::get('view/{id}', [ApprovalModuleController::class, 'show']);
+        Route::post('create', [ApprovalModuleController::class, 'save']);
         Route::put('update/{id}', [ApprovalModuleController::class, 'update']);
         Route::delete('delete/{id}', [ApprovalModuleController::class, 'delete']);
     });
@@ -204,6 +176,7 @@ Route::group(['prefix' => 'admin'], function () {
     // Begin Approval
     Route::group(['prefix' => 'approval'], function() {
         Route::get('', [ApprovalController::class, 'index']);
+        Route::get('get-unit', [ApprovalController::class, 'getOrg']);
         Route::post('create', [ApprovalController::class, 'save']);
         Route::get('view/{id}', [ApprovalController::class, 'show']);
         Route::put('update/{id}', [ApprovalController::class, 'update']);

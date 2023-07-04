@@ -55,38 +55,13 @@
                                             </div>
                                         </div>
                                     </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div v-for="(divElement, index) in appendedOrganization" :key="divElement.id">
-                                                    <div class="mb-3">
-                                                        <label class="form-label" for="name">Organization {{index+1}}</label>
-                                                        <multiselect
-                                                            v-model="appendedOrganization[index]"
-                                                            placeholder="Select Organization"
-                                                            label="name"
-                                                            track-by="id"
-                                                            :options="organization"
-                                                            :multiple="false">
-                                                        </multiselect>
-                                                    </div>
-                                                </div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div v-if="loading" class="text-center">
+                                                <img src="../../assets/loader.gif" alt="loading" width="100">
                                             </div>
-                                            <div class="col-md-6">
-                                                <div v-for="(divElement, index) in appendedApprover" :key="divElement.id">
-                                                    <div class="mb-3">
-                                                        <label class="form-label" for="name">Approver {{index+1}}</label>
-                                                        <multiselect
-                                                            v-model="appendedApprover[index]"
-                                                            placeholder="Select User"
-                                                            label="name"
-                                                            track-by="id"
-                                                            :options="users"
-                                                            :multiple="false">
-                                                        </multiselect>
-                                                    </div>
-                                                </div>
-                                            </div>
-
+                                            <div ref="approverTable"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -108,6 +83,7 @@
 
 <script>
 import axios from "axios"
+import {TabulatorFull as Tabulator} from 'tabulator-tables';
 
 export default {
     data() {
@@ -129,27 +105,52 @@ export default {
             organization_id: 0,
             level: 0,
             selectedLevel: 0,
-            appendedMultiselects: [],
-            appendedMultiselectModels: [],
+            loading: false,
         }
     },
-    created() {
-        this.getApprovals()
-        this.getApprovalModules()
-        this.loadCabang()
-        this.getUsers()
+    async mounted() {
+        await this.getApprovals()
+        await this.getApprovalModules()
+        await this.loadCabang()
+        await this.getUsers()
+        this.initializeApproverTable()
     },
     methods: {
         async getApprovals() {
+            this.loading = true
             await axios.get(`/api/v1/admin/approval/view/${this.approvalId}`)
                 .then(response => {
                     this.approval = response.data.data
-                    console.log(this.approval.approval_module)
+                    console.log(this.approval.users)
                     this.selectedLevel = this.approval.users.length
                 })
                 .catch(error => {
                     console.error(error)
                 })
+        },
+        initializeApproverTable() {
+            new Tabulator(this.$refs.approverTable, {
+                data: this.approval.users,
+                layout: 'fitColumns',
+                columns: [
+                    {
+                        title: 'No',
+                        field: '',
+                        formatter: 'rownum',
+                        width: 100
+                    },
+                    {
+                        title: 'Approver Name',
+                        field: 'name',
+                    },
+                    {
+                        title: 'Units Name',
+                        field: 'employee.unit.name',
+                    },
+                ],
+                paginationInitialPage:1,
+            });
+            this.loading = false
         },
         async loadCabang() {
             await axios.get('/api/v1/admin/cabang')
@@ -169,24 +170,6 @@ export default {
                     console.error(error)
                 })
         },
-        generateLevel(){
-            this.appendedApprover = [];
-            this.appendedOrganization = [];
-            for (let i = 0; i < this.selectedLevel; i++) {
-                this.appendedApprover.push(this.appendLevelApprover());
-                this.appendedOrganization.push(this.appendLevelOrganization());
-            }
-        },
-        appendLevelOrganization() {
-            this.appendedMultiselects.push(this.generateMultiselect());
-            this.appendedMultiselectModels.push(null);
-            return document.createElement('div');
-        },
-        appendLevelApprover() {
-            this.appendedMultiselects.push(this.generateMultiselect());
-            this.appendedMultiselectModels.push(null);
-            return document.createElement('div');
-        },
         async getUsers() {
             await axios.get('/api/v1/admin/user')
                 .then(response => {
@@ -200,26 +183,6 @@ export default {
             return {
                 id: Math.random()
             };
-        },
-        async saveChanges(){
-            let userIds = []
-            this.appendedApprover.forEach((element, index) => {
-                userIds.push(element.id)
-            })
-            // console.log(this.approval.name, this.approval.approval_module_id, this.approval.active, this.approval.user_id)
-
-            await axios.post('/api/v1/admin/approval/create', {
-                name: this.approval.name,
-                approval_module_id: this.approval.approval_module_id.id,
-                is_active: true,
-                user_id: userIds,
-            }).then(response => {
-                this.basic_success_alert(response.data.message)
-                this.$router.push('/approval')
-            }).catch(error => {
-                this.warning_alert_state(error.response.data.message)
-            })
-
         },
         backToApproval(){
             this.basic_warning_alert()
@@ -266,3 +229,23 @@ export default {
     }
 }
 </script>
+
+<style>
+.tabulator .tabulator-header .tabulator-col {
+    background-color: #0A5640 !important;
+    color: #fff
+}
+.button-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 20%;
+    border: none;
+    margin: 2px;
+}
+
+.button-success {
+    background-color: #28a745;
+    color: #fff
+}
+</style>
+

@@ -2,6 +2,7 @@
 
 namespace App\Services\Core;
 
+use App\Helpers\UnitHelper;
 use App\Jobs\SyncEmployeesJob;
 use App\Models\Employee;
 use App\Models\Unit;
@@ -17,16 +18,19 @@ class EmployeeService extends BaseService
     /**
      * @throws Exception
      */
-    public function index($request)
+    public function index($request): JsonResponse
     {
+        $getUnit = Unit::where('id', $request->unit_id)->get();
+        $flattenedUnits = UnitHelper::flattenUnits($getUnit);
+        foreach ($flattenedUnits as $unit) {
+            $unitIds[] = $unit['id'];
+        }
         try {
             $employees = Employee::with('employeeDetail', 'employeeDetail.employeeTimesheet', 'job', 'unit');
             $employees->when(request('name'), function ($query) {
                 $query->where('name', 'like', '%' . request('name') . '%');
             });
-
-            $employees->where('unit_id', '=', $request->unit_id);
-
+            $employees->whereIn('unit_id', $unitIds);
             $employees->orderBy('id', 'asc');
 
             if (!$request->has('page')) {

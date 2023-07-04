@@ -20,12 +20,14 @@ class RoleService extends BaseService
     {
         try {
             $roles = Role::query();
+            $roles->with('permissions');
             $roles->when(request()->filled('name'), function ($query) {
                 $query->where('name', 'like', '%' . request()->query('name') . '%');
             });
             $roles->when(request()->filled('is_active'), function ($query) {
                 $query->where('is_active', '=', request()->query('is_active'));
             });
+            $roles->orderBy('id', 'asc');
 
             return $this->list($roles, $data);
 
