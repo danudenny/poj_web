@@ -188,13 +188,10 @@ export default {
             axios
                 .get(this.apiUrl, { params: this.params })
                 .then(response => {
-                    console.log(response);
-                    console.log(response.data.data.current_page);
                     this.totalItems = response.data.data.total;
                     this.params.page = response.data.data.current_page;
                     this.params.totalPages = response.data.data.last_page;
                     this.items = response.data.data.data.map((data, index) => ({...data, no: (index + 1) + ((this.params.page - 1) * this.params.per_page)}));
-                    console.log(this.params)
                 })
                 .catch(error => {
                     console.error(error);
