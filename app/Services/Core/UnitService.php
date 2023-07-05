@@ -4,6 +4,7 @@ namespace App\Services\Core;
 
 use App\Models\Unit;
 use App\Services\BaseService;
+use Illuminate\Database\Eloquent\Builder;
 
 class UnitService extends BaseService
 {
@@ -17,10 +18,13 @@ class UnitService extends BaseService
         try {
             $unit = Unit::query();
             $unit->with(['child']);
-            $unit->when(request()->filled('level_name'), function ($query) {
-                $query->whereHas('level', function($query) {
+            $unit->when(request()->filled('level_name'), function (Builder $query) {
+                $query->whereHas('level', function(Builder $query) {
                     $query->where('desc', request()->query('level_name'));
                 });
+            });
+            $unit->when(request()->filled('name'), function (Builder $query) {
+                $query->whereRaw('LOWER(name) LIKE ?', [strtolower('%' . request()->query('name') . '%')]);
             });
 
             return $this->list($unit, $data);
