@@ -7,6 +7,7 @@ use App\Http\Resources\RoleResource;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Services\BaseService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 class RoleService extends BaseService
@@ -21,8 +22,8 @@ class RoleService extends BaseService
         try {
             $roles = Role::query();
             $roles->with('permissions');
-            $roles->when(request()->filled('name'), function ($query) {
-                $query->where('name', 'like', '%' . request()->query('name') . '%');
+            $roles->when(request()->filled('name'), function (Builder $query) {
+                $query->whereRaw('LOWER(name) LIKE ?', [strtolower('%' . request()->query('name') . '%')]);
             });
             $roles->when(request()->filled('is_active'), function ($query) {
                 $query->where('is_active', '=', request()->query('is_active'));
