@@ -107,4 +107,9 @@ class EmployeeTimesheetController extends BaseController
         return $this->employeeTimesheetService->deleteSchedule($request);
     }
 
+    public function getPeriods(): JsonResponse
+    {
+        return $this->employeeTimesheetService->getPeriods();
+    }
+
 }

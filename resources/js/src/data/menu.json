@@ -120,12 +120,27 @@
         },
         {
             "title": "Timesheet",
-            "icon": "clock",
-            "iconf": "fill-clock",
-            "type": "link",
+            "icon": "user",
+            "iconf": "fill-learning",
+            "type": "sub",
             "active": false,
-            "path": "/timesheet",
-            "permission" : "timesheet_list"
+            "permission" : "timesheet_list",
+            "children": [
+                {
+                    "path": "timesheet",
+                    "title": "Timesheet Master",
+                    "type": "link",
+                    "active": false,
+                    "permission" : "timesheet_list"
+                },
+                {
+                    "path": "timesheet-assign",
+                    "title": "Timesheet Assignments",
+                    "type": "link",
+                    "active": false,
+                    "permission" : "timesheet_assignment_list"
+                }
+            ]
         },
         {
             "title": "Approvals",

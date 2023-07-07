@@ -356,4 +356,16 @@ class EmployeeTimesheetService extends BaseService {
             ], 500);
         }
     }
+
+    public function getPeriods(): JsonResponse
+    {
+        $currentYear = Carbon::now()->year;
+        $periods = Period::where('year', $currentYear)->get();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data fetched successfully',
+            'data' => $periods
+        ], 200);
+    }
 }
