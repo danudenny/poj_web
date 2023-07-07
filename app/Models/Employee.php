@@ -53,4 +53,9 @@ class Employee extends Model
     {
         return $this->hasOne(Unit::class, 'id', 'unit_id');
     }
+
+    public function timesheetSchedules(): HasMany
+    {
+        return $this->hasMany(EmployeeTimesheetSchedule::class, 'employee_id');
+    }
 }
