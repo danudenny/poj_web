@@ -55,7 +55,7 @@
                             <div v-if="column.key === 'status'">
                                 <span v-if="item[column.key] === 'In Active'" class="badge badge-danger">{{ item[column.key] }}</span>
                                 <span v-else-if="item[column.key] === 'Active'" class="badge badge-success">{{ item[column.key] }}</span>
-                                <span v-else>{{ item[column.key] }}</span>
+                                <span v-else>{{ item[column.key] }} </span>
                             </div>
 
                             <div class="media-body icon-state switch-outline" v-else-if="column.key === 'is_active'">
@@ -188,12 +188,10 @@ export default {
             axios
                 .get(this.apiUrl, { params: this.params })
                 .then(response => {
-                    console.log(response);
-                    console.log(response.data.data.current_page);
-                    this.items = response.data.data.data.map((data, index) => ({...data, no: index + 1}));
                     this.totalItems = response.data.data.total;
                     this.params.page = response.data.data.current_page;
                     this.params.totalPages = response.data.data.last_page;
+                    this.items = response.data.data.data.map((data, index) => ({...data, no: (index + 1) + ((this.params.page - 1) * this.params.per_page)}));
                 })
                 .catch(error => {
                     console.error(error);

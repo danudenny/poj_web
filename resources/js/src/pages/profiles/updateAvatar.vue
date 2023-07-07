@@ -82,7 +82,7 @@ export default {
                             console.log(response);
                             localStorage.setItem('USER_AVATAR', response.data.data.avatar);
                             useToast().success(response.data.message , { position: 'bottom-right' });
-
+                            window.location.reload()
                         })
                         .catch(function (error) {
                             console.log(error)

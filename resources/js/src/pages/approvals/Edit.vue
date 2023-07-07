@@ -92,7 +92,7 @@ export default {
                 name: '',
                 approval_module_id: '',
                 level: '',
-                active: '',
+                is_active: '',
                 user_id: [],
                 approval_module: {},
             },
@@ -123,6 +123,7 @@ export default {
                     this.approval = response.data.data
                     console.log(this.approval.users)
                     this.selectedLevel = this.approval.users.length
+                    this.appendedApprover = response.data.data.users
                 })
                 .catch(error => {
                     console.error(error)
@@ -171,13 +172,13 @@ export default {
                 })
         },
         async getUsers() {
-            await axios.get('/api/v1/admin/user')
-                .then(response => {
-                    this.users = response.data.data.data
-                })
-                .catch(error => {
-                    console.error(error)
-                })
+            // await axios.get('/api/v1/admin/user')
+            //     .then(response => {
+            //         this.users = response.data.data.data
+            //     })
+            //     .catch(error => {
+            //         console.error(error)
+            //     })
         },
         generateMultiselect() {
             return {
@@ -226,6 +227,23 @@ export default {
                 type: "error",
             });
         },
+        async saveChanges() {
+            let userIds = []
+            this.appendedApprover.forEach((element, index) => {
+                userIds.push(element.id)
+            })
+
+            await axios.put(`/api/v1/admin/approval/update/${this.approvalId}`, {
+                name: this.approval.name,
+                approval_module_id: this.approval.approval_module.id,
+                is_active: this.approval.is_active,
+                user_id: userIds,
+            }).then(response => {
+                this.basic_success_alert(response.data.message)
+            }).catch(error => {
+                this.warning_alert_state(error.response.data.message)
+            })
+        }
     }
 }
 </script>

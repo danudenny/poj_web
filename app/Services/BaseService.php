@@ -54,7 +54,7 @@ abstract class BaseService
         }
 
         if ($request->per_page) {
-            return $model->paginate($request->per_page);
+            return $model->paginate($request->per_page)->withQueryString();
         } else {
             return $model->get();
         }

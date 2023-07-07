@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\BaseService;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -21,8 +22,8 @@ class EmployeeAttendanceService extends BaseService {
             $attendances = EmployeeAttendance::query();
             $attendances->with(['employee', 'employee.company', 'employee.employeeDetail', 'employee.employeeDetail.employeeTimesheet', 'employeeAttendanceHistory']);
             $attendances->when($request->name, function ($query) use ($request) {
-                $query->whereHas('employee', function ($query) use ($request) {
-                    $query->where('name', 'like', '%'.$request->name.'%');
+                $query->whereHas('employee', function (Builder $query) use ($request) {
+                    $query->whereRaw('LOWER(name) LIKE ?', [strtolower('%' . request()->query('name') . '%')]);
                 });
             });
             $attendances->when($request->check_in, function ($query) use ($request) {

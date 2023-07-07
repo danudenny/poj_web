@@ -5,6 +5,7 @@ namespace App\Services\Core;
 use App\Http\Resources\PermissionResource;
 use App\Models\Permission;
 use App\Services\BaseService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 class PermissionService extends BaseService
@@ -13,8 +14,8 @@ class PermissionService extends BaseService
     {
         try {
             $permission = Permission::query();
-            $permission->when(request()->filled('name'), function ($query) {
-                $query->where('name', 'like', '%' . request()->query('name') . '%');
+            $permission->when(request()->filled('name'), function (Builder $query) {
+                $query->whereRaw('LOWER(name) like ?', [strtolower('%' . request()->query('name') . '%')]);
             });
 
             return $this->list($permission, $data);
