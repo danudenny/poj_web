@@ -45,6 +45,8 @@ import ApprovalModule from '../pages/approval-modules/index.vue';
 import CreateApproval from '../pages/approvals/Create.vue';
 import EditApproval from '../pages/approvals/Edit.vue';
 import Department from '../pages/departments/index.vue';
+import Regional from '../pages/regionals/index.vue';
+import RegionalDetail from '../pages/regionals/details.vue';
 
 //  Attendances
 import Attendances from '../pages/attendances/index.vue';
@@ -430,6 +432,33 @@ const routes =[
                     permission: 'profile',
                 }
             }
+        ]
+    },
+
+    {
+        path: '/regionals',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Regional',
+                component: Regional,
+                meta: {
+                    title: 'POJ - Regional',
+                    requiresAuth: true,
+                    permission: 'regional_list',
+                },
+            },
+            {
+                path: '/regionals/detail/:id',
+                name: 'regional_detail',
+                component: RegionalDetail,
+                meta: {
+                    title: 'POJ - Regional Detail',
+                    requiresAuth: true,
+                    permission: 'regional_list',
+                }
+            },
         ]
     },
     {

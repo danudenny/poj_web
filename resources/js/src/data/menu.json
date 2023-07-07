@@ -75,6 +75,13 @@
             "permission" : "working_area",
             "children": [
                 {
+                    "path": "/regionals",
+                    "title": "Regional",
+                    "type": "link",
+                    "active": false,
+                    "permission" : "regional_list"
+                },
+                {
                     "path": "/corporates",
                     "title": "Corporate",
                     "type": "link",
