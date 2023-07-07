@@ -116,6 +116,7 @@ Route::group(['prefix' => 'admin'], function () {
         Route::get('view-schedule', [EmployeeTimesheetController::class, 'showEmployeeSchedule']);
         Route::put('update-schedule', [EmployeeTimesheetController::class, 'updateEmployeeSchedule']);
         Route::delete('delete-schedule', [EmployeeTimesheetController::class, 'deleteEmployeeSchedule']);
+        Route::get('periods', [EmployeeTimesheetController::class, 'getPeriods']);
     });
     // End employee timesheet
 
