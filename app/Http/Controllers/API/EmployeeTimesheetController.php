@@ -8,7 +8,7 @@ use App\Http\Requests\EmployeeTimesheet\UpdateEmployeeTimesheetRequest;
 use App\Services\Core\EmployeeTimesheetService;
 use Exception;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Request;
+use Illuminate\Http\Request;
 use Psr\Container\ContainerExceptionInterface;
 
 class EmployeeTimesheetController extends BaseController
@@ -77,6 +77,34 @@ class EmployeeTimesheetController extends BaseController
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function assignSchedule(Request $request): JsonResponse
+    {
+        return $this->employeeTimesheetService->assignTimesheetSchedule($request);
+    }
+
+    public function getEmployeeSchedule(Request $request): JsonResponse
+    {
+        return $this->employeeTimesheetService->getEmployeeSchedule($request);
+    }
+
+    public function showEmployeeSchedule(Request $request): JsonResponse
+    {
+        return $this->employeeTimesheetService->showEmployeeSchedule($request);
+    }
+
+    public function updateEmployeeSchedule(Request $request): JsonResponse
+    {
+        return $this->employeeTimesheetService->updateSchedule($request);
+    }
+
+    public function deleteEmployeeSchedule(Request $request): JsonResponse
+    {
+        return $this->employeeTimesheetService->deleteSchedule($request);
     }
 
 }

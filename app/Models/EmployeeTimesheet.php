@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class EmployeeTimesheet extends Model
 {
@@ -18,13 +19,18 @@ class EmployeeTimesheet extends Model
         'is_active',
     ];
 
-    public function employeeDetails()
+    public function employeeDetails(): HasMany
     {
         return $this->hasMany(EmployeeDetail::class);
     }
 
-    public function employee()
+    public function employee(): HasMany
     {
         return $this->hasMany(Employee::class);
+    }
+
+    public function timesheetSchedules(): HasMany
+    {
+        return $this->hasMany(EmployeeTimesheetSchedule::class, 'timesheet_id');
     }
 }
