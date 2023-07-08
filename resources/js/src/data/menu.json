@@ -209,6 +209,15 @@
             "permission" : "report_list"
         },
         {
+            "title": "Incident Reporting",
+            "icon": "alert-circle",
+            "iconf": "alert-circle",
+            "type": "link",
+            "active": false,
+            "path": "/incident-reporting",
+            "permission" : "incident_reporting"
+        },
+        {
             "headTitle1": "CONFIGURATION",
             "headTitle2": "Configuration management",
             "type": "headtitle",
