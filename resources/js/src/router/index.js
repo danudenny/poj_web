@@ -73,6 +73,10 @@ import AreaDetail from '../pages/area/details.vue';
 import Outlets from '../pages/outlet/index.vue';
 import OutletDetail from '../pages/outlet/details.vue';
 
+//Incident Reporting
+import IncidentReporting from '../pages/incident-reporting/index.vue';
+import IncidentReportingDetail from '../pages/incident-reporting/detail.vue';
+
 //Error page
 import Error from  '../components/error.vue';
 
@@ -589,6 +593,32 @@ const routes =[
                     title: 'POJ - Outlet Detail',
                     requiresAuth: true,
                     permission: 'outlet_list',
+                }
+            },
+        ]
+    },
+    {
+        path: '/incident-reporting',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Incident Reporting',
+                component: IncidentReporting,
+                meta: {
+                    title: 'POJ - Incident Reporting',
+                    requiresAuth: true,
+                    permission: 'incident_reporting',
+                },
+            },
+            {
+                path: 'detail/:id',
+                name: 'incident_reporting_detail',
+                component: IncidentReportingDetail,
+                meta: {
+                    title: 'POJ - Incident Reporting',
+                    requiresAuth: true,
+                    permission : 'incident_reporting',
                 }
             },
         ]

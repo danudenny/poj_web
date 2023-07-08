@@ -10,6 +10,7 @@ use App\Http\Controllers\API\EmployeeAttendanceController;
 use App\Http\Controllers\API\EmployeeController;
 use App\Http\Controllers\API\EmployeeDetailController;
 use App\Http\Controllers\API\EmployeeTimesheetController;
+use App\Http\Controllers\API\IncidentController;
 use App\Http\Controllers\API\PermissionController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\SettingController;
@@ -208,4 +209,13 @@ Route::group(['prefix' => 'admin'], function () {
     });
     // End Backups
 
+    // Begin Incident
+    Route::group(['prefix' => 'incident'], functioN() {
+        Route::get('', [IncidentController::class, 'index']);
+        Route::get('view/{incidentID}', [IncidentController::class, 'view']);
+        Route::post('create', [IncidentController::class, 'create']);
+        Route::post('approval/{incidentID}', [IncidentController::class, 'approval']);
+        Route::post('closure/{incidentID}', [IncidentController::class, 'closure']);
+        Route::post('upload-image', [IncidentController::class, 'uploadImage']);
+    });
 });
