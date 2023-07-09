@@ -49,6 +49,10 @@
                                     <div class="alert-border alert alert-primary" v-if="item.status !== 'reject'">
                                         <table>
                                             <tr>
+                                                <td>Stage</td>
+                                                <td>: {{item.history_type}}</td>
+                                            </tr>
+                                            <tr>
                                                 <td>Status</td>
                                                 <td>: {{item.status}}</td>
                                             </tr>
@@ -56,26 +60,34 @@
                                                 <td>Timestamp</td>
                                                 <td>: {{item.created_at}}</td>
                                             </tr>
-                                            <tr v-if="item.status == 'approve'">
-                                                <td>Analisis Kejadian</td>
-                                                <td>: {{incident.incident_analysis}}</td>
+                                            <tr>
+                                                <td>Name</td>
+                                                <td>: {{item.employee.name}}</td>
                                             </tr>
-                                            <tr v-if="item.status == 'approve'">
+                                            <tr v-if="item.incident_analysis">
+                                                <td>Analisis Kejadian</td>
+                                                <td>: {{item.incident_analysis}}</td>
+                                            </tr>
+                                            <tr v-if="item.follow_up_incident">
                                                 <td>Tindak Lanjut Kejadian</td>
-                                                <td>: {{incident.follow_up_incident}}</td>
+                                                <td>: {{item.follow_up_incident}}</td>
                                             </tr>
                                             <tr v-if="item.reason">
                                                 <td>Reason</td>
                                                 <td>: {{item.reason}}</td>
                                             </tr>
                                         </table>
-                                        <br/>
                                         <div v-if="item.status == 'approve'">
+                                            <br/>
                                             <img :src="incident.incident_image_follow_up[0].image_url" style="width: 100%"/>
                                         </div>
                                     </div>
                                     <div class="alert-border alert alert-danger" v-if="item.status === 'reject'">
                                         <table>
+                                            <tr>
+                                                <td>Stage</td>
+                                                <td>: {{item.history_type}}</td>
+                                            </tr>
                                             <tr>
                                                 <td>Status</td>
                                                 <td>: {{item.status}}</td>
@@ -83,6 +95,10 @@
                                             <tr>
                                                 <td>Timestamp</td>
                                                 <td>: {{item.created_at}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>Name</td>
+                                                <td>: {{item.employee.name}}</td>
                                             </tr>
                                             <tr v-if="item.reason">
                                                 <td>Reason</td>
@@ -103,18 +119,29 @@
                     <hr/>
 
                     <h4>Foto Kejadian</h4>
+                    <silent-box ref="silentbox" :gallery="incidentImages"></silent-box>
                     <div class="row">
                         <div class="col-md-3 mb-3" v-for="(item, index) in incident.incident_images" :key="index">
-                            <img :src="item.image_url" style="width: 100%"/>
+                            <img :src="item.image_url" @click="openOverlayGallery" style="width: 100%"/>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer text-end">
                     <button class="btn btn-secondary" @click="$router.push('/incident-reporting')">Back</button> &nbsp;
-                    <div class="btn btn-primary button-info" data-bs-toggle="modal" data-bs-target="#approvalModal" v-if="this.incident.last_status === 'submitted'">
+                    <div
+                        class="btn btn-primary button-info"
+                        data-bs-toggle="modal"
+                        data-bs-target="#approvalModal"
+                        v-if="!this.incident.is_finished && (this.incident.last_status === 'submitted' || this.incident.last_status === 'close' || this.incident.last_status === 'disclose' || this.incident.last_status === 'reject')"
+                    >
                         Approval
                     </div>
-                    <div class="btn btn-primary button-info" data-bs-toggle="modal" data-bs-target="#closureModal" v-if="this.incident.last_status === 'approve'">
+                    <div
+                        class="btn btn-primary button-info"
+                        data-bs-toggle="modal"
+                        data-bs-target="#closureModal"
+                        v-if="!this.incident.is_finished && this.incident.last_status === 'approve'"
+                    >
                         Closure
                     </div>
                 </div>
@@ -177,10 +204,13 @@
 import L from 'leaflet';
 import VerticalModal from "@components/modal/verticalModal.vue";
 import { useToast } from "vue-toastification";
+import VueSilentbox from 'vue-silentbox'
+import 'vue-silentbox/dist/style.css'
 
 export default {
     components: {
-        VerticalModal
+        VerticalModal,
+        VueSilentbox
     },
     data() {
         return {
@@ -199,6 +229,7 @@ export default {
                 chronology: "",
                 last_stage: "",
                 last_status: "",
+                is_finished: false,
                 incident_images: [],
                 incident_image_follow_up: [],
                 incident_histories: []
@@ -217,6 +248,12 @@ export default {
             mapContainer: null,
             map: null,
             marker: null,
+            incidentImages: [
+                {
+                    src: 'http://192.168.100.73:9000/att-poj-bucket/uploads/incident/64aab2e041114_pagar_rusak.jpeg',
+                    description: 'Sunken dreams II. by Arbebuk',
+                }
+            ]
         }
     },
     created() {
@@ -227,6 +264,7 @@ export default {
             await this.$axios.get(`/api/v1/admin/incident/view/${this.$route.params.id}`)
                 .then(response => {
                     this.incident = response.data.data;
+                    this.generateImagesGallery()
                     this.generateMap()
                 })
                 .catch(error => {
@@ -297,8 +335,22 @@ export default {
                         useToast().error(error.response.data.message , { position: 'bottom-right' });
                     }
                 });
+        },
+        generateImagesGallery() {
+            this.incident.incident_images.forEach((item, index) => {
+                console.log("IncidentImage", {
+                    item: item,
+                    idx: index
+                })
+            })
+        },
+        openOverlayGallery() {
+            this.$refs.silentbox.openOverlay({
+                src: 'http://192.168.100.73:9000/att-poj-bucket/uploads/incident/64aab2e041114_pagar_rusak.jpeg',
+                description: 'Sunken dreams II. by Arbebuk',
+            }, 0)
         }
-    }
+    },
 };
 </script>
 

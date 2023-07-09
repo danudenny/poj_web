@@ -2,10 +2,14 @@
 
 namespace App\Services\Core;
 
+use App\Models\Approval;
+use App\Models\ApprovalModule;
+use App\Models\ApprovalUser;
 use App\Models\Employee;
 use App\Models\Incident;
 use App\Models\IncidentHistory;
 use App\Models\IncidentImage;
+use App\Models\User;
 use App\Services\BaseService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -37,7 +41,7 @@ class IncidentService extends BaseService
     }
 
     public function view(int $incidentID) {
-        $incident = Incident::query()->with(['incidentImages', 'incidentImageFollowUp', 'incidentHistories'])->find($incidentID);
+        $incident = Incident::query()->with(['incidentImages', 'incidentImageFollowUp', 'incidentHistories', 'incidentHistories.employee:employees.id,name'])->find($incidentID);
         if(is_null($incident)) {
             return response()->json([
                 'message' => 'Incident not found!'
@@ -53,8 +57,12 @@ class IncidentService extends BaseService
 
     public function createIncident(Request $request) {
         try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
             $request->validate([
-                'employee_reported_id' => ['required'],
                 'category' => [
                     'required',
                     Rule::in([Incident::TYPE_INTERNAL, Incident::TYPE_EXTERNAL])
@@ -71,16 +79,10 @@ class IncidentService extends BaseService
                 'images' => ['required']
             ]);
 
-            if(!Employee::query()->find($request->input('employee_reported_id'))) {
-                return response()->json([
-                    'message' => 'Employee not found!'
-                ], Response::HTTP_BAD_REQUEST);
-            }
-
             DB::beginTransaction();
 
             $incident = new Incident();
-            $incident->employee_id = $request->input('employee_reported_id');
+            $incident->employee_id = $user->employee_id;
             $incident->category = $request->input('category');
             $incident->name = $request->input('name');
             $incident->latitude = $request->input('latitude');
@@ -109,6 +111,7 @@ class IncidentService extends BaseService
             $incidentHistory->incident_id = $incident->id;
             $incidentHistory->history_type = $incident->last_stage;
             $incidentHistory->status = $incident->last_status;
+            $incidentHistory->employee_id = $user->employee_id;
 
             $incidentHistory->save();
 
@@ -146,6 +149,35 @@ class IncidentService extends BaseService
             ]);
 
             /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            /**
+             * @var ApprovalUser[] $approvalUsers
+             */
+            $approvalUsers = ApprovalUser::query()
+                ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
+                ->where('approvals.approval_module_id', '=', ApprovalModule::ApprovalModuleIncidentID)
+                ->where('approvals.unit_id', '=', $user->employee->unit_id)
+                ->where('approvals.is_active', '=', true)
+                ->orderBy('approval_users.id', 'ASC')
+                ->get(['approval_users.*']);
+
+            $isValidToCreate = false;
+            foreach ($approvalUsers as $approvalUser) {
+                if ($approvalUser->user_id == $user->id) {
+                    $isValidToCreate = true;
+                }
+            }
+
+            if (!$isValidToCreate) {
+                return response()->json([
+                    'message' => 'You don\'t have access to do approval!'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            /**
              * @var Incident $incident
              */
             $incident = Incident::query()->find($incidentID);
@@ -155,9 +187,39 @@ class IncidentService extends BaseService
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-            if($incident->last_status != IncidentHistory::StatusSubmitted) {
+            if ($incident->last_status == IncidentHistory::StatusApprove) {
                 return response()->json([
-                    'message' => 'Incident not valid to approval!'
+                    'message' => 'Incident cannot re-approve!'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            $incidentHistoryClosureTotal = IncidentHistory::query()
+                ->where('incident_id', '=', $incident->id)
+                ->where('history_type', '=', IncidentHistory::TypeClosure)
+                ->count();
+            $incidentHistoryApprovalTotal = IncidentHistory::query()
+                ->where('incident_id', '=', $incident->id)
+                ->where('history_type', '=', IncidentHistory::TypeFollowUp)
+                ->where('status', '=', IncidentHistory::StatusReject)
+                ->count();
+
+            $totalIncidentHistory = $incidentHistoryClosureTotal + $incidentHistoryApprovalTotal;
+
+            if ($totalIncidentHistory >= count($approvalUsers)) {
+                return response()->json([
+                    'message' => 'Incident approval is finished!'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            if (!isset($approvalUsers[$totalIncidentHistory])) {
+                return response()->json([
+                    'message' => 'Invalid incident approval!'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            if ($approvalUsers[$totalIncidentHistory]->user_id != $user->id) {
+                return response()->json([
+                    'message' => 'Last approver not doing approval!'
                 ], Response::HTTP_BAD_REQUEST);
             }
 
@@ -182,12 +244,17 @@ class IncidentService extends BaseService
             DB::beginTransaction();
 
             $incidentHistory = new IncidentHistory();
+            $incidentHistory->employee_id = $user->employee_id;
             $incidentHistory->incident_id = $incident->id;
             $incidentHistory->history_type = IncidentHistory::TypeFollowUp;
             $incidentHistory->status = $data['status'];
 
             if($data['status'] == IncidentHistory::StatusReject) {
                 $incidentHistory->reason = $data['reason'];
+            }
+            if($data['status'] == IncidentHistory::StatusApprove) {
+                $incidentHistory->incident_analysis = $data['incident_analysis'];
+                $incidentHistory->follow_up_incident = $data['follow_up_incident'];
             }
 
             $incidentHistory->save();
@@ -199,11 +266,6 @@ class IncidentService extends BaseService
                 $incidentImage->image_url = $data['file'];
 
                 $incidentImage->save();
-            }
-
-            if($data['status'] == IncidentHistory::StatusApprove) {
-                $incident->incident_analysis = $data['incident_analysis'];
-                $incident->follow_up_incident = $data['follow_up_incident'];
             }
 
             $incident->last_status = $incidentHistory->status;
@@ -244,6 +306,35 @@ class IncidentService extends BaseService
             ]);
 
             /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            /**
+             * @var ApprovalUser[] $approvalUsers
+             */
+            $approvalUsers = ApprovalUser::query()
+                ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
+                ->where('approvals.approval_module_id', '=', ApprovalModule::ApprovalModuleIncidentID)
+                ->where('approvals.unit_id', '=', $user->employee->unit_id)
+                ->where('approvals.is_active', '=', true)
+                ->orderBy('approval_users.id', 'ASC')
+                ->get(['approval_users.*']);
+
+            $isValidToCreate = false;
+            foreach ($approvalUsers as $approvalUser) {
+                if ($approvalUser->user_id == $user->id) {
+                    $isValidToCreate = true;
+                }
+            }
+
+            if (!$isValidToCreate) {
+                return response()->json([
+                    'message' => 'You don\'t have access to do approval!'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            /**
              * @var Incident $incident
              */
             $incident = Incident::query()->find($incidentID);
@@ -253,9 +344,32 @@ class IncidentService extends BaseService
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-            if($incident->last_status != IncidentHistory::StatusApprove) {
+            if ($incident->last_status == IncidentHistory::StatusClose || $incident->last_status == IncidentHistory::StatusDisclose) {
                 return response()->json([
-                    'message' => 'Incident not valid to closure!'
+                    'message' => 'Incident cannot re-approve!'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            $totalIncidentHistoryClosure = IncidentHistory::query()
+                ->where('incident_id', '=', $incident->id)
+                ->where('history_type', '=', IncidentHistory::TypeFollowUp)
+                ->count();
+
+            if ($totalIncidentHistoryClosure > count($approvalUsers)) {
+                return response()->json([
+                    'message' => 'Incident approval is finished!'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            if (!isset($approvalUsers[($totalIncidentHistoryClosure - 1)])) {
+                return response()->json([
+                    'message' => 'Invalid incident closure!'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            if ($approvalUsers[($totalIncidentHistoryClosure - 1)]->user_id != $user->id) {
+                return response()->json([
+                    'message' => 'Last approver not doing approval!'
                 ], Response::HTTP_BAD_REQUEST);
             }
 
@@ -267,6 +381,7 @@ class IncidentService extends BaseService
             DB::beginTransaction();
 
             $incidentHistory = new IncidentHistory();
+            $incidentHistory->employee_id = $user->employee_id;
             $incidentHistory->incident_id = $incident->id;
             $incidentHistory->history_type = IncidentHistory::TypeClosure;
             $incidentHistory->status = $data['status'];

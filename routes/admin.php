@@ -210,7 +210,7 @@ Route::group(['prefix' => 'admin'], function () {
     // End Backups
 
     // Begin Incident
-    Route::group(['prefix' => 'incident'], functioN() {
+    Route::group(['prefix' => 'incident', 'middleware' => ['auth:sanctum']], functioN() {
         Route::get('', [IncidentController::class, 'index']);
         Route::get('view/{incidentID}', [IncidentController::class, 'view']);
         Route::post('create', [IncidentController::class, 'create']);

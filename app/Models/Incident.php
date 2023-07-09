@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read IncidentImage[] $incidentImages
  * @property-read IncidentImage[] $incidentImageFollowUp
  * @property-read IncidentHistory[] $incidentHistories
+ * @property Employee $employee
  */
 class Incident extends Model
 {
@@ -42,6 +43,30 @@ class Incident extends Model
     protected $casts = [
         'created_at'  => 'date:Y-m-d H:i:s',
     ];
+
+    protected $appends = ['is_finished'];
+
+    public function getIsFinishedAttribute() {
+        $totalApproval = ApprovalUser::query()
+            ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
+            ->where('approvals.approval_module_id', '=', ApprovalModule::ApprovalModuleIncidentID)
+            ->where('approvals.unit_id', '=', $this->employee->unit_id)
+            ->where('approvals.is_active', '=', true)
+            ->orderBy('approval_users.id', 'ASC')
+            ->count();
+
+        $incidentHistoryClosureTotal = IncidentHistory::query()
+            ->where('incident_id', '=', $this->id)
+            ->where('history_type', '=', IncidentHistory::TypeClosure)
+            ->count();
+        $incidentHistoryApprovalTotal = IncidentHistory::query()
+            ->where('incident_id', '=', $this->id)
+            ->where('history_type', '=', IncidentHistory::TypeFollowUp)
+            ->where('status', '=', IncidentHistory::StatusReject)
+            ->count();
+
+        return ($incidentHistoryClosureTotal + $incidentHistoryApprovalTotal) >= $totalApproval;
+    }
 
     /**
      * @return HasMany
@@ -62,5 +87,9 @@ class Incident extends Model
      */
     public function incidentHistories() {
         return $this->hasMany(IncidentHistory::class, 'incident_id')->orderBy('created_at', 'ASC');
+    }
+
+    public function employee() {
+        return $this->belongsTo(Employee::class, 'employee_id');
     }
 }
