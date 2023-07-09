@@ -244,7 +244,9 @@ export default {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(this.map);
 
-            this.marker = L.marker([this.incident.latitude, this.incident.longitude]).addTo(this.map);
+            this.marker = L.marker([this.incident.latitude, this.incident.longitude], {icon: L.icon({
+                    iconUrl: '/marker-icon.png'
+                })}).addTo(this.map);
         },
         incidentApproval() {
             this.$axios.post(`/api/v1/admin/incident/approval/${this.$route.params.id}`, this.approval)
