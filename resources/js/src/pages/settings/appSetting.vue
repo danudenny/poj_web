@@ -1,5 +1,5 @@
 <template>
-    <div class="tab-pane fade" id="pills-app" role="tabpanel" aria-labelledby="pills-app-tab">
+    <div class="tab-pane fade active show" id="pills-app" role="tabpanel" aria-labelledby="pills-app-tab">
         <div class="card mb-0">
             <div class="card-header d-flex">
                 <h5 class="mb-0">App Settings</h5>
@@ -62,9 +62,9 @@ export default {
     },
     methods: {
         fetchExistingData() {
-            axios.get('api/v1/admin/setting?limit=100')
+            this.$axios.get('api/v1/admin/setting?limit=100')
                 .then(response => {
-                    const result = response.data.data.data;
+                    const result = response.data.data;
 
                     result.filter(entry => {
                         if (entry.key === 'app_name') {

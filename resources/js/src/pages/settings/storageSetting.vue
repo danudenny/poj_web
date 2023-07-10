@@ -120,9 +120,9 @@ export default {
     },
     methods: {
         fetchExistingData() {
-            axios.get('api/v1/admin/setting?limit=100')
+            this.$axios.get('api/v1/admin/setting?limit=100')
                 .then(response => {
-                    const result = response.data.data.data;
+                    const result = response.data.data;
 
                     result.filter(entry => {
                         if (entry.key === 'MINIO_KEY') {

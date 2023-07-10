@@ -134,9 +134,9 @@ Route::group(['prefix' => 'admin'], function () {
     // Begin employee timesheet
     Route::group(['prefix' => 'work-locations'], function() {
         Route::get('/', [WorkLocationController::class, 'index']);
-        Route::get('view/{id}', [WorkLocationController::class, 'view']);
+        Route::get('view', [WorkLocationController::class, 'show']);
         Route::post('create', [WorkLocationController::class, 'save']);
-        Route::put('update/{id}', [WorkLocationController::class, 'update']);
+        Route::put('update', [WorkLocationController::class, 'update']);
         Route::delete('delete/{id}', [WorkLocationController::class, 'delete']);
     });
     // End employee timesheet

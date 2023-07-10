@@ -9,7 +9,7 @@
                                 <ul class="nav main-menu" role="tablist">
                                     <li class="nav-item"><span class="main-title">Settings Menu</span></li>
                                     <li>
-                                        <a class="pills-link" id="pills-app-tab" data-bs-toggle="pill" href="#pills-app" role="tab"
+                                        <a class="pills-link active" id="pills-app-tab" data-bs-toggle="pill" href="#pills-app" role="tab"
                                            aria-controls="pills-app" aria-selected="true">
                                             <span class="title" @click="active('pills-app-tab')">
                                                 <i data-feather="command">

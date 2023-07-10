@@ -15,15 +15,8 @@ class WorkLocationService extends BaseService
     {
         try {
             $workLocation = WorkLocation::query();
-            $workLocation->when(request()->filled('lat'), function ($query) {
-                $query->where('lat', '=', request()->query('lat'));
-            });
-            $workLocation->when(request()->filled('long'), function ($query) {
-                $query->where('long', '=', request()->query('long'));
-            });
-            $workLocation->when(request()->filled('radius'), function ($query) {
-                $query->where('radius', '=', request()->query('radius'));
-            });
+            $workLocation->with('company');
+            $workLocation->where('reference_id', '=', $request->unit_id);
             return response()->json([
                 'status' => true,
                 'message' => 'Success fetch data!',
@@ -68,9 +61,11 @@ class WorkLocationService extends BaseService
         }
     }
 
-    public function show($id): JsonResponse
+    public function show($request): JsonResponse
     {
-        $dataExists = WorkLocation::find($id);
+        $dataExists = WorkLocation::with('company')
+            ->where('reference_id', $request->unit_id)
+            ->first();
         if (!$dataExists) {
             return response()->json([
                 'status' => false,
@@ -85,8 +80,8 @@ class WorkLocationService extends BaseService
         ]);
     }
 
-    public function edit($data, $id) {
-        $dataExists = WorkLocation::find($id);
+    public function edit($data) {
+        $dataExists = WorkLocation::find($data->unit_id);
         if (!$dataExists) {
             return response()->json([
                 'status' => false,
@@ -97,11 +92,13 @@ class WorkLocationService extends BaseService
 
         DB::beginTransaction();
         try {
-            $dataExists->reference_table = $data->reference_table;
-            $dataExists->reference_id = $data->reference_id;
+            $dataExists->reference_table = '';
+            $dataExists->reference_id = $data->unit_id;
             $dataExists->lat = $data->lat;
             $dataExists->long = $data->long;
             $dataExists->radius = $data->radius;
+            $dataExists->early_buffer = $data->early_buffer;
+            $dataExists->late_buffer = $data->late_buffer;
 
             if (!$dataExists->save()) {
                 throw new Exception('Failed save data!');

@@ -231,6 +231,15 @@
             "active": false,
             "path": "/general-settings",
             "permission" : "general_setting"
+        },
+        {
+            "title": "Company Settings",
+            "icon": "settings",
+            "iconf": "fill-learning",
+            "type": "link",
+            "active": false,
+            "path": "/company-settings",
+            "permission" : "company_setting"
         }
     ]
 }

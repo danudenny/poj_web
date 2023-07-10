@@ -33,6 +33,7 @@ import EmployeeDetail from '../pages/employees/details.vue';
 
 // General Settings
 import GeneralSettings from '../pages/settings/index.vue';
+import CompanySetting from '../pages/settings/company_setting/index.vue';
 
 // Work Area Settings
 import Cabang from '../pages/cabang/index.vue';
@@ -300,6 +301,22 @@ const routes =[
                     title: 'POJ - General Settings',
                     requiresAuth: true,
                     permission : 'general_setting',
+                },
+            },
+        ]
+    },
+    {
+        path: '/company-settings',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Company Settings',
+                component: CompanySetting,
+                meta: {
+                    title: 'POJ - Company Settings',
+                    requiresAuth: true,
+                    permission : 'company_setting',
                 },
             },
         ]

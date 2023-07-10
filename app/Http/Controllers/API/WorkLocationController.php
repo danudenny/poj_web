@@ -20,9 +20,9 @@ class WorkLocationController extends Controller
         return $this->workLocationService->index($request);
     }
 
-    public function show($id): JsonResponse
+    public function show(Request $request): JsonResponse
     {
-        return $this->workLocationService->show($id);
+        return $this->workLocationService->show($request);
     }
 
     public function save(Request $request): JsonResponse
@@ -30,9 +30,9 @@ class WorkLocationController extends Controller
         return $this->workLocationService->save($request);
     }
 
-    public function update(Request $request, $id): JsonResponse
+    public function update(Request $request): JsonResponse
     {
-        return $this->workLocationService->edit($request, $id);
+        return $this->workLocationService->edit($request);
     }
 
     public function delete($id): JsonResponse
