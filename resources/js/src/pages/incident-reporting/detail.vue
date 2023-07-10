@@ -119,10 +119,9 @@
                     <hr/>
 
                     <h4>Foto Kejadian</h4>
-                    <silent-box ref="silentbox" :gallery="incidentImages"></silent-box>
                     <div class="row">
                         <div class="col-md-3 mb-3" v-for="(item, index) in incident.incident_images" :key="index">
-                            <img :src="item.image_url" @click="openOverlayGallery" style="width: 100%"/>
+                            <img :src="item.image_url" style="width: 100%"/>
                         </div>
                     </div>
                 </div>
@@ -204,13 +203,10 @@
 import L from 'leaflet';
 import VerticalModal from "@components/modal/verticalModal.vue";
 import { useToast } from "vue-toastification";
-import VueSilentbox from 'vue-silentbox'
-import 'vue-silentbox/dist/style.css'
 
 export default {
     components: {
-        VerticalModal,
-        VueSilentbox
+        VerticalModal
     },
     data() {
         return {
@@ -343,12 +339,6 @@ export default {
                     idx: index
                 })
             })
-        },
-        openOverlayGallery() {
-            this.$refs.silentbox.openOverlay({
-                src: 'http://192.168.100.73:9000/att-poj-bucket/uploads/incident/64aab2e041114_pagar_rusak.jpeg',
-                description: 'Sunken dreams II. by Arbebuk',
-            }, 0)
         }
     },
 };
