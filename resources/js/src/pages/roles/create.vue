@@ -7,38 +7,25 @@
                     <div class="row">
                         <div class="col-sm-6 col-md-6">
                             <div class="mb-3">
+                                <label class="form-label">Role Level</label>
+                                <select class="form-control" v-model="role.level">
+                                    <option value="superadmin">Superadmin</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="staff">User / Staff</option>
+                                    <option value="guest">Guest</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
                                 <label class="form-label">Role Name</label>
                                 <input class="form-control" type="text" placeholder="Name" v-model="role.name">
                             </div>
                         </div>
                     </div>
-                    <dv class="row">
+                    <div class="row">
                         <div class="col-sm-6">
-                            <div class="card-block row">
-                                <div class="col-sm-12 col-lg-12 col-xl-12">
-                                    <div class="table-responsive">
-                                        <table class="table">
-                                            <thead class="table bg-primary">
-                                            <tr>
-                                                <th scope="col">
-                                                    <input class="form-check-input checkbox-solid-light" v-model="selectAll" @click="toggleSelectAll()" type="checkbox">
-                                                </th>
-                                                <th scope="col">Permission</th>
-                                            </tr>
-                                            </thead>
-                                            <tbody>
-                                            <tr v-for="permission in permissions" :key="permission.id">
-                                                <td><input type="checkbox" class="form-check-input checkbox-solid-light" v-bind:value="permission"
-                                                           v-model="role.permissions" @change="updateCheckall()" /></td>
-                                                <td>{{ permission.name }}</td>
-                                            </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
+                            <div ref="permissionsTable"></div>
                         </div>
-                    </dv>
+                    </div>
                 </div>
 
                 <div class="card-footer text-start">
@@ -53,6 +40,7 @@
 <script>
 import axios from "axios";
 import {useToast} from "vue-toastification";
+import {TabulatorFull as Tabulator} from 'tabulator-tables';
 
 export default {
     data() {
@@ -60,55 +48,93 @@ export default {
             role: {
                 id: null,
                 name: null,
-                permissions: []
+                level: null,
             },
             permissions: [],
             selectAll: false,
+            selectedPermission: [],
+            selectedIds: [],
         }
     },
-    mounted() {
-        this.getPermissions();
+    async mounted() {
+        await this.getPermissions();
+        await this.initializePermissionsTable();
     },
     methods: {
         toggleSelectAll: function () {
             this.selectAll = !this.selectAll;
             this.role.permissions = [];
             if (this.selectAll) {
-                for (var key in this.permissions) {
+                for (let key in this.permissions) {
                     this.role.permissions.push(this.permissions[key]);
                 }
             }
         },
         updateCheckall: function(){
-            if(this.role.permissions.length == this.permissions.length) {
-                this.selectAll = true;
-            } else {
-                this.selectAll = false;
-            }
+            this.selectAll = this.role.permissions.length === this.permissions.length;
         },
         async getPermissions() {
-            await axios.get(`/api/v1/admin/role/permissions`)
-                .then(res => {
-                    this.permissions = res.data.data;
+            await axios
+                .get(`/api/v1/admin/permission?per_page=1000`)
+                .then(response => {
+                    this.permissions = response.data.data.data;
                 })
-                .catch(e => {
-                    console.log(e);
+                .catch(error => {
+                    console.error(error);
                 });
+        },
+        async initializePermissionsTable() {
+            console.log(this.permissions);
+            const table = await new Tabulator(this.$refs.permissionsTable, {
+                data: this.permissions,
+                layout: 'fitDataStretch',
+                columns: [
+                    {
+                        formatter: "rowSelection",
+                        titleFormatter: "rowSelection",
+                        hozAlign: "center",
+                        headerSort: false,
+                        cellClick: function (e, cell) {
+                            cell.getRow()
+                        },
+                    },
+                    {
+                        title: 'Permission',
+                        field: 'name',
+                        headerFilter:"input"
+                    }
+                ],
+                pagination: 'local',
+                paginationSize: 20,
+                paginationSizeSelector: [10, 20, 50, 100],
+                headerFilter: true,
+                rowFormatter: (row) => {
+
+                },
+            });
+            table.on("rowSelectionChanged", function(data, rows, selected, deselected)  {
+                this.selectedPermission = rows.map(row => row.getData().id);
+                localStorage.setItem('selectedPermission', JSON.stringify(this.selectedPermission));
+            })
         },
         async addRole() {
             let id = this.role.id;
             let name = this.role.name;
-            let permission = this.role.permissions.map(value => value.id);
+            let role_level = this.role.level;
+
+            let ls = JSON.parse(localStorage.getItem('selectedPermission'));
 
             await axios.post(`/api/v1/admin/role/save`, {
                 id: id,
                 name: name,
-                permission: permission
+                role_level: role_level,
+                permission: ls
             })
                 .then(res => {
-                    useToast().success(res.data.message , { position: 'bottom-right' });
+                    useToast().success(res.data.message , {
+                        position: 'bottom-right'
+                    });
                     this.$router.push('/management/roles');
-                    console.log(res);
                 })
                 .catch(e => {
                     useToast().error(e.response.data.message , { position: 'bottom-right' });
@@ -116,8 +142,7 @@ export default {
                 });
         },
         async isChecked(permission) {
-            let check = await this.role.permissions.map(val => val.id === permission.id) !== false;
-            return check;
+            return this.role.permissions.map(val => val.id === permission.id) !== false;
         },
     },
 };

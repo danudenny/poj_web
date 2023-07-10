@@ -4,18 +4,24 @@ namespace App\Services\Core;
 
 use App\Http\Resources\PermissionResource;
 use App\Http\Resources\RoleResource;
+use App\Models\ExtendRole;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Services\BaseService;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 class RoleService extends BaseService
 {
+    const DATA_EXISTS = 'Role already exists.';
+
     /**
      * @param $data
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function index($data): mixed
     {
@@ -32,53 +38,53 @@ class RoleService extends BaseService
 
             return $this->list($roles, $data);
 
-        } catch (\InvalidArgumentException $e) {
-            throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+        } catch (InvalidArgumentException $e) {
+            throw new InvalidArgumentException($e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 
     /**
      * @param $id
      * @return RoleResource
-     * @throws \Exception
+     * @throws Exception
      */
     public function view($id): RoleResource
     {
         try {
-            $role = Role::with('permissions')->firstWhere('id', $id);
+            $role = ExtendRole::with('permissions')->firstWhere('id', $id);
 
             if (!$role) {
-                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+                throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
             return RoleResource::make($role);
 
-        } catch (\InvalidArgumentException $e) {
-            throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+        } catch (InvalidArgumentException $e) {
+            throw new InvalidArgumentException($e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 
     /**
-     * @return PermissionResource
-     * @throws \Exception
+     * @return AnonymousResourceCollection
+     * @throws Exception
      */
-    public function getPermissions()
+    public function getPermissions(): AnonymousResourceCollection
     {
         try {
             $permissions = Permission::get();
 
             if (empty($permissions)) {
-                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+                throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
             return PermissionResource::collection($permissions);
 
-        } catch (\InvalidArgumentException $e) {
-            throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+        } catch (InvalidArgumentException $e) {
+            throw new InvalidArgumentException($e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
 
     }
@@ -86,10 +92,15 @@ class RoleService extends BaseService
     /**
      * @param $request
      * @return Role
-     * @throws \Exception
+     * @throws Exception
      */
     public function save($request): Role
     {
+        $role = Role::where('name', strtolower(str_replace(' ', '_', $request->name)))->first();
+        if ($role) {
+            throw new InvalidArgumentException(self::DATA_EXISTS, 400);
+        }
+
         DB::beginTransaction();
         try {
             $role = new Role();
@@ -97,7 +108,7 @@ class RoleService extends BaseService
             $role->created_at = date('Y-m-d H:i:s');
 
             if (!$role->save()) {
-                throw new \Exception(self::DB_FAILED, 500);
+                throw new Exception(self::DB_FAILED, 500);
             }
 
             if (!empty($request->permission)) {
@@ -107,35 +118,42 @@ class RoleService extends BaseService
             DB::commit();
             return $role;
 
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             DB::rollBack();
-            throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
+            throw new InvalidArgumentException($e->getMessage());
+        } catch (Exception $e) {
             DB::rollBack();
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 
     /**
      * @param $request
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function update($request): mixed
     {
+        $role = Role::where('name', strtolower(str_replace(' ', '_', $request->name)))
+            ->where('id', '!=', $request->id)
+            ->first();
+        if ($role) {
+            throw new InvalidArgumentException(self::DATA_EXISTS, 400);
+        }
+
         DB::beginTransaction();
         try {
 
             $role = Role::find($request->id);
             if (!$role) {
-                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+                throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
 
             $role->name = strtolower(str_replace(' ', '_', $request->name));
             $role->updated_at = date('Y-m-d H:i:s');
 
             if (!$role->save()) {
-                throw new \Exception(self::DB_FAILED, 500);
+                throw new Exception(self::DB_FAILED, 500);
             }
 
             if (!empty($request->permission)) {
@@ -145,50 +163,49 @@ class RoleService extends BaseService
             DB::commit();
             return $role;
 
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             DB::rollBack();
-            throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
+            throw new InvalidArgumentException($e->getMessage());
+        } catch (Exception $e) {
             DB::rollBack();
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 
     /**
      * @param $request
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function toggleRoleStatus($request): mixed
     {
         DB::beginTransaction();
         try {
-
             $role = Role::find($request->id);
             if (!$role) {
-                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+                throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
 
             if(!$this->toggleDataStatus($role)) {
-                throw new \Exception(self::DB_FAILED, 500);
+                throw new Exception(self::DB_FAILED, 500);
             }
 
             DB::commit();
             return $role;
 
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             DB::rollBack();
-            throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
+            throw new InvalidArgumentException($e->getMessage());
+        } catch (Exception $e) {
             DB::rollBack();
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 
     /**
      * @param $request
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function delete($request): mixed
     {
@@ -198,26 +215,26 @@ class RoleService extends BaseService
             $role = Role::find($request->id);
 
             if (!$role) {
-                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+                throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
             $role->delete();
 
             DB::commit();
             return $role;
 
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             DB::rollBack();
-            throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
+            throw new InvalidArgumentException($e->getMessage());
+        } catch (Exception $e) {
             DB::rollBack();
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 
     /**
      * @param $request
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function restore($request): mixed
     {
@@ -226,26 +243,26 @@ class RoleService extends BaseService
             $role = Role::onlyTrashed()->find($request->id);
 
             if (!$role) {
-                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+                throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
             $role->restore();
 
             DB::commit();
             return $role;
 
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             DB::rollBack();
-            throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
+            throw new InvalidArgumentException($e->getMessage());
+        } catch (Exception $e) {
             DB::rollBack();
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 
     /**
      * @param $request
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function destroy($request): mixed
     {
@@ -254,19 +271,19 @@ class RoleService extends BaseService
             $role = Role::onlyTrashed()->find($request->id);
 
             if (!$role) {
-                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+                throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
             $role->forceDelete();
 
             DB::commit();
             return $role;
 
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             DB::rollBack();
-            throw new \InvalidArgumentException($e->getMessage());
-        } catch (\Exception $e) {
+            throw new InvalidArgumentException($e->getMessage());
+        } catch (Exception $e) {
             DB::rollBack();
-            throw new \Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 }
