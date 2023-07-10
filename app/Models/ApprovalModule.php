@@ -10,6 +10,8 @@ class ApprovalModule extends Model
 {
     use HasFactory;
 
+    const ApprovalIncident = "Incident";
+
     protected $table = 'approval_modules';
 
     protected $fillable = [

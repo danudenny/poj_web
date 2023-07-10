@@ -8,6 +8,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * Attributes:
+ * @property-read int $id
+ * @property string $name
+ * @property int $unit_id
+ *
+ * Relations:
+ * @property-read User $user
+ */
 class Employee extends Model
 {
     use HasFactory;
