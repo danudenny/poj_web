@@ -7,6 +7,15 @@
                     <div class="row">
                         <div class="col-sm-6 col-md-6">
                             <div class="mb-3">
+                                <label class="form-label">Role Level</label>
+                                <select class="form-control" v-model="roles.role_level" id="level" >
+                                    <option :selected="roles.role_level === 'superadmin' ? 'selected' : ''">Superadmin</option>
+                                    <option :selected="roles.role_level === 'admin' ? 'selected' : ''">Admin</option>
+                                    <option :selected="roles.role_level === 'staff' ? 'selected' : ''">User / Staff</option>
+                                    <option :selected="roles.role_level === 'guest' ? 'selected' : ''">Guest</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
                                 <label class="form-label">Role Name</label>
                                 <input class="form-control" type="text" placeholder="Name" v-model="roles.name">
                             </div>
@@ -36,7 +45,9 @@ import {useToast} from "vue-toastification";
 export default {
     data() {
         return {
-            roles: {},
+            roles: {
+                level: 'admin'
+            },
             permissions: [],
             selectAll: false,
             selectedPermission: [],
@@ -114,11 +125,12 @@ export default {
             await axios.post(`/api/v1/admin/role/update`, {
                 id: this.roles.id,
                 name: this.roles.name,
+                is_active: this.roles.is_active,
                 permission: getData
             })
             .then(res => {
                 useToast().success(res.data.message , { position: 'bottom-right' });
-                this.$router.push('/management/roles');
+                this.$router.push('/management/roles')
             })
             .catch(e => {
                 console.log(e);
