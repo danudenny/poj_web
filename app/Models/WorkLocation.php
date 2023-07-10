@@ -25,8 +25,8 @@ class WorkLocation extends Model
         'long',
     ];
 
-    public function company(): HasOne
+    public function company(): BelongsTo
     {
-        return $this->hasOne(Company::class, 'reference_id', 'id');
+        return $this->belongsTo(Unit::class, 'reference_id', 'id');
     }
 }
