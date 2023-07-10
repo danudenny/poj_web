@@ -10,7 +10,7 @@ class ApprovalModule extends Model
 {
     use HasFactory;
 
-    const ApprovalModuleIncidentID = 8;
+    const ApprovalIncident = "Incident";
 
     protected $table = 'approval_modules';
 

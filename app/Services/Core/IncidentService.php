@@ -158,7 +158,8 @@ class IncidentService extends BaseService
              */
             $approvalUsers = ApprovalUser::query()
                 ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
-                ->where('approvals.approval_module_id', '=', ApprovalModule::ApprovalModuleIncidentID)
+                ->join('approval_modules', 'approvals.approval_module_id', '=', 'approval_modules.id')
+                ->where('approval_modules.name', '=', ApprovalModule::ApprovalIncident)
                 ->where('approvals.unit_id', '=', $user->employee->unit_id)
                 ->where('approvals.is_active', '=', true)
                 ->orderBy('approval_users.id', 'ASC')
@@ -315,7 +316,8 @@ class IncidentService extends BaseService
              */
             $approvalUsers = ApprovalUser::query()
                 ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
-                ->where('approvals.approval_module_id', '=', ApprovalModule::ApprovalModuleIncidentID)
+                ->join('approval_modules', 'approvals.approval_module_id', '=', 'approval_modules.id')
+                ->where('approval_modules.name', '=', ApprovalModule::ApprovalIncident)
                 ->where('approvals.unit_id', '=', $user->employee->unit_id)
                 ->where('approvals.is_active', '=', true)
                 ->orderBy('approval_users.id', 'ASC')
