@@ -81,7 +81,7 @@ class WorkLocationService extends BaseService
     }
 
     public function edit($data) {
-        $dataExists = WorkLocation::find($data->unit_id);
+        $dataExists = WorkLocation::where('reference_id', $data->unit_id)->first();
         if (!$dataExists) {
             return response()->json([
                 'status' => false,
