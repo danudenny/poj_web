@@ -218,6 +218,15 @@
             "permission" : "incident_reporting"
         },
         {
+            "title": "Work Reporting",
+            "icon": "alert-circle",
+            "iconf": "alert-circle",
+            "type": "link",
+            "active": false,
+            "path": "/work-reporting",
+            "permission" : "work_reporting"
+        },
+        {
             "headTitle1": "EVENT",
             "headTitle2": "Master data management",
             "type": "headtitle",
