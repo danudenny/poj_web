@@ -21,33 +21,27 @@ class EmployeeService extends BaseService
      */
     public function index($request): JsonResponse
     {
-//        $getUnit = Unit::where('id', $request->unit_id)->get();
-//        $flattenedUnits = UnitHelper::flattenUnits($getUnit);
-//        $unitIds = [];
-//        foreach ($flattenedUnits as $unit) {
-//            $unitIds[] = $unit->id;
-//        }
         try {
-//            $employees = Employee::with('employeeDetail', 'employeeDetail.employeeTimesheet', 'job', 'unit');
-//            $employees->when(request('name'), function ($query) {
-//                $query->where('name', 'like', '%' . request('name') . '%');
-//            });
-////            $employees->whereIn('unit_id', $unitIds);
-//            $employees->orderBy('id', 'asc');
-//
-//            if (!$request->has('page')) {
-//                $employees = $employees->get();
-//            } else {
-//                $employees = $employees->paginate(10);
-//            }
-
             $loggedInEmployee = Auth::user();
 
             $employees = Employee::query();
             if ($loggedInEmployee->hasRole('superadmin')) {
-                $employees = $employees->with(['kanwil', 'area', 'cabang', 'outlet', 'job', 'employeeDetail', 'employeeDetail.employeeTimesheet'])->paginate(10);
+                $employees = $employees->with(['kanwil', 'area', 'cabang', 'outlet', 'job', 'employeeDetail', 'employeeDetail.employeeTimesheet'])
+                    ->when(request()->filled('name'), function ($query) {
+                        $query->whereRaw('LOWER("name") LIKE ? ', '%'.strtolower(request()->query('name')).'%');
+                    })
+                    ->when(request()->filled('unit_id'), function ($query) {
+                        $query->where('kanwil_id', request()->query('unit_id'));
+                        $query->orWhere('area_id', request()->query('unit_id'));
+                        $query->orWhere('cabang_id', request()->query('unit_id'));
+                        $query->orWhere('outlet_id', request()->query('unit_id'));
+                    })
+                    ->paginate(10);
             } else {
                 $employees = $employees->with(['kanwil', 'area', 'cabang', 'outlet', 'job', 'employeeDetail', 'employeeDetail.employeeTimesheet'])
+                    ->when(request()->filled('name'), function ($query) {
+                        $query->whereRaw('LOWER("name") LIKE ? ', '%'.strtolower(request()->query('name')).'%');
+                    })
                     ->where('kanwil_id', $loggedInEmployee->employee->kanwil_id)
                     ->where('area_id', $loggedInEmployee->employee->area_id)
                     ->where('cabang_id', $loggedInEmployee->employee->cabang_id)

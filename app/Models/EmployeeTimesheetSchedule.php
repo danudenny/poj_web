@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,7 +27,8 @@ class EmployeeTimesheetSchedule extends Model
 
     public function period(): BelongsTo
     {
-        return $this->belongsTo(Period::class, 'period_id');
+        $getMonth = Carbon::now()->month;
+        return $this->belongsTo(Period::class, 'period_id')->where('month', $getMonth);
     }
 
     public function employee(): BelongsTo

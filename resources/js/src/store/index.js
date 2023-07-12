@@ -4,6 +4,7 @@ import {createStore} from 'vuex'
 import layout from './modules/layout';
 import menu from './modules/menu';
 import bootsrap from "./modules/bootsrap"
+import timesheetSchedule from "./modules/timesheetSchedule"
 // import todo from './modules/todo';
 // import firebase_todo from './modules/firebase_todo';
 // import common from './modules/common';
@@ -129,7 +130,8 @@ export default createStore({
     modules: {
       layout,
       menu,
-      bootsrap
+      bootsrap,
+      timesheetSchedule
     }
 });
 

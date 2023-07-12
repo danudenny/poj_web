@@ -72,11 +72,16 @@ export default {
             period_id: 0,
             date: 0,
             timesheet_id: 0,
+            workingArea: {},
+            currentPage: 1,
+            pageSize: 10,
+            filterName: "",
+            filterUnit: "",
         }
     },
     async mounted() {
-        await this.getPeriods(),
-        await this.getTotalDays(),
+        await this.getPeriods();
+        await this.getTotalDays();
         await this.getTimesheet();
         await this.getEmployee();
         await this.initializeEmployeeTable();
@@ -114,18 +119,19 @@ export default {
         },
         async getEmployee() {
             this.loading = true;
-            const ls = JSON.parse(localStorage.getItem('USER_STORAGE_KEY'));
-            await this.$axios.get(`/api/v1/admin/employee?unit_id=${ls.unit_id}`)
+            await this.$axios.get(`/api/v1/admin/employee`)
                 .then(response => {
-                    this.employees = response.data.data;
+                    this.employees = response.data.data.data;
                 })
                 .catch(error => {
                     console.error(error);
                 });
         },
         async initializeEmployeeTable() {
+            const ls = localStorage.getItem('my_app_token')
             const table = await new Tabulator(this.$refs.employeeTable, {
-                data: this.employees,
+                // data: this.employees,
+                ajaxURL: '/api/v1/admin/employee',
                 layout: 'fitColumns',
                 columns: [
                     {
@@ -145,12 +151,52 @@ export default {
                     },
                     {
                         title: 'Unit',
-                        field: 'unit.name',
-                        headerFilter:"input"
+                        field: '',
+                        headerFilter:"input",
+                        formatter: (cell, formatterParams) => {
+                            const wd = cell.getData();
+                            const hierarchy = [
+                                wd.kanwil,
+                                wd.area,
+                                wd.cabang,
+                                wd.outlet
+                            ];
+
+                            const sortedHierarchy = hierarchy
+                                .filter(data => data && data.value !== null)
+                                .sort((a, b) => a.unit_level - b.unit_level);
+
+                            this.workingArea = sortedHierarchy[sortedHierarchy.length - 1];
+                            return this.workingArea.name
+                        }
                     }
                 ],
-                pagination: 'local',
-                paginationSize: 30,
+                pagination: true,
+                paginationMode: 'remote',
+                responsiveLayout: true,
+                filterMode:"remote",
+                paginationSize: this.pageSize,
+                ajaxConfig: {
+                    headers: {
+                        Authorization: `Bearer ${ls}`,
+                    },
+                },
+                ajaxParams: {
+                    page: this.currentPage,
+                    size: this.pageSize,
+                },
+                ajaxURLGenerator: (url, config, params) => {
+                    params.filter.map((item) => {
+                        if (item.field === 'name') this.filterName = item.value
+                    })
+                    return `${url}?page=${params.page}&size=${params.size}&name=${this.filterName}`
+                },
+                ajaxResponse: function (url, params, response) {
+                    return {
+                        data: response.data.data,
+                        last_page: response.data.last_page,
+                    }
+                },
                 paginationSizeSelector: [10, 20, 50, 100],
                 headerFilter: true,
                 rowFormatter: (row) => {
