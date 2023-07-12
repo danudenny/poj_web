@@ -29,7 +29,12 @@ class UserRolePermissionResource extends JsonResource
             'is_new' => $this->is_new,
             'unit_id' => $this->employee->unit_id,
             'roles' => $role,
-            'permissions' => $permission
+            'permissions' => $permission,
+            'kanwil_id' => $this->employee->kanwil_id,
+            'area_id' => $this->employee->area_id,
+            'cabang_id' => $this->employee->cabang_id,
+            'outlet_id' => $this->employee->outlet_id,
+            'customer_id' => $this->employee->customer_id,
         ];
     }
 }

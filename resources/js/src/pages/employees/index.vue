@@ -12,9 +12,13 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-2">
-                                    <button class="btn btn-warning" type="button" data-bs-toggle="modal"
-                                            data-bs-target="#exampleModalCenter">
-                                        <i class="fa fa-recycle" /> &nbsp; Sync From ERP
+                                    <button class="btn btn-warning"  :disabled="syncLoading" type="button" @click="syncFromERP">
+                                        <span v-if="syncLoading">
+                                            <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
+                                        </span>
+                                        <span v-else>
+                                            <i class="fa fa-recycle"></i> &nbsp; Sync From ERP
+                                        </span>
                                     </button>
                                 </div>
                                 <div v-if="loading" class="text-center">
@@ -33,12 +37,19 @@
 <script>
 import axios from "axios";
 import {TabulatorFull as Tabulator} from 'tabulator-tables';
+import {useToast} from "vue-toastification";
 
 export default {
     data() {
         return {
             employees: [],
             loading: false,
+            currentPage: 1,
+            pageSize: 10,
+            syncLoading: false,
+            table: null,
+            countdown: 0,
+            timerId: null
         }
     },
     async mounted() {
@@ -46,11 +57,18 @@ export default {
         this.initializeEmployeesTable();
     },
     methods: {
+        startCountdown() {
+            this.countdown = 1;
+            this.timerId = setInterval(() => {
+                this.countdown++;
+            }, 1000);
+        },
         async getEmployees() {
             this.loading = true;
-            const unitId = JSON.parse(localStorage.getItem('USER_STORAGE_KEY'));
+            const ls = JSON.parse(localStorage.getItem('USER_STORAGE_KEY'));
             await axios
-                .get(`/api/v1/admin/employee?unit_id=${parseInt(unitId.unit_id)}&sort=asc`)
+                // .get(`/api/v1/admin/employee?unit_id=${parseInt(ls.unit_id)}&sort=asc`)
+                .get(`/api/v1/admin/employee?sort=asc`)
                 .then(response => {
                     this.employees = response.data.data;
                 })
@@ -58,9 +76,26 @@ export default {
                     console.error(error);
                 });
         },
+
         initializeEmployeesTable() {
-            const table = new Tabulator(this.$refs.employeesTable, {
-                data: this.employees,
+            const ls = localStorage.getItem('my_app_token')
+            this.table = new Tabulator(this.$refs.employeesTable, {
+                ajaxURL: '/api/v1/admin/employee',
+                ajaxConfig: {
+                    headers: {
+                        Authorization: `Bearer ${ls}`,
+                    },
+                },
+                ajaxParams: {
+                    page: this.currentPage,
+                    size: this.pageSize,
+                },
+                ajaxResponse: function (url, params, response) {
+                    return {
+                        data: response.data.data,
+                        last_page: response.data.last_page,
+                    }
+                },
                 layout: 'fitDataStretch',
                 columns: [
                     {
@@ -99,14 +134,16 @@ export default {
                         }
                     },
                 ],
-                pagination: 'local',
-                paginationSize: 10,
+                pagination: true,
+                paginationMode: 'remote',
+                paginationSize: this.pageSize,
                 paginationSizeSelector: [10, 20, 50, 100],
                 headerFilter: true,
                 paginationInitialPage:1,
                 rowFormatter: (row) => {
                     //
-                }
+                },
+                placeholder: 'No Data Available',
             });
             this.loading = false
         },
@@ -115,6 +152,40 @@ export default {
         },
         viewData(id) {
             this.$router.push({name: 'employee_detail', params: {id}});
+        },
+        async syncFromERP() {
+            this.syncLoading = true;
+            this.loading = true
+            this.startCountdown();
+            this.table.destroy()
+
+            await axios.create({
+                baseURL: import.meta.env.VITE_SYNC_ODOO_URL,
+            }).get('/sync-employee')
+                .then(async (response) => {
+                    if (await response.data.status === 201) {
+                        this.syncLoading = false;
+                        this.loading = false;
+                        await this.getEmployees()
+                        this.initializeEmployeesTable();
+                        useToast().success(response.data.message);
+                    } else {
+                        this.syncLoading = false;
+                        this.loading = false;
+                        await this.getEmployees()
+                        this.initializeEmployeesTable();
+                        useToast().error(response.data.message);
+                    }
+                }).catch(async () => {
+                    this.syncLoading = false;
+                    this.loading = false;
+                    await this.getEmployees()
+                    this.initializeEmployeesTable();
+                    useToast().error("Failed to Sync Data! Check connection.");
+                }).finally(() => {
+                    this.syncLoading = false;
+                    clearInterval(this.timerId);
+                });
         }
     }
 }

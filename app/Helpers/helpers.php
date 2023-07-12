@@ -1,7 +1,11 @@
 <?php
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 
+/**
+ * @throws GuzzleException
+ */
 function calculateDistance($lat1, $lon1, $lat2, $lon2): float|int
 {
     $originLat = $lat1;

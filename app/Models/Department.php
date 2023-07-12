@@ -12,6 +12,6 @@ class Department extends Model
 
     public function unit(): BelongsTo
     {
-        return $this->belongsTo(Unit::class, 'company_id', 'id');
+        return $this->belongsTo(Unit::class, 'company_id', 'relation_id');
     }
 }

@@ -67,6 +67,7 @@
 <script>
 import basicInformation from "./basicInformation.vue";
 import companyInformation from "./companyInformation.vue";
+
 export default {
     components: {
         basicInformation,
@@ -92,8 +93,7 @@ export default {
         async fetchExistingData() {
             await this.$axios.get(`api/v1/admin/employee/view/${this.$route.params.id}`)
                 .then(response => {
-                    const data = response.data.data;
-                    this.employeeData = data
+                    this.employeeData = response.data.data
                     this.isLoading = false;
                 })
                 .catch(error => {

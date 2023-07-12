@@ -9,18 +9,22 @@ use App\Models\User;
 use App\Services\BaseService;
 use Carbon\Carbon;
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Arr;
 
 class EmployeeAttendanceService extends BaseService {
 
 
     public function index($request): JsonResponse
     {
+        $roles = Auth::user()->roles;
         try {
             $attendances = EmployeeAttendance::query();
-            $attendances->with(['employee', 'employee.company', 'employee.employeeDetail', 'employee.employeeDetail.employeeTimesheet', 'employeeAttendanceHistory']);
+            $attendances->with(['employee', 'employee.kanwil', 'employee.area', 'employee.cabang', 'employee.outlet', 'employee.employeeDetail', 'employee.employeeDetail.employeeTimesheet', 'employeeAttendanceHistory']);
             $attendances->when($request->name, function ($query) use ($request) {
                 $query->whereHas('employee', function (Builder $query) use ($request) {
                     $query->whereRaw('LOWER(name) LIKE ?', [strtolower('%' . request()->query('name') . '%')]);
@@ -43,10 +47,30 @@ class EmployeeAttendanceService extends BaseService {
             });
             $attendances->orderBy('created_at', 'desc');
 
+
+            foreach ($roles as $role) {
+                if ($role->role_level === 'superadmin') {
+                    $attendances = $attendances->paginate($request->get('limit', 10));
+                } else if ($role->role_level === 'staff') {
+                    $attendances = $attendances->where('employee_id', Auth::user()->employee_id)
+                        ->paginate($request->get('limit', 10));
+                } else if ($role->role_level === 'admin') {
+                    $attendances = $attendances->whereHas('employee', function (Builder $query) use ($roles) {
+                        $query->where('kanwil_id', $roles->kanwil_id)
+                            ->orWhere('area_id', $roles->area_id)
+                            ->orWhere('cabang_id', $roles->cabang_id)
+                            ->orWhere('outlet_id', $roles->outlet_id);
+                    });
+                } else {
+                    $attendances = $attendances->where('employee_id', Auth::user()->employee_id)
+                        ->paginate($request->get('limit', 10));
+                }
+            }
+
             return response()->json([
                 'status' => true,
                 'message' => 'Success get data!',
-                'data' => $attendances->paginate($request->get('limit', 10))
+                'data' => $attendances
             ]);
         } catch (Exception $e) {
             return response()->json([
@@ -55,26 +79,66 @@ class EmployeeAttendanceService extends BaseService {
             ], 500);
         }
     }
+
+    function getLastUnit($data) {
+        $bottomData = null;
+
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $nestedData = $this->getLastUnit($value);
+                if ($nestedData !== null) {
+                    $bottomData = $nestedData;
+                }
+            } elseif ($key === 'value' && $value !== null) {
+                $bottomData = $data;
+            }
+        }
+
+        return $bottomData;
+    }
     /**
      * @throws Exception
+     * @throws GuzzleException
      */
     public function checkIn($request, $id): JsonResponse
     {
-        $empData = Employee::find($id);
+        $empData = Employee::with(['kanwil', 'area', 'cabang', 'outlet', 'timesheetSchedules', 'timesheetSchedules.period', 'timesheetSchedules.timesheet'])->find($id);
         if (!$empData) {
             return response()->json([
                 'message' => 'Employee not found!'
             ], 400);
         }
 
-        $workLocation = $empData->unit->workLocations[0];
+        $decodedEmpData = json_decode($empData, true);
+        $filteredUnitData = Arr::only($decodedEmpData, ['kanwil', 'area', 'cabang', 'outlet']);
+        $timesheetSchedules = $decodedEmpData['timesheet_schedules'];
+
+        $currentDate = Carbon::now();
+        $matchingSchedule = null;
+
+        foreach ($timesheetSchedules as $schedule) {
+            $day = $schedule['date'];
+            $year = $schedule['period']['year'];
+            $month = $schedule['period']['month'];
+
+            $carbonDate = Carbon::create($year, $month, $day);
+
+            if ($carbonDate->isSameDay($currentDate)) {
+                $matchingSchedule = $schedule;
+            }
+        }
+
+        $empSchedule = $matchingSchedule;
+        $empUnit = $this->getLastUnit($filteredUnitData);
+
+        $workLocation = $empUnit;
         $employeeDetail = $empData->employeeDetail;
 
         // Check if time is in range
-        $employeeTimesheetCheckin = Carbon::parse($employeeDetail->employeeTimesheet->start_time);
-        $employeeTimesheetCheckout = Carbon::parse($employeeDetail->employeeTimesheet->end_time);
-        if ($employeeDetail->employeeTimesheet->end_time < $employeeDetail->employeeTimesheet->start_time) {
-            $employeeTimesheetCheckout = Carbon::parse($employeeDetail->employeeTimesheet->end_time)->addDay();
+        $employeeTimesheetCheckin = Carbon::parse($empSchedule['timesheet']['start_time']);
+        $employeeTimesheetCheckout = Carbon::parse($empSchedule['timesheet']['end_time']);
+        if ($empSchedule['timesheet']['end_time'] < $empSchedule['timesheet']['end_time']) {
+            $employeeTimesheetCheckout = Carbon::parse($empSchedule['timesheet']['end_time'])->addDay();
         }
         $parseRequestedTime = Carbon::parse($request->real_check_in);
         $requestedTime = Carbon::createFromTimeString($parseRequestedTime);
@@ -102,11 +166,18 @@ class EmployeeAttendanceService extends BaseService {
         // Check if employee has checked in today
 
         // Calulate distance
-        $distance = calculateDistance($request->lat, $request->long, floatval($workLocation->lat), floatval($workLocation->long));
+        if ($workLocation['lat'] === null && $workLocation['long'] === null) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Work location not found!'
+            ], 400);
+        }
+
+        $distance = calculateDistance($request->lat, $request->long, floatval($workLocation['lat']), floatval($workLocation['long']));
 
         $attType = "";
         $isNeedApproval = false;
-        if ($distance <= intval($workLocation->radius)){
+        if ($distance <= intval($workLocation['radius'])){
            $attType = "onsite";
             $isNeedApproval = false;
         } else {
@@ -126,9 +197,9 @@ class EmployeeAttendanceService extends BaseService {
             $checkIn->attendance_types = $request->attendance_types;
             $checkIn->checkin_real_radius = $distance ?? null;
             $checkIn->approved = !$isNeedApproval;
-            $checkIn->is_late = $requestedTime->subMinutes(15)->greaterThan($employeeTimesheetCheckin);
+            $checkIn->is_late = $requestedTime->subMinutes($workLocation['late_buffer'])->greaterThan($employeeTimesheetCheckin);
             if ($requestedTime->subMinutes(15)->greaterThan($employeeTimesheetCheckin)) {
-                $checkIn->late_duration = $requestedTime->addMinutes(15)->diffInMinutes($employeeTimesheetCheckin->subMinutes(15));
+                $checkIn->late_duration = $requestedTime->addMinutes($workLocation['late_buffer'])->diffInMinutes($employeeTimesheetCheckin->subMinutes($workLocation['late_buffer']));
             } else {
                 $checkIn->late_duration = 0;
             }
@@ -173,7 +244,7 @@ class EmployeeAttendanceService extends BaseService {
         }
         $parseRequestedTime = Carbon::parse($request->real_check_out);
         $requestedTime = Carbon::createFromTimeString($parseRequestedTime);
-        $adjustedCheckin = $employeeTimesheetCheckin->copy()->subMinutes(15);
+        $adjustedCheckin = $employeeTimesheetCheckin->copy()->subMinutes($workLocation->early_buffer);
 
         if (!$parseRequestedTime->greaterThan($adjustedCheckin)) {
             return response()->json([

@@ -24,8 +24,7 @@ class UnitController extends BaseController
     public function index(Request $request): JsonResponse
     {
         try {
-            $result = $this->unitService->index($request);
-            return $this->sendSuccess($result, self::SUCCESS_FETCH);
+            return $this->unitService->index($request);
 
         } catch (\Exception | \InvalidArgumentException $error) {
             return $this->sendError($error->getMessage());
@@ -37,18 +36,24 @@ class UnitController extends BaseController
      * @param Request $request
      * @return JsonResponse
      */
-    public function view(Request $request): JsonResponse
+    public function view(Request $request, $id): JsonResponse
     {
         try {
-            $data = $request->only('id');
-            $result = $this->unitService->view($data);
-
-            return $this->sendSuccess($result, self::SUCCESS_FETCH);
+            return $this->unitService->view($request, $id);
 
         } catch (\Exception | \InvalidArgumentException $error) {
 
             return $this->sendError($error->getMessage(), [], 500);
         }
+    }
+
+    public function allUnitNoFilter(Request $request) {
+        return $this->unitService->allUnitNoFilter($request);
+    }
+
+    public function update(Request $request, $id): JsonResponse
+    {
+        return $this->unitService->update($request, $id);
     }
 
 }

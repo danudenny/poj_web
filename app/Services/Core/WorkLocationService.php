@@ -63,9 +63,11 @@ class WorkLocationService extends BaseService
 
     public function show($request): JsonResponse
     {
-        $dataExists = WorkLocation::with('company')
-            ->where('reference_id', $request->unit_id)
+        $dataExists = DB::table('work_locations')
+            ->leftJoin('units', 'work_locations.reference_id', '=', 'units.relation_id')
+            ->where('unit_level', '=', $request->unit_id)
             ->first();
+
         if (!$dataExists) {
             return response()->json([
                 'status' => false,

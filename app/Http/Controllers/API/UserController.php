@@ -26,9 +26,7 @@ class UserController extends BaseController
     public function index(Request $request): JsonResponse
     {
         try {
-            $result = $this->userService->index($request);
-            return $this->sendSuccess($result, self::SUCCESS_FETCH);
-
+            return $this->userService->index($request);
         } catch (\Exception | \InvalidArgumentException $error) {
             return $this->sendError($error->getMessage());
         }

@@ -31,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        ini_set('max_execution_time', 300);
         $getSetting = DB::table('settings')->get();
 
         foreach ($getSetting as $value) {

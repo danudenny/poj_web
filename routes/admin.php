@@ -23,8 +23,8 @@ use App\Http\Controllers\API\OutletController;
 use App\Http\Controllers\API\UnitController;
 
 
-//Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () {
-Route::group(['prefix' => 'admin'], function () {
+Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () {
+//Route::group(['prefix' => 'admin'], function () {
 
     // Begin User
     Route::group(['prefix' => 'user'], function () {
@@ -166,7 +166,9 @@ Route::group(['prefix' => 'admin'], function () {
     // Begin Unit
     Route::group(['prefix' => 'unit'], function () {
         Route::get('/', [UnitController::class, 'index']);
-        Route::get('view', [UnitController::class, 'view']);
+        Route::get('view/{id}', [UnitController::class, 'view']);
+        Route::get('all', [UnitController::class, 'allUnitNoFilter']);
+        Route::put('update/{id}', [UnitController::class, 'update']);
     });
     // End Unit
 

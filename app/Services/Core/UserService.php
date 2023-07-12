@@ -32,7 +32,7 @@ class UserService extends BaseService
             $users = User::query();
             $users->with(['roles:name', 'employee']);
             $users->when(request()->filled('name'), function ($query) {
-                $query->where('name', 'like',  '%'.request()->query('name').'%');
+                $query->whereRaw('LOWER("name") LIKE ? ', '%'.strtolower(request()->query('name')).'%');
             });
             $users->when(request()->filled('unit_id'), function ($query) {
                 $query->whereHas('employee', function ($query) {
@@ -40,14 +40,18 @@ class UserService extends BaseService
                 });
             });
             $users->when(request()->filled('email'), function ($query) {
-                $query->where('email', 'like',  '%'.request()->query('email').'%');
+                $query->whereRaw('LOWER("email") LIKE ? ', '%'.strtolower(request()->query('email')).'%');
             });
             $users->when(request()->filled('is_active'), function ($query) {
                 $query->where('is_active', '=', request()->query('is_active'));
             });
             $users->orderBy('name', 'asc');
 
-            return $this->list($users, $data);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data retrieved successfully',
+                'data' => $users->paginate($data->per_page ?? 10)
+            ], 200);
 
         } catch (\InvalidArgumentException $e) {
             throw new \InvalidArgumentException($e->getMessage());

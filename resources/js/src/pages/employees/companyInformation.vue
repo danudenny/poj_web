@@ -74,7 +74,6 @@ export default {
         this.lat = this.employee.unit.work_locations[0].lat;
         this.long = this.employee.unit.work_locations[0].long;
 
-        console.log(this.lat, this.long);
         this.mapContainer = this.$el.querySelector('#map');
         this.map = L.map(this.mapContainer, {
             scrollWheelZoom: false

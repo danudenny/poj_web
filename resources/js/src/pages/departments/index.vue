@@ -12,9 +12,13 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-2">
-                                    <button class="btn btn-warning" type="button" data-bs-toggle="modal"
-                                            data-bs-target="#exampleModalCenter">
-                                        <i class="fa fa-recycle" /> &nbsp; Sync From ERP
+                                    <button class="btn btn-warning"  :disabled="syncLoading" type="button" @click="syncFromERP">
+                                        <span v-if="syncLoading">
+                                            <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
+                                        </span>
+                                        <span v-else>
+                                            <i class="fa fa-recycle"></i> &nbsp; Sync From ERP
+                                        </span>
                                     </button>
                                 </div>
                                 <div v-if="loading" class="text-center">
@@ -32,12 +36,18 @@
 
 <script>
 import {TabulatorFull as Tabulator} from 'tabulator-tables';
+import axios from "axios";
+import {useToast} from "vue-toastification";
 
 export default {
     data() {
         return {
             departments: [],
             loading: false,
+            syncLoading: false,
+            table: null,
+            countdown: 0,
+            timerId: null
         }
     },
     async mounted() {
@@ -45,20 +55,25 @@ export default {
         this.initializeDepartmentTable();
     },
     methods: {
+        startCountdown() {
+            this.countdown = 1;
+            this.timerId = setInterval(() => {
+                this.countdown++;
+            }, 1000);
+        },
         async getDepartments() {
             this.loading = true;
             const unitId = JSON.parse(localStorage.getItem('USER_STORAGE_KEY'));
             await this.$axios.get(`/api/v1/admin/department?company_id=${parseInt(unitId.unit_id)}`)
                 .then(response => {
-                    this.departments = response.data.data.data;
-                    console.log(this.departments)
+                    this.departments = response.data.data;
                 })
                 .catch(error => {
                     console.error(error);
                 });
         },
         initializeDepartmentTable() {
-            const table = new Tabulator(this.$refs.departmentTable, {
+            this.table = new Tabulator(this.$refs.departmentTable, {
                 data: this.departments,
                 layout: 'fitColumns',
                 columns: [
@@ -71,12 +86,15 @@ export default {
                     {
                         title: 'Name',
                         field: 'name',
-                        headerFilter:"input"
+                        headerFilter:"input",
+                        headerHozAlign: 'center',
                     },
                     {
                         title: 'Company Name',
                         field: 'unit.name',
-                        headerFilter:"input"
+                        headerFilter:"input",
+                        hozAlign: 'center',
+                        headerHozAlign: 'center',
                     },
                 ],
                 pagination: 'local',
@@ -86,10 +104,45 @@ export default {
                 paginationInitialPage:1,
                 rowFormatter: (row) => {
                     //
-                }
+                },
+                placeholder:"No Data Available",
             });
             this.loading = false
         },
+        async syncFromERP() {
+            this.syncLoading = true;
+            this.loading = true
+            this.startCountdown();
+            this.table.destroy()
+
+            await axios.create({
+                baseURL: import.meta.env.VITE_SYNC_ODOO_URL,
+            }).get('/sync-department')
+                .then(async (response) => {
+                    if (await response.data.status === 201) {
+                        this.syncLoading = false;
+                        this.loading = false;
+                        await this.getDepartments()
+                        this.initializeDepartmentTable();
+                        useToast().success(response.data.message);
+                    } else {
+                        this.syncLoading = false;
+                        this.loading = false;
+                        await this.getDepartments()
+                        this.initializeDepartmentTable();
+                        useToast().error(response.data.message);
+                    }
+                }).catch(async () => {
+                    this.syncLoading = false;
+                    this.loading = false;
+                    await this.getDepartments()
+                    this.initializeDepartmentTable();
+                    useToast().error("Failed to Sync Data! Check connection.");
+                }).finally(() => {
+                    this.syncLoading = false;
+                    clearInterval(this.timerId);
+                });
+        }
     }
 }
 </script>
