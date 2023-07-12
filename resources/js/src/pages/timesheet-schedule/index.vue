@@ -11,10 +11,34 @@
                         </div>
                         <div class="card-body">
                             <div class="d-flex justify-content-end">
-                                <button class="btn btn-primary" type="button" @click="createSchedule">
+                                <button class="btn btn-success" type="button" @click="createSchedule">
                                     <i class="fa fa-plus"></i> &nbsp; Create
                                 </button>
                             </div>
+                            <hr>
+                            <div v-if="loading" class="text-center">
+                                <img src="../../assets/loader.gif" alt="loading" width="100">
+                            </div>
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center">Date</th>
+                                        <th class="text-center">Total Employees</th>
+                                        <th class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(item, index) in this.schedules">
+                                        <td class="text-center">{{index}}</td>
+                                        <td class="text-center"><span class="badge badge-success">{{item.length}}</span></td>
+                                        <td class="text-center">
+                                            <button class="button-icon button-info" @click="viewData(index)">
+                                                <i class="fa fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -24,10 +48,36 @@
 </template>
 
 <script>
-
 export default {
-
+    data() {
+        return {
+            loading: false,
+            schedules: [],
+            date: 0,
+        }
+    },
+    mounted() {
+        this.getScheduleData()
+    },
     methods: {
+         viewData(e) {
+            this.$store.dispatch('setData', this.schedules[e]);
+            this.$router.push({
+                name: 'timesheet-schedule-detail'
+            })
+        },
+        getScheduleData() {
+            this.loading = true
+            this.$axios.get('/api/v1/admin/employee-timesheet/get-schedule')
+                .then((response) => {
+                    this.schedules = response.data.data
+                    this.loading = false
+                })
+                .catch((error) => {
+                    console.log(error)
+                    this.loading = false
+                })
+        },
         createSchedule() {
             this.$router.push({ name: 'timesheet-schedule-create' })
         }

@@ -64,7 +64,9 @@ class SyncEmployeesJob implements ShouldQueue
         // Check for deleted records
         $users->each(function ($user) use ($employees) {
             if (!$employees->contains('id', $user->employee_id)) {
-                $user->delete();
+                if ($user->name !== 'Superadmin') {
+                    $user->delete();
+                }
             }
         });
 

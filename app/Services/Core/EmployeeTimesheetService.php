@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Psr\Container\ContainerExceptionInterface;
@@ -243,13 +244,44 @@ class EmployeeTimesheetService extends BaseService {
 
     public function getEmployeeSchedule($request): JsonResponse
     {
-        $schedule = EmployeeTimesheetSchedule::with(['employee', 'timesheet', 'period'])
-            ->get();
+        $roles = Auth::user();
+        $groupedData = [];
+        $getMonth = Carbon::now()->format('m');
+        $schedule = EmployeeTimesheetSchedule::query();
+        $schedule->with(['employee', 'employee.kanwil', 'employee.area', 'employee.cabang','employee.outlet','timesheet', 'period']);
+        if ($roles->hasRole('superadmin')) {
+//            $getPeriod = Period::where('id', request()->query('period_id'))->first();
+            $schedule = $schedule
+                ->orderBy('date')
+                ->orderBy('period_id')
+                ->get();
+            $groupedData = $schedule->groupBy(function ($item) {
+                $year = $item->period->year;
+                $month = $item->period->month;
+                $getDate = Carbon::parse($year . '-' . $month);
+                return $item->date . '-' . $getDate->format('F Y');
+            });
+        } else if ($roles->hasRole('admin')) {
+            $schedule = $schedule->where('kanwil_id', request()->query('unit_id'));
+            $schedule = $schedule->orWhere('area_id', request()->query('unit_id'));
+            $schedule = $schedule->orWhere('cabang_id', request()->query('unit_id'));
+            $schedule = $schedule->orWhere('outlet_id', request()->query('unit_id'));
+            $schedule = $schedule->paginate(31);
+        } else if ($roles->hasRole('staff')) {
+            $schedule = $schedule->where('employee_id', $roles->employee_id);
+            $schedule = $schedule->paginate(31);
+        } else {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You are not authorized to access this data',
+                'data' => ''
+            ], 401);
+        }
 
         return response()->json([
             'status' => 'success',
             'message' => 'Data fetched successfully',
-            'data' => $schedule
+            'data' => $groupedData
         ], 200);
     }
 
