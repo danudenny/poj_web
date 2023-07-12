@@ -85,6 +85,10 @@ import EventRequestDetail from '../pages/event/detail.vue';
 import EventRequestCreate from '../pages/event/create.vue';
 import EventEmployeeEvent from '../pages/event/employee-event.vue';
 
+//Work Reporting
+import WorkReporting from '../pages/work_reporting/index.vue';
+import WorkReportingDetail from '../pages/work_reporting/detail.vue';
+
 //Error page
 import Error from  '../components/error.vue';
 
@@ -653,6 +657,32 @@ const routes =[
                     title: 'POJ - Incident Reporting',
                     requiresAuth: true,
                     permission : 'incident_reporting',
+                }
+            },
+        ]
+    },
+    {
+        path: '/work-reporting',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Work Reporting',
+                component: WorkReporting,
+                meta: {
+                    title: 'POJ - Work Reporting',
+                    requiresAuth: true,
+                    permission: 'work_reporting',
+                },
+            },
+            {
+                path: 'detail/:id',
+                name: 'Work Reporting Detail',
+                component: WorkReportingDetail,
+                meta: {
+                    title: 'POJ - Work Reporting Detail',
+                    requiresAuth: true,
+                    permission : 'work_reporting',
                 }
             },
         ]

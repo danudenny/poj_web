@@ -17,6 +17,7 @@ use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\SettingController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\WorkLocationController;
+use App\Http\Controllers\API\WorkReportingController;
 use App\Http\Controllers\BackupController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\KanwilController;
@@ -232,4 +233,14 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::post('/approve/{id}', [EventController::class, 'approve']);
     });
     // End Event
+
+    // Begin Work Reporting
+    Route::group(['prefix' => 'work-reporting', 'middleware' => ['auth:sanctum']], function() {
+        Route::get('', [WorkReportingController::class, 'index']);
+        Route::get('view/{id}', [WorkReportingController::class, 'show']);
+        Route::post('create', [WorkReportingController::class, 'store']);
+        Route::put('update/{id}', [WorkReportingController::class, 'edit']);
+        Route::delete('delete/{id}', [WorkReportingController::class, 'delete']);
+    });
+    // End Work Reporting
 });
