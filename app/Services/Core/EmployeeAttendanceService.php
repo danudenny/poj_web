@@ -6,6 +6,8 @@ use App\Models\Employee;
 use App\Models\EmployeeAttendance;
 use App\Models\EmployeeAttendanceHistory;
 use App\Models\User;
+use App\Models\WorkLocation;
+use App\Models\WorkReporting;
 use App\Services\BaseService;
 use Carbon\Carbon;
 use Exception;
@@ -113,7 +115,7 @@ class EmployeeAttendanceService extends BaseService {
         $filteredUnitData = Arr::only($decodedEmpData, ['kanwil', 'area', 'cabang', 'outlet']);
         $timesheetSchedules = $decodedEmpData['timesheet_schedules'];
 
-        $currentDate = Carbon::now();
+        $currentDate = Carbon::now()->addDay()->format('Y-m-d');
         $matchingSchedule = null;
 
         foreach ($timesheetSchedules as $schedule) {
@@ -121,23 +123,29 @@ class EmployeeAttendanceService extends BaseService {
             $year = $schedule['period']['year'];
             $month = $schedule['period']['month'];
 
-            $carbonDate = Carbon::create($year, $month, $day);
+            $carbonDate = Carbon::create($year, $month, $day)->format('Y-m-d');
 
-            if ($carbonDate->isSameDay($currentDate)) {
+            if ($carbonDate === $currentDate) {
                 $matchingSchedule = $schedule;
             }
         }
+
 
         $empSchedule = $matchingSchedule;
         $empUnit = $this->getLastUnit($filteredUnitData);
 
         $workLocation = $empUnit;
-        $employeeDetail = $empData->employeeDetail;
 
         // Check if time is in range
+        if (!$empSchedule) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Employee schedule not found! Contact Administrator for Help!'
+            ], 400);
+        }
         $employeeTimesheetCheckin = Carbon::parse($empSchedule['timesheet']['start_time']);
         $employeeTimesheetCheckout = Carbon::parse($empSchedule['timesheet']['end_time']);
-        if ($empSchedule['timesheet']['end_time'] < $empSchedule['timesheet']['end_time']) {
+        if ($empSchedule['timesheet']['end_time'] < $empSchedule['timesheet']['start_time']) {
             $employeeTimesheetCheckout = Carbon::parse($empSchedule['timesheet']['end_time'])->addDay();
         }
         $parseRequestedTime = Carbon::parse($request->real_check_in);
@@ -224,31 +232,70 @@ class EmployeeAttendanceService extends BaseService {
         }
     }
 
+    /**
+     * @throws GuzzleException
+     */
     public function checkOut($request, $id): JsonResponse
     {
-        $empData = Employee::find($id);
+        $empData = Employee::with(['kanwil', 'area', 'cabang', 'outlet', 'timesheetSchedules', 'timesheetSchedules.period', 'timesheetSchedules.timesheet'])->find($id);
         if (!$empData) {
             return response()->json([
                 'message' => 'Employee not found!'
             ], 400);
         }
 
-        $workLocation = $empData->unit->workLocations[0];
-        $employeeDetail = $empData->employeeDetail;
+        $decodedEmpData = json_decode($empData, true);
+        $filteredUnitData = Arr::only($decodedEmpData, ['kanwil', 'area', 'cabang', 'outlet']);
+        $timesheetSchedules = $decodedEmpData['timesheet_schedules'];
+
+        $currentDate = Carbon::now()->addDay();
+        $matchingSchedule = null;
+
+        foreach ($timesheetSchedules as $schedule) {
+            $day = $schedule['date'];
+            $year = $schedule['period']['year'];
+            $month = $schedule['period']['month'];
+
+            $carbonDate = Carbon::create($year, $month, $day);
+
+            if ($carbonDate->isSameDay($currentDate)) {
+                $matchingSchedule = $schedule;
+            }
+        }
+
+        $empSchedule = $matchingSchedule;
+        $empUnit = $this->getLastUnit($filteredUnitData);
+
+        $workLocation = $empUnit;
 
         // Check if time is in range
-        $employeeTimesheetCheckin = Carbon::parse($employeeDetail->employeeTimesheet->start_time);
-        $employeeTimesheetCheckout = Carbon::parse($employeeDetail->employeeTimesheet->end_time);
-        if ($employeeDetail->employeeTimesheet->end_time < $employeeDetail->employeeTimesheet->start_time) {
-            $employeeTimesheetCheckout = Carbon::parse($employeeDetail->employeeTimesheet->end_time)->addDay();
+        if (!$empSchedule) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Schedule not found!'
+            ], 400);
+        }
+        $employeeTimesheetCheckin = Carbon::parse($empSchedule['timesheet']['start_time']);
+        $employeeTimesheetCheckout = Carbon::parse($empSchedule['timesheet']['end_time']);
+        if ($empSchedule['timesheet']['end_time'] < $empSchedule['timesheet']['start_time']) {
+            $employeeTimesheetCheckout = Carbon::parse($empSchedule['timesheet']['end_time'])->addDay();
         }
         $parseRequestedTime = Carbon::parse($request->real_check_out);
         $requestedTime = Carbon::createFromTimeString($parseRequestedTime);
-        $adjustedCheckin = $employeeTimesheetCheckin->copy()->subMinutes($workLocation->early_buffer);
+        $adjustedCheckin = $employeeTimesheetCheckin->copy()->subMinutes($workLocation['early_buffer']);
 
         if (!$parseRequestedTime->greaterThan($adjustedCheckin)) {
             return response()->json([
                 'message' => 'Check out time must be greater than ' . $employeeTimesheetCheckin->toTimeString('minutes')
+            ], 400);
+        }
+
+        //check if employee has submit worklocation today
+        $workReporting = WorkReporting::where('employee_id', $id)->whereDate('date', Carbon::today())->first();
+        if (!$workReporting) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You have not submit work location today!'
             ], 400);
         }
 
@@ -259,10 +306,17 @@ class EmployeeAttendanceService extends BaseService {
             ], 400);
         }
 
+        if ($workLocation['lat'] === null && $workLocation['long'] === null) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Work location not found!'
+            ], 400);
+        }
+
         $distance = calculateDistance(
             $request->lat, $request->long,
-            floatval($workLocation->lat),
-            floatval($workLocation->long)
+            floatval($workLocation['lat']),
+            floatval($workLocation['long'])
         );
 
         DB::beginTransaction();
@@ -271,7 +325,7 @@ class EmployeeAttendanceService extends BaseService {
             $checkInData->checkout_lat = $request->lat;
             $checkInData->checkout_long = $request->long;
             $checkInData->checkout_real_radius = $distance;
-            $checkInData->is_early = Carbon::parse($request->real_check_out)->lessThan(Carbon::parse($checkInData->employee->employeeDetail->employeeTimesheet->end_time));
+            $checkInData->is_early = Carbon::parse($request->real_check_out)->lessThan(Carbon::parse($empSchedule['timesheet']['end_time']));
             if ($requestedTime->lessThan($employeeTimesheetCheckout)) {
                 $checkInData->early_duration = $requestedTime->diffInMinutes($employeeTimesheetCheckout);
             } else {
@@ -294,6 +348,7 @@ class EmployeeAttendanceService extends BaseService {
 
             $getUser = User::where('employee_id', $id)->first();
             $getUser->is_normal_checkin = false;
+            $getUser->is_normal_checkout = true;
             $getUser->save();
 
             DB::commit();
