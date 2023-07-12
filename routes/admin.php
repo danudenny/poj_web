@@ -10,6 +10,7 @@ use App\Http\Controllers\API\EmployeeAttendanceController;
 use App\Http\Controllers\API\EmployeeController;
 use App\Http\Controllers\API\EmployeeDetailController;
 use App\Http\Controllers\API\EmployeeTimesheetController;
+use App\Http\Controllers\API\EventController;
 use App\Http\Controllers\API\IncidentController;
 use App\Http\Controllers\API\PermissionController;
 use App\Http\Controllers\API\RoleController;
@@ -218,4 +219,15 @@ Route::group(['prefix' => 'admin'], function () {
         Route::post('closure/{incidentID}', [IncidentController::class, 'closure']);
         Route::post('upload-image', [IncidentController::class, 'uploadImage']);
     });
+    // End Incident
+
+    // Begin Event
+    Route::group(['prefix' => 'event', 'middleware' => ['auth:sanctum']], function() {
+        Route::get('', [EventController::class, 'index']);
+        Route::get('view/{id}', [EventController::class, 'view']);
+        Route::get('employee-event', [EventController::class, 'employeeEvent']);
+        Route::post('create', [EventController::class, 'create']);
+        Route::post('/approve/{id}', [EventController::class, 'approve']);
+    });
+    // End Event
 });

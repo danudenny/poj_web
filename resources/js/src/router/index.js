@@ -78,6 +78,12 @@ import OutletDetail from '../pages/outlet/details.vue';
 import IncidentReporting from '../pages/incident-reporting/index.vue';
 import IncidentReportingDetail from '../pages/incident-reporting/detail.vue';
 
+//Event
+import EventRequestList from '../pages/event/index.vue';
+import EventRequestDetail from '../pages/event/detail.vue';
+import EventRequestCreate from '../pages/event/create.vue';
+import EventEmployeeEvent from '../pages/event/employee-event.vue';
+
 //Error page
 import Error from  '../components/error.vue';
 
@@ -636,6 +642,52 @@ const routes =[
                     title: 'POJ - Incident Reporting',
                     requiresAuth: true,
                     permission : 'incident_reporting',
+                }
+            },
+        ]
+    },
+    {
+        path: '/event',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'event_request_list',
+                component: EventRequestList,
+                meta: {
+                    title: 'POJ - Event Request',
+                    requiresAuth: true,
+                    permission: 'event_request',
+                },
+            },
+            {
+                path: 'detail/:id',
+                name: 'event_request_detail',
+                component: EventRequestDetail,
+                meta: {
+                    title: 'POJ - Event Request',
+                    requiresAuth: true,
+                    permission : 'event_request',
+                }
+            },
+            {
+                path: 'create',
+                name: 'event_request_create',
+                component: EventRequestCreate,
+                meta: {
+                    title: 'POJ - Create Event Request',
+                    requiresAuth: true,
+                    permission : 'event_request',
+                }
+            },
+            {
+                path: 'employee-event',
+                name: 'employee_event',
+                component: EventEmployeeEvent,
+                meta: {
+                    title: 'POJ - Employee Event',
+                    requiresAuth: true,
+                    permission : 'event_request',
                 }
             },
         ]
