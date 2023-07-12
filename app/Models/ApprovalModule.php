@@ -11,6 +11,7 @@ class ApprovalModule extends Model
     use HasFactory;
 
     const ApprovalIncident = "Incident";
+    const ApprovalEvent = "Event";
 
     protected $table = 'approval_modules';
 

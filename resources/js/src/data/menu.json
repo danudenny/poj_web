@@ -218,6 +218,30 @@
             "permission" : "incident_reporting"
         },
         {
+            "headTitle1": "EVENT",
+            "headTitle2": "Master data management",
+            "type": "headtitle",
+            "permission" : "event_request"
+        },
+        {
+            "title": "Event Request",
+            "icon": "calendar",
+            "iconf": "calendar",
+            "type": "link",
+            "active": false,
+            "path": "/event",
+            "permission" : "event_request"
+        },
+        {
+            "title": "Employee Event",
+            "icon": "calendar",
+            "iconf": "calendar",
+            "type": "link",
+            "active": false,
+            "path": "/event/employee-event",
+            "permission" : "event_request"
+        },
+        {
             "headTitle1": "CONFIGURATION",
             "headTitle2": "Configuration management",
             "type": "headtitle",
