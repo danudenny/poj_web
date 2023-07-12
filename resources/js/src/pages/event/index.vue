@@ -35,21 +35,21 @@ import {TabulatorFull as Tabulator} from 'tabulator-tables';
 export default {
     data() {
         return {
-            incidents: [],
+            events: [],
             loading: false,
         }
     },
     async mounted() {
-        await this.getIncidents();
+        await this.getEvents();
         this.initializeEventTable();
     },
     methods: {
-        async getIncidents() {
+        async getEvents() {
             this.loading = true;
             await this.$axios.get(`/api/v1/admin/event`)
                 .then(response => {
                     console.log(response.data.data)
-                    this.incidents = response.data.data;
+                    this.events = response.data.data;
                 })
                 .catch(error => {
                     console.error(error);
@@ -57,7 +57,7 @@ export default {
         },
         initializeEventTable() {
             const table = new Tabulator(this.$refs.eventRequest, {
-                data: this.incidents,
+                data: this.events,
                 layout: 'fitColumns',
                 columns: [
                     {
