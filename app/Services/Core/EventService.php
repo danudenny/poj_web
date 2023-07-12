@@ -252,7 +252,7 @@ class EventService extends BaseService
     }
 
     public function getEmployeeEvents(Request $request) {
-        $employeeEvents = EmployeeEvent::query()->with(['employee:employees.id,name', 'event'])
+        $employeeEvents = EmployeeEvent::query()->with(['employee:employees.id,name', 'event:events.id,title,requestor_employee_id', 'event.requestorEmployee:employees.id,name'])
             ->orderBy('id', 'DESC')->get();
 
         return response()->json([
