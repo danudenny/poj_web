@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Employee;
+use App\Models\ExtendRole;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -37,24 +38,26 @@ class SyncEmployeesJob implements ShouldQueue
                 $user->name = $employee->name;
                 $user->email = $employee->work_email;
                 $user->email_verified_at = now();
-                $user->password = '$10$A7iTVOJ0ItCaXMbvLJApceAI0B/373zpRLhFY3tHLMnylaiV32z/S';
+                $user->password = '$2y$10$m54GoOajOHJ4AYs2VnfP7e3hPBf3pJw.Omimsct0m6gDcHCt8hTHi';
                 $user->is_active = true;
                 $user->created_at = now();
                 $user->updated_at = now();
                 $user->employee_id = $employee->id;
                 $user->save();
+
+                $user->assignRole('staff');
             } else {
                 User::create([
                     'employee_id' => $employee->id,
                     'name' => $employee->name,
                     'email' => $employee->work_email,
                     'email_verified_at' => now(),
-                    'password' => '$10$A7iTVOJ0ItCaXMbvLJApceAI0B/373zpRLhFY3tHLMnylaiV32z/S',
+                    'password' => '$2y$10$m54GoOajOHJ4AYs2VnfP7e3hPBf3pJw.Omimsct0m6gDcHCt8hTHi',
                     'is_active' => true,
                     'created_at' => now(),
                     'updated_at' => now(),
                     'is_new' => true,
-                ]);
+                ])->assignRole('staff');
             }
         });
 

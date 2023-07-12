@@ -38,13 +38,13 @@ class Unit extends Model
 
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(Unit::class, 'parent_unit_id', 'id')
+        return $this->belongsTo(Unit::class, 'parent_unit_id', 'relation_id')
             ->with('parent');
     }
 
     public function child(): HasMany
     {
-        return $this->hasMany(Unit::class, 'parent_unit_id', 'id')->with('child');
+        return $this->hasMany(Unit::class, 'parent_unit_id', 'relation_id');
     }
 
     public function workLocations()  {

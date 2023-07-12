@@ -11,6 +11,7 @@ use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class EmployeeService extends BaseService
@@ -20,23 +21,39 @@ class EmployeeService extends BaseService
      */
     public function index($request): JsonResponse
     {
-        $getUnit = Unit::where('id', $request->unit_id)->get();
-        $flattenedUnits = UnitHelper::flattenUnits($getUnit);
-        foreach ($flattenedUnits as $unit) {
-            $unitIds[] = $unit['id'];
-        }
+//        $getUnit = Unit::where('id', $request->unit_id)->get();
+//        $flattenedUnits = UnitHelper::flattenUnits($getUnit);
+//        $unitIds = [];
+//        foreach ($flattenedUnits as $unit) {
+//            $unitIds[] = $unit->id;
+//        }
         try {
-            $employees = Employee::with('employeeDetail', 'employeeDetail.employeeTimesheet', 'job', 'unit');
-            $employees->when(request('name'), function ($query) {
-                $query->where('name', 'like', '%' . request('name') . '%');
-            });
-            $employees->whereIn('unit_id', $unitIds);
-            $employees->orderBy('id', 'asc');
+//            $employees = Employee::with('employeeDetail', 'employeeDetail.employeeTimesheet', 'job', 'unit');
+//            $employees->when(request('name'), function ($query) {
+//                $query->where('name', 'like', '%' . request('name') . '%');
+//            });
+////            $employees->whereIn('unit_id', $unitIds);
+//            $employees->orderBy('id', 'asc');
+//
+//            if (!$request->has('page')) {
+//                $employees = $employees->get();
+//            } else {
+//                $employees = $employees->paginate(10);
+//            }
 
-            if (!$request->has('page')) {
-                $employees = $employees->get();
+            $loggedInEmployee = Auth::user();
+
+            $employees = Employee::query();
+            if ($loggedInEmployee->hasRole('superadmin')) {
+                $employees = $employees->with(['kanwil', 'area', 'cabang', 'outlet', 'job', 'employeeDetail', 'employeeDetail.employeeTimesheet'])->paginate(10);
             } else {
-                $employees = $employees->paginate(10);
+                $employees = $employees->with(['kanwil', 'area', 'cabang', 'outlet', 'job', 'employeeDetail', 'employeeDetail.employeeTimesheet'])
+                    ->where('kanwil_id', $loggedInEmployee->employee->kanwil_id)
+                    ->where('area_id', $loggedInEmployee->employee->area_id)
+                    ->where('cabang_id', $loggedInEmployee->employee->cabang_id)
+                    ->where('outlet_id', $loggedInEmployee->employee->outlet_id)
+                    ->order_by('name', 'asc')
+                    ->paginate(10);
             }
 
             return response()->json([
@@ -58,7 +75,7 @@ class EmployeeService extends BaseService
     public function view($id): Model|Builder
     {
         try {
-            $employee = Employee::with( 'employeeDetail', 'employeeDetail.employeeTimesheet', 'job', 'unit.workLocations')->find($id);
+            $employee = Employee::with( ['kanwil', 'area', 'cabang', 'outlet', 'job', 'employeeDetail', 'employeeDetail.employeeTimesheet'])->find($id);
 
             if (!$employee) {
                 throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);

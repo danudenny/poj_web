@@ -12,9 +12,13 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-2">
-                                    <button class="btn btn-warning" type="button" data-bs-toggle="modal"
-                                            data-bs-target="#exampleModalCenter">
-                                        <i class="fa fa-recycle" /> &nbsp; Sync From Employee
+                                    <button class="btn btn-warning"  :disabled="syncLoading" type="button" @click="syncFromEmployee">
+                                        <span v-if="syncLoading">
+                                            <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
+                                        </span>
+                                        <span v-else>
+                                            <i class="fa fa-recycle"></i> &nbsp; Sync From Employee
+                                        </span>
                                     </button>
                                 </div>
                                 <div v-if="loading" class="text-center">
@@ -33,12 +37,21 @@
 <script>
 import axios from "axios";
 import {TabulatorFull as Tabulator} from 'tabulator-tables';
+import {useToast} from "vue-toastification";
 
 export default {
     data() {
         return {
             users: [],
             loading: false,
+            syncLoading: false,
+            table: null,
+            countdown: 0,
+            timerId: null,
+            currentPage: 1,
+            pageSize: 10,
+            filterName: '',
+            filterEmail: ''
         }
     },
     async mounted() {
@@ -46,11 +59,17 @@ export default {
         this.initializeUsersTable();
     },
     methods: {
+        startCountdown() {
+            this.countdown = 1;
+            this.timerId = setInterval(() => {
+                this.countdown++;
+            }, 1000);
+        },
         async getUsers() {
             this.loading = true;
             const unitId = JSON.parse(localStorage.getItem('USER_STORAGE_KEY'));
             await axios
-                .get(`/api/v1/admin/user?unit_id=${parseInt(unitId.unit_id)}`)
+                .get(`/api/v1/admin/user`)
                 .then(response => {
                     this.users = response.data.data;
                 })
@@ -59,14 +78,42 @@ export default {
                 });
         },
         initializeUsersTable() {
-            const table = new Tabulator(this.$refs.usersTable, {
-                data: this.users,
-                layout: 'fitDataStretch',
+            const ls = localStorage.getItem('my_app_token')
+            this.table = new Tabulator(this.$refs.usersTable, {
+                ajaxURL:"/api/v1/admin/user",
+                ajaxConfig: {
+                    headers: {
+                        Authorization: `Bearer ${ls}`,
+                    },
+                },
+                ajaxParams: {
+                    page: this.currentPage,
+                    size: this.pageSize,
+                },
+                ajaxURLGenerator: (url, config, params) => {
+                    params.filter.map((item) => {
+                        if (item.field === 'name') this.filterName = item.value
+                        if (item.field === 'email') this.filterEmail = item.value
+                    })
+                    return `${url}?page=${params.page}&size=${params.size}&name=${this.filterName}&email=${this.filterEmail}`
+                },
+                ajaxResponse: function (url, params, response) {
+                    return {
+                        data: response.data.data,
+                        last_page: response.data.last_page,
+                    }
+                },
+                layout: 'fitColumns',
+                fitColumns: true,
+                responsiveLayout: true,
+                progressiveLoad: true,
+                filterMode:"remote",
                 columns: [
                     {
                         title: 'No',
                         field: '',
                         formatter: 'rownum',
+                        width: 100
                     },
                     {
                         title: 'Name',
@@ -82,17 +129,19 @@ export default {
                         title: 'Role',
                         field: '',
                         hozAlign: 'center',
+                        headerHozAlign: 'center',
                         headerFilter:"input",
+                        width: 150,
                         formatter: function(row) {
                             return row.getData().roles.map(function(role) {
-                                return `<span class='badge badge-danger '>${role.name}</span>`;
+                                return `<span class='badge badge-danger '>${role.name.toUpperCase()}</span>`;
                             }).join(", ");
                         }
                     },
                     {
                         title: '',
                         formatter: this.viewDetailsFormatter,
-                        width: 50,
+                        width: 100,
                         hozAlign: 'center',
                         sortable: false,
                         cellClick: (e, cell) => {
@@ -100,19 +149,19 @@ export default {
                         }
                     },
                 ],
-                pagination: 'local',
-                paginationSize: 10,
-                paginationSizeSelector: [10, 20, 50, 100],
+                pagination: true,
+                paginationMode: "remote",
+                paginationSize: this.pageSize,
+                paginationSizeSelector: [10, 25, 50, 100],
                 headerFilter: true,
                 paginationInitialPage:1,
+                placeholder: 'No Data Available',
                 rowFormatter: (row) => {
-                    //
                 }
             });
             this.loading = false
         },
         viewDetailsFormatter(cell, formatterParams, onRendered) {
-            // return 2 buttons
             return `
                 <div>
                     <button class="button-icon button-success" data-action="view" data-id="${cell.getRow().getData().id}">
@@ -139,6 +188,28 @@ export default {
                     params: {id: rowData.id}
                 })
             }
+        },
+        async syncFromEmployee() {
+            this.syncLoading = true;
+            this.loading = true
+            this.startCountdown();
+            this.table.destroy()
+
+            await this.$axios.get('/api/v1/admin/employee/sync-to-users')
+                .then(async (response) => {
+                    this.syncLoading = false;
+                    this.loading = false;
+                    await this.getUsers()
+                    this.initializeUsersTable();
+                    useToast().success(response.data.message);
+
+                }).catch(() => {
+                    this.syncLoading = false;
+                    useToast().error("Failed to Sync Data! Check connection.");
+                }).finally(() => {
+                    this.syncLoading = false;
+                    clearInterval(this.timerId);
+                });
         }
     }
 }

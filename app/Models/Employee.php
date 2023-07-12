@@ -58,4 +58,24 @@ class Employee extends Model
     {
         return $this->hasMany(EmployeeTimesheetSchedule::class, 'employee_id');
     }
+
+    public function kanwil(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class, 'kanwil_id', 'relation_id')->where('unit_level', 4);
+    }
+
+    public function area(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class, 'area_id', 'relation_id')->where('unit_level', 5);
+    }
+
+    public function cabang(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class, 'cabang_id', 'relation_id')->where('unit_level', 6);
+    }
+
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class, 'outlet_id', 'relation_id')->where('unit_level', 7);
+    }
 }

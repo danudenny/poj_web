@@ -22,7 +22,7 @@ class DepartmentService
         return response()->json([
             'status' => 'success',
             'message' => 'Success fetch data',
-            'data' => $department->paginate($request->page ?? 10)
+            'data' => $department->get()
         ]);
     }
 

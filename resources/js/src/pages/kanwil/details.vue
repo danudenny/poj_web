@@ -1,39 +1,72 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs :main="$route.name"/>
+        <Breadcrumbs title="Kantor Wilayah"/>
         <div class="col-sm-12">
             <form class="card">
                 <div class="card-body">
+                    <div>
+                        <button type="button" v-if="editing" class="btn btn-warning" @click="editData">
+                            <i class="fa fa-pencil-square"></i> Edit Data
+                        </button>
+                        <div v-else class="d-flex justify-content-end mb-4 column-gap-2">
+                            <button type="button" class="btn btn-success" @click="saveData">
+                                <i class="fa fa-save"></i> Save Data
+                            </button>
+                            <button type="button" class="btn btn-danger" @click="closeEdit">
+                                <i class="fa fa-times-circle"></i> Cancel Edit
+                            </button>
+                        </div>
+                    </div>
+                    <hr>
                     <div class="row">
-                        <div class="col-md-5">
-
+                        <div class="col-md-12">
                             <div class="mb-3">
                                 <label class="form-label">Name</label>
                                 <input class="form-control" type="text" v-model="item.name" disabled>
                             </div>
+                        </div>
+                        <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label">Create Date</label>
-                                <input class="form-control" type="text" v-model="item.create_date" disabled>
+                                <label class="form-label">Latitude</label>
+                                <input class="form-control" type="text" v-model="item.lat" :disabled="editing">
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Write Date</label>
-                                <input class="form-control" type="text" v-model="item.write_date" disabled>
+                                <label class="form-label">Early Tolerance (minutes)</label>
+                                <input class="form-control" type="text" v-model="item.early_buffer" :disabled="editing">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Radius Buffer (meters)</label>
+                                <input class="form-control" type="text" v-model="item.radius" :disabled="editing">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Longitude</label>
+                                <input class="form-control" type="text" v-model="item.long" :disabled="editing">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Late Tolerance (minutes)</label>
+                                <input class="form-control" type="text" v-model="item.late_buffer" :disabled="editing">
                             </div>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <table class="table table-striped table-bordered">
                                 <thead>
                                 <tr>
-                                    <th>Level</th>
-                                    <th>Unit</th>
+                                    <th>
+                                        Unit Area
+                                        <input class="form-control mt-2" type="text" v-model="search" @input="handleInputChange" placeholder="Search">
+                                    </th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr v-for="(it, index) in item.child" :key="it">
+                                <tr v-for="(it, index) in item.child" :key="it" v-if="item.child && item.child.length > 0">
                                     <td>{{ it.name }}</td>
-                                    <td>{{ item.level.desc }}</td>
+                                </tr>
+                                <tr v-else>
+                                    <td><span>No Data Available</span></td>
                                 </tr>
                                 </tbody>
                             </table>
@@ -50,27 +83,64 @@
 
 <script>
 import axios from 'axios';
-import { useRoute } from 'vue-router';
+import {useToast} from 'vue-toastification';
+
 export default {
     data() {
         return {
             item: [],
+            search: null,
+            editing: true
         }
     },
     mounted() {
         this.getUnit();
     },
     methods: {
-        getUnit() {
-            const route = useRoute();
+        closeEdit() {
+            this.editing = true;
+            this.getUnit();
+        },
+        editData() {
+            this.editing = false;
+        },
+        saveData() {
             axios
-                .get(`/api/v1/admin/unit/view?id=`+ route.params.id)
+                .put(`/api/v1/admin/unit/update/${this.$route.params.id}`, {
+                    lat: this.item.lat,
+                    long: this.item.long,
+                    early_buffer: this.item.early_buffer,
+                    late_buffer: this.item.late_buffer,
+                    radius: this.item.radius
+                })
                 .then(response => {
-                    this.item = response.data.data;
+                    this.editing = true;
+                    this.getUnit();
+                    useToast().success('Data successfully updated');
+                })
+                .catch(error => {
+                    console.error(error);
+                    useToast().success('Data failed to update');
+                });
+        },
+        getUnit() {
+            axios
+                .get(`/api/v1/admin/unit/view/${this.$route.params.id}?unit_level=4`)
+                .then(response => {
+                    this.item = response.data.data[0];
                 })
                 .catch(error => {
                     console.error(error);
                 });
+        },
+        handleInputChange() {
+            if (this.search) {
+                this.item.child = this.item.child.filter((item) => {
+                    return item.name.toLowerCase().includes(this.search.toLowerCase());
+                });
+            } else {
+                this.getUnit();
+            }
         }
     }
 };

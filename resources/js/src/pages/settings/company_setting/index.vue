@@ -17,7 +17,7 @@
                                     <div class="col-sm-6">
                                         <div class="mb-3">
                                             <label>Company Name</label>
-                                            <input class="form-control" type="text" placeholder="" v-model="workLocations.company.name" disabled>
+                                            <input class="form-control" type="text" placeholder="" v-model="workLocations.name" disabled>
                                         </div>
                                     </div>
                                 </div>
@@ -41,7 +41,7 @@
                                         </div>
                                     </div>
                                     <div class="mb-3">
-                                        <a class="text-danger" :href="`https://www.google.com/maps/@${workLocations.lat},${workLocations.long},4z?entry=ttu`" target="_blank"><i class="fa fa-map-marker"></i> Show in google maps</a>
+                                        <a class="text-danger" :href="`https://www.google.com/maps/@${workLocations.lat},${workLocations.long},17z?entry=ttu`" target="_blank"><i class="fa fa-map-marker"></i> Show in google maps</a>
                                     </div>
                                 </div>
 
@@ -50,13 +50,13 @@
                                 <div class="row">
                                     <div class="col-sm-6">
                                         <div class="mb-3">
-                                            <label>Early Attendance Tolerance</label>
+                                            <label>Early Attendance Tolerance (minutes)</label>
                                             <input class="form-control" type="number" placeholder="" v-model="workLocations.early_buffer">
                                         </div>
                                     </div>
                                     <div class="col-sm-6">
                                         <div class="mb-3">
-                                            <label>Late Attendance Tolerance</label>
+                                            <label>Late Attendance Tolerance (minutes)</label>
                                             <input class="form-control" type="number" placeholder="" v-model="workLocations.late_buffer">
                                         </div>
                                     </div>

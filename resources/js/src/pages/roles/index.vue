@@ -141,6 +141,11 @@ export default {
                 <button class="button-icon button-danger" data-action="delete" data-row-id="${rowData.id}"><i data-action="delete" class="fa fa-trash"></i> </button>
              `;
         },
+        redrawTable() {
+            this.$nextTick(() => {
+                this.table.redraw(true);
+            });
+        },
         handleActionButtonClick(e, cell) {
             const action = e.target.dataset.action
             const rowData = cell.getRow().getData();
@@ -172,10 +177,11 @@ export default {
             }).then((result)=>{
                 if(result.value){
                     axios.delete(`api/v1/admin/role/delete?id=${id}`)
-                        .then(() => {
+                        .then(async (res) => {
+                            const pluck = this.roles.filter((item) => item.id !== id);
                             this.loading = true
-                            this.getRoles();
-                            this.table.setData(this.roles);
+                            this.table.setData(pluck);
+                            this.redrawTable();
                             this.loading = false
                             useToast().success('Success Delete Data' , {
                                 position: 'bottom-right'
