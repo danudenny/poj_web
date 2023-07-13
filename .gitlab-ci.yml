@@ -22,7 +22,7 @@ connect_vpn:
   stage: connect_vpn
   image: alpine:latest
   script:
-    - echo ${VPN_PASSWORD} | openconnect --user=${VPN_USERNAME} --passwd-on-stdin ${VPN_SERVER_ADDRESS}
+    - echo "${VPN_PASSWORD}" | openconnect --user="${VPN_USERNAME}" --passwd-on-stdin "${VPN_SERVER_ADDRESS}" --no-cert-check
   only:
     - staging
     - tags
