@@ -146,8 +146,8 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     // Begin employee attendance
     Route::group(['prefix' => 'attendance'], function() {
         Route::get('/', [EmployeeAttendanceController::class, 'index']);
-        Route::post('check-in/{id}', [EmployeeAttendanceController::class, 'checkIn']);
-        Route::post('check-out/{id}', [EmployeeAttendanceController::class, 'checkOut']);
+        Route::post('check-in', [EmployeeAttendanceController::class, 'checkIn']);
+        Route::post('check-out', [EmployeeAttendanceController::class, 'checkOut']);
     });
     // End employee attendance
 

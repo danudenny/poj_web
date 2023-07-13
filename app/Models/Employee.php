@@ -92,4 +92,9 @@ class Employee extends Model
     {
         return $this->hasOne(LateCheckin::class);
     }
+
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(EmployeeAttendance::class)->orderBy('id', 'desc');
+    }
 }

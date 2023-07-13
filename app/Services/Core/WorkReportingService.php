@@ -80,6 +80,15 @@ class WorkReportingService
 
     public function save($request): JsonResponse
     {
+        $empData = auth()->user()->employee;
+
+        if ($empData->job_id === null || $empData->job_id === 0 || stripos($empData->job->name, "SATPAM") === false) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You are not required to report!'
+            ], 403);
+        }
+
         DB::beginTransaction();
         try {
             $workReporting = new WorkReporting();
