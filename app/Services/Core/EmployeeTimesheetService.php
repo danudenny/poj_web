@@ -289,7 +289,12 @@ class EmployeeTimesheetService extends BaseService {
     {
         $schedule = EmployeeTimesheetSchedule::with(['employee', 'timesheet', 'period'])
             ->where('date', $request->date)
-            ->get();
+            ->when($request->employee_id, function ($query) use ($request) {
+                $query->whereHas('employee', function ($query) use ($request) {
+                    $query->where('id', $request->employee_id);
+                })->first();
+            })
+            ->first();
 
         return response()->json([
             'status' => 'success',
