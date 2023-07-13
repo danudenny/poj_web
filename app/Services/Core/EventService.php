@@ -420,6 +420,13 @@ class EventService extends BaseService
                     }
                 }
             }
+        } else {
+            $eventDate = new EventDate();
+            $eventDate->is_need_absence = $event->is_need_absence;
+            $eventDate->event_date = $parsedEventDate->format('D, Y-m-d');
+            $eventDate->event_time = $event->time_event;
+
+            $eventDates[] = $eventDate;
         }
 
         return $eventDates;
