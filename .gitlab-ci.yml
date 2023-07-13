@@ -1,6 +1,9 @@
 stages:
   - test
 
+variables:
+  VPN_PASSWORD: $VPN_PASSWORD
+
 before_script:
   - echo "$VPN_PASSWORD" "${VPN_PASSWORD}" $VPN_PASSWORD ${VPN_PASSWORD} %VPN_PASSWORD%
 
