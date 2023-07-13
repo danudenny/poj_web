@@ -208,10 +208,15 @@ export default {
                 first: null,
                 second: null
             },
+            currentPage: 1,
+            pageSize: 10,
+            filterName: "",
+            filterUnit: "",
             employees: [],
             months: ['Januri', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
             map: null,
-            marker: null
+            marker: null,
+            selectedEmployees: []
         }
     },
     mounted() {
@@ -220,8 +225,7 @@ export default {
     },
     methods: {
         getEmployees() {
-            const unitId = JSON.parse(localStorage.getItem('USER_STORAGE_KEY'));
-            this.$axios.get(`/api/v1/admin/employee?unit_id=${parseInt(unitId.unit_id)}&sort=asc`)
+            this.$axios.get(`/api/v1/admin/employee?sort=asc`)
                 .then(response => {
                     this.employees = response.data.data;
                     this.generateEmployeesTable()
@@ -231,35 +235,76 @@ export default {
                 });
         },
         generateEmployeesTable() {
+            const ls = localStorage.getItem('my_app_token')
             const table = new Tabulator(this.$refs.employeesTable, {
-                data: this.employees,
-                layout: 'fitDataStretch',
+                ajaxURL: '/api/v1/admin/employee',
+                layout: 'fitColumns',
                 columns: [
                     {
                         formatter: "rowSelection",
                         titleFormatter: "rowSelection",
                         hozAlign: "center",
                         headerSort: false,
+                        titleFormatterParams: {
+                            rowRange: "active"
+                        },
                         cellClick: function (e, cell) {
                             cell.getRow()
                         },
                     },
                     {
-                        title: 'Name',
+                        title: 'Employee Name',
                         field: 'name',
                         headerFilter:"input"
                     }
                 ],
-                pagination: 'local',
-                paginationSize: 20,
+                pagination: true,
+                paginationMode: 'remote',
+                responsiveLayout: true,
+                filterMode:"remote",
+                paginationSize: this.pageSize,
+                ajaxConfig: {
+                    headers: {
+                        Authorization: `Bearer ${ls}`,
+                    },
+                },
+                ajaxParams: {
+                    page: this.currentPage,
+                    size: this.pageSize,
+                },
+                ajaxURLGenerator: (url, config, params) => {
+                    let localFilter = {
+                        name: ''
+                    }
+                    params.filter.map((item) => {
+                        if (item.field === 'name') localFilter.name = item.value
+                    })
+                    return `${url}?page=${params.page}&size=${params.size}&name=${localFilter.name}`
+                },
+                ajaxResponse: function (url, params, response) {
+                    return {
+                        data: response.data.data,
+                        last_page: response.data.last_page,
+                    }
+                },
                 paginationSizeSelector: [10, 20, 50, 100],
                 headerFilter: true,
                 rowFormatter: (row) => {
-
+                    if (this.selectedEmployees.includes(row.getData().id)) {
+                        row.select()
+                    }
                 },
             });
             table.on("rowSelectionChanged", (data, rows, selected, deselected) => {
-                this.event.event_attendances = rows.map(row => row.getData().id);
+                if(selected.length > 0) {
+                    this.selectedEmployees.push(selected[0].getData().id)
+                }
+                if (deselected.length > 0) {
+                    let deselectedID = deselected[0].getData().id
+                    this.selectedEmployees = this.selectedEmployees.filter((val) => {
+                        return deselectedID !== val
+                    })
+                }
             })
         },
         generateMap() {
@@ -333,6 +378,8 @@ export default {
 
                 this.event.repeat_days = monthlyDays.join(",")
             }
+
+            this.event.event_attendances = this.selectedEmployees
 
             this.$axios.post(`/api/v1/admin/event/create`, this.event)
                 .then(response => {
