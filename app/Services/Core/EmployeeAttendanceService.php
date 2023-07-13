@@ -7,7 +7,6 @@ use App\Models\EmployeeAttendance;
 use App\Models\EmployeeAttendanceHistory;
 use App\Models\LateCheckin;
 use App\Models\User;
-use App\Models\WorkLocation;
 use App\Models\WorkReporting;
 use App\Services\BaseService;
 use Carbon\Carbon;
@@ -22,6 +21,11 @@ use Illuminate\Support\Arr;
 class EmployeeAttendanceService extends BaseService {
 
 
+    private EmployeeTimesheetService $employeeTimesheetService;
+
+    public function __construct(EmployeeTimesheetService $employeeTimesheetService) {
+        $this->employeeTimesheetService = $employeeTimesheetService;
+    }
     public function index($request): JsonResponse
     {
         $roles = Auth::user()->roles;
@@ -84,128 +88,118 @@ class EmployeeAttendanceService extends BaseService {
     }
 
     function getLastUnit($data) {
-        $bottomData = null;
-
-        foreach ($data as $key => $value) {
-            if (is_array($value)) {
-                $nestedData = $this->getLastUnit($value);
-                if ($nestedData !== null) {
-                    $bottomData = $nestedData;
-                }
-            } elseif ($key === 'value' && $value !== null) {
-                $bottomData = $data;
+        $lastData = null;
+        foreach ($data as $item) {
+            if ($item === null) {
+                break;
             }
+            $lastData = $item;
         }
-
-        return $bottomData;
+        return $lastData;
     }
     /**
      * @throws Exception
      * @throws GuzzleException
      */
-    public function checkIn($request, $id): JsonResponse
+    public function checkIn($request): JsonResponse
     {
-        $empData = Employee::with(['kanwil', 'area', 'cabang', 'outlet', 'timesheetSchedules', 'timesheetSchedules.period', 'timesheetSchedules.timesheet'])->find($id);
-        if (!$empData) {
+        $empData = auth()->user()->employee;
+        $filteredUnitData = [$empData->kanwil,$empData->area,$empData->cabang,$empData->outlet];
+
+        $timesheetSchedules = $empData->timesheetSchedules;
+        if (!$timesheetSchedules) {
             return response()->json([
-                'message' => 'Employee not found!'
+                'status' => 'error',
+                'message' => 'Employee schedule not found!'
             ], 400);
         }
 
-        $decodedEmpData = json_decode($empData, true);
-        $filteredUnitData = Arr::only($decodedEmpData, ['kanwil', 'area', 'cabang', 'outlet']);
-
-        $timesheetSchedules = $decodedEmpData['timesheet_schedules'];
-
-        $currentDate = Carbon::now()->format('Y-m-d');
-        $matchingSchedule = null;
+        $now = Carbon::now();
+        $empSchedule = null;
 
         foreach ($timesheetSchedules as $schedule) {
             $day = $schedule['date'];
             $year = $schedule['period']['year'];
             $month = $schedule['period']['month'];
-
             $carbonDate = Carbon::create($year, $month, $day)->format('Y-m-d');
 
-            if ($carbonDate === $currentDate) {
-                $matchingSchedule = $schedule;
+            if ($carbonDate === $now->format('Y-m-d')) {
+                $empSchedule = $schedule;
             }
         }
 
-        $empSchedule = $matchingSchedule;
-        $empUnit = $this->getLastUnit($filteredUnitData);
-
-        $workLocation = $empUnit;
-
-        // Check if time is in range
         if (!$empSchedule) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Employee schedule not found! Contact Administrator for Help!'
             ], 400);
         }
-        $employeeTimesheetCheckin = Carbon::parse($empSchedule['timesheet']['start_time']);
-        $employeeTimesheetCheckout = Carbon::parse($empSchedule['timesheet']['end_time']);
-        if ($empSchedule['timesheet']['end_time'] < $empSchedule['timesheet']['start_time']) {
-            $employeeTimesheetCheckout = Carbon::parse($empSchedule['timesheet']['end_time'])->addDay();
+
+        $workLocation = $this->getLastUnit($filteredUnitData);
+
+        // BEGIN : Check if time is in range
+        $employeeTimeZone = getTimezone($request->lat, $request->long);
+        $companyTimeZone = getTimezone($workLocation->lat, $workLocation->long);
+
+        $employeeTimesheetStartTime = Carbon::parse($empSchedule['timesheet']['start_time'], $companyTimeZone);
+        $employeeTimesheetEndTime = Carbon::parse($empSchedule['timesheet']['end_time'], $companyTimeZone);
+        if ($employeeTimesheetEndTime < $employeeTimesheetStartTime) {
+            Carbon::parse($employeeTimesheetEndTime)->addDay();
         }
-        $parseRequestedTime = Carbon::parse($request->real_check_in);
+        $parseRequestedTime = Carbon::parse($now);
         $requestedTime = Carbon::createFromTimeString($parseRequestedTime);
 
-        $adjustedCheckin = $employeeTimesheetCheckin->copy()->subMinutes($workLocation['early_buffer']);
-        $adjustedCheckout = $employeeTimesheetCheckout->copy()->subMinutes($workLocation['late_buffer']);
+        $adjustedStartTime = $employeeTimesheetStartTime->copy()->subMinutes($workLocation->early_buffer)->setTimezone($companyTimeZone);
+        $adjustedEndTime = $employeeTimesheetEndTime->copy()->subMinutes($workLocation->late_buffer)->setTimezone($companyTimeZone);
 
-        if (!$parseRequestedTime->between($adjustedCheckin, $adjustedCheckout)) {
+        if (!$parseRequestedTime->between($adjustedStartTime, $adjustedEndTime)) {
             return response()->json([
-                'message' => 'Check in time must be between ' . $employeeTimesheetCheckin->toTimeString('minutes') . ' and ' . $employeeTimesheetCheckout->toTimeString('minutes')
+                'message' => 'Check in time must be between ' . $employeeTimesheetStartTime->toTimeString('minutes') . ' and ' . $employeeTimesheetEndTime->toTimeString('minutes')
             ], 400);
         }
-        // Check if time is in range
+        // END : Check if time is in range
 
-        // Check if employee has checked in today
-        $checkInData = EmployeeAttendance::where('employee_id', $id)->orderBy('id', 'desc')->first();
+        // BEGIN : Check if employee has checked in today
+        $checkInData = $empData->attendances;
 
-        if (!$request->real_check_in) {
-            if ($request->attendance_types == 'normal' && Carbon::parse($checkInData->real_check_in)->format('Y-m-d') == Carbon::parse($parseRequestedTime)->format('Y-m-d')) {
-                return response()->json([
-                    'message' => 'You have checked in today!'
-                ], 400);
+        foreach ($checkInData as $checkIn) {
+            if ($checkIn->real_check_in) {
+                if (Carbon::parse($checkIn->real_check_in)->format('Y-m-d') == Carbon::parse($parseRequestedTime)->format('Y-m-d')) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'You have checked in today!'
+                    ], 400);
+                }
             }
         }
-        // Check if employee has checked in today
+        // END : Check if employee has checked in today
 
-        // Calulate distance
-        if ($workLocation['lat'] === null && $workLocation['long'] === null) {
+        // BEGIN : Calculate distance
+        if ($workLocation->lat === null && $workLocation->long === null) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Work location not found!'
             ], 400);
         }
 
-        $distance = calculateDistance($request->lat, $request->long, floatval($workLocation['lat']), floatval($workLocation['long']));
+        $distance = calculateDistance($request->lat, $request->long, floatval($workLocation->lat), floatval($workLocation->long));
+        // END : Calculate distance
 
-        $employeeTimeZone = getTimezone($request->lat, $request->long);
-        $companyTimeZone = getTimezone($workLocation['lat'], $workLocation['long']);
+        $earlyTolerance = $workLocation->early_buffer;
+        $lateTolerance = $workLocation->late_buffer;
 
-        $earlyTolerance = $workLocation['early_buffer'];
-        $lateTolerance = $workLocation['late_buffer'];
-
-        $employeeCheckInTime = Carbon::parse($request->real_check_in, $employeeTimeZone)->setTimezone($companyTimeZone);
+        $employeeCheckInTime = Carbon::parse($now, $companyTimeZone);
         $companyCheckInTime = Carbon::createFromFormat('H:i', $empSchedule['timesheet']['start_time'], $companyTimeZone);
 
         $earlyBoundary = $companyCheckInTime->copy()->subMinutes($earlyTolerance);
         $lateBoundary = $companyCheckInTime->copy()->addMinutes($lateTolerance);
 
-        $lateDifference = $lateBoundary->diffInMinutes($employeeCheckInTime, false);
+        $lateDifference = $lateBoundary->diffInMinutes($employeeCheckInTime);
+        $isOnTime = $employeeCheckInTime->between($earlyBoundary, $lateBoundary);
 
-        // Compare the employee's check-in time with the boundaries
-        $isOnTime = $employeeCheckInTime->between($earlyBoundary, $lateBoundary, true);
-
-        $attType = "";
         $isNeedApproval = false;
-        if ($distance <= intval($workLocation['radius'])){
-           $attType = "onsite";
-            $isNeedApproval = false;
+        if ($distance <= intval($workLocation->radius)){
+            $attType = "onsite";
         } else {
             $attType = "offsite";
             $isNeedApproval = true;
@@ -214,116 +208,165 @@ class EmployeeAttendanceService extends BaseService {
         DB::beginTransaction();
         try {
             $checkIn = new EmployeeAttendance();
-            $checkIn->employee_id = $id;
-            $checkIn->real_check_in = $request->real_check_in;
+            $checkIn->employee_id = auth()->user()->employee_id;
+            $checkIn->real_check_in = Carbon::now($companyTimeZone)->toDateTimeString();
             $checkIn->checkin_type = $attType;
             $checkIn->checkin_lat = $request->lat;
             $checkIn->checkin_long = $request->long;
             $checkIn->is_need_approval = $isNeedApproval;
             $checkIn->attendance_types = $request->attendance_types;
-            $checkIn->checkin_real_radius = max(0, $distance);
+            $checkIn->checkin_real_radius = $distance;
             $checkIn->approved = !$isNeedApproval;
             $checkIn->check_in_tz = $employeeTimeZone;
-            $checkIn->is_late = Carbon::parse($requestedTime)->lessThan(Carbon::parse($empSchedule['timesheet']['start_time']));
-           if ($requestedTime->lessThan($employeeCheckInTime)) {
-                $checkIn->late_duration = $requestedTime->diffInMinutes($employeeCheckInTime);
-            } else {
-                $checkIn->late_duration = 0;
-            }
-            $checkIn->is_on_time = $isOnTime;
+            $checkIn->is_late = $lateDifference > 0;
+            $checkIn->late_duration = $lateDifference;
 
             if (!$checkIn->save()) {
-                throw new Exception('Failed save data!');
+                DB::rollBack();
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Failed to save data!'
+                ], 400);
             }
 
-//            if ($lateDifference >= 15 && $lateDifference <= 120) {
-//                $columnName = 'late_' . $lateDifference;
-//                $totalLateColumn = 'total_' . $columnName;
-//                $year = $employeeCheckInTime->year;
-//                $month = $employeeCheckInTime->month;
-//                LateCheckin::where('employee_id', $id)->increment($columnName, $lateDifference, [
-//                    'year' => $year,
-//                    'month' => $month,
-//                    $totalLateColumn => $lateDifference,
-//                ]);
-//            }
+            $attHistory = new EmployeeAttendanceHistory();
+            $attHistory->employee_id = auth()->user()->employee_id;
+            $attHistory->employee_attendances_id = $checkIn->id;
+            $attHistory->status = !$isNeedApproval ? 'approved' : 'pending';
 
-            $getUser = User::where('employee_id', $id)->first();
+            if (!$attHistory->save()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Failed to save data!'
+                ], 400);
+            }
+
+            $columnName = null;
+            if ($lateDifference >= 15) {
+                if ($lateDifference <= 15) {
+                    $columnName = 'late_15';
+                } else if ($lateDifference <= 30) {
+                    $columnName = 'late_30';
+                } else if ($lateDifference <= 45) {
+                    $columnName = 'late_45';
+                } else if ($lateDifference <= 60) {
+                    $columnName = 'late_60';
+                } else if ($lateDifference <= 75) {
+                    $columnName = 'late_75';
+                } else if ($lateDifference <= 90) {
+                    $columnName = 'late_90';
+                } else if ($lateDifference <= 105) {
+                    $columnName = 'late_105';
+                } else if ($lateDifference <= 120) {
+                    $columnName = 'late_120';
+                } else {
+                    $columnName = 'late_120';
+                }
+                $year = $employeeCheckInTime->year;
+                $month = $employeeCheckInTime->month;
+
+                if ($columnName) {
+                    $totalLateColumn = 'total_' . $columnName;
+                    $lateCheckin = LateCheckin::where('employee_id', auth()->user()->employee_id)
+                        ->where('year', $year)
+                        ->where('month', $month)
+                        ->first();
+
+                    if (!$lateCheckin) {
+                        $lateCheckin = new LateCheckin();
+                        $lateCheckin->employee_id = auth()->user()->employee_id;
+                        $lateCheckin->month = $month;
+                        $lateCheckin->year = $year;
+                        $lateCheckin->$columnName = 1;
+                        $lateCheckin->$totalLateColumn = $lateDifference;
+                        $lateCheckin->save();
+                    }
+
+                    $lateCheckin->$columnName++;
+                    $lateCheckin->$totalLateColumn = $lateCheckin->$totalLateColumn + $lateDifference;
+                    $lateCheckin->save();
+                }
+            }
+
+            $getUser = User::where('employee_id', auth()->user()->employee_id)->first();
             $getUser->is_normal_checkin = true;
+            $getUser->is_normal_checkout = false;
             $getUser->save();
 
             DB::commit();
             return response()->json([
                 'status' => true,
-                'message' => 'Success save data!',
+                'message' => 'Success check in!',
                 'data' => $checkIn
             ]);
         } catch (Exception $e) {
             DB::rollBack();
-            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 400);
         }
     }
 
     /**
      * @throws GuzzleException
      */
-    public function checkOut($request, $id): JsonResponse
+    public function checkOut($request): JsonResponse
     {
-        $empData = Employee::with(['kanwil', 'area', 'cabang', 'outlet', 'timesheetSchedules', 'timesheetSchedules.period', 'timesheetSchedules.timesheet'])->find($id);
-        if (!$empData) {
+        $empData = auth()->user()->employee;
+
+        $filteredUnitData = [$empData->kanwil,$empData->area,$empData->cabang,$empData->outlet];
+        $timesheetSchedules = $empData->timesheetSchedules;
+
+        if (!$timesheetSchedules) {
             return response()->json([
-                'message' => 'Employee not found!'
+                'status' => 'error',
+                'message' => 'Employee schedule not found!'
             ], 400);
         }
 
-        $decodedEmpData = json_decode($empData, true);
-        $filteredUnitData = Arr::only($decodedEmpData, ['kanwil', 'area', 'cabang', 'outlet']);
-        $timesheetSchedules = $decodedEmpData['timesheet_schedules'];
-
-        $currentDate = Carbon::now()->addDay();
-        $matchingSchedule = null;
+        $now = Carbon::now();
+        $empSchedule = null;
 
         foreach ($timesheetSchedules as $schedule) {
             $day = $schedule['date'];
             $year = $schedule['period']['year'];
             $month = $schedule['period']['month'];
+            $carbonDate = Carbon::create($year, $month, $day)->format('Y-m-d');
 
-            $carbonDate = Carbon::create($year, $month, $day);
-
-            if ($carbonDate->isSameDay($currentDate)) {
-                $matchingSchedule = $schedule;
+            if ($carbonDate === $now->format('Y-m-d')) {
+                $empSchedule = $schedule;
             }
         }
 
-        $empSchedule = $matchingSchedule;
-        $empUnit = $this->getLastUnit($filteredUnitData);
-
-        $workLocation = $empUnit;
-
-        // FIXME: Check if time is in range
         if (!$empSchedule) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Schedule not found!'
+                'message' => 'Employee schedule not found! Contact Administrator for Help!'
             ], 400);
         }
-        $employeeTimesheetCheckin = Carbon::parse($empSchedule['timesheet']['start_time']);
-        $employeeTimesheetCheckout = Carbon::parse($empSchedule['timesheet']['end_time']);
-        if ($empSchedule['timesheet']['end_time'] < $empSchedule['timesheet']['start_time']) {
-            $employeeTimesheetCheckout = Carbon::parse($empSchedule['timesheet']['end_time'])->addDay();
-        }
-        $parseRequestedTime = Carbon::parse($request->real_check_out);
-        $requestedTime = Carbon::createFromTimeString($parseRequestedTime);
-        $adjustedCheckin = $employeeTimesheetCheckin->copy()->subMinutes($workLocation['early_buffer']);
 
-        if (!$parseRequestedTime->greaterThan($adjustedCheckin)) {
-            return response()->json([
-                'message' => 'Check out time must be greater than ' . $employeeTimesheetCheckin->toTimeString('minutes')
-            ], 400);
+        $workLocation = $this->getLastUnit($filteredUnitData);
+
+        // BEGIN : Check if time is in range
+        $employeeTimeZone = getTimezone($request->lat, $request->long);
+        $companyTimeZone = getTimezone($workLocation->lat, $workLocation->long);
+
+        $employeeTimesheetStartTime = Carbon::parse($empSchedule['timesheet']['start_time'], $companyTimeZone);
+        $employeeTimesheetEndTime = Carbon::parse($empSchedule['timesheet']['end_time'], $companyTimeZone);
+        if ($employeeTimesheetEndTime < $employeeTimesheetStartTime) {
+            Carbon::parse($employeeTimesheetEndTime)->addDay();
         }
+        $parseRequestedTime = Carbon::parse($now);
+        $requestedTime = Carbon::createFromTimeString($parseRequestedTime);
+        // END : Check if time is in range
 
         //check if employee has submit worklocation today
-        $workReporting = WorkReporting::where('employee_id', $id)->whereDate('date', Carbon::today())->first();
+        $workReporting = WorkReporting::where('employee_id', $empData->id)
+            ->whereDate('date', Carbon::today())
+            ->orderBy('id', 'desc')
+            ->first();
+
         if (!$workReporting) {
             return response()->json([
                 'status' => 'error',
@@ -331,8 +374,11 @@ class EmployeeAttendanceService extends BaseService {
             ], 400);
         }
 
-        $checkInData = EmployeeAttendance::where('employee_id', $id)->whereNull('real_check_out')->first();
-        if (!$checkInData) {
+        $employeeTimeZone = getTimezone($request->lat, $request->long);
+        $companyTimeZone = getTimezone($workLocation['lat'], $workLocation['long']);
+        $checkInData = $empData->attendances->first();
+
+        if (!auth()->user()->is_normal_checkin) {
             return response()->json([
                 'message' => 'The employee has not checked in today.'
             ], 400);
@@ -351,29 +397,27 @@ class EmployeeAttendanceService extends BaseService {
             floatval($workLocation['long'])
         );
 
-        $employeeTimeZone = getTimezone($request->lat, $request->long);
-
         DB::beginTransaction();
         try {
-            $checkInData->real_check_out = $request->real_check_out;
+            $checkInData->real_check_out = Carbon::now($companyTimeZone)->toDateTimeString();
             $checkInData->checkout_lat = $request->lat;
             $checkInData->checkout_long = $request->long;
             $checkInData->checkout_real_radius = $distance;
             $checkInData->check_out_tz = $employeeTimeZone;
-            $checkInData->is_early = Carbon::parse($request->real_check_out)->lessThan(Carbon::parse($empSchedule['timesheet']['end_time']));
-            if ($requestedTime->lessThan($employeeTimesheetCheckout)) {
-                $checkInData->early_duration = $requestedTime->diffInMinutes($employeeTimesheetCheckout);
+            $checkInData->is_early = Carbon::parse(now(), $companyTimeZone)->lessThan(Carbon::parse($empSchedule['timesheet']['end_time'], $companyTimeZone));
+            if ($requestedTime->lessThan($employeeTimesheetEndTime)) {
+                $checkInData->early_duration = $requestedTime->diffInMinutes($employeeTimesheetEndTime);
             } else {
                 $checkInData->early_duration = 0;
             }
-            $checkInData->duration = Carbon::parse($checkInData->real_check_in)->diffInMinutes(Carbon::parse($checkInData->real_check_out));
 
+            $checkInData->duration = Carbon::parse($checkInData->real_check_in, $companyTimeZone)->diffInMinutes(Carbon::parse($checkInData->real_check_out, $companyTimeZone));
             if (!$checkInData->save()) {
                 throw new Exception('Failed save checkout data!');
             }
 
             $attHistory = new EmployeeAttendanceHistory();
-            $attHistory->employee_id = $id;
+            $attHistory->employee_id = auth()->user()->employee_id;
             $attHistory->employee_attendances_id = $checkInData->id;
             $attHistory->status = $checkInData->approved ? 'approved' : 'pending';
 
@@ -381,7 +425,7 @@ class EmployeeAttendanceService extends BaseService {
                 throw new Exception('Failed save attendance histories data!');
             }
 
-            $getUser = User::where('employee_id', $id)->first();
+            $getUser = User::where('employee_id', auth()->user()->employee_id)->first();
             $getUser->is_normal_checkin = false;
             $getUser->is_normal_checkout = true;
             $getUser->save();

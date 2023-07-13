@@ -6,6 +6,7 @@ use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
 use App\Services\Core\EmployeeAttendanceService;
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -24,14 +25,18 @@ class EmployeeAttendanceController extends BaseController
 
     /**
      * @throws Exception
+     * @throws GuzzleException
      */
-    public function checkIn(Request $request, $id): JsonResponse
+    public function checkIn(Request $request): JsonResponse
     {
-        return $this->employeeAttendanceService->checkIn($request, $id);
+        return $this->employeeAttendanceService->checkIn($request);
     }
 
-    public function checkOut(Request $request, $id): JsonResponse
+    /**
+     * @throws GuzzleException
+     */
+    public function checkOut(Request $request): JsonResponse
     {
-        return $this->employeeAttendanceService->checkOut($request, $id);
+        return $this->employeeAttendanceService->checkOut($request);
     }
 }
