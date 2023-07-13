@@ -2,7 +2,7 @@ stages:
   - test
 
 before_script:
-  - 'echo "$VPN_PASSWORD" "$VPN_USERNAME" "$VPN_SERVER_ADDRESS"'
+  - echo "$VPN_PASSWORD" "${VPN_PASSWORD}" $VPN_PASSWORD ${VPN_PASSWORD}
 
 test:
   stage: test
