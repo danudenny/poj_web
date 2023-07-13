@@ -23,18 +23,18 @@ connect_vpn:
   image: alpine:latest
   script:
     - echo "${VPN_PASSWORD}" | openconnect --user="${VPN_USERNAME}" --passwd-on-stdin "${VPN_SERVER_ADDRESS}"
-  rules:
-    - exists:
-        - staging
+  only:
+    - staging
+    - tags
 
 build:
   stage: build
   image: node:lts
   script:
     - npm ci
-  rules:
-    - exists:
-        - staging
+  only:
+    - staging
+    - tags
 
 test:
   stage: test
@@ -42,9 +42,9 @@ test:
   script:
     - composer install --no-interaction --prefer-dist --optimize-autoloader
     - ./vendor/bin/phpunit
-  rules:
-    - exists:
-        - staging
+  only:
+    - staging
+    - tags
 
 deploy:
   stage: deploy
@@ -67,11 +67,9 @@ deploy:
     - ssh -p ${SSH_PORT} -i "${SSH_PRIVATE_KEY}" "${SSH_USERNAME}@${SERVER_IP}" "cd /var/www/html/ && php artisan optimize"
     - ssh -p ${SSH_PORT} -i "${SSH_PRIVATE_KEY}" "${SSH_USERNAME}@${SERVER_IP}" "cd /var/www/html/ && npm install"
     - ssh -p ${SSH_PORT} -i "${SSH_PRIVATE_KEY}" "${SSH_USERNAME}@${SERVER_IP}" "cd /var/www/html/ && npm run build"
-  rules:
-    - exists:
-        - staging
-    - exists:
-        - tags
+  only:
+    - staging
+    - tags
 
 after_script:
   - |
