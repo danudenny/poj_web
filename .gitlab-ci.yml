@@ -4,16 +4,6 @@ stages:
   - test
   - deploy
 
-variables:
-  VPN_SERVER_ADDRESS: $VPN_SERVER_ADDRESS
-  VPN_USERNAME: $VPN_USERNAME
-  VPN_PASSWORD: $VPN_PASSWORD
-  SERVER_IP: $SERVER_IP
-  SSH_PORT: $SSH_PORT
-  SSH_USERNAME: $SSH_USERNAME
-  SSH_PASSWORD: $SSH_PASSWORD
-  SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY
-
 before_script:
   - apk update
   - apk add openconnect openssh-client
