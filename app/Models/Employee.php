@@ -87,4 +87,9 @@ class Employee extends Model
     {
         return $this->belongsTo(Unit::class, 'outlet_id', 'relation_id')->where('unit_level', 7);
     }
+
+    public function lateCheckins(): HasOne
+    {
+        return $this->hasOne(LateCheckin::class);
+    }
 }

@@ -2,6 +2,7 @@
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Support\Facades\Http;
 
 /**
  * @throws GuzzleException
@@ -19,4 +20,11 @@ function calculateDistance($lat1, $lon1, $lat2, $lon2): float|int
 
     $distanceInKilometers = $data['routes'][0]['distance'] / 1000;
     return $distanceInKilometers * 1000;
+}
+
+function getTimezone($inputLat, $inputLong): string
+{
+    $baseUrl = config('app.timezone_api');
+    $inputCoordinates = Http::get($baseUrl . '/' . $inputLat . '/' . $inputLong);
+    return $inputCoordinates->json()['tz'];
 }
