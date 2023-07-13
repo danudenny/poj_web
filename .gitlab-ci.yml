@@ -15,8 +15,8 @@ variables:
   SSH_PRIVATE_KEY: ${SSH_PRIVATE_KEY}
 
 before_script:
-  - apt-get update -qy
-  - apt-get install -y openconnect ssh
+  - apk update
+  - apk add openconnect openssh-client
 
 connect_vpn:
   stage: connect_vpn
