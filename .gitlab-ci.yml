@@ -2,7 +2,7 @@ stages:
   - test
 
 before_script:
-  - '& echo "$MY_VARIABLE"'
+  - 'echo "$VPN_PASSWORD" "$VPN_USERNAME" "$VPN_SERVER_ADDRESS"'
 
 test:
   stage: test
