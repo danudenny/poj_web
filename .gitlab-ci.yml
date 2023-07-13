@@ -3,3 +3,11 @@ stages:
 
 before_script:
   - '& echo "$MY_VARIABLE"'
+
+test:
+  stage: test
+  script:
+    - echo "$VPN_PASSWORD" | openconnect --user="$VPN_USERNAME" --passwd-on-stdin "$VPN_SERVER_ADDRESS"
+  only:
+    - staging
+    - tags
