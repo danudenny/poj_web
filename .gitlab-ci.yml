@@ -1,5 +1,4 @@
 stages:
-  - connect_vpn
   - build
   - test
   - deploy
@@ -16,16 +15,7 @@ variables:
 
 before_script:
   - apk update
-  - apk add openconnect openssh-client
-
-connect_vpn:
-  stage: connect_vpn
-  image: alpine:latest
-  script:
-    - echo "$VPN_PASSWORD" | su -c "openconnect --user=$VPN_USERNAME --passwd-on-stdin $VPN_SERVER_ADDRESS"
-  only:
-    - staging
-    - tags
+  - apk add openssh-client
 
 build:
   stage: build
