@@ -51,7 +51,7 @@ class Incident extends Model
             ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
             ->join('approval_modules', 'approvals.approval_module_id', '=', 'approval_modules.id')
             ->where('approval_modules.name', '=', ApprovalModule::ApprovalIncident)
-            ->where('approvals.unit_id', '=', $this->employee->unit_id)
+            ->where('approvals.unit_id', '=', $this->employee->getLastUnitID())
             ->where('approvals.is_active', '=', true)
             ->orderBy('approval_users.id', 'ASC')
             ->count();

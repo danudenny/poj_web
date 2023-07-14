@@ -12,10 +12,19 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * Attributes:
  * @property-read int $id
  * @property string $name
- * @property int $unit_id
+ * @property int $outlet_id
+ * @property int $cabang_id
+ * @property int $area_id
+ * @property int $kanwil_id
+ * @property int $corporate_id
  *
  * Relations:
  * @property-read User $user
+ * @property-read Unit $outlet
+ * @property-read Unit $cabang
+ * @property-read Unit $area
+ * @property-read Unit $kanwil
+ * @property-read Unit $corporate
  */
 class Employee extends Model
 {
@@ -31,6 +40,25 @@ class Employee extends Model
         } else {
             return "In Active";
         }
+    }
+
+    /**
+     * @return int|null
+     */
+    public function getLastUnitID(): int|null {
+        if ($this->outlet_id) {
+            return $this->outlet_id;
+        } else if ($this->cabang_id) {
+            return $this->cabang_id;
+        } else if ($this->area_id) {
+            return $this->area_id;
+        } else if ($this->kanwil_id) {
+            return $this->kanwil_id;
+        } else if ($this->corporate_id) {
+            return $this->corporate_id;
+        }
+
+        return null;
     }
 
     public function company(): BelongsTo
