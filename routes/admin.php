@@ -170,6 +170,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::get('/', [UnitController::class, 'index']);
         Route::get('view/{id}', [UnitController::class, 'view']);
         Route::get('all', [UnitController::class, 'allUnitNoFilter']);
+        Route::get('paginated', [UnitController::class, 'paginatedListUnits']);
         Route::put('update/{id}', [UnitController::class, 'update']);
     });
     // End Unit
