@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $description
  * @property float $latitude
  * @property float $longitude
+ * @property string $location_type
  * @property string $address
  * @property string $date_event
  * @property string $time_event
@@ -40,6 +41,9 @@ class Event extends Model
 
     const EventTypeAnggaran = "anggaran";
     const EventTypeNonAnggaran = "non-anggaran";
+
+    const LocationTypeInternal = "internal";
+    const LocationTypeExternal = "external";
 
     const StatusPending = "pending";
     const StatusApprove = "approve";

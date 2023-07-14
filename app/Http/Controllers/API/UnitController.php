@@ -31,6 +31,10 @@ class UnitController extends BaseController
         }
     }
 
+    public function paginatedListUnits(Request $request): JsonResponse {
+        return $this->unitService->paginatedListUnit($request);
+    }
+
     /**
      * view specific resource
      * @param Request $request
