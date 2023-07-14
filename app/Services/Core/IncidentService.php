@@ -160,7 +160,7 @@ class IncidentService extends BaseService
                 ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
                 ->join('approval_modules', 'approvals.approval_module_id', '=', 'approval_modules.id')
                 ->where('approval_modules.name', '=', ApprovalModule::ApprovalIncident)
-                ->where('approvals.unit_id', '=', $user->employee->unit_id)
+                ->where('approvals.unit_id', '=', $user->employee->getLastUnitID())
                 ->where('approvals.is_active', '=', true)
                 ->orderBy('approval_users.id', 'ASC')
                 ->get(['approval_users.*']);
@@ -318,7 +318,7 @@ class IncidentService extends BaseService
                 ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
                 ->join('approval_modules', 'approvals.approval_module_id', '=', 'approval_modules.id')
                 ->where('approval_modules.name', '=', ApprovalModule::ApprovalIncident)
-                ->where('approvals.unit_id', '=', $user->employee->unit_id)
+                ->where('approvals.unit_id', '=', $user->employee->getLastUnitID())
                 ->where('approvals.is_active', '=', true)
                 ->orderBy('approval_users.id', 'ASC')
                 ->get(['approval_users.*']);

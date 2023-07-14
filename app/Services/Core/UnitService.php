@@ -2,10 +2,13 @@
 
 namespace App\Services\Core;
 
+use App\Models\Role;
 use App\Models\Unit;
+use App\Models\User;
 use App\Services\BaseService;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class UnitService extends BaseService
@@ -92,6 +95,34 @@ class UnitService extends BaseService
             throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
 
+    }
+
+    public function paginatedListUnit(Request $request) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            $query = Unit::query();
+            if ($user->hasRole(Role::RoleSuperAdministrator)) {
+                $query->when($request->filled('name'), function(Builder $builder) use ($request) {
+                    $builder->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower(request()->query('name')).'%']);
+                });
+            } else {
+                $query->where('id', '=', $user->employee->getLastUnitID());
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data retrieved successfully',
+                'data' => $this->list($query, $request)
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            throw new \InvalidArgumentException($e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+        }
     }
 
     /**

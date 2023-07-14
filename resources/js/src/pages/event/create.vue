@@ -27,8 +27,15 @@
                                     <textarea class="form-control" v-model="event.description" required></textarea>
                                 </div>
                                 <div class="mt-2">
+                                    <label for="status">Lokasi Event</label>
+                                    <select id="status" name="status" class="form-select" v-model="event.location_type" @change="onLocationEventTypeChange" required>
+                                        <option value="internal" :selected="event.location_type === 'internal' ? 'selected' : ''">Internal</option>
+                                        <option value="external" :selected="event.location_type === 'external' ? 'selected' : ''">External</option>
+                                    </select>
+                                </div>
+                                <div class="mt-2">
                                     <label for="name">Alamat</label>
-                                    <input type="text" class="form-control" v-model="event.address" required>
+                                    <textarea class="form-control" v-model="event.address" required disabled></textarea>
                                 </div>
                                 <div class="mt-2">
                                     <label for="name">Tanggal</label>
@@ -147,7 +154,8 @@
                             </form>
                         </div>
                         <div class="col-md-6">
-                            <div id="map" class="mb-4"></div>
+                            <div id="map" class="mb-4" v-if="event.location_type === 'external'"></div>
+                            <div ref="unitsTable" v-if="event.location_type === 'internal'"></div>
 
                             <hr/>
 
@@ -180,6 +188,7 @@ export default {
                 image_url: null,
                 title: null,
                 description: null,
+                location_type: 'external',
                 latitude: null,
                 longitude: null,
                 address: null,
@@ -216,24 +225,15 @@ export default {
             months: ['Januri', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
             map: null,
             marker: null,
-            selectedEmployees: []
+            selectedEmployees: [],
+            selectedUnitID: null,
         }
     },
     mounted() {
         this.generateMap()
-        this.getEmployees()
+        this.generateEmployeesTable()
     },
     methods: {
-        getEmployees() {
-            this.$axios.get(`/api/v1/admin/employee?sort=asc`)
-                .then(response => {
-                    this.employees = response.data.data;
-                    this.generateEmployeesTable()
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-        },
         generateEmployeesTable() {
             const ls = localStorage.getItem('my_app_token')
             const table = new Tabulator(this.$refs.employeesTable, {
@@ -307,6 +307,81 @@ export default {
                 }
             })
         },
+        generateUnitsTable() {
+            const ls = localStorage.getItem('my_app_token')
+            const table = new Tabulator(this.$refs.employeesTable, {
+                ajaxURL: '/api/v1/admin/unit/paginated',
+                layout: 'fitColumns',
+                columns: [
+                    {
+                        formatter: "rowSelection",
+                        titleFormatter: "rowSelection",
+                        hozAlign: "center",
+                        headerSort: false,
+                        titleFormatterParams: {
+                            rowRange: "active"
+                        },
+                        cellClick: function (e, cell) {
+                            cell.getRow()
+                        },
+                    },
+                    {
+                        title: 'Unit Name',
+                        field: 'name',
+                        headerFilter:"input"
+                    }
+                ],
+                selectable: 1,
+                pagination: true,
+                paginationMode: 'remote',
+                responsiveLayout: true,
+                filterMode:"remote",
+                paginationSize: this.pageSize,
+                ajaxConfig: {
+                    headers: {
+                        Authorization: `Bearer ${ls}`,
+                    },
+                },
+                ajaxParams: {
+                    page: this.currentPage,
+                    size: this.pageSize,
+                },
+                ajaxURLGenerator: (url, config, params) => {
+                    let localFilter = {
+                        name: ''
+                    }
+                    console.log("URLGenerateParam", params)
+                    params.filter.map((item) => {
+                        if (item.field === 'name') localFilter.name = item.value
+                    })
+                    return `${url}?page=${params.page}&per_page=${params.size}&size=${params.size}&name=${localFilter.name}`
+                },
+                ajaxResponse: function (url, params, response) {
+                    return {
+                        data: response.data.data,
+                        last_page: response.data.last_page,
+                    }
+                },
+                paginationSizeSelector: [10, 20, 50, 100],
+                headerFilter: true,
+                rowFormatter: (row) => {
+                    if (this.selectedUnitID !== null && (this.selectedUnitID.id === row.getData().id)) {
+                        row.select()
+                    }
+                },
+            });
+            table.on("rowSelectionChanged", (data, rows, selected, deselected) => {
+                if(selected.length > 0) {
+                    this.selectedUnitID = {
+                        id: selected[0].getData().id,
+                        latitude: selected[0].getData().lat,
+                        longitude: selected[0].getData().long
+                    }
+
+                    this.fetchLatLngAddress(this.selectedUnitID.latitude, this.selectedUnitID.longitude)
+                }
+            })
+        },
         generateMap() {
             this.mapContainer = this.$el.querySelector('#map');
 
@@ -327,7 +402,15 @@ export default {
                 this.marker = L.marker([this.event.latitude, this.event.longitude], {icon: L.icon({
                         iconUrl: '/marker-icon.png'
                     })}).addTo(this.map)
+
+                this.fetchLatLngAddress(this.event.latitude, this.event.longitude)
             })
+        },
+        fetchLatLngAddress(latitude, longitude) {
+            this.$axios.get(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`)
+                .then(resp => {
+                    this.event.address = resp.data.display_name
+                })
         },
         onChangeFile(e) {
             let formData = new FormData()
@@ -395,6 +478,13 @@ export default {
                         useToast().error(error.response.data.message , { position: 'bottom-right' });
                     }
                 });
+        },
+        onLocationEventTypeChange(e) {
+            if(e.target.value === 'external') {
+                this.generateMap()
+            } else if (e.target.value === 'internal') {
+                this.generateUnitsTable()
+            }
         }
     },
 };

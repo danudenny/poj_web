@@ -70,6 +70,7 @@ class EventService extends BaseService
             $event->description = $request->input('description');
             $event->latitude = $request->input('latitude');
             $event->longitude = $request->input('longitude');
+            $event->location_type = $request->input('location_type');
             $event->address = $request->input('address');
             $event->date_event = $request->input('date_event');
             $event->time_event = $request->input('time_event');
@@ -171,7 +172,7 @@ class EventService extends BaseService
                 ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
                 ->join('approval_modules', 'approvals.approval_module_id', '=', 'approval_modules.id')
                 ->where('approval_modules.name', '=', ApprovalModule::ApprovalEvent)
-                ->where('approvals.unit_id', '=', $user->employee->unit_id)
+                ->where('approvals.unit_id', '=', $user->employee->getLastUnitID())
                 ->where('approvals.is_active', '=', true)
                 ->orderBy('approval_users.id', 'ASC')
                 ->get(['approval_users.*']);
@@ -253,7 +254,9 @@ class EventService extends BaseService
 
     public function getEmployeeEvents(Request $request) {
         $employeeEvents = EmployeeEvent::query()->with(['employee:employees.id,name', 'event:events.id,title,requestor_employee_id', 'event.requestorEmployee:employees.id,name'])
-            ->orderBy('id', 'DESC')->get();
+            ->whereRaw("TO_CHAR(event_date::DATE, 'YYYY-mm') = TO_CHAR(CURRENT_DATE, 'YYYY-mm')")
+            ->orderBy('id', 'DESC')
+            ->get();
 
         return response()->json([
             'status' => 'success',
@@ -420,6 +423,13 @@ class EventService extends BaseService
                     }
                 }
             }
+        } else {
+            $eventDate = new EventDate();
+            $eventDate->is_need_absence = $event->is_need_absence;
+            $eventDate->event_date = $parsedEventDate->format('D, Y-m-d');
+            $eventDate->event_time = $event->time_event;
+
+            $eventDates[] = $eventDate;
         }
 
         return $eventDates;

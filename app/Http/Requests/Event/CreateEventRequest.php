@@ -32,6 +32,7 @@ class CreateEventRequest extends FormRequest
             'description' => ['required'],
             'latitude' => ['required'],
             'longitude' => ['required'],
+            'location_type' => ['required', Rule::in(Event::LocationTypeInternal, Event::LocationTypeExternal)],
             'address' => ['required'],
             'date_event' => ['required', 'date'],
             'time_event' => ['required', 'date_format:H:i'],
