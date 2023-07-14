@@ -29,7 +29,8 @@ test:
     - apk add --no-cache curl
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   script:
-    - composer install --no-interaction --prefer-dist --optimize-autoloader
+    - composer update --ignore-platform-reqs
+    - composer install --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-reqs
   only:
     - staging
     - tags
