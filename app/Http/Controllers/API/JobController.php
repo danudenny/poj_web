@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Job;
+use App\Services\Core\JobService;
 use Illuminate\Http\Request;
 
 class JobController extends Controller
@@ -13,9 +14,9 @@ class JobController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request, JobService $service)
     {
-        //
+        return $service->index($request);
     }
 
     /**

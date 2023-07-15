@@ -11,6 +11,7 @@ use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -19,7 +20,7 @@ class EmployeeService extends BaseService
     /**
      * @throws Exception
      */
-    public function index($request): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         try {
             $loggedInEmployee = Auth::user();
@@ -30,11 +31,16 @@ class EmployeeService extends BaseService
                     ->when(request()->filled('name'), function ($query) {
                         $query->whereRaw('LOWER("name") LIKE ? ', '%'.strtolower(request()->query('name')).'%');
                     })
-                    ->when(request()->filled('unit_id'), function ($query) {
-                        $query->where('kanwil_id', request()->query('unit_id'));
-                        $query->orWhere('area_id', request()->query('unit_id'));
-                        $query->orWhere('cabang_id', request()->query('unit_id'));
-                        $query->orWhere('outlet_id', request()->query('unit_id'));
+                    ->when(request()->filled('unit_id'), function (Builder $query) {
+                        $query->where(function($q) {
+                            $q->where('kanwil_id', request()->query('unit_id'));
+                            $q->orWhere('area_id', request()->query('unit_id'));
+                            $q->orWhere('cabang_id', request()->query('unit_id'));
+                            $q->orWhere('outlet_id', request()->query('unit_id'));
+                        });
+                    })
+                    ->when($request->filled('job_id'), function (Builder $builder) use ($request) {
+                        $builder->where('job_id', '=', $request->input('job_id'));
                     })
                     ->paginate(10);
             } else {
@@ -46,6 +52,9 @@ class EmployeeService extends BaseService
                     ->where('area_id', $loggedInEmployee->employee->area_id)
                     ->where('cabang_id', $loggedInEmployee->employee->cabang_id)
                     ->where('outlet_id', $loggedInEmployee->employee->outlet_id)
+                    ->when($request->filled('job_id'), function (Builder $builder) use ($request) {
+                        $builder->where('job_id', '=', $request->input('job_id'));
+                    })
                     ->order_by('name', 'asc')
                     ->paginate(10);
             }

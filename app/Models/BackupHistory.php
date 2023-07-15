@@ -17,6 +17,10 @@ class BackupHistory extends Model
         'status'
     ];
 
+    protected $casts = [
+        'created_at'  => 'date:Y-m-d H:i:s',
+    ];
+
     public function backups(): BelongsTo
     {
         return $this->belongsTo(Backup::class);

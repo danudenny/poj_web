@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
- *
+ * Attributes:
+ * @property-read int $id
+ * @property int $relation_id
  */
 class Unit extends Model
 {

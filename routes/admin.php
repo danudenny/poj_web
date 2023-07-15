@@ -12,6 +12,7 @@ use App\Http\Controllers\API\EmployeeDetailController;
 use App\Http\Controllers\API\EmployeeTimesheetController;
 use App\Http\Controllers\API\EventController;
 use App\Http\Controllers\API\IncidentController;
+use App\Http\Controllers\API\JobController;
 use App\Http\Controllers\API\PermissionController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\SettingController;
@@ -146,6 +147,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     // Begin employee attendance
     Route::group(['prefix' => 'attendance'], function() {
         Route::get('/', [EmployeeAttendanceController::class, 'index']);
+        Route::get('view/{id}', [EmployeeAttendanceController::class, 'view']);
         Route::post('check-in', [EmployeeAttendanceController::class, 'checkIn']);
         Route::post('check-out', [EmployeeAttendanceController::class, 'checkOut']);
     });
@@ -244,4 +246,10 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::delete('delete/{id}', [WorkReportingController::class, 'delete']);
     });
     // End Work Reporting
+
+    // Begin Job
+    Route::group(['prefix' => 'job'], function() {
+        Route::get('', [JobController::class, 'index']);
+    });
+    // End Job
 });

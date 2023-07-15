@@ -309,7 +309,7 @@ export default {
         },
         generateUnitsTable() {
             const ls = localStorage.getItem('my_app_token')
-            const table = new Tabulator(this.$refs.employeesTable, {
+            const table = new Tabulator(this.$refs.unitsTable, {
                 ajaxURL: '/api/v1/admin/unit/paginated',
                 layout: 'fitColumns',
                 columns: [

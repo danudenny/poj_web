@@ -9,22 +9,32 @@ use App\Models\EmployeeAttendance;
 use App\Models\EmployeeAttendanceHistory;
 use App\Models\EmployeeTimesheet;
 use App\Models\Job;
+use App\Models\Role;
 use App\Models\Unit;
 use App\Models\User;
 use App\Notifications\AssignBackupRequestNotification;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
 class BackupService
 {
-    public function index($request): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
         $backups = Backup::query();
+        if (!$user->hasRole(Role::RoleSuperAdministrator)) {
+            $backups->whereIn('unit_id', $user->employee->getAllUnitID());
+        }
         $backups->with(['unit', 'job', 'timesheet', 'assignee', 'backupHistory']);
-        $backups->where('unit_id', $request->unit_id);
         $backups->orderBy('created_at', 'desc');
 
         return response()->json([
@@ -34,38 +44,45 @@ class BackupService
         ]);
     }
 
-    public function show($request, $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
-        $isExists = Backup::where('unit_id', $request->unit_id)->find($id);
-        if (!$isExists) {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
+        /**
+         * @var Backup $backup
+         */
+        $backup = Backup::query()->with(['unit', 'job', 'timesheet', 'assignee', 'backupHistory'])->find($id);
+        if (!$backup) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Backup id not found',
             ], 404);
         }
 
-        $unitIdExists = Unit::find($request->unit_id);
-        if (!$unitIdExists) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unit id not found',
-            ], 404);
+        if (!$user->hasRole(Role::RoleSuperAdministrator)) {
+            if (!in_array($backup->unit_id, $user->employee->getAllUnitID())) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unit id not found',
+                ], 404);
+            }
         }
-
-        $backup = Backup::query();
-        $backup->with(['unit', 'job', 'timesheet', 'assignee', 'backupHistory']);
-        $backup->where('unit_id', $request->unit_id);
-        $backup->where('id', $id);
 
         return response()->json([
             'status' => 'success',
             'message' => 'Succcess fetch data',
-            'data' => $backup->first(),
+            'data' => $backup,
         ]);
     }
 
-    public function create($request) {
-        $unitExists = Unit::find($request->unit_id);
+    public function create(Request $request) {
+        /**
+         * @var Unit $unitExists
+         */
+        $unitExists = Unit::query()->where('id', '=', $request->input('unit_id'))->first();
         if (!$unitExists) {
             return response()->json([
                 'status' => 'error',
@@ -73,7 +90,10 @@ class BackupService
             ], 404);
         }
 
-        $jobExists = Job::find($request->job_id);
+        /**
+         * @var Job $jobExists
+         */
+        $jobExists = Job::query()->where('id', '=', $request->input('job_id'))->first();
         if (!$jobExists) {
             return response()->json([
                 'status' => 'error',
@@ -81,8 +101,11 @@ class BackupService
             ], 404);
         }
 
-        $employeeExists = Employee::where('unit_id', $request->unit_id)->find($request->assignee_id);
-        if (!$employeeExists) {
+        /**
+         * @var Employee $employeeExists
+         */
+        $employeeExists = Employee::query()->find($request->input('assignee_id'));
+        if (!$employeeExists || (!$employeeExists->hasUnitID($unitExists->relation_id))) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Employee id not found',
@@ -90,7 +113,7 @@ class BackupService
         }
 
         $backupExists = Backup::leftJoin('backup_histories', 'backups.id', '=', 'backup_histories.backup_id')
-            ->where('assignee_id', $request->assignee_id)
+            ->where('assignee_id', $request->input('assignee_id'))
             ->where('backup_histories.status', 'assigned')
             ->orWhere('backup_histories.status', 'in_progress')
             ->first();
@@ -102,8 +125,8 @@ class BackupService
             ], 400);
         }
 
-        if ($request->shift_type === 'Shift') {
-            $timesheet = EmployeeTimesheet::find($request->timesheet_id);
+        if ($request->input('shift_type') === Backup::TypeShift) {
+            $timesheet = EmployeeTimesheet::find($request->input('timesheet_id'));
             if (!$timesheet) {
                 return response()->json([
                     'status' => 'error',
@@ -112,11 +135,11 @@ class BackupService
             }
         }
 
-        $startDate = date_create($request->start_date);
-        $endDate = date_create($request->end_date);
+        $startDate = date_create($request->input('start_date'));
+        $endDate = date_create($request->input('end_date'));
         $diff = date_diff($startDate, $endDate);
-        $diffInDays = $diff->format("%a");
-        if (intval($diffInDays) !== $request->duration) {
+        $diffInDays = intval($diff->format("%a"));
+        if (($diffInDays + 1) !== $request->input('duration')) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Duration is not in start_date and end_date difference',
@@ -126,27 +149,26 @@ class BackupService
         DB::beginTransaction();
         try {
             $backup = Backup::create([
-                'unit_id' => $request->unit_id,
-                'job_id' => $request->job_id,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'timesheet_id' => $request->shift_type === 'Shift' ? $request->timesheet_id : null,
-                'assignee_id' => $request->assignee_id,
-                'shift_type' => $request->shift_type,
-                'duration' => $request->duration,
+                'unit_id' => $unitExists->id,
+                'job_id' => $jobExists->id,
+                'start_date' => $request->input('start_date'),
+                'end_date' => $request->input('end_date'),
+                'timesheet_id' => $request->input('shift_type') === Backup::TypeShift ? $request->input('timesheet_id') : null,
+                'assignee_id' => $request->input('assignee_id'),
+                'shift_type' => $request->input('shift_type'),
+                'duration' => $request->input('duration'),
             ]);
+            $backup->save();
 
             $backupHistory = BackupHistory::create([
                 'backup_id' => $backup->id,
                 'status' => 'assigned',
             ]);
-
-            $backup->save();
             $backupHistory->save();
 
             DB::commit();
 
-            $getUser = User::where('employee_id', $request->assignee_id)->first();
+            $getUser = User::where('employee_id', $request->input('assignee_id'))->first();
             try {
                 Notification::send(null,new AssignBackupRequestNotification($getUser->fcm_token));
             } catch (Exception $e) {

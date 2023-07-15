@@ -7,6 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Attributes:
+ * @property-read int $id
+ *
+ * Relations:
+ * @property-read Employee $employee
+ * @property-read EmployeeAttendanceHistory[] $employeeAttendanceHistory
+ */
 class EmployeeAttendance extends Model
 {
     use HasFactory;
