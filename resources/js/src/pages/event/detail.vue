@@ -19,7 +19,7 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Deskripsi Event</label>
-                                <textarea class="form-control chronology-text-area" v-mode="event.description" disabled>{{event.description}}</textarea>
+                                <textarea class="form-control chronology-text-area" v-model="event.description" disabled>{{event.description}}</textarea>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Alamat</label>

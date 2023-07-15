@@ -61,6 +61,73 @@ class Employee extends Model
         return null;
     }
 
+    /**
+     * @return Unit|null
+     */
+    public function getLastUnit(): Unit|null {
+        if ($this->outlet) {
+            return $this->outlet;
+        } else if ($this->cabang) {
+            return $this->cabang;
+        } else if ($this->area) {
+            return $this->area;
+        } else if ($this->kanwil) {
+            return $this->kanwil;
+        } else if ($this->corporate) {
+            return $this->corporate;
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array
+     */
+    public function getAllUnitID(): array {
+        $unitIDs = [];
+
+        if ($this->outlet_id) {
+            $unitIDs[] = $this->outlet_id;
+        } else if ($this->cabang_id) {
+            $unitIDs[] = $this->cabang_id;
+        } else if ($this->area_id) {
+            $unitIDs[] = $this->area_id;
+        } else if ($this->kanwil_id) {
+            $unitIDs[] = $this->kanwil_id;
+        } else if ($this->corporate_id) {
+            $unitIDs[] = $this->corporate_id;
+        }
+
+        return $unitIDs;
+    }
+
+    /**
+     * @return Unit[]
+     */
+    public function getAllUnits(): array {
+        $units = [];
+
+        if ($this->outlet) {
+            $units[] = $this->outlet;
+        } else if ($this->cabang) {
+            $units[] = $this->cabang;
+        } else if ($this->area) {
+            $units[] = $this->area;
+        } else if ($this->kanwil) {
+            $units[] = $this->kanwil;
+        } else if ($this->corporate) {
+            $units[] = $this->corporate;
+        }
+
+        return $units;
+    }
+
+    public function hasUnitID(int $unitID): bool {
+        return (
+            $this->outlet_id == $unitID || $this->cabang_id == $unitID || $this->area_id == $unitID || $this->kanwil_id == $unitID || $this->corporate_id == $unitID
+        );
+    }
+
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);

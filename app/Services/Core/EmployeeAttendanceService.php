@@ -14,6 +14,7 @@ use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Arr;
@@ -26,7 +27,7 @@ class EmployeeAttendanceService extends BaseService {
     public function __construct(EmployeeTimesheetService $employeeTimesheetService) {
         $this->employeeTimesheetService = $employeeTimesheetService;
     }
-    public function index($request): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $roles = Auth::user()->roles;
         try {
@@ -55,29 +56,29 @@ class EmployeeAttendanceService extends BaseService {
             $attendances->orderBy('created_at', 'desc');
 
 
-            foreach ($roles as $role) {
-                if ($role->role_level === 'superadmin') {
-                    $attendances = $attendances->paginate($request->get('limit', 10));
-                } else if ($role->role_level === 'staff') {
-                    $attendances = $attendances->where('employee_id', Auth::user()->employee_id)
-                        ->paginate($request->get('limit', 10));
-                } else if ($role->role_level === 'admin') {
-                    $attendances = $attendances->whereHas('employee', function (Builder $query) use ($roles) {
-                        $query->where('kanwil_id', $roles->kanwil_id)
-                            ->orWhere('area_id', $roles->area_id)
-                            ->orWhere('cabang_id', $roles->cabang_id)
-                            ->orWhere('outlet_id', $roles->outlet_id);
-                    });
-                } else {
-                    $attendances = $attendances->where('employee_id', Auth::user()->employee_id)
-                        ->paginate($request->get('limit', 10));
-                }
-            }
+//            foreach ($roles as $role) {
+//                if ($role->role_level === 'superadmin') {
+//                    $attendances = $attendances->paginate($request->get('limit', 10));
+//                } else if ($role->role_level === 'staff') {
+//                    $attendances = $attendances->where('employee_id', Auth::user()->employee_id)
+//                        ->paginate($request->get('limit', 10));
+//                } else if ($role->role_level === 'admin') {
+//                    $attendances = $attendances->whereHas('employee', function (Builder $query) use ($roles) {
+//                        $query->where('kanwil_id', $roles->kanwil_id)
+//                            ->orWhere('area_id', $roles->area_id)
+//                            ->orWhere('cabang_id', $roles->cabang_id)
+//                            ->orWhere('outlet_id', $roles->outlet_id);
+//                    });
+//                } else {
+//                    $attendances = $attendances->where('employee_id', Auth::user()->employee_id)
+//                        ->paginate($request->get('limit', 10));
+//                }
+//            }
 
             return response()->json([
                 'status' => true,
                 'message' => 'Success get data!',
-                'data' => $attendances
+                'data' => $this->list($attendances, $request)
             ]);
         } catch (Exception $e) {
             return response()->json([
@@ -85,6 +86,23 @@ class EmployeeAttendanceService extends BaseService {
                 'message' => self::SOMETHING_WRONG.' : '.$e->getMessage()
             ], 500);
         }
+    }
+
+    public function view(Request $request, int $id) {
+        $attendance = EmployeeAttendance::query()->with(['employeeAttendanceHistory', 'employee'])->where('id', '=', $id)->first();
+
+        if (!$attendance) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Employee attendance not found!'
+            ], 400);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Success get data!',
+            'data' => $attendance
+        ]);
     }
 
     function getLastUnit($data) {

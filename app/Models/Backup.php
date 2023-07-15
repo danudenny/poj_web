@@ -7,9 +7,24 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Attributes:
+ * @property-read int $id
+ * @property int $unit_id
+ *
+ * Relations:
+ * @property-read Unit $unit
+ * @property-read Job $job
+ * @property-read EmployeeTimesheet $timesheet
+ * @property-read Employee $assignee
+ * @property-read BackupHistory[] $backupHistory
+ */
 class Backup extends Model
 {
     use HasFactory;
+
+    const TypeShift = "Shift";
+    const TypeNonShift = "Non Shift";
 
     protected $table = 'backups';
     protected $fillable = [

@@ -23,6 +23,10 @@ class EmployeeAttendanceController extends BaseController
         return $this->employeeAttendanceService->index($request);
     }
 
+    public function view(Request $request, int $id) {
+        return $this->employeeAttendanceService->view($request, $id);
+    }
+
     /**
      * @throws Exception
      * @throws GuzzleException
