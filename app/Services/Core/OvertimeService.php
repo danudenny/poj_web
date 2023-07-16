@@ -459,7 +459,10 @@ class OvertimeService extends BaseService
             /**
              * @var EmployeeAttendance $checkInData
              */
-            $checkInData = $user->employee->attendances()->orderBy('id', 'DESC')->first();
+            $checkInData = $user->employee->attendances()
+                ->where('attendance_types', '=', EmployeeAttendance::AttendanceTypeOvertime)
+                ->orderBy('id', 'DESC')
+                ->first();
 
             $workLocation = $user->employee->getLastUnit();
             $distance = calculateDistance($overtimeRequest->location_lat, $overtimeRequest->location_long, $dataLocation['latitude'], $dataLocation['longitude']);
