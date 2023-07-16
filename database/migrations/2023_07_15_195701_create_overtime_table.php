@@ -22,8 +22,8 @@ return new class extends Migration
             $table->time('end_time');
             $table->text('notes');
             $table->text('image_url')->nullable();
-            $table->float('location_lat');
-            $table->float('location_long');
+            $table->float('location_lat')->nullable();
+            $table->float('location_long')->nullable();
             $table->timestamps();
         });
 
