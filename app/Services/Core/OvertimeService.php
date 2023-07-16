@@ -31,7 +31,7 @@ class OvertimeService extends BaseService
          */
         $user = $request->user();
 
-        $overtimes = Overtime::query()->with(['requestorEmployee:employees.id,name']);
+        $overtimes = Overtime::query()->with(['requestorEmployee:employees.id,name', 'unit:units.relation_id,name']);
 
         if ($user->inRoleLevel([Role::RoleAdmin])) {
             $overtimes->whereIn('unit_relation_id', $user->employee->getAllUnitID());
