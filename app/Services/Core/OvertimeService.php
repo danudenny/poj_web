@@ -3,6 +3,7 @@
 namespace App\Services\Core;
 
 use App\Http\Requests\Overtime\CreateOvertimeRequest;
+use App\Http\Requests\Overtime\OvertimeApprovalRequest;
 use App\Models\Overtime;
 use App\Models\OvertimeEmployee;
 use App\Models\OvertimeHistory;
@@ -101,9 +102,70 @@ class OvertimeService extends BaseService
                 $overtimeHistory->history_type = OvertimeHistory::TypeApproved;
                 $overtimeHistory->save();
 
-                $overtime->approved_at = Carbon::now();
+                $overtime->approval_status = OvertimeHistory::TypeApproved;
+                $overtime->approval_time = Carbon::now();
                 $overtime->save();
             }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success'
+            ], Response::HTTP_OK);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function approval(OvertimeApprovalRequest $request, int $id) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            if (!$user->hasRole([Role::RoleSuperAdministrator, Role::RoleAdmin])) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'You don\'t have access'
+                ], Response::HTTP_FORBIDDEN);
+            }
+
+            /**
+             * @var Overtime $overtime
+             */
+            $overtime = Overtime::query()->where('id', '=', $id)->first();
+            if (!$overtime) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "overtime Not Found"
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            if ($overtime->approval_status != null) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "overtime already in approval"
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            DB::beginTransaction();
+
+            $overtime->approval_status = $request->input('status');
+            $overtime->approval_time = Carbon::now();
+            $overtime->save();
+
+            $overtimeHistory = new OvertimeHistory();
+            $overtimeHistory->overtime_id = $overtime->id;
+            $overtimeHistory->employee_id = $user->employee_id;
+            $overtimeHistory->history_type = $overtime->approval_status;
+            $overtimeHistory->notes = $request->input('notes');
+            $overtimeHistory->save();
 
             DB::commit();
 

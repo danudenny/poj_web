@@ -258,7 +258,8 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     Route::group(['prefix' => 'overtime', 'middleware' => ['auth:sanctum']], function () {
         Route::get('/', [OvertimeController::class, 'index']);
         Route::get('/view/{id}', [OvertimeController::class, 'view']);
-        Route::post('/', [OvertimeController::class, 'create']);
+        Route::post('', [OvertimeController::class, 'create']);
+        Route::post('approval/{id}', [OvertimeController::class, 'approval']);
     });
     // End Overtime
 });

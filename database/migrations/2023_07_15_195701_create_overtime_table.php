@@ -16,7 +16,8 @@ return new class extends Migration
         Schema::create('overtimes', function (Blueprint $table) {
             $table->id();
             $table->integer('requestor_employee_id');
-            $table->timestamp('approved_at')->nullable();
+            $table->enum('approval_status', ['approved', 'rejected'])->nullable();
+            $table->timestamp('approval_time')->nullable();
             $table->date('date_overtime');
             $table->time('start_time');
             $table->time('end_time');
@@ -31,7 +32,8 @@ return new class extends Migration
             $table->id();
             $table->integer('overtime_id');
             $table->integer('employee_id');
-            $table->enum('history_type', ['submitted', 'check-in', 'check-out', 'approved']);
+            $table->enum('history_type', ['submitted', 'check-in', 'check-out', 'approved', 'rejected']);
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
 

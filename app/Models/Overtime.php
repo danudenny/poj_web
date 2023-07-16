@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Model;
  * Attributes:
  * @property-read int $id
  * @property int $requestor_employee_id
- * @property string|null $approved_at
+ * @property string|null $approval_status
+ * @property string|null $approval_time
  * @property string $date_overtime
  * @property string $start_time
  * @property string $end_time
