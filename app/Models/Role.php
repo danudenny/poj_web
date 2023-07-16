@@ -5,6 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Permission\Models\Role as SpatieRole;
+
+/**
+ * Attributes:
+ * @property-read int $id
+ * @property string $role_level
+ */
 class Role extends SpatieRole
 {
     const RoleSuperAdministrator = "superadmin";

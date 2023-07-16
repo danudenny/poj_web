@@ -129,7 +129,7 @@ class OvertimeService extends BaseService
              */
             $user = $request->user();
 
-            if (!$user->hasRole([Role::RoleSuperAdministrator, Role::RoleAdmin])) {
+            if (!$user->inRoleLevel([Role::RoleSuperAdministrator, Role::RoleAdmin])) {
                 return response()->json([
                     'status' => false,
                     'message' => 'You don\'t have access'
