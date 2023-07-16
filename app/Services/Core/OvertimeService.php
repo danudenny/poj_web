@@ -38,7 +38,10 @@ class OvertimeService extends BaseService
         } else if ($user->inRoleLevel([Role::RoleStaff])) {
             $overtimes->join('overtime_employees', 'overtime_employees.overtime_id', '=', 'overtimes.id');
             $overtimes->where('overtime_employees.employee_id', '=', $user->employee_id);
+            $overtimes->select(['overtimes.*']);
         }
+
+        $overtimes->orderBy('overtimes.id', 'DESC');
 
         return response()->json([
             'status' => true,
@@ -54,7 +57,7 @@ class OvertimeService extends BaseService
         $user = $request->user();
         $query = Overtime::query()
             ->with([
-                'requestorEmployee:id,name', 'unit',
+                'requestorEmployee:employees.id,name', 'unit',
                 'overtimeHistories', 'overtimeHistories.employee:employees.id,name',
                 'overtimeEmployees', 'overtimeEmployees.employee:employees.id,name'
             ])->where('overtimes.id', '=', $id);
@@ -64,6 +67,7 @@ class OvertimeService extends BaseService
         } else if ($user->inRoleLevel([Role::RoleStaff])) {
             $query->join('overtime_employees', 'overtime_employees.overtime_id', '=', 'overtimes.id');
             $query->where('overtime_employees.employee_id', '=', $user->employee_id);
+            $query->select(['overtimes.*']);
         }
 
         $overtime = $query->first();
@@ -73,6 +77,8 @@ class OvertimeService extends BaseService
                 'message' => "overtime Not Found"
             ], Response::HTTP_BAD_REQUEST);
         }
+
+        $overtime->append('is_can_approve');
 
         return response()->json([
             'status' => true,
@@ -115,6 +121,39 @@ class OvertimeService extends BaseService
             $startTime = Carbon::parse($request->input('start_datetime'), $unitTimeZone)->setTimezone('UTC');
             $endTime = Carbon::parse($request->input('end_datetime'), $unitTimeZone)->setTimezone('UTC');
 
+            $employeeIDs = $request->input('employees', []);
+
+            /**
+             * @var OvertimeEmployee[] $employeeExistingOvertimes
+             */
+            $employeeExistingOvertimes = OvertimeEmployee::query()
+                ->join('overtimes', 'overtimes.id', '=', 'overtime_employees.overtime_id')
+                ->whereIn('overtime_employees.employee_id', $employeeIDs)
+                ->where(function(Builder $builder) use ($request, $startTime, $endTime) {
+                    $builder->orWhere(function (Builder $query) use ($request, $startTime, $endTime) {
+                        $query->where('overtimes.start_datetime', '<=', $startTime->format('Y-m-d H:i:s'))
+                            ->where('overtimes.end_datetime', '>=', $startTime->format('Y-m-d H:i:s'));
+                    })->orWhere(function (Builder $query) use ($request, $startTime, $endTime) {
+                        $query->where('overtimes.start_datetime', '<=', $endTime->format('Y-m-d H:i:s'))
+                            ->where('overtimes.end_datetime', '>=', $endTime->format('Y-m-d H:i:s'));
+                    });
+                })
+                ->whereNull('overtime_employees.check_in_time')
+                ->where(function(Builder $builder) {
+                    $builder->orWhereNotIn('overtimes.last_status', [OvertimeHistory::TypeRejected, OvertimeHistory::TypeFinished])
+                        ->orWhereNull('overtimes.last_status');
+                })
+                ->select(['overtime_employees.*'])
+                ->orderBy('overtimes.start_datetime', 'ASC')
+                ->get();
+
+            foreach ($employeeExistingOvertimes as $employeeExistingOvertime) {
+                return response()->json([
+                    'status' => false,
+                    'message' => sprintf("%s has active overtime on that time", $employeeExistingOvertime->employee->name)
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
             DB::beginTransaction();
 
             $overtime = new Overtime();
@@ -129,7 +168,7 @@ class OvertimeService extends BaseService
             $overtime->location_long = $unit->long;
             $overtime->save();
 
-            foreach ($request->input('employees', []) as $employeeID) {
+            foreach ($employeeIDs as $employeeID) {
                 $overtimeEmployee = new OvertimeEmployee();
                 $overtimeEmployee->overtime_id = $overtime->id;
                 $overtimeEmployee->employee_id = $employeeID;
@@ -142,7 +181,7 @@ class OvertimeService extends BaseService
             $overtimeHistory->history_type = OvertimeHistory::TypePending;
             $overtimeHistory->save();
 
-            if ($user->hasRole([Role::RoleSuperAdministrator, Role::RoleAdmin])) {
+            if ($user->inRoleLevel([Role::RoleSuperAdministrator, Role::RoleAdmin])) {
                 $overtimeHistory = new OvertimeHistory();
                 $overtimeHistory->overtime_id = $overtime->id;
                 $overtimeHistory->employee_id = $user->employee_id;
@@ -188,7 +227,8 @@ class OvertimeService extends BaseService
                 ], Response::HTTP_FORBIDDEN);
             }
 
-            $query = Overtime::query()->where('overtimes.id', '=', $id);
+            $query = Overtime::query()->where('overtimes.id', '=', $id)
+                ->where('last_status', '=', OvertimeHistory::TypePending);
             if ($user->inRoleLevel([Role::RoleAdmin])) {
                 $query->whereIn('unit_relation_id', $user->employee->getAllUnitID());
             }
@@ -321,7 +361,7 @@ class OvertimeService extends BaseService
             $employeeOvertime = OvertimeEmployee::query()
                 ->join('overtimes', 'overtimes.id', '=', 'overtime_employees.overtime_id')
                 ->where('overtime_employees.employee_id', '=', $user->employee_id)
-                ->where('overtimes.end_datetime', '>', Carbon::now()->addMinutes(60)->format('Y-m-d H:i:s'))
+                ->where('overtimes.end_datetime', '<=', Carbon::now()->addMinutes(60)->format('Y-m-d H:i:s'))
                 ->whereNull('overtime_employees.check_out_time')
                 ->whereNotNull('overtime_employees.check_in_time')
                 ->where(function(Builder $builder) {

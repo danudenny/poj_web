@@ -26,6 +26,9 @@ class OvertimeHistory extends Model
     const TypeApproved = "approved";
     const TypeRejected = "rejected";
     const TypeFinished = "finished";
+    protected $casts = [
+        'created_at' => 'date:Y-m-d H:i:s'
+    ];
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

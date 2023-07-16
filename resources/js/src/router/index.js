@@ -95,6 +95,7 @@ import WorkReportingDetail from '../pages/work_reporting/detail.vue';
 // Overtime
 import Overtime from "../pages/overtime/index.vue";
 import CreateOvertime from "../pages/overtime/create.vue";
+import DetailOvertime from "../pages/overtime/detail.vue";
 
 //Error page
 import Error from  '../components/error.vue';
@@ -523,6 +524,16 @@ const routes =[
                 component: CreateOvertime,
                 meta: {
                     title: 'POJ - Create Overtime',
+                    requiresAuth: true,
+                    permission: 'overtime_list',
+                },
+            },
+            {
+                path: 'detail-overtime/:id',
+                name: 'Detail Overtime',
+                component: DetailOvertime,
+                meta: {
+                    title: 'POJ - Detail Overtime',
                     requiresAuth: true,
                     permission: 'overtime_list',
                 },

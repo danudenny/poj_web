@@ -78,6 +78,10 @@ export default {
                         field: 'check_out_time',
                     },
                     {
+                        title: 'Created At',
+                        field: 'created_at',
+                    },
+                    {
                         title: '',
                         formatter: this.viewDetailsFormatter,
                         width: 70,
@@ -129,7 +133,7 @@ export default {
             return `<button class="button-icon button-success" data-id="${cell.getRow().getData().id}"><i class="fa fa-eye"></i> </button>`;
         },
         viewData(id) {
-            this.$router.push({name: 'event_request_detail', params: {id}});
+            this.$router.push({name: 'Detail Overtime', params: {id}});
         }
     }
 }

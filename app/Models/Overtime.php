@@ -41,18 +41,22 @@ class Overtime extends Model
         'check_out_time'
     ];
 
+    protected $casts = [
+        'created_at' => 'date:Y-m-d H:i:s'
+    ];
+
     /**
      * @return string
      */
     public function getCheckInTimeAttribute(): string {
-        return $this->getCheckInTime()->format('Y-m-d H:i:s');
+        return $this->getCheckInTime()->format('Y-m-d H:i:s T');
     }
 
     /**
      * @return string
      */
     public function getCheckOutTimeAttribute(): string {
-        return $this->getCheckOutTime()->format('Y-m-d H:i:s');
+        return $this->getCheckOutTime()->format('Y-m-d H:i:s T');
     }
 
     /**
@@ -67,6 +71,15 @@ class Overtime extends Model
      */
     public function getCheckOutTime(): Carbon {
         return Carbon::parse($this->end_datetime, 'UTC')->setTimezone($this->timezone);
+    }
+
+    public function getIsCanApproveAttribute(): bool {
+        /**
+         * @var User $user
+         */
+        $user = request()->user();
+
+        return $this->last_status === OvertimeHistory::TypePending && $user->inRoleLevel([Role::RoleAdmin, Role::RoleSuperAdministrator]);
     }
 
     /**
