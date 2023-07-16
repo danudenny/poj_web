@@ -26,7 +26,19 @@ class OvertimeService extends BaseService
      * @return \Illuminate\Http\JsonResponse
      */
     public function index(Request $request) {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
         $overtimes = Overtime::query()->with(['requestorEmployee:employees.id,name']);
+
+        if ($user->inRoleLevel([Role::RoleAdmin])) {
+            $overtimes->whereIn('unit_relation_id', $user->employee->getAllUnitID());
+        } else if ($user->inRoleLevel([Role::RoleStaff])) {
+            $overtimes->join('overtime_employees', 'overtime_employees.overtime_id', '=', 'overtimes.id');
+            $overtimes->where('overtime_employees.employee_id', '=', $user->employee_id);
+        }
 
         return response()->json([
             'status' => true,
@@ -37,15 +49,24 @@ class OvertimeService extends BaseService
 
     public function view(Request $request, int $id) {
         /**
-         * @var Overtime $overtime
+         * @var User $user
          */
-        $overtime = Overtime::query()
+        $user = $request->user();
+        $query = Overtime::query()
             ->with([
                 'requestorEmployee:id,name', 'unit',
                 'overtimeHistories', 'overtimeHistories.employee:employees.id,name',
                 'overtimeEmployees', 'overtimeEmployees.employee:employees.id,name'
-            ])->where('id', '=', $id)
-            ->first();
+            ])->where('overtimes.id', '=', $id);
+
+        if ($user->inRoleLevel([Role::RoleAdmin])) {
+            $query->whereIn('unit_relation_id', $user->employee->getAllUnitID());
+        } else if ($user->inRoleLevel([Role::RoleStaff])) {
+            $query->join('overtime_employees', 'overtime_employees.overtime_id', '=', 'overtimes.id');
+            $query->where('overtime_employees.employee_id', '=', $user->employee_id);
+        }
+
+        $overtime = $query->first();
         if (!$overtime) {
             return response()->json([
                 'status' => false,
@@ -82,8 +103,6 @@ class OvertimeService extends BaseService
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-            $unitTimeZone = getTimezoneV2($unit->lat, $unit->long);
-
             /**
              *  NOTES:
              *
@@ -92,6 +111,7 @@ class OvertimeService extends BaseService
              *  datetime, and also to matching with User current location timezone.
              */
 
+            $unitTimeZone = getTimezoneV2($unit->lat, $unit->long);
             $startTime = Carbon::parse($request->input('start_datetime'), $unitTimeZone)->setTimezone('UTC');
             $endTime = Carbon::parse($request->input('end_datetime'), $unitTimeZone)->setTimezone('UTC');
 
@@ -168,10 +188,15 @@ class OvertimeService extends BaseService
                 ], Response::HTTP_FORBIDDEN);
             }
 
+            $query = Overtime::query()->where('overtimes.id', '=', $id);
+            if ($user->inRoleLevel([Role::RoleAdmin])) {
+                $query->whereIn('unit_relation_id', $user->employee->getAllUnitID());
+            }
+
             /**
              * @var Overtime $overtime
              */
-            $overtime = Overtime::query()->where('id', '=', $id)->first();
+            $overtime = $query->first();
             if (!$overtime) {
                 return response()->json([
                     'status' => false,
@@ -188,14 +213,14 @@ class OvertimeService extends BaseService
 
             DB::beginTransaction();
 
-            $overtime->approval_status = $request->input('status');
-            $overtime->approval_time = Carbon::now();
+            $overtime->last_status = $request->input('status');
+            $overtime->last_status_at = Carbon::now();
             $overtime->save();
 
             $overtimeHistory = new OvertimeHistory();
             $overtimeHistory->overtime_id = $overtime->id;
             $overtimeHistory->employee_id = $user->employee_id;
-            $overtimeHistory->history_type = $overtime->approval_status;
+            $overtimeHistory->history_type = $overtime->last_status;
             $overtimeHistory->notes = $request->input('notes');
             $overtimeHistory->save();
 

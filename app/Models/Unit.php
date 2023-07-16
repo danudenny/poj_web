@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
 
 /**
  * Attributes:
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Unit extends Model
 {
     use HasFactory;
+    use QueriesExpressions;
 
     /**
      * The attributes that are mass assignable.
