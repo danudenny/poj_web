@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  *
  * Relations:
  * @property-read Employee $employee
+ * @property-read Overtime $overtime
  */
 class OvertimeEmployee extends Model
 {
@@ -29,5 +30,12 @@ class OvertimeEmployee extends Model
      */
     public function employee() {
         return $this->belongsTo(Employee::class, 'employee_id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function overtime() {
+        return $this->belongsTo(Overtime::class, 'overtime_id');
     }
 }

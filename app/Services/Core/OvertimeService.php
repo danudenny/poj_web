@@ -2,15 +2,19 @@
 
 namespace App\Services\Core;
 
+use App\Http\Requests\Overtime\OvertimeCheckInRequest;
 use App\Http\Requests\Overtime\CreateOvertimeRequest;
 use App\Http\Requests\Overtime\OvertimeApprovalRequest;
+use App\Http\Requests\Overtime\OvertimeCheckOutRequest;
 use App\Models\Overtime;
 use App\Models\OvertimeEmployee;
 use App\Models\OvertimeHistory;
 use App\Models\Role;
+use App\Models\Unit;
 use App\Models\User;
 use App\Services\BaseService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -37,7 +41,7 @@ class OvertimeService extends BaseService
          */
         $overtime = Overtime::query()
             ->with([
-                'requestorEmployee:id,name',
+                'requestorEmployee:id,name', 'unit',
                 'overtimeHistories', 'overtimeHistories.employee:employees.id,name',
                 'overtimeEmployees', 'overtimeEmployees.employee:employees.id,name'
             ])->where('id', '=', $id)
@@ -67,19 +71,42 @@ class OvertimeService extends BaseService
              */
             $user = $request->user();
 
-            $requestorUnit = $user->employee->getLastUnit();
+            /**
+             * @var Unit $unit
+             */
+            $unit = Unit::query()->where('relation_id', '=', $request->input('unit_relation_id', $user->employee->getLastUnitID()))->first();
+            if (!$unit) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Unit Not Found"
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            $unitTimeZone = getTimezoneV2($unit->lat, $unit->long);
+
+            /**
+             *  NOTES:
+             *
+             *  For start_datetime and end_datetime need to unified to be UTC, this changes be more useful for some reasons,
+             *  especially for some Users has different timezones. With unified timezone, it will be easier to make sorting
+             *  datetime, and also to matching with User current location timezone.
+             */
+
+            $startTime = Carbon::parse($request->input('start_datetime'), $unitTimeZone)->setTimezone('UTC');
+            $endTime = Carbon::parse($request->input('end_datetime'), $unitTimeZone)->setTimezone('UTC');
 
             DB::beginTransaction();
 
             $overtime = new Overtime();
             $overtime->requestor_employee_id = $user->employee_id;
-            $overtime->date_overtime = $request->input('date_overtime');
-            $overtime->start_time = $request->input('start_time');
-            $overtime->end_time = $request->input('end_time');
+            $overtime->unit_relation_id = $unit->relation_id;
+            $overtime->start_datetime = $startTime;
+            $overtime->end_datetime = $endTime;
+            $overtime->timezone = $unitTimeZone;
             $overtime->notes = $request->input('notes');
             $overtime->image_url = $request->input('image_url');
-            $overtime->location_lat = $requestorUnit->lat;
-            $overtime->location_long = $requestorUnit->long;
+            $overtime->location_lat = $unit->lat;
+            $overtime->location_long = $unit->long;
             $overtime->save();
 
             foreach ($request->input('employees', []) as $employeeID) {
@@ -92,7 +119,7 @@ class OvertimeService extends BaseService
             $overtimeHistory = new OvertimeHistory();
             $overtimeHistory->overtime_id = $overtime->id;
             $overtimeHistory->employee_id = $user->employee_id;
-            $overtimeHistory->history_type = OvertimeHistory::TypeSubmitted;
+            $overtimeHistory->history_type = OvertimeHistory::TypePending;
             $overtimeHistory->save();
 
             if ($user->hasRole([Role::RoleSuperAdministrator, Role::RoleAdmin])) {
@@ -101,11 +128,11 @@ class OvertimeService extends BaseService
                 $overtimeHistory->employee_id = $user->employee_id;
                 $overtimeHistory->history_type = OvertimeHistory::TypeApproved;
                 $overtimeHistory->save();
-
-                $overtime->approval_status = OvertimeHistory::TypeApproved;
-                $overtime->approval_time = Carbon::now();
-                $overtime->save();
             }
+
+            $overtime->last_status = $overtimeHistory->history_type;
+            $overtime->last_status_at = Carbon::now();
+            $overtime->save();
 
             DB::commit();
 
@@ -122,6 +149,11 @@ class OvertimeService extends BaseService
         }
     }
 
+    /**
+     * @param OvertimeApprovalRequest $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function approval(OvertimeApprovalRequest $request, int $id) {
         try {
             /**
@@ -165,6 +197,135 @@ class OvertimeService extends BaseService
             $overtimeHistory->employee_id = $user->employee_id;
             $overtimeHistory->history_type = $overtime->approval_status;
             $overtimeHistory->notes = $request->input('notes');
+            $overtimeHistory->save();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success'
+            ], Response::HTTP_OK);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function checkIn(OvertimeCheckInRequest $request) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            $dataLocation = [
+                'latitude' => $request->input('latitude'),
+                'longitude' => $request->input('longitude')
+            ];
+
+            /**
+             * @var OvertimeEmployee $employeeOvertime
+             */
+            $employeeOvertime = OvertimeEmployee::query()
+                ->join('overtimes', 'overtimes.id', '=', 'overtime_employees.overtime_id')
+                ->where('overtime_employees.employee_id', '=', $user->employee_id)
+                ->where('overtimes.end_datetime', '>', Carbon::now()->format('Y-m-d H:i:s'))
+                ->whereNull('overtime_employees.check_in_time')
+                ->where(function(Builder $builder) {
+                    $builder->orWhereNotIn('overtimes.last_status', [OvertimeHistory::TypeRejected, OvertimeHistory::TypeFinished])
+                        ->orWhereNull('overtimes.last_status');
+                })
+                ->select(['overtime_employees.*'])
+                ->orderBy('overtimes.start_datetime', 'ASC')
+                ->first();
+            if (!$employeeOvertime) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "You don't have any overtime need to check-in"
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            $overtimeRequest = $employeeOvertime->overtime;
+
+            DB::beginTransaction();
+
+            $employeeOvertime->check_in_lat = $dataLocation['latitude'];
+            $employeeOvertime->check_in_long = $dataLocation['longitude'];
+            $employeeOvertime->check_in_time = Carbon::now();
+            $employeeOvertime->save();
+
+            $overtimeHistory = new OvertimeHistory();
+            $overtimeHistory->overtime_id = $overtimeRequest->id;
+            $overtimeHistory->employee_id = $user->employee_id;
+            $overtimeHistory->history_type = OvertimeHistory::TypeCheckIn;
+            $overtimeHistory->save();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success'
+            ], Response::HTTP_OK);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function checkOut(OvertimeCheckOutRequest $request) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            $dataLocation = [
+                'latitude' => $request->input('latitude'),
+                'longitude' => $request->input('longitude')
+            ];
+
+            /**
+             * @var OvertimeEmployee $employeeOvertime
+             */
+            $employeeOvertime = OvertimeEmployee::query()
+                ->join('overtimes', 'overtimes.id', '=', 'overtime_employees.overtime_id')
+                ->where('overtime_employees.employee_id', '=', $user->employee_id)
+                ->where('overtimes.end_datetime', '>', Carbon::now()->addMinutes(60)->format('Y-m-d H:i:s'))
+                ->whereNull('overtime_employees.check_out_time')
+                ->whereNotNull('overtime_employees.check_in_time')
+                ->where(function(Builder $builder) {
+                    $builder->orWhereNotIn('overtimes.last_status', [OvertimeHistory::TypeRejected, OvertimeHistory::TypeFinished])
+                        ->orWhereNull('overtimes.last_status');
+                })
+                ->select(['overtime_employees.*'])
+                ->orderBy('overtimes.start_datetime', 'ASC')
+                ->first();
+            if (!$employeeOvertime) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "You don't have any overtime need to check-out"
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            $overtimeRequest = $employeeOvertime->overtime;
+
+            DB::beginTransaction();
+
+            $employeeOvertime->check_out_lat = $dataLocation['latitude'];
+            $employeeOvertime->check_out_long = $dataLocation['longitude'];
+            $employeeOvertime->check_out_time = Carbon::now();
+            $employeeOvertime->save();
+
+            $overtimeHistory = new OvertimeHistory();
+            $overtimeHistory->overtime_id = $overtimeRequest->id;
+            $overtimeHistory->employee_id = $user->employee_id;
+            $overtimeHistory->history_type = OvertimeHistory::TypeCheckOut;
             $overtimeHistory->save();
 
             DB::commit();

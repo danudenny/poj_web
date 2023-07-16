@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests\Overtime;
 
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CreateOvertimeRequest extends FormRequest
 {
@@ -24,12 +27,21 @@ class CreateOvertimeRequest extends FormRequest
     public function rules()
     {
         return [
-            'date_overtime' => ['required', 'date'],
-            'start_time' => ['required', 'date_format:H:i:s'],
-            'end_time' => ['required', 'date_format:H:i:s'],
+            'start_datetime' => ['required', 'date_format:Y-m-d H:i:s'],
+            'end_datetime' => ['required', 'date_format:Y-m-d H:i:s'],
             'notes' => ['required'],
             'image_url' => ['nullable', 'url'],
-            'employees' => ['required', 'array']
+            'employees' => ['required', 'array'],
+            'unit_relation_id' => [
+                Rule::requiredIf(function() {
+                    /**
+                     * @var User $user
+                     */
+                    $user = request()->user();
+
+                    return !$user->inRoleLevel([Role::RoleStaff]);
+                })
+            ]
         ];
     }
 }

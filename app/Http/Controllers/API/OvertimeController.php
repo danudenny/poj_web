@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Overtime\OvertimeCheckInRequest;
 use App\Http\Requests\Overtime\CreateOvertimeRequest;
 use App\Http\Requests\Overtime\OvertimeApprovalRequest;
+use App\Http\Requests\Overtime\OvertimeCheckOutRequest;
 use App\Services\Core\OvertimeService;
 use Illuminate\Http\Request;
 
@@ -46,5 +48,23 @@ class OvertimeController extends Controller
      */
     public function approval(OvertimeApprovalRequest $request, OvertimeService $service, int $id) {
         return $service->approval($request, $id);
+    }
+
+    /**
+     * @param OvertimeCheckInRequest $request
+     * @param OvertimeService $service
+     * @return \Illuminate\Http\JsonResponse|null
+     */
+    public function checkIn(OvertimeCheckInRequest $request, OvertimeService $service) {
+        return  $service->checkIn($request);
+    }
+
+    /**
+     * @param OvertimeCheckOutRequest $request
+     * @param OvertimeService $service
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkOut(OvertimeCheckOutRequest $request, OvertimeService $service) {
+        return $service->checkOut($request);
     }
 }

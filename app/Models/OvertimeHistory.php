@@ -20,11 +20,12 @@ class OvertimeHistory extends Model
 {
     use HasFactory;
 
-    const TypeSubmitted = "submitted";
+    const TypePending = "pending";
     const TypeCheckIn = "check-in";
     const TypeCheckOut = "check-out";
     const TypeApproved = "approved";
     const TypeRejected = "rejected";
+    const TypeFinished = "finished";
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
