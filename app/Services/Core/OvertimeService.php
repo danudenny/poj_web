@@ -7,6 +7,7 @@ use App\Http\Requests\Overtime\CreateOvertimeRequest;
 use App\Http\Requests\Overtime\OvertimeApprovalRequest;
 use App\Http\Requests\Overtime\OvertimeCheckOutRequest;
 use App\Models\Employee;
+use App\Models\EmployeeAttendance;
 use App\Models\Overtime;
 use App\Models\OvertimeEmployee;
 use App\Models\OvertimeHistory;
@@ -363,6 +364,14 @@ class OvertimeService extends BaseService
             $overtimeRequest = $employeeOvertime->overtime;
             $employeeTimezone = getTimezoneV2($dataLocation['latitude'], $dataLocation['longitude']);
 
+            $workLocation = $user->employee->getLastUnit();
+            $distance = calculateDistance($overtimeRequest->location_lat, $overtimeRequest->location_long, $dataLocation['latitude'], $dataLocation['longitude']);
+
+            $checkInType = EmployeeAttendance::TypeOnSite;
+            if ($distance > $workLocation->radius) {
+                $checkInType = EmployeeAttendance::TypeOffSite;
+            }
+
             DB::beginTransaction();
 
             $employeeOvertime->check_in_lat = $dataLocation['latitude'];
@@ -376,6 +385,21 @@ class OvertimeService extends BaseService
             $overtimeHistory->employee_id = $user->employee_id;
             $overtimeHistory->history_type = OvertimeHistory::TypeCheckIn;
             $overtimeHistory->save();
+
+            $checkIn = new EmployeeAttendance();
+            $checkIn->employee_id = $user->employee_id;
+            $checkIn->real_check_in = $employeeOvertime->check_in_time;
+            $checkIn->checkin_type = $checkInType;
+            $checkIn->checkin_lat = $employeeOvertime->check_in_lat;
+            $checkIn->checkin_long = $employeeOvertime->check_in_long;
+            $checkIn->is_need_approval = $checkInType == EmployeeAttendance::TypeOffSite;
+            $checkIn->attendance_types = EmployeeAttendance::AttendanceTypeOvertime;
+            $checkIn->checkin_real_radius = $distance;
+            $checkIn->approved = !($checkInType == EmployeeAttendance::TypeOffSite);
+            $checkIn->check_in_tz = $employeeTimezone;
+            $checkIn->is_late = false;
+            $checkIn->late_duration = 0;
+            $checkIn->save();
 
             $this->refreshFinishedStatus($overtimeRequest, $user->employee_id);
 
@@ -432,6 +456,19 @@ class OvertimeService extends BaseService
             $overtimeRequest = $employeeOvertime->overtime;
             $employeeTimezone = getTimezoneV2($dataLocation['latitude'], $dataLocation['longitude']);
 
+            /**
+             * @var EmployeeAttendance $checkInData
+             */
+            $checkInData = $user->employee->attendances()->orderBy('id', 'DESC')->first();
+
+            $workLocation = $user->employee->getLastUnit();
+            $distance = calculateDistance($overtimeRequest->location_lat, $overtimeRequest->location_long, $dataLocation['latitude'], $dataLocation['longitude']);
+
+            $checkOutType = EmployeeAttendance::TypeOnSite;
+            if ($distance > $workLocation->radius) {
+                $checkOutType = EmployeeAttendance::TypeOffSite;
+            }
+
             DB::beginTransaction();
 
             $employeeOvertime->check_out_lat = $dataLocation['latitude'];
@@ -445,6 +482,16 @@ class OvertimeService extends BaseService
             $overtimeHistory->employee_id = $user->employee_id;
             $overtimeHistory->history_type = OvertimeHistory::TypeCheckOut;
             $overtimeHistory->save();
+
+            if ($checkInData) {
+                $checkInData->real_check_out = $employeeOvertime->check_out_time;
+                $checkInData->checkout_lat = $employeeOvertime->check_out_lat;
+                $checkInData->checkout_long = $employeeOvertime->check_out_long;
+                $checkInData->checkout_real_radius = $distance;
+                $checkInData->checkout_type = $checkOutType;
+                $checkInData->check_out_tz = $employeeOvertime->check_out_timezone;
+                $checkInData->save();
+            }
 
             $this->refreshFinishedStatus($overtimeRequest, $user->employee_id);
 

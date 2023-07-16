@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read Unit $area
  * @property-read Unit $kanwil
  * @property-read Unit $corporate
+ * @property-read EmployeeAttendance[] $attendances
  */
 class Employee extends Model
 {

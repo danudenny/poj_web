@@ -13,8 +13,9 @@ use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
  * Attributes:
  * @property-read int $id
  * @property int $relation_id
- * @property string $lat
- * @property string $long
+ * @property float $lat
+ * @property float $long
+ * @property float $radius
  */
 class Unit extends Model
 {

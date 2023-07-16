@@ -50,7 +50,7 @@ class OvertimeEmployee extends Model
      * @return string|null
      */
     public function getCheckOutTimeWithEmployeeTimezoneAttribute(): string|null {
-        if (is_null($this->check_in_time)) {
+        if (is_null($this->check_out_time)) {
             return null;
         }
 
@@ -72,7 +72,7 @@ class OvertimeEmployee extends Model
      * @return string|null
      */
     public function getCheckOutTimeWithUnitTimezoneAttribute(): string|null {
-        if (is_null($this->check_in_time)) {
+        if (is_null($this->check_out_time)) {
             return null;
         }
 
