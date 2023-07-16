@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * Attributes:
  * @property-read int $id
  * @property int $relation_id
+ * @property string $lat
+ * @property string $long
  */
 class Unit extends Model
 {

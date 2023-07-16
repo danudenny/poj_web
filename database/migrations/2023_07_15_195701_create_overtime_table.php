@@ -39,12 +39,12 @@ return new class extends Migration
             $table->id();
             $table->integer('employee_id');
             $table->integer('overtime_id');
-            $table->timestamp('check_in_time');
-            $table->float('check_in_lat');
-            $table->float('check_in_long');
-            $table->timestamp('check_out_time');
-            $table->float('check_out_lat');
-            $table->float('check_out_long');
+            $table->timestamp('check_in_time')->nullable();
+            $table->float('check_in_lat')->nullable();
+            $table->float('check_in_long')->nullable();
+            $table->timestamp('check_out_time')->nullable();
+            $table->float('check_out_lat')->nullable();
+            $table->float('check_out_long')->nullable();
             $table->timestamps();
         });
     }

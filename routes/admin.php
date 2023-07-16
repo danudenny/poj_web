@@ -13,6 +13,7 @@ use App\Http\Controllers\API\EmployeeTimesheetController;
 use App\Http\Controllers\API\EventController;
 use App\Http\Controllers\API\IncidentController;
 use App\Http\Controllers\API\JobController;
+use App\Http\Controllers\API\OvertimeController;
 use App\Http\Controllers\API\PermissionController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\SettingController;
@@ -252,4 +253,10 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::get('', [JobController::class, 'index']);
     });
     // End Job
+
+    // Begin Overtime
+    Route::group(['prefix' => 'overtime', 'middleware' => ['auth:sanctum']], function () {
+        Route::post('/', [OvertimeController::class, 'create']);
+    });
+    // End Overtime
 });

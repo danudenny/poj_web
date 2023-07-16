@@ -8,6 +8,8 @@ use Spatie\Permission\Models\Role as SpatieRole;
 class Role extends SpatieRole
 {
     const RoleSuperAdministrator = "superadmin";
+    const RoleAdmin = "admin";
+    const RoleStaff = "staff";
 
     protected $appends = ['status'];
     protected $dates = ['deleted_at'];
