@@ -31,6 +31,10 @@ class OvertimeController extends Controller
         return $service->view($request, $id);
     }
 
+    public function employee_overtimes(Request $request, OvertimeService  $service) {
+        return $service->listEmployeeOvertime($request);
+    }
+
     /**
      * @param CreateOvertimeRequest $request
      * @param OvertimeService $service

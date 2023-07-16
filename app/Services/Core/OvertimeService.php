@@ -88,6 +88,33 @@ class OvertimeService extends BaseService
         ], Response::HTTP_OK);
     }
 
+    public function listEmployeeOvertime(Request $request) {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
+        $query = OvertimeEmployee::query()
+            ->with(['employee:employees.id,name', 'overtime'])
+            ->join('overtimes', 'overtimes.id', '=', 'overtime_employees.overtime_id')
+            ->whereNotIn('overtimes.last_status', [OvertimeHistory::TypeRejected])
+            ->select(['overtime_employees.*']);
+
+        if ($user->inRoleLevel([Role::RoleAdmin])) {
+            $query->whereIn('overtimes.unit_relation_id', $user->employee->getAllUnitID());
+        } else if ($user->inRoleLevel([Role::RoleStaff])) {
+            $query->where('overtime_employees.employee_id', '=', $user->employee_id);
+        }
+
+        $query->orderBy('overtimes.start_datetime', 'DESC');
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Success',
+            'data' => $this->list($query, $request)
+        ], Response::HTTP_OK);
+    }
+
     /**
      * @param CreateOvertimeRequest $request
      * @return \Illuminate\Http\JsonResponse
@@ -317,12 +344,14 @@ class OvertimeService extends BaseService
             }
 
             $overtimeRequest = $employeeOvertime->overtime;
+            $employeeTimezone = getTimezoneV2($dataLocation['latitude'], $dataLocation['longitude']);
 
             DB::beginTransaction();
 
             $employeeOvertime->check_in_lat = $dataLocation['latitude'];
             $employeeOvertime->check_in_long = $dataLocation['longitude'];
             $employeeOvertime->check_in_time = Carbon::now();
+            $employeeOvertime->check_in_timezone = $employeeTimezone;
             $employeeOvertime->save();
 
             $overtimeHistory = new OvertimeHistory();
@@ -384,12 +413,14 @@ class OvertimeService extends BaseService
             }
 
             $overtimeRequest = $employeeOvertime->overtime;
+            $employeeTimezone = getTimezoneV2($dataLocation['latitude'], $dataLocation['longitude']);
 
             DB::beginTransaction();
 
             $employeeOvertime->check_out_lat = $dataLocation['latitude'];
             $employeeOvertime->check_out_long = $dataLocation['longitude'];
             $employeeOvertime->check_out_time = Carbon::now();
+            $employeeOvertime->check_out_timezone = $employeeTimezone;
             $employeeOvertime->save();
 
             $overtimeHistory = new OvertimeHistory();

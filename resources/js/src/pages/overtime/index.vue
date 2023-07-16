@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs main="Event Request"/>
+        <Breadcrumbs main=""/>
 
         <div class="container-fluid">
             <div class="email-wrap bookmark-wrap">
@@ -8,7 +8,7 @@
                     <div class="col-md-12">
                         <div class="card card-absolute">
                             <div class="card-header bg-primary">
-                                <h5>Event Request</h5>
+                                <h5>Employee Overtime Request</h5>
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-2">

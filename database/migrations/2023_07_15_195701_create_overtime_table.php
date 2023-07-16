@@ -48,6 +48,8 @@ return new class extends Migration
             $table->timestamp('check_out_time')->nullable();
             $table->float('check_out_lat')->nullable();
             $table->float('check_out_long')->nullable();
+            $table->string('check_in_timezone')->nullable();
+            $table->string('check_out_timezone')->nullable();
             $table->timestamps();
         });
     }
