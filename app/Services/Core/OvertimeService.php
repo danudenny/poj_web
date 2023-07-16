@@ -6,6 +6,7 @@ use App\Http\Requests\Overtime\OvertimeCheckInRequest;
 use App\Http\Requests\Overtime\CreateOvertimeRequest;
 use App\Http\Requests\Overtime\OvertimeApprovalRequest;
 use App\Http\Requests\Overtime\OvertimeCheckOutRequest;
+use App\Models\Employee;
 use App\Models\Overtime;
 use App\Models\OvertimeEmployee;
 use App\Models\OvertimeHistory;
@@ -264,6 +265,8 @@ class OvertimeService extends BaseService
             $overtimeHistory->notes = $request->input('notes');
             $overtimeHistory->save();
 
+            $this->refreshFinishedStatus($overtime, $user->employee_id);
+
             DB::commit();
 
             return response()->json([
@@ -327,6 +330,8 @@ class OvertimeService extends BaseService
             $overtimeHistory->employee_id = $user->employee_id;
             $overtimeHistory->history_type = OvertimeHistory::TypeCheckIn;
             $overtimeHistory->save();
+
+            $this->refreshFinishedStatus($overtimeRequest, $user->employee_id);
 
             DB::commit();
 
@@ -393,6 +398,8 @@ class OvertimeService extends BaseService
             $overtimeHistory->history_type = OvertimeHistory::TypeCheckOut;
             $overtimeHistory->save();
 
+            $this->refreshFinishedStatus($overtimeRequest, $user->employee_id);
+
             DB::commit();
 
             return response()->json([
@@ -405,6 +412,31 @@ class OvertimeService extends BaseService
                 'status' => false,
                 'message' => $exception->getMessage()
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private function refreshFinishedStatus(Overtime  $overtime, int $employeeID) {
+        $overtime->refresh();
+
+        $isEmployeeFinishedAttendance = true;
+
+        foreach ($overtime->overtimeEmployees as $overtimeEmployee) {
+            if (is_null($overtimeEmployee->check_in_time) || is_null($overtimeEmployee->check_out_time)) {
+                $isEmployeeFinishedAttendance = false;
+            }
+        }
+
+        $isFinished = $overtime->last_status == OvertimeHistory::TypeApproved && $isEmployeeFinishedAttendance;
+        if ($isFinished) {
+            $overtime->last_status = OvertimeHistory::TypeFinished;
+            $overtime->last_status_at = Carbon::now();
+            $overtime->save();
+
+            $overtimeHistory = new OvertimeHistory();
+            $overtimeHistory->overtime_id = $overtime->id;
+            $overtimeHistory->employee_id = $employeeID;
+            $overtimeHistory->history_type = OvertimeHistory::TypeFinished;
+            $overtimeHistory->save();
         }
     }
 }
