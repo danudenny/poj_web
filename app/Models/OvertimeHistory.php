@@ -11,6 +11,9 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $overtime_id
  * @property int $employee_id
  * @property string $history_type
+ *
+ * Relations:
+ * @property-read Employee $employee
  */
 class OvertimeHistory extends Model
 {
@@ -20,4 +23,11 @@ class OvertimeHistory extends Model
     const TypeCheckIn = "check-in";
     const TypeCheckOut = "check-out";
     const TypeApproved = "approved";
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function employee() {
+        return $this->belongsTo(Employee::class, 'employee_id');
+    }
 }

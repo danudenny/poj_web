@@ -10,11 +10,50 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\BaseService;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
 class OvertimeService extends BaseService
 {
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function index(Request $request) {
+        $overtimes = Overtime::query()->with(['requestorEmployee:employees.id,name']);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Success',
+            'data' => $this->list($overtimes, $request)
+        ], Response::HTTP_OK);
+    }
+
+    public function view(Request $request, int $id) {
+        /**
+         * @var Overtime $overtime
+         */
+        $overtime = Overtime::query()
+            ->with([
+                'requestorEmployee:id,name',
+                'overtimeHistories', 'overtimeHistories.employee:employees.id,name',
+                'overtimeEmployees', 'overtimeEmployees.employee:employees.id,name'
+            ])->where('id', '=', $id)
+            ->first();
+        if (!$overtime) {
+            return response()->json([
+                'status' => false,
+                'message' => "overtime Not Found"
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Success',
+            'data' => $overtime
+        ], Response::HTTP_OK);
+    }
 
     /**
      * @param CreateOvertimeRequest $request
