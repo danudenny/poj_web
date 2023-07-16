@@ -151,6 +151,7 @@ export default {
                     {
                         title: 'Employee Name',
                         field: 'employee.name',
+                        headerFilter:"input"
                     },
                     {
                         title: 'Start Time',
@@ -198,9 +199,9 @@ export default {
                         name: ''
                     }
                     params.filter.map((item) => {
-                        if (item.field === 'name') localFilter.name = item.value
+                        if (item.field === 'employee.name') localFilter.name = item.value
                     })
-                    return `${url}?page=${params.page}&per_page=${params.size}&size=${params.size}&name=${localFilter.name}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&size=${params.size}&employee_name=${localFilter.name}`
                 },
                 ajaxResponse: function (url, params, response) {
                     return {

@@ -59,10 +59,12 @@ export default {
                     {
                         title: 'Requestor Name',
                         field: 'requestor_employee.name',
+                        headerFilter:"input"
                     },
                     {
                         title: 'Status',
                         field: 'last_status',
+                        headerFilter:"input"
                     },
                     {
                         title: 'Unit Name',
@@ -108,13 +110,17 @@ export default {
                 },
                 ajaxURLGenerator: (url, config, params) => {
                     let localFilter = {
-                        name: ''
+                        unitName: '',
+                        lastStatus: '',
+                        requestorName: ''
                     }
                     console.log("URLGenerateParam", params)
                     params.filter.map((item) => {
-                        if (item.field === 'name') localFilter.name = item.value
+                        if (item.field === 'unit.name') localFilter.unitName = item.value
+                        if (item.field === 'last_status') localFilter.lastStatus = item.value
+                        if (item.field === 'requestor_employee.name') localFilter.requestorName = item.value
                     })
-                    return `${url}?page=${params.page}&per_page=${params.size}&size=${params.size}&name=${localFilter.name}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&size=${params.size}&unit_name=${localFilter.unitName}&last_status=${localFilter.lastStatus}&requestor_name=${localFilter.requestorName}`
                 },
                 ajaxResponse: function (url, params, response) {
                     return {

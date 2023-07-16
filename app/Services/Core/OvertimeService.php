@@ -39,9 +39,21 @@ class OvertimeService extends BaseService
         } else if ($user->inRoleLevel([Role::RoleStaff])) {
             $overtimes->join('overtime_employees', 'overtime_employees.overtime_id', '=', 'overtimes.id');
             $overtimes->where('overtime_employees.employee_id', '=', $user->employee_id);
-            $overtimes->select(['overtimes.*']);
         }
 
+        $overtimes->when($request->filled('unit_name'), function(Builder $builder) use ($request) {
+            $builder->join('units', 'units.relation_id', '=', 'overtimes.unit_relation_id')
+                ->whereRaw('LOWER(units.name) LIKE ?', ['%'.strtolower($request->query('unit_name')).'%']);
+        });
+        $overtimes->when($request->filled('last_status'), function(Builder $builder) use ($request) {
+            $builder->whereRaw('LOWER(overtimes.last_status) LIKE ?', ['%'.strtolower($request->query('last_status')).'%']);
+        });
+        $overtimes->when($request->filled('requestor_name'), function(Builder $builder) use ($request) {
+            $builder->join('employees', 'employees.id', '=', 'overtimes.requestor_employee_id')
+                ->whereRaw('LOWER(employees.name) LIKE ?', ['%'.strtolower($request->query('requestor_name')).'%']);
+        });
+
+        $overtimes->select(['overtimes.*']);
         $overtimes->orderBy('overtimes.id', 'DESC');
 
         return response()->json([
@@ -97,8 +109,7 @@ class OvertimeService extends BaseService
         $query = OvertimeEmployee::query()
             ->with(['employee:employees.id,name', 'overtime'])
             ->join('overtimes', 'overtimes.id', '=', 'overtime_employees.overtime_id')
-            ->whereNotIn('overtimes.last_status', [OvertimeHistory::TypeRejected])
-            ->select(['overtime_employees.*']);
+            ->whereNotIn('overtimes.last_status', [OvertimeHistory::TypeRejected]);
 
         if ($user->inRoleLevel([Role::RoleAdmin])) {
             $query->whereIn('overtimes.unit_relation_id', $user->employee->getAllUnitID());
@@ -106,6 +117,12 @@ class OvertimeService extends BaseService
             $query->where('overtime_employees.employee_id', '=', $user->employee_id);
         }
 
+        $query->when($request->filled('employee_name'), function(Builder $builder) use ($request) {
+            $builder->join('employees', 'employees.id', '=', 'overtime_employees.employee_id')
+                ->whereRaw('LOWER(employees.name) LIKE ?', ['%'.strtolower($request->query('employee_name')).'%']);
+        });
+
+        $query->select(['overtime_employees.*']);
         $query->orderBy('overtimes.start_datetime', 'DESC');
 
         return response()->json([
