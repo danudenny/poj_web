@@ -204,7 +204,7 @@ class Employee extends Model
         return $this->hasMany(Unit::class, 'parent_unit_id');
     }
 
-    function getLastUnit($data) {
+    function getLastUnits($data) {
         $lastData = null;
         foreach ($data as $item) {
             if ($item === null) {
@@ -218,7 +218,7 @@ class Employee extends Model
     public function getRelatedUnit(): array
     {
         $areas = [$this->kanwil, $this->area, $this->cabang, $this->outlet];
-        $workLocation = $this->getLastUnit($areas);
+        $workLocation = $this->getLastUnits($areas);
 
         $parentRelationId = $workLocation->relation_id;
 
