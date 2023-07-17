@@ -59,7 +59,6 @@ export default {
     async mounted() {
         await this.getEmployees();
         this.initializeEmployeesTable();
-        await this.getUnits();
     },
     methods: {
         startCountdown() {
@@ -117,22 +116,6 @@ export default {
                         title: 'Jobs',
                         field: 'job.name',
                         headerFilter:"input"
-                    },
-                    {
-                        title: 'Unit',
-                        field: '',
-                        formatter: function (cell, formatterParams, onRendered) {
-                            const unit = cell.getRow().getData();
-                            if (unit.outlet === null) {
-                                return `<span>${unit.cabang.name}</span>`
-                            } else if (unit.cabang === null && false) {
-                                return unit.area.name;
-                            } else if (unit.area === null && false) {
-                                return unit.kanwil.name;
-                            } else {
-                                return unit.outlet.name;
-                            }
-                        },
                     },
                     {
                         title: 'Email',
