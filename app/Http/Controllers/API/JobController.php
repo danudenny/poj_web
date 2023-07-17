@@ -23,6 +23,11 @@ class JobController extends Controller
         return $service->index($request);
     }
 
+    public function show($id): JsonResponse
+    {
+        return $this->jobService->getById($id);
+    }
+
     public function store(Request $request, $id): JsonResponse
     {
         return $this->jobService->store($request, $id);

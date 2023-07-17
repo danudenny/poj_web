@@ -13,17 +13,47 @@ use Illuminate\Support\Facades\DB;
 
 class JobService extends BaseService
 {
-    public function index(Request $request) {
-        $job = Job::query();
-        $job->when($request->filled('name'), function(Builder $builder) use ($request) {
-            $builder->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower($request->query('name')).'%']);
-        });
-        $job->orderBy('name', 'ASC');
+    public function index(Request $request): JsonResponse
+    {
+        $units = Unit::with('jobs')->orderBy('id', 'asc')->paginate(10);
 
+        $units->flatMap(function ($unit) {
+            return $unit->jobs->map(function ($job) use ($unit) {
+                $job->is_camera = $job->pivot->is_camera;
+                $job->is_upload = $job->pivot->is_upload;
+                $job->is_reporting = $job->pivot->is_reporting;
+                unset($job->pivot);
+                return $job;
+            });
+        });
         return response()->json([
             'status' => 'success',
             'message' => 'Data retrieved successfully',
-            'data' => $this->list($job, $request)
+            'data' => $units
+        ]);
+    }
+
+    public function getById($id) {
+        $unit = Unit::with('jobs')->find($id);
+        if (!$unit) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unit not found'
+            ], 404);
+        }
+
+        $unit->jobs->map(function ($job) use ($unit) {
+            $job->is_camera = $job->pivot->is_camera;
+            $job->is_upload = $job->pivot->is_upload;
+            $job->is_reporting = $job->pivot->is_reporting;
+            unset($job->pivot);
+            return $job;
+        });
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data retrieved successfully',
+            'data' => $unit
         ]);
     }
 
