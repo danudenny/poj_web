@@ -83,11 +83,11 @@
                                                 <td>Name</td>
                                                 <td>: {{item.employee.name}}</td>
                                             </tr>
+                                            <tr>
+                                                <td>Notes</td>
+                                                <td>: {{item.notes}}</td>
+                                            </tr>
                                         </table>
-                                        <tr>
-                                            <td>Notes</td>
-                                            <td>: {{item.notes}}</td>
-                                        </tr>
                                     </div>
                                     <div v-if="index < (event.event_histories.length - 1)">
                                         <p align="center">

@@ -7,15 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
 
 /**
  * Attributes:
  * @property-read int $id
  * @property int $relation_id
+ * @property float $lat
+ * @property float $long
+ * @property float $radius
  */
 class Unit extends Model
 {
     use HasFactory;
+    use QueriesExpressions;
 
     /**
      * The attributes that are mass assignable.

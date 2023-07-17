@@ -10,6 +10,24 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * Attributes:
  * @property-read int $id
+ * @property int $employee_id
+ * @property string $real_check_in
+ * @property string $checkin_type
+ * @property float $checkin_lat
+ * @property float $checkin_long
+ * @property bool $is_need_approval
+ * @property string $attendance_types
+ * @property float $checkin_real_radius
+ * @property bool $approved
+ * @property string $check_in_tz
+ * @property bool $is_late
+ * @property int $late_duration
+ * @property string $real_check_out
+ * @property float $checkout_lat
+ * @property float $checkout_long
+ * @property float $checkout_real_radius
+ * @property string $checkout_type
+ * @property string $check_out_tz
  *
  * Relations:
  * @property-read Employee $employee
@@ -18,6 +36,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class EmployeeAttendance extends Model
 {
     use HasFactory;
+
+    const TypeOnSite = "onsite";
+    const TypeOffSite = "offsite";
+
+    const AttendanceTypeOvertime = "overtime";
 
     protected $table = 'employee_attendances';
 

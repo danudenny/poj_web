@@ -28,3 +28,9 @@ function getTimezone($inputLat, $inputLong): string
     $inputCoordinates = Http::get($baseUrl . '/' . $inputLat . '/' . $inputLong);
     return $inputCoordinates->json()['tz'];
 }
+
+function getTimezoneV2($latitude,$longitude): string
+{
+    $inputCoordinates = Http::get("https://api.wheretheiss.at/v1/coordinates/" . $latitude . "," . $longitude);
+    return $inputCoordinates->json()['timezone_id'];
+}

@@ -92,6 +92,12 @@ import EventEmployeeEvent from '../pages/event/employee-event.vue';
 import WorkReporting from '../pages/work_reporting/index.vue';
 import WorkReportingDetail from '../pages/work_reporting/detail.vue';
 
+// Overtime
+import Overtime from "../pages/overtime/index.vue";
+import CreateOvertime from "../pages/overtime/create.vue";
+import DetailOvertime from "../pages/overtime/detail.vue";
+import EmployeeOvertime from "../pages/overtime/employee-overtime.vue";
+
 //Error page
 import Error from  '../components/error.vue';
 
@@ -501,6 +507,46 @@ const routes =[
                     title: 'POJ - Detail Backup',
                     requiresAuth: true,
                     permission: 'backup_list',
+                },
+            },
+            {
+                path: 'overtime',
+                name: 'Overtime',
+                component: Overtime,
+                meta: {
+                    title: 'POJ - Overtime',
+                    requiresAuth: true,
+                    permission: 'overtime_list',
+                },
+            },
+            {
+                path: 'overtime/create',
+                name: 'Create Overtime',
+                component: CreateOvertime,
+                meta: {
+                    title: 'POJ - Create Overtime',
+                    requiresAuth: true,
+                    permission: 'overtime_list',
+                },
+            },
+            {
+                path: 'detail-overtime/:id',
+                name: 'Detail Overtime',
+                component: DetailOvertime,
+                meta: {
+                    title: 'POJ - Detail Overtime',
+                    requiresAuth: true,
+                    permission: 'overtime_list',
+                },
+            },
+            {
+                path: 'employee-overtime',
+                name: 'Employee Overtime',
+                component: EmployeeOvertime,
+                meta: {
+                    title: 'POJ - Employee Overtime',
+                    requiresAuth: true,
+                    permission: 'overtime_list',
                 },
             }
         ]
