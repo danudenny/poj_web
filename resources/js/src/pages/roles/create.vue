@@ -124,7 +124,7 @@ export default {
 
             let ls = JSON.parse(localStorage.getItem('selectedPermission'));
 
-            await axios.post(`/api/v1/admin/role/save`, {
+            await this.$axios.post(`/api/v1/admin/role/save`, {
                 id: id,
                 name: name,
                 role_level: role_level,

@@ -112,7 +112,7 @@ export default {
                 const formData = new FormData();
                 formData.append('file', this.appLogoFile);
 
-                await axios.post('api/v1/upload-files', formData)
+                await this.$axios.post('api/v1/upload-files', formData)
                     .then((response) => {
                         const logoURL = response.data.path;
                         resolve(logoURL);
@@ -128,7 +128,7 @@ export default {
                 { id: this.appLogoId, key: 'app_logo', value: appLogoURL }
             ];
 
-            axios.put('api/v1/admin/setting/bulk-update', data)
+           this.$axios.put('api/v1/admin/setting/bulk-update', data)
                 .then((response) => {
                     this.basic_success_alert();
                     console.log(response);

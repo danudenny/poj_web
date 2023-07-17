@@ -125,4 +125,39 @@ class Employee extends Model
     {
         return $this->hasMany(EmployeeAttendance::class)->orderBy('id', 'desc');
     }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class, 'parent_unit_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(Unit::class, 'parent_unit_id');
+    }
+
+    function getLastUnit($data) {
+        $lastData = null;
+        foreach ($data as $item) {
+            if ($item === null) {
+                break;
+            }
+            $lastData = $item;
+        }
+        return $lastData;
+    }
+
+    public function getRelatedUnit(): array
+    {
+        $areas = [$this->kanwil, $this->area, $this->cabang, $this->outlet];
+        $workLocation = $this->getLastUnit($areas);
+
+        $parentRelationId = $workLocation->relation_id;
+
+        $otherUnits = Unit::with('children')->where('parent_unit_id', $parentRelationId)
+            ->where('id', '!=', $workLocation->id)
+            ->get();
+
+        return $otherUnits->all();
+    }
 }

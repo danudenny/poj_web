@@ -21,45 +21,61 @@ class EmployeeService extends BaseService
      */
     public function index($request): JsonResponse
     {
+        $auth = Auth::user();
         try {
-            $loggedInEmployee = Auth::user();
+            $employees = Employee::query()->with('job');
+            $employeesData = [];
 
-            $employees = Employee::query();
-            if ($loggedInEmployee->hasRole('superadmin')) {
-                $employees = $employees->with(['kanwil', 'area', 'cabang', 'outlet', 'job', 'employeeDetail', 'employeeDetail.employeeTimesheet'])
-                    ->when(request()->filled('name'), function ($query) {
-                        $query->whereRaw('LOWER("name") LIKE ? ', '%'.strtolower(request()->query('name')).'%');
-                    })
-                    ->when(request()->filled('unit_id'), function ($query) {
-                        $query->where('kanwil_id', request()->query('unit_id'));
-                        $query->orWhere('area_id', request()->query('unit_id'));
-                        $query->orWhere('cabang_id', request()->query('unit_id'));
-                        $query->orWhere('outlet_id', request()->query('unit_id'));
-                    })
-                    ->paginate(10);
-            } else {
-                $employees = $employees->with(['kanwil', 'area', 'cabang', 'outlet', 'job', 'employeeDetail', 'employeeDetail.employeeTimesheet'])
-                    ->when(request()->filled('name'), function ($query) {
-                        $query->whereRaw('LOWER("name") LIKE ? ', '%'.strtolower(request()->query('name')).'%');
-                    })
-                    ->where('kanwil_id', $loggedInEmployee->employee->kanwil_id)
-                    ->where('area_id', $loggedInEmployee->employee->area_id)
-                    ->where('cabang_id', $loggedInEmployee->employee->cabang_id)
-                    ->where('outlet_id', $loggedInEmployee->employee->outlet_id)
-                    ->order_by('name', 'asc')
-                    ->paginate(10);
+            $highestPriorityRole = null;
+            $highestPriority = null;
+
+            foreach ($auth->roles as $role) {
+                if ($highestPriority === null || $role['priority'] < $highestPriority) {
+                    $highestPriorityRole = $role;
+                    $highestPriority = $role['priority'];
+                }
             }
 
+            $employees->when($request->get('kanwil_id'), function ($query) use ($request) {
+                $query->where('kanwil_id', '=', $request->get('kanwil_id'));
+            });
+            $employees->when($request->get('area_id'), function ($query) use ($request) {
+                $query->where('area_id', '=', $request->get('area_id'));
+            });
+            $employees->when($request->get('cabang_id'), function ($query) use ($request) {
+                $query->where('cabang_id', '=', $request->get('cabang_id'));
+            });
+            $employees->when($request->get('outlet_id'), function ($query) use ($request) {
+                $query->where('outlet_id', '=', $request->get('outlet_id'));
+            });
+
+            if ($highestPriorityRole->role_level === 'superadmin') {
+                $employeesData = $employees->paginate($request->get('limit', 10));
+            } else if ($highestPriorityRole->role_level === 'staff') {
+                $employeesData = $employees->where('id', '=', $auth->employee_id);
+            } else if ($highestPriorityRole->role_level === 'admin') {
+                $empUnit = $auth->employee->getRelatedUnit();
+                $flatUnit = UnitHelper::flattenUnits($empUnit);
+                $relationIds = array_column($flatUnit, 'relation_id');
+
+                $employeesData[] = $employees
+                    ->whereIn('kanwil_id', $relationIds)
+                    ->orWhereIn('area_id', $relationIds)
+                    ->orWhereIn('cabang_id', $relationIds)
+                    ->orWhereIn('outlet_id', $relationIds)
+                    ->with(['job', 'kanwil', 'area', 'cabang', 'outlet'])
+                    ->paginate(10);
+            }
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data retrieved successfully',
-                'data' => $employees
+                'data' => is_array($employeesData) ? $employeesData[0] : $employeesData
             ]);
 
         } catch (\InvalidArgumentException $e) {
             throw new \InvalidArgumentException($e->getMessage());
         } catch (Exception $e) {
-            throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e);
         }
     }
 
@@ -69,7 +85,7 @@ class EmployeeService extends BaseService
     public function view($id): Model|Builder
     {
         try {
-            $employee = Employee::with( ['kanwil', 'area', 'cabang', 'outlet', 'job', 'employeeDetail', 'employeeDetail.employeeTimesheet'])->find($id);
+            $employee = Employee::with( ['kanwil', 'area', 'cabang', 'outlet', 'job', 'timesheetSchedules'])->find($id);
 
             if (!$employee) {
                 throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);

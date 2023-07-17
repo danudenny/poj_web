@@ -77,7 +77,7 @@ export default {
     },
     methods: {
         async getApproval() {
-            await axios.get('/api/v1/admin/approval')
+            await this.$axios.get('/api/v1/admin/approval')
                 .then(response => {
                     this.approvals = response.data.data
                 })
@@ -106,7 +106,7 @@ export default {
                 cancelButtonColor: '#efefef',
             }).then((result)=>{
                 if(result.value){
-                    axios.delete(`api/v1/admin/approval/delete/${id}`)
+                    this.$axios.delete(`api/v1/admin/approval/delete/${id}`)
                         .then(() => {
                             this.basic_success_alert("Data successfully deleted!");
                             this.getApprovalModules();

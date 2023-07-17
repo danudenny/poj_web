@@ -167,7 +167,7 @@ export default {
             );
         },
         async loadOrg() {
-            await axios.get(`/api/v1/admin/approval/get-unit?id=${this.ls.unit_id}`)
+            await this.$axios.get(`/api/v1/admin/approval/get-unit?id=${this.ls.unit_id}`)
                 .then(response => {
                     this.organization = response.data.data
                 })
@@ -176,7 +176,7 @@ export default {
                 })
         },
         async getApprovalModules() {
-            await axios.get('/api/v1/admin/approval-module')
+            await this.$axios.get('/api/v1/admin/approval-module')
                 .then(response => {
                     this.approvalModules = response.data.data.data
                 })
@@ -185,7 +185,7 @@ export default {
                 })
         },
         async getUsers() {
-            await axios.get(`/api/v1/admin/employee?unit_id=${this.ls.unit_id}`)
+            await this.$axios.get(`/api/v1/admin/employee?unit_id=${this.ls.unit_id}`)
                 .then(response => {
                     this.users = response.data.data
                 })
@@ -221,7 +221,7 @@ export default {
             this.appendedApprover.forEach((element, index) => {
                 userIds.push(element.id)
             })
-            await axios.post('/api/v1/admin/approval/create', {
+            await this.$axios.post('/api/v1/admin/approval/create', {
                 name: this.approval.name,
                 approval_module_id: this.approval.approval_module_id.id,
                 is_active: true,

@@ -100,7 +100,7 @@ export default {
     },
     methods: {
         async getApprovalModules() {
-            await axios.get('/api/v1/admin/approval-module')
+            await this.$axios.get('/api/v1/admin/approval-module')
                 .then(response => {
                     this.approvalModules = response.data.data;
                 })
@@ -109,7 +109,7 @@ export default {
                 })
         },
         async getSingleData(id) {
-            await axios.get(`api/v1/admin/approval-module/view/${id}`)
+            await this.$axios.get(`api/v1/admin/approval-module/view/${id}`)
                 .then(response => {
                     this.approvalModule = response.data.data;
                 })
@@ -118,7 +118,7 @@ export default {
                 })
         },
         async updateData(id) {
-            await axios.put(`api/v1/admin/approval-module/update/${id}`, this.approvalModule)
+            await this.$axios.put(`api/v1/admin/approval-module/update/${id}`, this.approvalModule)
                 .then(() => {
                     this.basic_success_alert("Data updated successfully!");
                     this.getApprovalModules();
@@ -131,7 +131,7 @@ export default {
                 })
         },
         async saveChanges() {
-            await axios.post('/api/v1/admin/approval-module/create', this.approvalModule)
+            await this.$axios.post('/api/v1/admin/approval-module/create', this.approvalModule)
                 .then(() => {
                     this.basic_success_alert('Approval Module Created Successfully');
                     this.getApprovalModules();
@@ -171,7 +171,7 @@ export default {
                 cancelButtonColor: '#efefef',
             }).then((result)=>{
                 if(result.value){
-                    axios.delete(`api/v1/admin/approval-module/delete/${id}`)
+                    this.$axios.delete(`api/v1/admin/approval-module/delete/${id}`)
                         .then(() => {
                             this.basic_success_alert("Data successfully deleted!");
                             this.getApprovalModules();

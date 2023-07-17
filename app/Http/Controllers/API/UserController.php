@@ -6,6 +6,7 @@ use App\Http\Controllers\BaseController;
 use App\Http\Requests\User\UserSaveRequest;
 use App\Http\Requests\User\UserUpdateRequest;
 use App\Services\Core\UserService;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -176,6 +177,11 @@ class UserController extends BaseController
     public function updateToken(Request $request, $id): JsonResponse
     {
         return $this->userService->updateToken($request, $id);
+    }
+
+    public function profile(): ?Authenticatable
+    {
+        return auth()->user();
     }
 
 }

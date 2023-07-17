@@ -166,7 +166,7 @@ export default {
                 { id: this.emailAddressId, key: 'MAIL_ADDRESS', value: emailAddress }
             ];
 
-            axios.put('api/v1/admin/setting/bulk-update', data)
+           this.$axios.put('api/v1/admin/setting/bulk-update', data)
                 .then((response) => {
                     this.basic_success_alert();
                     console.log(response);

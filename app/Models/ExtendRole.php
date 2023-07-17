@@ -13,6 +13,7 @@ class ExtendRole extends Role
     protected $fillable = [
         'name',
         'role_level',
+        'priority',
         'guard_name',
         'created_at',
         'updated_at',

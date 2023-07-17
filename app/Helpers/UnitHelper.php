@@ -15,6 +15,7 @@ class UnitHelper
                 'value' => $unit['value'],
                 'unit_level' => $unit['unit_level'],
                 'parent_unit_id' => $unit['parent_unit_id'],
+                'relation_id' => $unit['relation_id'],
                 'create_date' => $unit['create_date'],
                 'write_date' => $unit['write_date'],
                 'is_active' => $unit['is_active'],
@@ -22,8 +23,8 @@ class UnitHelper
 
             $flattenedUnits[] = $flattenedUnit;
 
-            if (!empty($unit['child'])) {
-                $flattenedChildUnits = self::flattenUnits($unit['child']);
+            if (!empty($unit['children'])) {
+                $flattenedChildUnits = self::flattenUnits($unit['children']);
 
                 foreach ($flattenedChildUnits as $childUnit) {
                     $flattenedUnits[] = $childUnit;

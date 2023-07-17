@@ -122,7 +122,7 @@ export default {
         },
         async updateRole(){
             const getData = JSON.parse(localStorage.getItem('selectedPermission'))
-            await axios.post(`/api/v1/admin/role/update`, {
+            await this.$axios.post(`/api/v1/admin/role/update`, {
                 id: this.roles.id,
                 name: this.roles.name,
                 is_active: this.roles.is_active,

@@ -43,7 +43,7 @@ export default {
         async addPermission() {
             let name = this.permission.name;
 
-            await axios.post(`/api/v1/admin/permission/save`, {
+            await this.$axios.post(`/api/v1/admin/permission/save`, {
                 name: name,
             })
                 .then(res => {

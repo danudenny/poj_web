@@ -170,7 +170,7 @@ export default {
                 { id: this.bucketNameId, key: 'MINIO_BUCKET', value: bucketName }
             ];
 
-            axios.put('api/v1/admin/setting/bulk-update', data)
+           this.$axios.put('api/v1/admin/setting/bulk-update', data)
                 .then((response) => {
                     this.basic_success_alert();
                     console.log(response);

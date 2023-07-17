@@ -118,7 +118,7 @@ export default {
     methods: {
         async getApprovals() {
             this.loading = true
-            await axios.get(`/api/v1/admin/approval/view/${this.approvalId}`)
+            await this.$axios.get(`/api/v1/admin/approval/view/${this.approvalId}`)
                 .then(response => {
                     this.approval = response.data.data
                     console.log(this.approval.users)
@@ -154,7 +154,7 @@ export default {
             this.loading = false
         },
         async loadCabang() {
-            await axios.get('/api/v1/admin/cabang')
+            await this.$axios.get('/api/v1/admin/cabang')
                 .then(response => {
                     this.organization = response.data.data.data
                 })
@@ -163,7 +163,7 @@ export default {
                 })
         },
         async getApprovalModules() {
-            await axios.get('/api/v1/admin/approval-module')
+            await this.$axios.get('/api/v1/admin/approval-module')
                 .then(response => {
                     this.approvalModules = response.data.data.data
                 })
@@ -172,7 +172,7 @@ export default {
                 })
         },
         async getUsers() {
-            // await axios.get('/api/v1/admin/user')
+            // await this.$axios.get('/api/v1/admin/user')
             //     .then(response => {
             //         this.users = response.data.data.data
             //     })
@@ -233,7 +233,7 @@ export default {
                 userIds.push(element.id)
             })
 
-            await axios.put(`/api/v1/admin/approval/update/${this.approvalId}`, {
+            await this.$axios.put(`/api/v1/admin/approval/update/${this.approvalId}`, {
                 name: this.approval.name,
                 approval_module_id: this.approval.approval_module.id,
                 is_active: this.approval.is_active,

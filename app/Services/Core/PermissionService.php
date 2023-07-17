@@ -60,6 +60,7 @@ class PermissionService extends BaseService
         try {
             $permission = new Permission();
             $permission->name = strtolower(str_replace(' ', '_', $request->name));
+            $permission->guard_name = 'web';
             $permission->created_at = date('Y-m-d H:i:s');
 
             if (!$permission->save()) {
