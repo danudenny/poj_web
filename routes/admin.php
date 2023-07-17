@@ -255,6 +255,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     // Begin Job
     Route::group(['prefix' => 'job', 'middleware' => ['auth:sanctum']], function() {
         Route::get('', [JobController::class, 'index']);
+        Route::get('show/{id}', [JobController::class, 'show']);
         Route::post('save/{id}', [JobController::class, 'store']);
         Route::put('update/{id}', [JobController::class, 'update']);
         Route::delete('delete/{unit_id}/{job_id}', [JobController::class, 'delete']);

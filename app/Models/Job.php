@@ -24,6 +24,7 @@ class Job extends Model
 
     public function units(): BelongsToMany
     {
-        return $this->belongsToMany(Unit::class, 'unit_jobs');
+        return $this->belongsToMany(Unit::class, 'unit_jobs')
+            ->withPivot('is_camera', 'is_upload', 'is_reporting');
     }
 }
