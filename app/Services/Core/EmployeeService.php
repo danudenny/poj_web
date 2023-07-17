@@ -11,6 +11,7 @@ use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -19,7 +20,7 @@ class EmployeeService extends BaseService
     /**
      * @throws Exception
      */
-    public function index($request): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $auth = Auth::user();
         try {

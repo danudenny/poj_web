@@ -191,6 +191,24 @@
             "permission" : "backup_list"
         },
         {
+            "title": "Overtime",
+            "icon": "clock",
+            "iconf": "clock",
+            "type": "link",
+            "active": false,
+            "path": "/attendance/overtime",
+            "permission" : "overtime_list"
+        },
+        {
+            "title": "Employee Overtime",
+            "icon": "clock",
+            "iconf": "clock",
+            "type": "link",
+            "active": false,
+            "path": "/attendance/employee-overtime",
+            "permission" : "overtime_list"
+        },
+        {
             "headTitle1": "ASSESMENT",
             "headTitle2": "Assesment management",
             "type": "headtitle",

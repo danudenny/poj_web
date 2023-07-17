@@ -146,7 +146,7 @@ export default {
                 })
         },
         viewData(id) {
-            this.$router.push(`/admin/attendance/${id}`)
+            this.$router.push({name: 'Detail Attendance', params: {id}});
         },
     }
 }

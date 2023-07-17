@@ -19,7 +19,7 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Deskripsi Event</label>
-                                <textarea class="form-control chronology-text-area" v-mode="event.description" disabled>{{event.description}}</textarea>
+                                <textarea class="form-control chronology-text-area" v-model="event.description" disabled>{{event.description}}</textarea>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Alamat</label>
@@ -83,11 +83,11 @@
                                                 <td>Name</td>
                                                 <td>: {{item.employee.name}}</td>
                                             </tr>
+                                            <tr>
+                                                <td>Notes</td>
+                                                <td>: {{item.notes}}</td>
+                                            </tr>
                                         </table>
-                                        <tr>
-                                            <td>Notes</td>
-                                            <td>: {{item.notes}}</td>
-                                        </tr>
                                     </div>
                                     <div v-if="index < (event.event_histories.length - 1)">
                                         <p align="center">

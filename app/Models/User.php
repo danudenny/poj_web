@@ -61,6 +61,25 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    /**
+     * @param array $roleLevels
+     * @return bool
+     */
+    public function inRoleLevel(array $roleLevels): bool {
+        /**
+         * @var Role[] $roles
+         */
+        $roles = $this->roles;
+
+        foreach ($roles as $role) {
+            if (in_array($role->role_level, $roleLevels)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function employee(): BelongsTo
     {
         return $this->BelongsTo(Employee::class);

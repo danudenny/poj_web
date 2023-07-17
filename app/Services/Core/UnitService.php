@@ -97,12 +97,24 @@ class UnitService extends BaseService
             $user = $request->user();
 
             $query = Unit::query();
-            if ($user->hasRole(Role::RoleSuperAdministrator)) {
+            if ($user->inRoleLevel([Role::RoleSuperAdministrator])) {
                 $query->when($request->filled('name'), function(Builder $builder) use ($request) {
                     $builder->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower(request()->query('name')).'%']);
                 });
             } else {
-                $query->where('id', '=', $user->employee->getLastUnitID());
+                /**
+                 * @var Builder $query
+                 */
+                $query = Unit::query()->from('unit_data')
+                    ->withRecursiveExpression('unit_data', Unit::query()->where('relation_id', '=', $user->employee->getLastUnitID())->unionAll(
+                            Unit::query()->select(['units.*'])
+                                ->join('unit_data', 'units.parent_unit_id', '=', 'unit_data.relation_id')
+                    ));
+
+                $query->when($request->filled('name'), function(Builder $builder) use ($request) {
+                    $builder->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower(request()->query('name')).'%']);
+                });
+                $query->orderBy('unit_level', 'ASC');
             }
 
             return response()->json([

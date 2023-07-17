@@ -12,8 +12,7 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-2">
-                                    <button class="btn btn-warning" type="button" data-bs-toggle="modal"
-                                            data-bs-target="#exampleModalCenter">
+                                    <button class="btn btn-warning" type="button" @click="$router.push('/attendance/create-backup')">
                                         <i class="fa fa-recycle" /> &nbsp; Assign Backup
                                     </button>
                                 </div>
@@ -47,8 +46,7 @@ export default {
     methods: {
         async getDepartments() {
             this.loading = true;
-            const unitId = JSON.parse(localStorage.getItem('USER_STORAGE_KEY'));
-            await this.$axios.get(`/api/v1/admin/backup?unit_id=${parseInt(unitId.unit_id)}`)
+            await this.$axios.get(`/api/v1/admin/backup`)
                 .then(response => {
                     this.backups = response.data.data;
                 })
@@ -113,7 +111,7 @@ export default {
             return `<button class="button-icon button-success" data-id="${cell.getRow().getData().id}"><i class="fa fa-eye"></i> </button>`;
         },
         viewData(id) {
-            this.$router.push({name: 'employee_detail', params: {id}});
+            this.$router.push({name: 'Detail Backup', params: {id}});
         }
     }
 }

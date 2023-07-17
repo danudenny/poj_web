@@ -12,6 +12,8 @@ use App\Http\Controllers\API\EmployeeDetailController;
 use App\Http\Controllers\API\EmployeeTimesheetController;
 use App\Http\Controllers\API\EventController;
 use App\Http\Controllers\API\IncidentController;
+use App\Http\Controllers\API\JobController;
+use App\Http\Controllers\API\OvertimeController;
 use App\Http\Controllers\API\PermissionController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\SettingController;
@@ -148,6 +150,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     // Begin employee attendance
     Route::group(['prefix' => 'attendance'], function() {
         Route::get('/', [EmployeeAttendanceController::class, 'index']);
+        Route::get('view/{id}', [EmployeeAttendanceController::class, 'view']);
         Route::post('check-in', [EmployeeAttendanceController::class, 'checkIn']);
         Route::post('check-out', [EmployeeAttendanceController::class, 'checkOut']);
     });
@@ -248,4 +251,22 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::delete('delete/{id}', [WorkReportingController::class, 'delete']);
     });
     // End Work Reporting
+
+    // Begin Job
+    Route::group(['prefix' => 'job'], function() {
+        Route::get('', [JobController::class, 'index']);
+    });
+    // End Job
+
+    // Begin Overtime
+    Route::group(['prefix' => 'overtime', 'middleware' => ['auth:sanctum']], function () {
+        Route::get('/', [OvertimeController::class, 'index']);
+        Route::get('/view/{id}', [OvertimeController::class, 'view']);
+        Route::get('/employee-overtime', [OvertimeController::class, 'employee_overtimes']);
+        Route::post('', [OvertimeController::class, 'create']);
+        Route::post('approval/{id}', [OvertimeController::class, 'approval']);
+        Route::post('check-in', [OvertimeController::class, 'checkIn']);
+        Route::post('check-out', [OvertimeController::class, 'checkOut']);
+    });
+    // End Overtime
 });

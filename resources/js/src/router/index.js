@@ -54,7 +54,10 @@ import RegionalDetail from '../pages/regionals/details.vue';
 
 //  Attendances
 import Attendances from '../pages/attendances/index.vue';
+import DetailAttendance from '../pages/attendances/detail.vue';
 import Backup from '../pages/backups/index.vue';
+import CreateBackup from '../pages/backups/create.vue';
+import DetailBackup from '../pages/backups/detail.vue';
 
 // Profile
 import Profile from '../pages/profiles/index.vue';
@@ -88,6 +91,12 @@ import EventEmployeeEvent from '../pages/event/employee-event.vue';
 //Work Reporting
 import WorkReporting from '../pages/work_reporting/index.vue';
 import WorkReportingDetail from '../pages/work_reporting/detail.vue';
+
+// Overtime
+import Overtime from "../pages/overtime/index.vue";
+import CreateOvertime from "../pages/overtime/create.vue";
+import DetailOvertime from "../pages/overtime/detail.vue";
+import EmployeeOvertime from "../pages/overtime/employee-overtime.vue";
 
 //Error page
 import Error from  '../components/error.vue';
@@ -461,6 +470,16 @@ const routes =[
                 },
             },
             {
+                path: 'detail-attendance/:id',
+                name: 'Detail Attendance',
+                component: DetailAttendance,
+                meta: {
+                    title: 'POJ - Detail Attendance',
+                    requiresAuth: true,
+                    permission: 'attendance_list',
+                },
+            },
+            {
                 path: 'backup',
                 name: 'Backup',
                 component: Backup,
@@ -470,6 +489,66 @@ const routes =[
                     permission: 'backup_list',
                 },
             },
+            {
+                path: 'create-backup',
+                name: 'Create Backup',
+                component: CreateBackup,
+                meta: {
+                    title: 'POJ - Create Backup',
+                    requiresAuth: true,
+                    permission: 'backup_list',
+                },
+            },
+            {
+                path: 'detail-backup/:id',
+                name: 'Detail Backup',
+                component: DetailBackup,
+                meta: {
+                    title: 'POJ - Detail Backup',
+                    requiresAuth: true,
+                    permission: 'backup_list',
+                },
+            },
+            {
+                path: 'overtime',
+                name: 'Overtime',
+                component: Overtime,
+                meta: {
+                    title: 'POJ - Overtime',
+                    requiresAuth: true,
+                    permission: 'overtime_list',
+                },
+            },
+            {
+                path: 'overtime/create',
+                name: 'Create Overtime',
+                component: CreateOvertime,
+                meta: {
+                    title: 'POJ - Create Overtime',
+                    requiresAuth: true,
+                    permission: 'overtime_list',
+                },
+            },
+            {
+                path: 'detail-overtime/:id',
+                name: 'Detail Overtime',
+                component: DetailOvertime,
+                meta: {
+                    title: 'POJ - Detail Overtime',
+                    requiresAuth: true,
+                    permission: 'overtime_list',
+                },
+            },
+            {
+                path: 'employee-overtime',
+                name: 'Employee Overtime',
+                component: EmployeeOvertime,
+                meta: {
+                    title: 'POJ - Employee Overtime',
+                    requiresAuth: true,
+                    permission: 'overtime_list',
+                },
+            }
         ]
     },
     {
