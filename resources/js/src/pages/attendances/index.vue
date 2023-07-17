@@ -137,7 +137,7 @@ export default {
                 this.formattedCheckOut = this.formatDate(this.filter.check_out)
             }
 
-            axios.get(`/api/v1/admin/attendance?name=${this.filter.name}&check_in=${this.formattedCheckIn}&check_out=${this.formattedCheckOut}&checkin_type=${this.filter.location}&per_page=10`)
+            this.$axios.get(`/api/v1/admin/attendance?name=${this.filter.name}&check_in=${this.formattedCheckIn}&check_out=${this.formattedCheckOut}&checkin_type=${this.filter.location}`)
                 .then(response => {
                     this.attendances = response.data.data.data
                 })

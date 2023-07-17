@@ -24,8 +24,8 @@
                                         <a class="pills-link active" id="pills-app-tab" data-bs-toggle="pill" href="#pills-app" role="tab"
                                            aria-controls="pills-app" aria-selected="true">
                                             <span class="title" @click="active('pills-app-tab')">
-                                                <i data-feather="command">
-                                                    <vue-feather type="info"></vue-feather>
+                                                <i data-feather="user">
+                                                    <vue-feather type="user"></vue-feather>
                                                 </i>
                                                 Basic Information
                                             </span>
@@ -39,6 +39,17 @@
                                                     <vue-feather type="briefcase"></vue-feather>
                                                 </i>
                                                 Work Information
+                                            </span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="pills-link" id="pills-timesheet-tab" data-bs-toggle="pill" href="#pills-timesheet" role="tab"
+                                           aria-controls="pills-timesheet" aria-selected="true">
+                                            <span class="title" @click="active('pills-timesheet-tab')">
+                                                <i data-feather="watch">
+                                                    <vue-feather type="watch"></vue-feather>
+                                                </i>
+                                                Timesheet Information
                                             </span>
                                         </a>
                                     </li>
@@ -57,6 +68,7 @@
                     <div class="tab-content">
                         <basicInformation v-if="!isLoading" :employee="employeeData"/>
                         <companyInformation v-if="!isLoading" :employee="employeeData"/>
+                        <timesheetInformation v-if="!isLoading" :profile="profile"/>
                     </div>
                 </div>
             </div>
@@ -67,32 +79,56 @@
 <script>
 import basicInformation from "./basicInformation.vue";
 import companyInformation from "./companyInformation.vue";
+import timesheetInformation from "./timesheetInformation.vue";
 
 export default {
     components: {
         basicInformation,
-        companyInformation
+        companyInformation,
+        timesheetInformation
     },
     data() {
         return {
             filtered: false,
             employeeData: {},
             isLoading: true,
+            profile: {},
+            schedules: []
         }
     },
-    created() {
-         this.fetchExistingData();
+    async created() {
+        await this.getProfile();
+        await this.fetchExistingData();
+        // await this.getTimesheet();
     },
     methods: {
+        async getTimesheet() {
+            this.$axios.get(`/api/v1/admin/employee-timesheet/show-schedule?employee_id=${this.profile.employee_id}`)
+                .then(response => {
+                    this.schedules = response.data.data;
+                })
+                .catch(error => {
+                    console.log(error);
+                });
+
+            // return this.fullDate;
+            return this.schedules;
+        },
         active(tabId) {
             document.getElementById(tabId).classList.add('active');
         },
         collapse() {
             this.filtered = !this.filtered
         },
+        async getProfile() {
+            await this.$axios.get('api/v1/admin/user/profile').then(response => {
+                this.profile = response.data
+            }).catch(error => {
+                console.error(error);
+            });
+        },
         async fetchExistingData() {
-            const ls = JSON.parse(localStorage.getItem('USER_STORAGE_KEY'));
-            await this.$axios.get(`api/v1/admin/employee/view/${this.$route.params.id}`)
+            await this.$axios.get(`api/v1/admin/employee/view/${this.profile.employee_id}`)
                 .then(response => {
                     this.employeeData = response.data.data
                     this.isLoading = false;

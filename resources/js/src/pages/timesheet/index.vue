@@ -164,14 +164,14 @@ export default {
     methods: {
         async getTimesheet(page) {
             try {
-                const response = await axios.get(`api/v1/admin/employee-timesheet?limit=10`);
+                const response = await this.$axios.get(`api/v1/admin/employee-timesheet?limit=10`);
                 this.timesheetData = response.data.data;
             } catch (error) {
                 console.log(error);
             }
         },
         saveChanges() {
-            axios.post('api/v1/admin/employee-timesheet/create', this.timesheet)
+            this.$axios.post('api/v1/admin/employee-timesheet/create', this.timesheet)
                 .then(() => {
                     this.basic_success_alert("Data saved successfully!");
                     this.getTimesheet();
@@ -187,7 +187,7 @@ export default {
             this.basic_warning_alert(id);
         },
         getSingleData(id) {
-            axios.get(`api/v1/admin/employee-timesheet/view/${id}`)
+            this.$axios.get(`api/v1/admin/employee-timesheet/view/${id}`)
                 .then(response => {
                     this.singleTimesheet = response.data.data;
                 })
@@ -196,7 +196,7 @@ export default {
                 })
         },
         updateTimesheet(id) {
-            axios.put(`api/v1/admin/employee-timesheet/update/${id}`, this.singleTimesheet)
+            this.$axios.put(`api/v1/admin/employee-timesheet/update/${id}`, this.singleTimesheet)
                 .then(() => {
                     this.basic_success_alert("Data updated successfully!");
                     this.getTimesheet();
@@ -236,7 +236,7 @@ export default {
                 cancelButtonColor: '#efefef',
             }).then((result)=>{
                 if(result.value){
-                    axios.delete(`api/v1/admin/employee-timesheet/delete/${id}`)
+                    this.$axios.delete(`api/v1/admin/employee-timesheet/delete/${id}`)
                         .then(() => {
                             this.basic_success_alert("Data successfully deleted!");
                             this.getTimesheet();

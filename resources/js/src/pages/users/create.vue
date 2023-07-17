@@ -68,7 +68,7 @@ export default {
     },
     methods: {
         async getRoles() {
-            await axios.get(`/api/v1/admin/user/roles`)
+            await this.$axios.get(`/api/v1/admin/user/roles`)
                 .then(res => {
                     this.roles = res.data.data;
                 })
@@ -85,7 +85,7 @@ export default {
             let roles = this.user.roles.map(value => value.id);
             let employee_id = this.user.employee_id;
 
-            await axios.post(`/api/v1/admin/user/save`, {
+            await this.$axios.post(`/api/v1/admin/user/save`, {
                 id: id,
                 name: name,
                 username: username,

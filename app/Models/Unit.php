@@ -22,11 +22,6 @@ class Unit extends Model
     use HasFactory;
     use QueriesExpressions;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
         'value',
@@ -38,7 +33,6 @@ class Unit extends Model
     protected $casts = [
         'create_date'  => 'date:Y-m-d',
         'write_date'  => 'date:Y-m-d',
-//        'write_date' => 'datetime:Y-m-d H:00',
     ];
 
     public function level(): BelongsTo
@@ -48,16 +42,16 @@ class Unit extends Model
 
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(Unit::class, 'parent_unit_id', 'relation_id')
-            ->with('parent');
+        return $this->belongsTo(Unit::class, 'parent_unit_id', 'relation_id');
     }
 
-    public function child(): HasMany
+    public function children(): HasMany
     {
         return $this->hasMany(Unit::class, 'parent_unit_id', 'relation_id');
     }
 
-    public function workLocations()  {
+    public function workLocations(): HasMany
+    {
         return $this->hasMany(WorkLocation::class, 'reference_id', 'id');
     }
 

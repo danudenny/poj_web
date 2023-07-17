@@ -58,7 +58,7 @@ export default {
             let id = this.permission.id;
             let name = this.permission.name;
 
-            await axios.post(`/api/v1/admin/permission/update`, {
+            await this.$axios.post(`/api/v1/admin/permission/update`, {
                 id: id,
                 name: name,
             })

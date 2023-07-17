@@ -2,32 +2,26 @@
 
 namespace App\Services\Core;
 
+use App\Helpers\UnitHelper;
 use App\Models\Role;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\BaseService;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 class UnitService extends BaseService
 {
-
-    public function allUnitNoFilter($request) {
-        $units = Unit::query();
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Success Fetch Data',
-            'data' => $units->paginate($request->per_page ?? 10)
-        ]);
-    }
     /**
      * @param $data
-     * @return mixed
+     * @return JsonResponse
      * @throws Exception
      */
-    public function index($data): mixed
+    public function index($data): JsonResponse
     {
         try {
             $parentLevel = intval($data->unit_level);
@@ -89,19 +83,17 @@ class UnitService extends BaseService
             ]);
 
 
-        } catch (\InvalidArgumentException $e) {
-            throw new \InvalidArgumentException($e->getMessage());
+        } catch (InvalidArgumentException $e) {
+            throw new InvalidArgumentException($e->getMessage());
         } catch (Exception $e) {
             throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
 
     }
 
-    public function paginatedListUnit(Request $request) {
+    public function paginatedListUnit(Request $request): JsonResponse
+    {
         try {
-            /**
-             * @var User $user
-             */
             $user = $request->user();
 
             $query = Unit::query();
@@ -130,19 +122,20 @@ class UnitService extends BaseService
                 'message' => 'Data retrieved successfully',
                 'data' => $this->list($query, $request)
             ]);
-        } catch (\InvalidArgumentException $e) {
-            throw new \InvalidArgumentException($e->getMessage());
+        } catch (InvalidArgumentException $e) {
+            throw new InvalidArgumentException($e->getMessage());
         } catch (Exception $e) {
             throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 
     /**
+     * @param $data
      * @param $id
-     * @return mixed
+     * @return JsonResponse
      * @throws Exception
      */
-    public function view($data, $id): mixed
+    public function view($data, $id): JsonResponse
     {
         try {
             $parentLevel = intval($data->unit_level);
@@ -214,14 +207,15 @@ class UnitService extends BaseService
                 'data' => $nestedUnits
             ]);
 
-        } catch (\InvalidArgumentException $e) {
-            throw new \InvalidArgumentException($e->getMessage());
+        } catch (InvalidArgumentException $e) {
+            throw new InvalidArgumentException($e->getMessage());
         } catch (Exception $e) {
             throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
     }
 
-    public function update($data, $id) {
+    public function update($data, $id): JsonResponse
+    {
         DB::beginTransaction();
         try {
             $units = Unit::where('id', $id)->first();
@@ -251,5 +245,16 @@ class UnitService extends BaseService
                 'message' => $e->getMessage()
             ]);
         }
+    }
+
+    public function getRelatedUnit(): JsonResponse
+    {
+        $empUnit = auth()->user()->employee->getRelatedUnit();
+        $flatUnit = UnitHelper::flattenUnits($empUnit);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Success Fetch Data',
+            'data' => $flatUnit
+        ]);
     }
 }

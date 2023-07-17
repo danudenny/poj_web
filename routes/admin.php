@@ -34,6 +34,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     Route::group(['prefix' => 'user'], function () {
         Route::get('/', [UserController::class, 'index']);
         Route::get('view', [UserController::class, 'view']);
+        Route::get('profile', [UserController::class, 'profile']);
         Route::get('/roles', [UserController::class, 'getRoles']);
         Route::post('save', [UserController::class, 'save']);
         Route::post('update', [UserController::class, 'update']);
@@ -119,6 +120,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::post('assign-schedule', [EmployeeTimesheetController::class, 'assignSchedule']);
         Route::get('get-schedule', [EmployeeTimesheetController::class, 'getEmployeeSchedule']);
         Route::get('view-schedule', [EmployeeTimesheetController::class, 'showEmployeeSchedule']);
+        Route::get('show-schedule', [EmployeeTimesheetController::class, 'showEmployeeScheduleById']);
         Route::put('update-schedule', [EmployeeTimesheetController::class, 'updateEmployeeSchedule']);
         Route::delete('delete-schedule', [EmployeeTimesheetController::class, 'deleteEmployeeSchedule']);
         Route::get('periods', [EmployeeTimesheetController::class, 'getPeriods']);
@@ -171,10 +173,12 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     // Begin Unit
     Route::group(['prefix' => 'unit'], function () {
         Route::get('/', [UnitController::class, 'index']);
+        Route::get('related-unit', [UnitController::class, 'relatedUnit']);
         Route::get('view/{id}', [UnitController::class, 'view']);
         Route::get('all', [UnitController::class, 'allUnitNoFilter']);
         Route::get('paginated', [UnitController::class, 'paginatedListUnits']);
         Route::put('update/{id}', [UnitController::class, 'update']);
+
     });
     // End Unit
 

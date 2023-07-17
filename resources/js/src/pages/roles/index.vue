@@ -176,7 +176,7 @@ export default {
                 cancelButtonColor: '#efefef',
             }).then((result)=>{
                 if(result.value){
-                    axios.delete(`api/v1/admin/role/delete?id=${id}`)
+                    this.$axios.delete(`api/v1/admin/role/delete?id=${id}`)
                         .then(async (res) => {
                             const pluck = this.roles.filter((item) => item.id !== id);
                             this.loading = true

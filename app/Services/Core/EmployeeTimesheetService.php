@@ -288,7 +288,9 @@ class EmployeeTimesheetService extends BaseService {
     public function showEmployeeSchedule($request): JsonResponse
     {
         $schedule = EmployeeTimesheetSchedule::with(['employee', 'timesheet', 'period'])
-            ->where('date', $request->date)
+            ->when($request->date, function ($query) use ($request) {
+                $query->where('date', $request->date);
+            })
             ->when($request->employee_id, function ($query) use ($request) {
                 $query->whereHas('employee', function ($query) use ($request) {
                     $query->where('id', $request->employee_id);
@@ -302,6 +304,33 @@ class EmployeeTimesheetService extends BaseService {
             'data' => $schedule
         ], 200);
     }
+
+    public function showEmployeeScheduleById($request): JsonResponse
+    {
+
+        $schedule = EmployeeTimesheetSchedule::with(['timesheet', 'period'])
+            ->when($request->date, function ($query) use ($request) {
+                $query->where('date', $request->date);
+            })
+            ->when($request->month, function ($query) use ($request) {
+                $query->whereHas('period', function ($query) use ($request) {
+                    $query->where('month', $request->month);
+                });
+            })
+            ->when($request->employee_id, function ($query) use ($request) {
+                $query->whereHas('employee', function ($query) use ($request) {
+                    $query->where('id', $request->employee_id);
+                });
+            })
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data fetched successfully',
+            'data' => $schedule
+        ], 200);
+    }
+
 
     public function updateSchedule($request): JsonResponse
     {

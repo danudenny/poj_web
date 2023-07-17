@@ -4,77 +4,99 @@
         <div class="col-sm-12">
             <form class="card">
                 <div class="card-body">
-                    <div>
-                        <button type="button" v-if="editing" class="btn btn-warning" @click="editData">
-                            <i class="fa fa-pencil-square"></i> Edit Data
-                        </button>
-                        <div v-else class="d-flex justify-content-end mb-4 column-gap-2">
-                            <button type="button" class="btn btn-success" @click="saveData">
-                                <i class="fa fa-save"></i> Save Data
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <ul class="nav nav-pills nav-primary" id="pills-icontab" role="tablist">
+                                <li class="nav-item"><a class="nav-link active" id="pills-iconhome-tab" data-bs-toggle="pill" href="#pills-iconhome" role="tab" aria-controls="pills-iconhome" aria-selected="true"><i class="icofont icofont-info"></i>Basic Information</a></li>
+                                <li class="nav-item"><a class="nav-link" id="pills-iconprofile-tab" data-bs-toggle="pill" href="#pills-iconprofile" role="tab" aria-controls="pills-iconprofile" aria-selected="false"><i class="icofont icofont-sub-listing"></i>Sub Unit</a></li>
+                                <li class="nav-item"><a class="nav-link" id="pills-iconcontact-tab" data-bs-toggle="pill" href="#pills-iconcontact" role="tab" aria-controls="pills-iconcontact" aria-selected="false"><i class="icofont icofont-file-document"></i>Work Reporting</a></li>
+                                <li class="nav-item"><a class="nav-link" id="pills-iconcontact-tab" data-bs-toggle="pill" href="#pills-iconcontact" role="tab" aria-controls="pills-iconcontact" aria-selected="false"><i class="icofont icofont-clock-time"></i>Timesheet</a></li>
+                                <li class="nav-item"><a class="nav-link" id="pills-iconcontact-tab" data-bs-toggle="pill" href="#pills-iconcontact" role="tab" aria-controls="pills-iconcontact" aria-selected="false"><i class="icofont icofont-calendar"></i>Timesheet Schedule</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <button class="btn btn-info" @click="$router.push('/corporates')">
+                                <i class="icofont icofont-double-left"></i>&nbsp;Back
                             </button>
-                            <button type="button" class="btn btn-danger" @click="closeEdit">
-                                <i class="fa fa-times-circle"></i> Cancel Edit
-                            </button>
                         </div>
                     </div>
-                    <hr>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="mb-3">
-                                <label class="form-label">Name</label>
-                                <input class="form-control" type="text" v-model="item.name" disabled>
+                    <div class="tab-content" id="pills-icontabContent">
+                        <hr>
+                        <div class="tab-pane fade show active" id="pills-iconhome" role="tabpanel" aria-labelledby="pills-iconhome-tab">
+                            <div>
+                                <button type="button" v-if="editing" class="btn btn-warning" @click="editData">
+                                    <i class="fa fa-pencil-square"></i> Edit Data
+                                </button>
+                                <div v-else class="d-flex justify-content-end column-gap-2">
+                                    <button type="button" class="btn btn-success" @click="saveData">
+                                        <i class="fa fa-save"></i> Save Data
+                                    </button>
+                                    <button type="button" class="btn btn-danger" @click="closeEdit">
+                                        <i class="fa fa-times-circle"></i> Cancel Edit
+                                    </button>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="mb-3">
+                                        <label class="form-label">Name</label>
+                                        <input class="form-control" type="text" v-model="item.name" disabled>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Latitude</label>
+                                        <input class="form-control" type="text" v-model="item.lat" :disabled="editing">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Early Tolerance (minutes)</label>
+                                        <input class="form-control" type="text" v-model="item.early_buffer" :disabled="editing">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Radius Buffer (meters)</label>
+                                        <input class="form-control" type="text" v-model="item.radius" :disabled="editing">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Longitude</label>
+                                        <input class="form-control" type="text" v-model="item.long" :disabled="editing">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Late Tolerance (minutes)</label>
+                                        <input class="form-control" type="text" v-model="item.late_buffer" :disabled="editing">
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Latitude</label>
-                                <input class="form-control" type="text" v-model="item.lat" :disabled="editing">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Early Tolerance (minutes)</label>
-                                <input class="form-control" type="text" v-model="item.early_buffer" :disabled="editing">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Radius Buffer (meters)</label>
-                                <input class="form-control" type="text" v-model="item.radius" :disabled="editing">
+                        <div class="tab-pane fade" id="pills-iconprofile" role="tabpanel" aria-labelledby="pills-iconprofile-tab">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <table class="table table-striped table-bordered">
+                                        <thead>
+                                        <tr>
+                                            <th>
+                                                Unit Kantor Wilayah
+                                                <input class="form-control mt-2" type="text" v-model="search" @input="handleInputChange" placeholder="Search">
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr v-for="(it, index) in item.child" :key="it" v-if="item.child && item.child.length > 0">
+                                            <td>{{ it.name }}</td>
+                                        </tr>
+                                        <tr v-else>
+                                            <td><span>No Data Available</span></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Longitude</label>
-                                <input class="form-control" type="text" v-model="item.long" :disabled="editing">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Late Tolerance (minutes)</label>
-                                <input class="form-control" type="text" v-model="item.late_buffer" :disabled="editing">
-                            </div>
+                        <div class="tab-pane fade" id="pills-iconcontact" role="tabpanel" aria-labelledby="pills-iconcontact-tab">
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <table class="table table-striped table-bordered">
-                                <thead>
-                                <tr>
-                                    <th>
-                                        Unit Kantor Wilayah
-                                        <input class="form-control mt-2" type="text" v-model="search" @input="handleInputChange" placeholder="Search">
-                                    </th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr v-for="(it, index) in item.child" :key="it" v-if="item.child && item.child.length > 0">
-                                    <td>{{ it.name }}</td>
-                                </tr>
-                                <tr v-else>
-                                    <td><span>No Data Available</span></td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer text-end">
-                    <button class="btn btn-secondary" @click="$router.push('/corporates')">Back</button>
                 </div>
             </form>
         </div>

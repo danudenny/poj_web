@@ -49,12 +49,17 @@ export default {
             syncLoading: false,
             table: null,
             countdown: 0,
-            timerId: null
+            timerId: null,
+            kanwil: [],
+            cabang: [],
+            outlet: [],
+            area: []
         }
     },
     async mounted() {
         await this.getEmployees();
         this.initializeEmployeesTable();
+        await this.getUnits();
     },
     methods: {
         startCountdown() {
@@ -67,8 +72,7 @@ export default {
             this.loading = true;
             const ls = JSON.parse(localStorage.getItem('USER_STORAGE_KEY'));
             await axios
-                // .get(`/api/v1/admin/employee?unit_id=${parseInt(ls.unit_id)}&sort=asc`)
-                .get(`/api/v1/admin/employee?sort=asc`)
+                .get(`/api/v1/admin/employee`)
                 .then(response => {
                     this.employees = response.data.data;
                 })
@@ -80,6 +84,7 @@ export default {
         initializeEmployeesTable() {
             const ls = localStorage.getItem('my_app_token')
             this.table = new Tabulator(this.$refs.employeesTable, {
+                paginationCounter:"rows",
                 ajaxURL: '/api/v1/admin/employee',
                 ajaxConfig: {
                     headers: {
@@ -114,9 +119,20 @@ export default {
                         headerFilter:"input"
                     },
                     {
-                        title: 'Mobile',
-                        field: 'mobile_phone',
-                        headerFilter:"input"
+                        title: 'Unit',
+                        field: '',
+                        formatter: function (cell, formatterParams, onRendered) {
+                            const unit = cell.getRow().getData();
+                            if (unit.outlet === null) {
+                                return `<span>${unit.cabang.name}</span>`
+                            } else if (unit.cabang === null && false) {
+                                return unit.area.name;
+                            } else if (unit.area === null && false) {
+                                return unit.kanwil.name;
+                            } else {
+                                return unit.outlet.name;
+                            }
+                        },
                     },
                     {
                         title: 'Email',
