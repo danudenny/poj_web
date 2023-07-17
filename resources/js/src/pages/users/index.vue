@@ -106,7 +106,6 @@ export default {
                 layout: 'fitColumns',
                 fitColumns: true,
                 responsiveLayout: true,
-                progressiveLoad: true,
                 filterMode:"remote",
                 columns: [
                     {
