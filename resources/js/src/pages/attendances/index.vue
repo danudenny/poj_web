@@ -139,7 +139,7 @@ export default {
 
             this.$axios.get(`/api/v1/admin/attendance?name=${this.filter.name}&check_in=${this.formattedCheckIn}&check_out=${this.formattedCheckOut}&checkin_type=${this.filter.location}`)
                 .then(response => {
-                    this.attendances = response.data.data.data
+                    this.attendances = response.data.data
                 })
                 .catch(error => {
                     console.log(error)

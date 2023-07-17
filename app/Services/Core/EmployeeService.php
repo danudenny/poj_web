@@ -24,7 +24,7 @@ class EmployeeService extends BaseService
     {
         $auth = Auth::user();
         try {
-            $employees = Employee::query()->with('job');
+            $employees = Employee::query()->with(['kanwil', 'area', 'cabang', 'outlet', 'job']);
             $employeesData = [];
 
             $highestPriorityRole = null;
