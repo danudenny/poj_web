@@ -121,7 +121,7 @@
         {
             "title": "Timesheet",
             "icon": "user",
-            "iconf": "fill-learning",
+            "iconf": "fill-user",
             "type": "sub",
             "active": false,
             "permission" : "timesheet_list",

@@ -8,11 +8,10 @@
                         <div class="col-sm-6 col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Role Level</label>
-                                <select class="form-control" v-model="roles.role_level" id="level" >
-                                    <option :selected="roles.role_level === 'superadmin' ? 'selected' : ''">Superadmin</option>
-                                    <option :selected="roles.role_level === 'admin' ? 'selected' : ''">Admin</option>
-                                    <option :selected="roles.role_level === 'staff' ? 'selected' : ''">User / Staff</option>
-                                    <option :selected="roles.role_level === 'guest' ? 'selected' : ''">Guest</option>
+                                <select class="form-control" v-model="roles.role_level" id="level">
+                                    <option value="superadmin" :selected="roles.role_level === 'superadmin'">Superadmin</option>
+                                    <option value="admin" :selected="roles.role_level === 'admin'">Admin</option>
+                                    <option value="staff" :selected="roles.role_level === 'staff'">User / Staff</option>
                                 </select>
                             </div>
                             <div class="mb-3">
@@ -126,6 +125,7 @@ export default {
                 id: this.roles.id,
                 name: this.roles.name,
                 is_active: this.roles.is_active,
+                role_level: this.roles.role_level,
                 permission: getData
             })
             .then(res => {
