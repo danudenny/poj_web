@@ -250,7 +250,7 @@ export default {
             }).then(response => {
                 localStorage.removeItem('selectedEmployees');
                 useToast().success(response.data.message , { position: 'bottom-right' });
-                this.$router.push('/management/timesheet-assign');
+                this.$router.push('/timesheet-assignment');
             }).catch(error => {
                 useToast().error(error.response.data.message , { position: 'bottom-right' });
             });
