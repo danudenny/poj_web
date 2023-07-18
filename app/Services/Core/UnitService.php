@@ -3,6 +3,7 @@
 namespace App\Services\Core;
 
 use App\Helpers\UnitHelper;
+use App\Models\Employee;
 use App\Models\Role;
 use App\Models\Unit;
 use App\Models\User;
@@ -249,12 +250,21 @@ class UnitService extends BaseService
 
     public function getRelatedUnit(): JsonResponse
     {
-        $empUnit = auth()->user()->employee->getRelatedUnit();
-        $flatUnit = UnitHelper::flattenUnits($empUnit);
+        $roles = auth()->user()->roles;
+        $datas = [];
+        foreach ($roles as $role) {
+            if ($role->role_level === 'superadmin') {
+                $datas = Unit::all();
+//                $datas = UnitHelper::flattenUnits($empUnit);
+            } else {
+                $empUnit = auth()->user()->employee->getRelatedUnit();
+                $datas = UnitHelper::flattenUnits($empUnit);
+            }
+        }
         return response()->json([
             'status' => 'success',
             'message' => 'Success Fetch Data',
-            'data' => $flatUnit
+            'data' => $datas
         ]);
     }
 }

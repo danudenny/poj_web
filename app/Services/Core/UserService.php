@@ -375,7 +375,7 @@ class UserService extends BaseService
 
     public function profile() {
         $auth = auth()->user();
-        $user = User::with(['employee', 'employee.job'])->where('id', $auth->id)
+        $user = User::with(['employee', 'employee.job', 'roles', 'roles.permissions'])->where('id', $auth->id)
             ->first();
 
         $user['unit'] = $user->employee->getLastUnit();

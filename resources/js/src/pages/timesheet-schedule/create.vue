@@ -13,19 +13,32 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="row">
-                                        <div class="col-md-3 mb-3">
+                                        <div class="col-md-6 mb-3">
                                             <label>Periods :</label>
                                             <select v-model="period_id" class="form-control" >
                                                 <option value="">Select Periods</option>
                                                 <option :value="period.id" v-for="period in periods">{{ period.month }} {{period.year}}</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-3 mb-3">
+                                        <div class="col-md-6 mb-3">
                                             <label>Date :</label>
                                             <select v-model="date" class="form-control" >
                                                 <option value="">Select Date</option>
                                                 <option :value="td" v-for="td in totalDays">{{ td }}</option>
                                             </select>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label>Unit :</label>
+                                            <multiselect
+                                                v-model="selectedOptions"
+                                                placeholder="Select Unit"
+                                                label="name"
+                                                track-by="name"
+                                                :options="units"
+                                                :multiple="false"
+                                                @select="selectedUnit"
+                                            >
+                                            </multiselect>
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label>Timesheet :</label>
@@ -77,16 +90,30 @@ export default {
             pageSize: 10,
             filterName: "",
             filterUnit: "",
+            units: [],
+            selectedOptions: [],
+            visibleOptions: [],
         }
     },
     async mounted() {
         await this.getPeriods();
         await this.getTotalDays();
-        await this.getTimesheet();
         await this.getEmployee();
+        await this.getUnit();
         await this.initializeEmployeeTable();
     },
     methods: {
+        async selectedUnit() {
+            await this.getTimesheet(this.selectedOptions.id)
+        },
+        async getUnit() {
+            await this.$axios.get(`api/v1/admin/unit/related-unit`)
+                .then(response => {
+                    this.units = response.data.data;
+                }).catch(error => {
+                    console.error(error);
+                });
+        },
         async getTotalDays() {
             const date = new Date();
             const year = date.getFullYear();
@@ -97,7 +124,7 @@ export default {
             }
         },
         async getPeriods() {
-          await this.$axios.get(`/api/v1/admin/employee-timesheet/periods`)
+          await this.$axios.get(`/api/v1/admin/periods`)
               .then(response => {
                     this.periods = response.data.data;
                     this.periods.forEach((item, index) => {
@@ -108,14 +135,18 @@ export default {
                   console.error(error);
               });
         },
-        async getTimesheet() {
-          await this.$axios.get(`/api/v1/admin/employee-timesheet`)
-              .then(response => {
-                  this.timesheets = response.data.data.data;
-              })
-              .catch(error => {
-                  console.error(error);
-              });
+        async getTimesheet(id) {
+            try {
+                await this.$axios.get(`api/v1/admin/employee-timesheet/${id}`)
+                    .then(response => {
+                        this.timesheets = response.data.data.data;
+                        console.log(this.timesheets)
+                    }).catch(error => {
+                        console.error(error);
+                    });
+            } catch (error) {
+                console.log(error);
+            }
         },
         async getEmployee() {
             this.loading = true;
@@ -215,13 +246,13 @@ export default {
                 employee_ids: ls,
                 period_id: this.period_id,
                 timesheet_id: this.timesheet_id,
-                date: this.date
+                date: this.date,
             }).then(response => {
                 localStorage.removeItem('selectedEmployees');
                 useToast().success(response.data.message , { position: 'bottom-right' });
-                this.$router.push('/timesheet-assign');
+                this.$router.push('/management/timesheet-assign');
             }).catch(error => {
-                useToast().error(response.data.message , { position: 'bottom-right' });
+                useToast().error(error.response.data.message , { position: 'bottom-right' });
             });
         }
     }

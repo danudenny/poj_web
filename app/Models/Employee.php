@@ -217,9 +217,7 @@ class Employee extends Model
 
     public function getRelatedUnit(): array
     {
-        $areas = [$this->kanwil, $this->area, $this->cabang, $this->outlet];
-        $workLocation = $this->getLastUnits($areas);
-
+        $workLocation = $this->getLastUnit();
         $parentRelationId = $workLocation->relation_id;
 
         $otherUnits = Unit::with('children')->where('parent_unit_id', $parentRelationId)
