@@ -16,34 +16,25 @@ class JobService extends BaseService
 {
     public function index($id): JsonResponse
     {
-        $jobs = Job::select(
-            'jobs.name',
-            'jobs.id',
-            'u.relation_id',
-            'u.id as units',
-            'uj.unit_id',
-            'uj.is_camera',
-            'uj.is_upload',
-            'uj.is_reporting',
-            'uj.is_mandatory_reporting'
-        )
-            ->leftJoin('employees as emp', 'jobs.odoo_job_id', '=', 'emp.job_id')
-            ->leftJoin('units as u', 'u.relation_id', '=', 'emp.corporate_id')
-            ->leftJoin('unit_jobs as uj', 'jobs.id', '=', 'uj.job_id')
-            ->whereNotNull('jobs.name')
+        $subquery = DB::table('jobs as j')
+            ->select('j.id', 'j.name', 'u.id AS unitID', 'u.relation_id')
+            ->join('employees as e', 'j.odoo_job_id', '=', 'e.job_id')
+            ->join('units as u', function ($join) {
+                $join->on('u.relation_id', '=', DB::raw('CAST(e.corporate_id AS BIGINT)'))
+                    ->orWhere('u.relation_id', '=', DB::raw('CAST(e.kanwil_id AS BIGINT)'))
+                    ->orWhere('u.relation_id', '=', DB::raw('CAST(e.area_id AS BIGINT)'))
+                    ->orWhere('u.relation_id', '=', DB::raw('CAST(e.cabang_id AS BIGINT)'))
+                    ->orWhere('u.relation_id', '=', DB::raw('CAST(e.outlet_id AS BIGINT)'));
+            })
             ->where('u.id', $id)
-            ->groupBy(
-                'jobs.name',
-                'jobs.id',
-                'u.relation_id',
-                'u.id',
-                'uj.is_camera',
-                'uj.unit_id',
-                'uj.is_upload',
-                'uj.is_reporting',
-                'uj.is_mandatory_reporting'
-            )
+            ->groupBy('j.id', 'u.id');
+
+        $jobs = DB::table(DB::raw("({$subquery->toSql()}) as d"))
+            ->mergeBindings($subquery)
+            ->leftJoin('unit_jobs as uj', 'd.id', '=', 'uj.job_id')
+            ->select('d.*', 'uj.unit_id', 'uj.is_camera', 'uj.is_upload', 'uj.is_reporting', 'uj.is_mandatory_reporting')
             ->get();
+
 
         return response()->json([
             'status' => 'success',

@@ -68,7 +68,7 @@ export default {
         },
         getScheduleData() {
             this.loading = true
-            this.$axios.get('/api/v1/admin/employee-timesheet/get-schedule')
+            this.$axios.get('/api/v1/admin/timesheet-schedule/get-schedule')
                 .then((response) => {
                     this.schedules = response.data.data
                     this.loading = false

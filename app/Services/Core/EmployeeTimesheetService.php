@@ -251,7 +251,6 @@ class EmployeeTimesheetService extends BaseService {
         $schedule = EmployeeTimesheetSchedule::query();
         $schedule->with(['employee', 'employee.kanwil', 'employee.area', 'employee.cabang','employee.outlet','timesheet', 'period']);
         if ($roles->hasRole('superadmin')) {
-//            $getPeriod = Period::where('id', request()->query('period_id'))->first();
             $schedule = $schedule
                 ->orderBy('date')
                 ->orderBy('period_id')
@@ -331,7 +330,6 @@ class EmployeeTimesheetService extends BaseService {
             'data' => $schedule
         ], 200);
     }
-
 
     public function updateSchedule($request): JsonResponse
     {
@@ -422,17 +420,5 @@ class EmployeeTimesheetService extends BaseService {
                 'data' => ''
             ], 500);
         }
-    }
-
-    public function getPeriods(): JsonResponse
-    {
-        $currentYear = Carbon::now()->year;
-        $periods = Period::where('year', $currentYear)->get();
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Data fetched successfully',
-            'data' => $periods
-        ], 200);
     }
 }

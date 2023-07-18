@@ -14,6 +14,7 @@ use App\Http\Controllers\API\EventController;
 use App\Http\Controllers\API\IncidentController;
 use App\Http\Controllers\API\JobController;
 use App\Http\Controllers\API\OvertimeController;
+use App\Http\Controllers\API\PeriodController;
 use App\Http\Controllers\API\PermissionController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\SettingController;
@@ -118,12 +119,17 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::put('update/{id}', [EmployeeTimesheetController::class, 'edit']);
         Route::delete('delete/{id}', [EmployeeTimesheetController::class, 'delete']);
         Route::post('assign-schedule', [EmployeeTimesheetController::class, 'assignSchedule']);
-        Route::get('get-schedule', [EmployeeTimesheetController::class, 'getEmployeeSchedule']);
-        Route::get('view-schedule', [EmployeeTimesheetController::class, 'showEmployeeSchedule']);
-        Route::get('show-schedule', [EmployeeTimesheetController::class, 'showEmployeeScheduleById']);
         Route::put('update-schedule', [EmployeeTimesheetController::class, 'updateEmployeeSchedule']);
         Route::delete('delete-schedule', [EmployeeTimesheetController::class, 'deleteEmployeeSchedule']);
         Route::get('periods', [EmployeeTimesheetController::class, 'getPeriods']);
+    });
+    Route::group(['prefix' => 'timesheet-schedule'], function() {
+        Route::get('get-schedule', [EmployeeTimesheetController::class, 'getEmployeeSchedule']);
+        Route::get('view-schedule', [EmployeeTimesheetController::class, 'showEmployeeSchedule']);
+        Route::get('show-schedule', [EmployeeTimesheetController::class, 'showEmployeeScheduleById']);
+    });
+    Route::group(['prefix' => 'periods'], function() {
+        Route::get('', [PeriodController::class, 'index']);
     });
     // End employee timesheet
 

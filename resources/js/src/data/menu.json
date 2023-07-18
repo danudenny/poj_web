@@ -127,14 +127,14 @@
             "permission" : "timesheet_list",
             "children": [
                 {
-                    "path": "timesheet",
+                    "path": "management/timesheet",
                     "title": "Timesheet Master",
                     "type": "link",
                     "active": false,
                     "permission" : "timesheet_list"
                 },
                 {
-                    "path": "timesheet-assign",
+                    "path": "management/timesheet-assign",
                     "title": "Timesheet Assignments",
                     "type": "link",
                     "active": false,

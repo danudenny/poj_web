@@ -6,6 +6,7 @@ use App\Http\Controllers\BaseController;
 use App\Http\Requests\EmployeeTimesheet\CreateEmployeeTimesheetRequest;
 use App\Http\Requests\EmployeeTimesheet\UpdateEmployeeTimesheetRequest;
 use App\Services\Core\EmployeeTimesheetService;
+use App\Services\Core\PeriodService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -110,11 +111,6 @@ class EmployeeTimesheetController extends BaseController
     public function deleteEmployeeSchedule(Request $request): JsonResponse
     {
         return $this->employeeTimesheetService->deleteSchedule($request);
-    }
-
-    public function getPeriods(): JsonResponse
-    {
-        return $this->employeeTimesheetService->getPeriods();
     }
 
 }

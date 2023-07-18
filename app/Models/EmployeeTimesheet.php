@@ -17,6 +17,7 @@ class EmployeeTimesheet extends Model
         'start_time',
         'end_time',
         'is_active',
+        'unit_id'
     ];
 
     public function employeeDetails(): HasMany
