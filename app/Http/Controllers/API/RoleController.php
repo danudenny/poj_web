@@ -59,10 +59,7 @@ class RoleController extends BaseController
     {
         try {
             $id = $request->only('id')['id'];
-            $result = $this->roleService->view($id);
-
-            return $this->sendSuccess($result, self::SUCCESS_FETCH);
-
+            return $this->roleService->view($id);
         } catch (\Exception | \InvalidArgumentException $error) {
             return $this->sendError($error->getMessage());
         }

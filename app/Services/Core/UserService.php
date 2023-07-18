@@ -5,6 +5,7 @@ namespace App\Services\Core;
 use App\Http\Resources\RoleResource;
 use App\Http\Resources\UserResource;
 use App\Models\Role;
+use App\Models\Unit;
 use App\Models\User;
 use App\Services\BaseService;
 use App\Services\MinioService;
@@ -374,13 +375,10 @@ class UserService extends BaseService
 
     public function profile() {
         $auth = auth()->user();
-        $user = User::where('id', $auth->id)
+        $user = User::with(['employee', 'employee.job'])->where('id', $auth->id)
             ->first();
 
         $user['unit'] = $user->employee->getLastUnit();
-
-        $job = $this->jobService->getById($user['unit']->id);
-        $user['unit'] = $job->getData()->data;
 
         return response()->json([
             'status' => 'success',

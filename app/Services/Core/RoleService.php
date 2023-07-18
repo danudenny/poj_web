@@ -10,6 +10,7 @@ use App\Models\Role;
 use App\Services\BaseService;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -47,10 +48,10 @@ class RoleService extends BaseService
 
     /**
      * @param $id
-     * @return RoleResource
+     * @return JsonResponse
      * @throws Exception
      */
-    public function view($id): RoleResource
+    public function view($id): JsonResponse
     {
         try {
             $role = ExtendRole::with('permissions')->firstWhere('id', $id);
@@ -58,7 +59,10 @@ class RoleService extends BaseService
             if (!$role) {
                 throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
-            return RoleResource::make($role);
+            return response()->json([
+                'status' => 'success',
+                'data' => $role
+            ], 200);
 
         } catch (InvalidArgumentException $e) {
             throw new InvalidArgumentException($e->getMessage());
