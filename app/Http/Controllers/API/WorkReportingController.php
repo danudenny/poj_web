@@ -40,4 +40,9 @@ class WorkReportingController extends Controller
     {
         return $this->workReportingService->delete($id);
     }
+
+    public function createMandatoryWorkReporting(Request $request): JsonResponse
+    {
+        return $this->workReportingService->createMandatoryWorkReporting($request);
+    }
 }

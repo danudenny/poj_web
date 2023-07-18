@@ -305,9 +305,8 @@ class EmployeeTimesheetService extends BaseService {
         ], 200);
     }
 
-    public function showEmployeeScheduleById($request): JsonResponse
+    public function scheduleById($request): JsonResponse
     {
-
         $schedule = EmployeeTimesheetSchedule::with(['timesheet', 'period'])
             ->when($request->date, function ($query) use ($request) {
                 $query->where('date', $request->date);
