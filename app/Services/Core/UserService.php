@@ -3,6 +3,7 @@
 namespace App\Services\Core;
 
 use App\Http\Resources\RoleResource;
+use App\Http\Resources\UserResource;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\BaseService;
@@ -15,10 +16,12 @@ use Illuminate\Support\Facades\Hash;
 class UserService extends BaseService
 {
     private MinioService $minioService;
+    private JobService $jobService;
 
-    public function __construct(MinioService $minioService)
+    public function __construct(MinioService $minioService, JobService $jobService)
     {
         $this->minioService = $minioService;
+        $this->jobService = $jobService;
     }
 
     /**
@@ -367,5 +370,22 @@ class UserService extends BaseService
                 'message' => 'Failed to update token'
             ], 500);
         }
+    }
+
+    public function profile() {
+        $auth = auth()->user();
+        $user = User::where('id', $auth->id)
+            ->first();
+
+        $user['unit'] = $user->employee->getLastUnit();
+
+        $job = $this->jobService->getById($user['unit']->id);
+        $user['unit'] = $job->getData()->data;
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User profile fetched successfully',
+            'data' => $user
+        ], 200);
     }
 }

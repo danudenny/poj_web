@@ -179,9 +179,9 @@ class UserController extends BaseController
         return $this->userService->updateToken($request, $id);
     }
 
-    public function profile(): ?Authenticatable
+    public function profile(): JsonResponse
     {
-        return auth()->user();
+        return $this->userService->profile();
     }
 
 }

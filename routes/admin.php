@@ -112,9 +112,9 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
 
     // Begin employee timesheet
     Route::group(['prefix' => 'employee-timesheet'], function() {
-        Route::get('/', [EmployeeTimesheetController::class, 'index']);
-        Route::get('view/{id}', [EmployeeTimesheetController::class, 'view']);
-        Route::post('create', [EmployeeTimesheetController::class, 'save']);
+        Route::get('/{id}', [EmployeeTimesheetController::class, 'index']);
+        Route::get('view/{unit_id}/{id}', [EmployeeTimesheetController::class, 'view']);
+        Route::post('create/{id}', [EmployeeTimesheetController::class, 'save']);
         Route::put('update/{id}', [EmployeeTimesheetController::class, 'edit']);
         Route::delete('delete/{id}', [EmployeeTimesheetController::class, 'delete']);
         Route::post('assign-schedule', [EmployeeTimesheetController::class, 'assignSchedule']);
@@ -254,7 +254,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
 
     // Begin Job
     Route::group(['prefix' => 'job', 'middleware' => ['auth:sanctum']], function() {
-        Route::get('', [JobController::class, 'index']);
+        Route::get('{id}', [JobController::class, 'index']);
         Route::get('show/{id}', [JobController::class, 'show']);
         Route::post('save/{id}', [JobController::class, 'store']);
         Route::put('update/{id}', [JobController::class, 'update']);
