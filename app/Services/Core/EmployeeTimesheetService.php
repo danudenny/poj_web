@@ -23,7 +23,7 @@ class EmployeeTimesheetService extends BaseService {
      * @throws ContainerExceptionInterface
      * @throws Exception
      */
-    public function index($request): JsonResponse
+    public function index($request, $id): JsonResponse
     {
         try {
             $data = EmployeeTimesheet::query();
@@ -39,6 +39,7 @@ class EmployeeTimesheetService extends BaseService {
             $data->when(request()->has('sort'), function ($query) {
                 $query->orderBy(request()->get('sort'), request()->get('order'));
             });
+            $data->where('unit_id', $id);
 
             return response()->json([
                 'status' => 'success',
@@ -55,17 +56,14 @@ class EmployeeTimesheetService extends BaseService {
     /**
      * @throws Exception
      */
-    public function save($request): JsonResponse
+    public function save($request, $id): JsonResponse
     {
 
         DB::beginTransaction();
         try {
-            $dataExsists = EmployeeTimesheet::where('name', $request->name)->first();
-            if ($dataExsists) {
-                throw new Exception('Timesheet Name already exists');
-            }
 
             $data = new EmployeeTimesheet();
+            $data->unit_id = $id;
             $data->name = $request->name;
             $data->start_time = $request->start_time;
             $data->end_time = $request->end_time;
@@ -92,10 +90,13 @@ class EmployeeTimesheetService extends BaseService {
     /**
      * @throws Exception
      */
-    public function show($id): JsonResponse
+    public function show($unit_id, $id): JsonResponse
     {
         try {
-            $timesheet = EmployeeTimesheet::where('id', $id)->first();
+            $timesheet = EmployeeTimesheet::where('unit_id', $unit_id)
+                ->where('id', $id)
+                ->first();
+
             if (!$timesheet) {
                 throw new Exception('Data not found');
             }

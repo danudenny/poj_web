@@ -13,18 +13,18 @@
                             <div className="card-body">
                                 <div className="d-flex justify-content-end mb-2">
                                     <button className="btn btn-warning" :disable="syncLoading" type="button" @click="syncFromERP">
-                                        <span v-if="syncLoading">
-                                            <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
-                                        </span>
-                                        <span v-else>
-                                            <i class="fa fa-recycle"></i> &nbsp; Sync From ERP
-                                        </span>
+                                        <div>
+                                            <i v-if="syncLoading" className="fa fa-spinner fa-spin"/>
+                                        </div>
+                                        <div>
+                                            <i v-if="!syncLoading" className="fa fa-recycle"/>&nbsp; Sync From ERP
+                                        </div>
                                     </button>
                                 </div>
                                 <div v-if="loading" className="text-center">
                                     <img src="../../assets/loader.gif" alt="loading" width="100">
                                 </div>
-                                <div ref="corporateTable"></div>
+                                <div ref="kanwilTable"></div>
                             </div>
                         </div>
                     </div>
@@ -41,38 +41,29 @@ import axios from 'axios';
 export default {
     data() {
         return {
-            corporates: [],
+            kanwils: [],
             loading: false,
-            syncLoading: false,
-            table: null,
-            countdown: 0,
-            timerId: null
+            syncLoading: false
         }
     },
     async mounted() {
-        await this.getCorporate();
-        this.initializeCorporateTable();
+        await this.getRegionals();
+        this.initializeRegionalTable();
     },
     methods: {
-        startCountdown() {
-            this.countdown = 1;
-            this.timerId = setInterval(() => {
-                this.countdown++;
-            }, 1000);
-        },
-        async getCorporate() {
+        async getRegionals() {
             this.loading = true;
             await this.$axios.get(`/api/v1/admin/unit?unit_level=4`)
                 .then(response => {
-                    this.corporates = response.data.data;
+                    this.kanwils = response.data.data;
                 })
                 .catch(error => {
                     console.error(error);
                 });
         },
-        initializeCorporateTable() {
-            this.table = new Tabulator(this.$refs.corporateTable, {
-                data: this.corporates,
+        initializeRegionalTable() {
+            const table = new Tabulator(this.$refs.kanwilTable, {
+                data: this.kanwils,
                 layout: 'fitColumns',
                 columns: [
                     {
@@ -87,7 +78,7 @@ export default {
                         headerFilter: "input"
                     },
                     {
-                        title: 'Jumlah Kanwil',
+                        title: 'Jumlah Area',
                         field: '',
                         hozAlign: 'center',
                         headerHozAlign: 'center',
@@ -124,32 +115,18 @@ export default {
             this.$router.push({name: 'Kanwil Detail', params: {id}});
         },
         async syncFromERP() {
-            this.syncLoading = true;
-            this.loading = true;
-            this.startCountdown();
-            this.table.destroy();
-
             await axios.create({
                 baseURL: import.meta.env.VITE_SYNC_ODOO_URL,
-            }).get('/sync-corporates')
-                .then(async (response) => {
-                    if (await response.data.status === 201) {
+            }).get('/sync-kanwil')
+                .then(response => {
+                    this.syncLoading = true;
+                    if (response.data.status === 201) {
                         this.syncLoading = false;
-                        this.loading = false;
-                        await this.getCorporate()
-                        this.initializeCorporateTable()
                         useToast().success(response.data.message);
                     } else {
-                        this.syncLoading = false;
                         useToast().error(response.data.message);
                     }
-                }).catch(error => {
-                    this.syncLoading = false;
-                    useToast().error("Failed to Sync Data! Check if connection are stable");
-                }).finally(() => {
-                    this.syncLoading = false;
-                    clearInterval(this.timerId);
-                });
+                })
         }
     }
 }

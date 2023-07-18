@@ -22,10 +22,10 @@ class EmployeeTimesheetController extends BaseController
     /**
      * @throws Exception
      */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, $id): JsonResponse
     {
         try {
-            return $this->employeeTimesheetService->index($request);
+            return $this->employeeTimesheetService->index($request, $id);
         } catch (Exception|ContainerExceptionInterface $e) {
             return $this->sendError($e->getMessage());
         }
@@ -34,10 +34,10 @@ class EmployeeTimesheetController extends BaseController
     /**
      * @throws Exception
      */
-    public function save(CreateEmployeeTimesheetRequest $request): JsonResponse
+    public function save(CreateEmployeeTimesheetRequest $request, $id): JsonResponse
     {
         try {
-            return $this->employeeTimesheetService->save($request);
+            return $this->employeeTimesheetService->save($request, $id);
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }
@@ -46,10 +46,10 @@ class EmployeeTimesheetController extends BaseController
     /**
      * @throws Exception
      */
-    public function view($id): JsonResponse
+    public function view($unit_id,$id): JsonResponse
     {
         try {
-            return $this->employeeTimesheetService->show($id);
+            return $this->employeeTimesheetService->show($unit_id,$id);
         } catch (Exception $e) {
             return $this->sendError($e->getMessage());
         }
