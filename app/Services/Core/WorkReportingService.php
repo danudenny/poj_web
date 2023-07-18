@@ -3,6 +3,8 @@
 namespace App\Services\Core;
 
 use App\Models\Employee;
+use App\Models\Unit;
+use App\Models\UnitReporting;
 use App\Models\WorkReporting;
 use Carbon\Carbon;
 use Exception;
@@ -222,6 +224,40 @@ class WorkReportingService
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to delete work reporting data',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function createMandatoryWorkReporting($request) {
+        DB::beginTransaction();
+        try {
+            $create = new UnitReporting();
+            $create->unit_jobs_id = $request->unit_jobs_id;
+            $create->type = $request->type;
+            $create->total_reporting = $request->total_reporting;
+            $create->reporting_names = json_encode($request->reporting_names);
+
+            if (!$create->save()) {
+                DB::rollBack();
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Failed to fetch mandatory work reporting data'
+                ], 500);
+            }
+
+            DB::commit();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Successfully create mandatory work reporting data',
+                'data' => $create
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to fetch mandatory work reporting data',
                 'error' => $e->getMessage()
             ], 500);
         }

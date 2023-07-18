@@ -38,6 +38,11 @@ class JobController extends Controller
         return $this->jobService->update($request, $id);
     }
 
+    public function updateMandatoryReporting(Request $request, $id): JsonResponse
+    {
+        return $this->jobService->updateMandatoryReporting($request, $id);
+    }
+
     public function delete($unitId, $jobId): JsonResponse
     {
         return $this->jobService->destroy($unitId, $jobId);

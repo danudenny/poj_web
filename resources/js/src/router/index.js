@@ -368,23 +368,7 @@ const routes =[
         ]
     },
     {
-        path: '/management/timesheet',
-        component: Body,
-        children: [
-            {
-                path: '',
-                name: 'Timesheet',
-                component: Timesheet,
-                meta: {
-                    title: 'POJ - Timesheet',
-                    requiresAuth: true,
-                    permission: 'timesheet_list',
-                },
-            },
-        ]
-    },
-    {
-        path: '/management/timesheet-assign',
+        path: '/timesheet-assignment',
         component: Body,
         children: [
             {
