@@ -293,16 +293,16 @@ class EventService extends BaseService
 
                 $employeeEvent->save();
             }
-        }
 
-        $this->getNotificationService()->createNotification(
-            $eventAttendance->employee_id,
-            $event->title,
-            $event->getEventRepeatDescriptionAttribute(),
-            "Event",
-            EmployeeNotification::ReferenceEvent,
-            $event->id
-        );
+            $this->getNotificationService()->createNotification(
+                $eventAttendance->employee_id,
+                $event->title,
+                $event->getEventRepeatDescriptionAttribute(),
+                "Event",
+                EmployeeNotification::ReferenceEvent,
+                $event->id
+            );
+        }
     }
 
     public function checkIn(CheckInEventRequest $request, int $id) {
@@ -363,6 +363,12 @@ class EventService extends BaseService
             $checkIn->save();
 
             DB::commit();
+
+            $this->getNotificationService()->createNotification(
+                $user->employee_id,
+                'Check In Event',
+                'Check In Event Telah Berhasil'
+            )->withSendPushNotification()->silent()->send();
 
             return response()->json([
                 'status' => true,
@@ -440,6 +446,12 @@ class EventService extends BaseService
             }
 
             DB::commit();
+
+            $this->getNotificationService()->createNotification(
+                $user->employee_id,
+                'Check Out Event',
+                'Check Out Event Telah Berhasil'
+            )->withSendPushNotification()->silent()->send();
 
             return response()->json([
                 'status' => true,

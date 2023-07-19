@@ -197,7 +197,7 @@ class BackupService extends BaseService
                     'Backup Pegawai',
                     EmployeeNotification::ReferenceBackup,
                     $backup->id
-                );
+                )->withSendPushNotification()->send();
             }
 
             $backupHistory = new BackupHistory();
@@ -364,6 +364,12 @@ class BackupService extends BaseService
 
             DB::commit();
 
+            $this->getNotificationService()->createNotification(
+                $user->employee_id,
+                'Check In Backup',
+                'Check In Backup Telah Berhasil'
+            )->withSendPushNotification()->silent()->send();
+
             return response()->json([
                 'status' => true,
                 'message' => 'Success check in',
@@ -441,6 +447,12 @@ class BackupService extends BaseService
             }
 
             DB::commit();
+
+            $this->getNotificationService()->createNotification(
+                $user->employee_id,
+                'Check In Backup',
+                'Check In Backup Telah Berhasil'
+            )->withSendPushNotification()->silent()->send();
 
             return response()->json([
                 'status' => true,

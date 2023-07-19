@@ -17,6 +17,7 @@ use Watson\Rememberable\Rememberable;
  * Attributes:
  * @property-read int $id
  * @property int $employee_id
+ * @property string|null $fcm_token
  *
  * Relations:
  * @property-read Employee $employee

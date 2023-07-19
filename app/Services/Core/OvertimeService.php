@@ -242,7 +242,7 @@ class OvertimeService extends BaseService
                     'Lembur Pegawai',
                     EmployeeNotification::ReferenceOvertime,
                     $overtime->id
-                );
+                )->withSendPushNotification()->send();
             }
 
             DB::commit();
@@ -434,6 +434,12 @@ class OvertimeService extends BaseService
 
             DB::commit();
 
+            $this->getNotificationService()->createNotification(
+                $user->employee_id,
+                'Check In Lembur',
+                'Check In Lembur Telah Berhasil'
+            )->withSendPushNotification()->silent()->send();
+
             return response()->json([
                 'status' => true,
                 'message' => 'Success'
@@ -521,6 +527,12 @@ class OvertimeService extends BaseService
             // $this->refreshFinishedStatus($overtimeRequest, $user->employee_id);
 
             DB::commit();
+
+            $this->getNotificationService()->createNotification(
+                $user->employee_id,
+                'Check Out Lembur',
+                'Check Out Lembur Telah Berhasil'
+            )->withSendPushNotification()->silent()->send();
 
             return response()->json([
                 'status' => true,
