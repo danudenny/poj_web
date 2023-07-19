@@ -39,6 +39,6 @@ class Approval extends Model
 
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'approval_users');
+        return $this->belongsToMany(Employee::class, 'approval_users', 'approval_id', 'user_id');
     }
 }

@@ -18,7 +18,7 @@ class ApprovalService extends BaseService
     {
         try {
             $approvals = Approval::query();
-            $approvals->with(['approvalModule', 'users']);
+            $approvals->with(['approvalModule', 'approvalUsers']);
             $approvals->when($request->name, function($q) use ($request) {
                 $q->where('name', 'LIKE', '%' . $request->name . '%');
             });
@@ -62,7 +62,7 @@ class ApprovalService extends BaseService
 
         if (count($request->user_id) > 0) {
             foreach ($request->user_id as $userId) {
-                $userExists = User::where('id', $userId)->first();
+                $userExists = User::where('employee_id', $userId)->first();
                 if (!$userExists) {
                     return response()->json([
                         'status' => 'error',
@@ -170,9 +170,10 @@ class ApprovalService extends BaseService
     public function show($id): JsonResponse
     {
         try {
-            $approval = Approval::with(['approvalModule', 'users.employee', 'users.employee.unit'])
+            $approval = Approval::with(['approvalModule', 'users'])
                 ->orderBy('id', 'desc')
                 ->find($id);
+
             if (!$approval) {
                 return response()->json([
                     'status' => 'error',
