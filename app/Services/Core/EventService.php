@@ -503,7 +503,7 @@ class EventService extends BaseService
             'status' => true,
             'message' => 'Success!',
             'data' => $employeeEvent
-        ], ResponseAlias::HTTP_BAD_REQUEST);
+        ]);
     }
 
     /**
