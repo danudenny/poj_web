@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Event\CheckInEventRequest;
+use App\Http\Requests\Event\CheckOutEventRequest;
 use App\Http\Requests\Event\CreateEventRequest;
 use App\Http\Requests\Event\EventApprovalRequest;
 use App\Services\Core\EventService;
@@ -28,5 +30,17 @@ class EventController extends Controller
 
     public function approve(EventApprovalRequest $request, EventService $service, int $id) {
         return $service->eventApproval($request, $id);
+    }
+
+    public function checkIn(CheckInEventRequest $request, EventService $service, int $id) {
+        return $service->checkIn($request, $id);
+    }
+
+    public function checkOut(CheckOutEventRequest $request, EventService $service, int $id) {
+        return $service->checkOut($request, $id);
+    }
+
+    public function getActiveEmployeeEvent(Request $request, EventService $service, int $id) {
+        return $service->getActiveEventEmployee($request, $id);
     }
 }

@@ -22,4 +22,5 @@ class EmployeeNotification extends Model
 
     const ReferenceBackup = "backup";
     const ReferenceOvertime = "overtime";
+    const ReferenceEvent = "event";
 }

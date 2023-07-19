@@ -249,6 +249,9 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::get('employee-event', [EventController::class, 'employeeEvent']);
         Route::post('create', [EventController::class, 'create']);
         Route::post('/approve/{id}', [EventController::class, 'approve']);
+        Route::post('/check-in/{id}', [EventController::class, 'checkIn']);
+        Route::post('/check-out/{id}', [EventController::class, 'checkOut']);
+        Route::get('get-active-backup/{id}', [EventController::class, 'getActiveEmployeeEvent']);
     });
     // End Event
 

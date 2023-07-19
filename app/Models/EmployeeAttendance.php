@@ -42,6 +42,7 @@ class EmployeeAttendance extends Model
 
     const AttendanceTypeOvertime = "overtime";
     const AttendanceTypeBackup = "backup";
+    const AttendanceTypeEvent = "event";
 
     protected $table = 'employee_attendances';
 
