@@ -28,12 +28,12 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr v-for="(item, index) in approvals.data">
+                                <tr v-for="(item, index) in approvals">
                                     <td>{{index + 1}}</td>
                                     <td class="text-center">{{item.name}}</td>
                                     <td class="text-center">{{item.approval_module.name}}</td>
                                     <td class="text-center">
-                                        <span class="badge badge-info">{{item.users.length}}</span>
+                                        <span class="badge badge-info">{{item.approval_users.length}}</span>
                                     </td>
                                     <td class="text-center">
                                         <span class="badge badge-success" v-if="item.is_active">Active</span>
@@ -59,7 +59,7 @@
 </template>
 
 <script>
-import axios from "axios"
+import {useToast} from "vue-toastification"
 import VerticalModal from "@components/modal/verticalModal.vue";
 
 
@@ -79,7 +79,11 @@ export default {
         async getApproval() {
             await this.$axios.get('/api/v1/admin/approval')
                 .then(response => {
-                    this.approvals = response.data.data
+                    this.approvals = response.data.data.data
+                    console.log(this.approvals)
+                    // this.approval.map((item, index) => {
+                    //     console.log(item.users)
+                    // })
                 })
                 .catch(error => {
                     console.log(error)
@@ -108,11 +112,11 @@ export default {
                 if(result.value){
                     this.$axios.delete(`api/v1/admin/approval/delete/${id}`)
                         .then(() => {
-                            this.basic_success_alert("Data successfully deleted!");
-                            this.getApprovalModules();
+                            useToast().success("Data successfully deleted!");
+                            this.getApproval();
                         })
                         .catch(error => {
-                            this.warning_alert_state(error.message);
+                            useToast().success("Error deleting data!");
                         });
                 }else{
                     this.$swal({
