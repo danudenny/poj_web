@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
  * Attributes:
  * @property-read int $id
  * @property int $employee_id
- * @property int $overtime_id
+ * @property int $overtime_date_id
  * @property string|null $check_in_time
  * @property string|null $check_in_lat
  * @property string|null $check_in_long
@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Model;
  *
  * Relations:
  * @property-read Employee $employee
- * @property-read Overtime $overtime
+ * @property-read OvertimeDate $overtimeDate
  */
 class OvertimeEmployee extends Model
 {
@@ -65,7 +65,7 @@ class OvertimeEmployee extends Model
             return null;
         }
 
-        return Carbon::parse($this->check_in_time)->setTimezone($this->overtime->timezone)->format('Y-m-d H:i:s T');
+        return Carbon::parse($this->check_in_time)->setTimezone($this->overtimeDate->overtime->timezone)->format('Y-m-d H:i:s T');
     }
 
     /**
@@ -76,20 +76,20 @@ class OvertimeEmployee extends Model
             return null;
         }
 
-        return Carbon::parse($this->check_out_time)->setTimezone($this->overtime->timezone)->format('Y-m-d H:i:s T');
+        return Carbon::parse($this->check_out_time)->setTimezone($this->overtimeDate->overtime->timezone)->format('Y-m-d H:i:s T');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function employee() {
-        return $this->belongsTo(Employee::class, 'employee_id');
+        return $this->belongsTo(Employee::class, 'semployee_id');
     }
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
-    public function overtime() {
-        return $this->belongsTo(Overtime::class, 'overtime_id');
+    public function overtimeDate() {
+        return $this->belongsTo(OvertimeDate::class, 'overtime_date_id');
     }
 }

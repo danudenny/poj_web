@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\Core\NotificationService;
 use Illuminate\Support\Arr;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -13,6 +14,8 @@ abstract class BaseService
     public const AUTH_FAILED = 'Authentication Failed';
     public const SOMETHING_WRONG = 'Something Went Wrong';
     public const NOT_REGISTERED = 'Email is not registered';
+
+    private NotificationService $notificationService;
 
 
     /**
@@ -109,5 +112,12 @@ abstract class BaseService
 
         // return UploadedFile object
         return $file;
+    }
+
+    protected function getNotificationService(): NotificationService {
+        if (!isset($this->notificationService)) {
+            $this->notificationService = new NotificationService();
+        }
+        return $this->notificationService;
     }
 }

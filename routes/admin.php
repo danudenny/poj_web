@@ -13,6 +13,7 @@ use App\Http\Controllers\API\EmployeeTimesheetController;
 use App\Http\Controllers\API\EventController;
 use App\Http\Controllers\API\IncidentController;
 use App\Http\Controllers\API\JobController;
+use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\OvertimeController;
 use App\Http\Controllers\API\PeriodController;
 use App\Http\Controllers\API\PermissionController;
@@ -222,10 +223,11 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::get('', [BackupController::class, 'index']);
         Route::get('view/{id}', [BackupController::class, 'show']);
         Route::get('list-employee-backup', [BackupController::class, 'listEmployeeBackupTime']);
+        Route::get('get-active-backup/{id}', [BackupController::class, 'getActiveEmployeeData']);
         Route::post('create', [BackupController::class, 'create']);
         Route::post('approve/{id}', [BackupController::class, 'approve']);
-        Route::post('check-in', [BackupController::class, 'checkIn']);
-        Route::post('check-out', [BackupController::class, 'checkOut']);
+        Route::post('check-in/{id}', [BackupController::class, 'checkIn']);
+        Route::post('check-out/{id}', [BackupController::class, 'checkOut']);
     });
     // End Backups
 
@@ -279,8 +281,15 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::get('/employee-overtime', [OvertimeController::class, 'employee_overtimes']);
         Route::post('', [OvertimeController::class, 'create']);
         Route::post('approval/{id}', [OvertimeController::class, 'approval']);
-        Route::post('check-in', [OvertimeController::class, 'checkIn']);
-        Route::post('check-out', [OvertimeController::class, 'checkOut']);
+        Route::post('check-in/{id}', [OvertimeController::class, 'checkIn']);
+        Route::post('check-out/{id}', [OvertimeController::class, 'checkOut']);
+        Route::get('get-active-overtime/{id}', [OvertimeController::class, 'getActiveOvertime']);
     });
     // End Overtime
+
+    // Begin Notification
+    Route::group(['prefix' => 'notification', 'middleware' => ['auth:sanctum']], function() {
+        Route::get('', [NotificationController::class, 'index']);
+    });
+    // End Notificataion
 });

@@ -27,21 +27,12 @@ class CreateOvertimeRequest extends FormRequest
     public function rules()
     {
         return [
-            'start_datetime' => ['required', 'date_format:Y-m-d H:i:s'],
-            'end_datetime' => ['required', 'date_format:Y-m-d H:i:s'],
+            'unit_relation_id' => ['required'],
+            'job_id' => ['required'],
+            'dates' => ['required', 'array'],
+            'employee_ids' => ['required'],
             'notes' => ['required'],
-            'image_url' => ['nullable', 'url'],
-            'employees' => ['required', 'array'],
-            'unit_relation_id' => [
-                Rule::requiredIf(function() {
-                    /**
-                     * @var User $user
-                     */
-                    $user = request()->user();
-
-                    return !$user->inRoleLevel([Role::RoleStaff]);
-                })
-            ]
+            'image_url' => ['nullable', 'url']
         ];
     }
 }
