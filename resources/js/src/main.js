@@ -34,7 +34,6 @@ axios.interceptors.request.use(config => {
 });
 axios.defaults.baseURL = import.meta.env.VITE_API_URL;
 
-
 const app = createApp(App)
     .use(router)
     .use(store)

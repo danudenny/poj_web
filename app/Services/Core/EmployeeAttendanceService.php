@@ -157,6 +157,12 @@ class EmployeeAttendanceService extends BaseService {
 
         // BEGIN : Check if time is in range
         $employeeTimeZone = getTimezone($request->lat, $request->long);
+        if (!$workLocation->lat && !$workLocation->long) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Work location not found!'
+            ], 400);
+        }
         $companyTimeZone = getTimezone($workLocation->lat, $workLocation->long);
 
         $employeeTimesheetStartTime = Carbon::parse($empSchedule['timesheet']['start_time'], $companyTimeZone);
@@ -312,6 +318,23 @@ class EmployeeAttendanceService extends BaseService {
             $getUser->save();
 
             DB::commit();
+
+            $notification = [
+                'title' => 'Attendance Check In',
+                'body' => 'You have successfully checked in!'
+            ];
+
+            $recipients = User::where('employee_id', auth()->user()->employee_id)->pluck('fcm_token')->toArray();
+
+            fcm()
+                ->to($recipients)
+                ->priority('high')
+                ->timeToLive(0)
+                ->data($notification)
+                ->enableResponseLog()
+                ->send();
+
+
             return response()->json([
                 'status' => true,
                 'message' => 'Success check in!',
