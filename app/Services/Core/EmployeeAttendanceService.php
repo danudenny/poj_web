@@ -330,10 +330,9 @@ class EmployeeAttendanceService extends BaseService {
                 ->to($recipients)
                 ->priority('high')
                 ->timeToLive(0)
-                ->data($notification)
+                ->notification($notification)
                 ->enableResponseLog()
                 ->send();
-
 
             return response()->json([
                 'status' => true,
