@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Backup\BackupApprovalRequest;
+use App\Http\Requests\Backup\BackupCheckInRequest;
+use App\Http\Requests\Backup\BackupCheckOutRequest;
+use App\Http\Requests\Backup\CreateBackupRequest;
 use App\Services\Core\BackupService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,18 +29,23 @@ class BackupController extends Controller
         return $this->backupService->show($request, $id);
     }
 
-    public function create(Request $request): JsonResponse
+    public function create(CreateBackupRequest $request): JsonResponse
     {
         return $this->backupService->create($request);
     }
 
-    public function approve($id): JsonResponse
+    public function approve(BackupApprovalRequest $request, int $id): JsonResponse
     {
-        return $this->backupService->approve($id);
+        return $this->backupService->approve($request, $id);
     }
 
-    public function checkIn(Request $request, $id): JsonResponse
+    public function checkIn(BackupCheckInRequest $request, int $id): JsonResponse
     {
         return $this->backupService->checkIn($request, $id);
+    }
+
+    public function checkOut(BackupCheckOutRequest $request, int $id): JsonResponse
+    {
+        return $this->backupService->checkOut($request, $id);
     }
 }
