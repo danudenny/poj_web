@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $repeat_every
  * @property string|null $repeat_days
  * @property string|null $repeat_end_date
+ * @property string $timezone
  *
  * Relations:
  * @property-read Employee $requestorEmployee

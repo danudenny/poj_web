@@ -2,11 +2,15 @@
 
 namespace App\Services\Core;
 
+use App\Http\Requests\Event\CheckInEventRequest;
+use App\Http\Requests\Event\CheckOutEventRequest;
 use App\Http\Requests\Event\CreateEventRequest;
 use App\Http\Requests\Event\EventApprovalRequest;
 use App\Models\ApprovalModule;
 use App\Models\ApprovalUser;
+use App\Models\EmployeeAttendance;
 use App\Models\EmployeeEvent;
+use App\Models\EmployeeNotification;
 use App\Models\Event;
 use App\Models\EventAttendance;
 use App\Models\EventDate;
@@ -17,6 +21,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class EventService extends BaseService
 {
@@ -117,8 +122,17 @@ class EventService extends BaseService
                 ], Response::HTTP_BAD_REQUEST);
             }
 
+            $timezone = getTimezoneV2($event->latitude, $event->longitude);
+            foreach ($eventDates as $idx => $eventDate) {
+                $eventDateTime = Carbon::parse(sprintf("%s %s", $eventDate->event_date, $eventDate->event_time), $timezone)->setTimezone('UTC');
+                $eventDate->event_datetime = $eventDateTime->format('Y-m-d H:i:s');
+                unset($eventDate->event_date);
+                unset($eventDate->event_time);
+            }
+
             DB::beginTransaction();
 
+            $event->timezone = $timezone;
             $event->save();
 
             foreach ($eventDates as $eventDate) {
@@ -275,12 +289,200 @@ class EventService extends BaseService
                 $employeeEvent->employee_id = $eventAttendance->employee_id;
                 $employeeEvent->event_id = $event->id;
                 $employeeEvent->is_need_absence = $eventDate->is_need_absence;
-                $employeeEvent->event_date = $eventDate->event_date;
-                $employeeEvent->event_time = $eventDate->event_time;
+                $employeeEvent->event_datetime = $eventDate->event_datetime;
 
                 $employeeEvent->save();
             }
         }
+
+        $this->getNotificationService()->createNotification(
+            $eventAttendance->employee_id,
+            $event->title,
+            $event->getEventRepeatDescriptionAttribute(),
+            "Event",
+            EmployeeNotification::ReferenceEvent,
+            $event->id
+        );
+    }
+
+    public function checkIn(CheckInEventRequest $request, int $id) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            $dataLocation = [
+                'latitude' => $request->input('latitude'),
+                'longitude' => $request->input('longitude')
+            ];
+
+            /**
+             * @var EmployeeEvent $employeeEvent
+             */
+            $employeeEvent = EmployeeEvent::query()
+                ->where('id', '=', $id)
+                ->where('employee_id', '=', $user->employee_id)
+                ->whereNull('check_in_time')
+                ->where('is_need_absence', '=', true)
+                ->first();
+            if (!$employeeEvent) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'There is no event need to checked in!',
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            $event = $employeeEvent->event;
+            $employeeTimezone = getTimezoneV2($dataLocation['latitude'], $dataLocation['longitude']);
+            $distance = calculateDistance($event->latitude, $event->longitude, $dataLocation['latitude'], $dataLocation['longitude']);
+
+            $checkInType = EmployeeAttendance::TypeOnSite;
+
+            DB::beginTransaction();
+
+            $employeeEvent->check_in_lat = $dataLocation['latitude'];
+            $employeeEvent->check_in_long = $dataLocation['longitude'];
+            $employeeEvent->check_in_time = Carbon::now();
+            $employeeEvent->check_in_timezone = $employeeTimezone;
+            $employeeEvent->save();
+
+            $checkIn = new EmployeeAttendance();
+            $checkIn->employee_id = $user->employee_id;
+            $checkIn->real_check_in = $employeeEvent->check_in_time;
+            $checkIn->checkin_type = $checkInType;
+            $checkIn->checkin_lat = $employeeEvent->check_in_lat;
+            $checkIn->checkin_long = $employeeEvent->check_in_long;
+            $checkIn->is_need_approval = $checkInType == EmployeeAttendance::TypeOffSite;
+            $checkIn->attendance_types = EmployeeAttendance::AttendanceTypeEvent;
+            $checkIn->checkin_real_radius = $distance;
+            $checkIn->approved = !($checkInType == EmployeeAttendance::TypeOffSite);
+            $checkIn->check_in_tz = $employeeTimezone;
+            $checkIn->is_late = false;
+            $checkIn->late_duration = 0;
+            $checkIn->save();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success check in',
+                'data' => [],
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function checkOut(CheckOutEventRequest $request, int $id) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            $dataLocation = [
+                'latitude' => $request->input('latitude'),
+                'longitude' => $request->input('longitude')
+            ];
+
+            /**
+             * @var EmployeeEvent $employeeEvent
+             */
+            $employeeEvent = EmployeeEvent::query()
+                ->where('id', '=', $id)
+                ->where('employee_id', '=', $user->employee_id)
+                ->whereNotNull('check_in_time')
+                ->whereNull('check_out_time')
+                ->where('is_need_absence', '=', true)
+                ->first();
+            if (!$employeeEvent) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'There is no event need to checked in!',
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            $event = $employeeEvent->event;
+            $employeeTimezone = getTimezoneV2($dataLocation['latitude'], $dataLocation['longitude']);
+            $distance = calculateDistance($event->latitude, $event->longitude, $dataLocation['latitude'], $dataLocation['longitude']);
+
+            $checkOutType = EmployeeAttendance::TypeOnSite;
+
+            /**
+             * @var EmployeeAttendance $checkInData
+             */
+            $checkInData = $user->employee->attendances()
+                ->where('attendance_types', '=', EmployeeAttendance::AttendanceTypeEvent)
+                ->orderBy('id', 'DESC')
+                ->first();
+
+            DB::beginTransaction();
+
+            $employeeEvent->check_out_lat = $dataLocation['latitude'];
+            $employeeEvent->check_out_long = $dataLocation['longitude'];
+            $employeeEvent->check_out_time = Carbon::now();
+            $employeeEvent->check_out_timezone = $employeeTimezone;
+            $employeeEvent->save();
+
+            if ($checkInData) {
+                $checkInData->real_check_out = $employeeEvent->check_out_time;
+                $checkInData->checkout_lat = $employeeEvent->check_out_lat;
+                $checkInData->checkout_long = $employeeEvent->check_out_long;
+                $checkInData->checkout_real_radius = $distance;
+                $checkInData->checkout_type = $checkOutType;
+                $checkInData->check_out_tz = $employeeEvent->check_out_timezone;
+                $checkInData->save();
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success check out',
+                'data' => [],
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getActiveEventEmployee(Request $request, int $id) {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
+        $employeeEvent = EmployeeEvent::query()
+            ->with(['employee', 'event'])
+            ->join('events', 'events.id', '=', 'employee_events.event_id')
+            ->where('employee_events.employee_id', '=', $user->employee_id)
+            ->whereIn('events.last_status', [Event::StatusApprove])
+            ->whereRaw("TO_CHAR(employee_events.event_datetime::DATE, 'YYYY-mm-dd') = ?", Carbon::now()->format('Y-m-d'))
+            ->where('event_id', '=', $id)
+            ->select(['employee_events.*'])
+            ->orderBy('employee_events.event_datetime', 'ASC')
+            ->first();
+        if (!$employeeEvent) {
+            return response()->json([
+                'status' => false,
+                'message' => 'There is no event need to checked in!',
+            ], ResponseAlias::HTTP_BAD_REQUEST);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Success!',
+            'data' => $employeeEvent
+        ], ResponseAlias::HTTP_BAD_REQUEST);
     }
 
     /**
