@@ -15,6 +15,7 @@ use App\Models\Event;
 use App\Models\EventAttendance;
 use App\Models\EventDate;
 use App\Models\EventHistory;
+use App\Models\Role;
 use App\Models\User;
 use App\Services\BaseService;
 use Carbon\Carbon;
@@ -267,15 +268,23 @@ class EventService extends BaseService
     }
 
     public function getEmployeeEvents(Request $request) {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
         $employeeEvents = EmployeeEvent::query()->with(['employee:employees.id,name', 'event:events.id,title,requestor_employee_id', 'event.requestorEmployee:employees.id,name'])
-            ->whereRaw("TO_CHAR(event_date::DATE, 'YYYY-mm') = TO_CHAR(CURRENT_DATE, 'YYYY-mm')")
-            ->orderBy('id', 'DESC')
-            ->get();
+            ->whereRaw("TO_CHAR(event_datetime::DATE, 'YYYY-mm') = TO_CHAR(CURRENT_DATE, 'YYYY-mm')")
+            ->orderBy('id', 'DESC');
+
+        if (!$user->inRoleLevel([Role::RoleSuperAdministrator])) {
+            $employeeEvents->where('employee_id', '=', $user->employee_id);
+        }
 
         return response()->json([
             'status' => 'success',
             'message' => 'Data retrieved successfully',
-            'data' => $employeeEvents
+            'data' => $this->list($employeeEvents, $request)
         ]);
     }
 
