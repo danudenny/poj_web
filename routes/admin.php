@@ -222,8 +222,9 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::get('', [BackupController::class, 'index']);
         Route::get('view/{id}', [BackupController::class, 'show']);
         Route::post('create', [BackupController::class, 'create']);
-        Route::put('approve/{id}', [BackupController::class, 'approve']);
+        Route::post('approve/{id}', [BackupController::class, 'approve']);
         Route::post('check-in/{id}', [BackupController::class, 'checkIn']);
+        Route::post('check-out/{id}', [BackupController::class, 'checkOut']);
     });
     // End Backups
 
