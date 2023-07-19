@@ -30,12 +30,12 @@
 
           <a class="sidebar-link sidebar-title" href="javascript:void(0)" :class="{ 'active': menuItem.active }"
              v-if="menuItem.type === 'sub' && this.permissions.includes(menuItem.permission)" @click="setNavActive(menuItem, index)">
-            <svg class="stroke-icon">
-                <use :href="`/assets/svg/icon-sprite.svg#${menuItem.icon}`"></use>
-            </svg>
-            <svg class="fill-icon">
-                <use :href="`/assets/svg/icon-sprite.svg#${menuItem.iconf}`"></use>
-            </svg>
+              <svg class="stroke-icon">
+                  <use :href="`@/assets/svg/icon-sprite.svg#${menuItem.icon}`"></use>
+              </svg>
+              <svg class="fill-icon">
+                  <use :href="`@/assets/svg/icon-sprite.svg#${menuItem.iconf}`"></use>
+              </svg>
             <span class="lan-3">
               {{ (menuItem.title) }}
             </span>

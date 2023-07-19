@@ -26,7 +26,13 @@ function getTimezone($inputLat, $inputLong): string
 {
     $baseUrl = config('app.timezone_api');
     $inputCoordinates = Http::get($baseUrl . '/' . $inputLat . '/' . $inputLong);
-    return $inputCoordinates->json()['tz'];
+    $tz = '';
+    foreach ($inputCoordinates->json() as $key => $value) {
+        if ($key == 'tz') {
+            $tz = $value;
+        }
+    }
+    return $tz;
 }
 
 function getTimezoneV2($latitude,$longitude): string
