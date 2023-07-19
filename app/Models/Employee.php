@@ -224,6 +224,6 @@ class Employee extends Model
             ->where('id', '!=', $workLocation->id)
             ->get();
 
-        return $otherUnits->all();
+        return $otherUnits->toArray();
     }
 }

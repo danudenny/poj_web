@@ -255,7 +255,6 @@ class UnitService extends BaseService
         foreach ($roles as $role) {
             if ($role->role_level === 'superadmin') {
                 $datas = Unit::all();
-//                $datas = UnitHelper::flattenUnits($empUnit);
             } else {
                 $empUnit = auth()->user()->employee->getRelatedUnit();
                 $datas = UnitHelper::flattenUnits($empUnit);

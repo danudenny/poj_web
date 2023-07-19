@@ -182,7 +182,7 @@ export default {
             );
         },
         async loadOrg() {
-            await this.$axios.get(`/api/v1/admin/approval/get-unit?id=${this.ls.unit_id}`)
+            await this.$axios.get(`/api/v1/admin/unit/related-unit`)
                 .then(response => {
                     this.organization = response.data.data
                 })
@@ -200,7 +200,7 @@ export default {
                 })
         },
         async getUsers() {
-            await this.$axios.get(`/api/v1/admin/employee?unit_id=${this.ls.unit_id}`)
+            await this.$axios.get(`/api/v1/admin/employee`)
                 .then(response => {
                     this.users = response.data.data
                 })
