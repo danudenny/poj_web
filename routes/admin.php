@@ -126,7 +126,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     Route::group(['prefix' => 'timesheet-schedule'], function() {
         Route::get('get-schedule', [EmployeeTimesheetController::class, 'getEmployeeSchedule']);
         Route::get('view-schedule', [EmployeeTimesheetController::class, 'showEmployeeSchedule']);
-        Route::get('show-schedule', [EmployeeTimesheetController::class, 'showEmployeeScheduleById']);
+        Route::get('show-schedule', [EmployeeTimesheetController::class, 'scheduleById']);
     });
     Route::group(['prefix' => 'periods'], function() {
         Route::get('', [PeriodController::class, 'index']);
@@ -254,6 +254,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::get('', [WorkReportingController::class, 'index']);
         Route::get('view/{id}', [WorkReportingController::class, 'show']);
         Route::post('create', [WorkReportingController::class, 'store']);
+        Route::post('create-mandatory', [WorkReportingController::class, 'createMandatoryWorkReporting']);
         Route::put('update/{id}', [WorkReportingController::class, 'edit']);
         Route::delete('delete/{id}', [WorkReportingController::class, 'delete']);
     });
@@ -265,6 +266,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::get('show/{id}', [JobController::class, 'show']);
         Route::post('save/{id}', [JobController::class, 'store']);
         Route::put('update/{id}', [JobController::class, 'update']);
+        Route::put('update-mandatory/{id}', [JobController::class, 'updateMandatoryReporting']);
         Route::delete('delete/{unit_id}/{job_id}', [JobController::class, 'delete']);
     });
     // End Job

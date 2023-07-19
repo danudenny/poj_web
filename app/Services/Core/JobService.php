@@ -64,6 +64,9 @@ class JobService extends BaseService
             $job->is_upload = $job->pivot->is_upload;
             $job->is_reporting = $job->pivot->is_reporting;
             $job->is_mandatory_reporting = $job->pivot->is_mandatory_reporting;
+            $job->reporting_type = $job->pivot->type;
+            $job->total_reporting = $job->pivot->total_reporting;
+            $job->reporting_names = $job->pivot->reporting_names;
             unset($job->pivot);
             return $job;
         });
@@ -160,6 +163,7 @@ class JobService extends BaseService
                 'is_camera' => $isCamera,
                 'is_upload' => $isUpload,
                 'is_reporting' => $isReporting,
+                'is_reporting_mandatory' => $is_reporting_mandatory,
             ]);
 
             DB::commit();
@@ -202,6 +206,50 @@ class JobService extends BaseService
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to detach job from unit',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateMandatoryReporting($request, $id): JsonResponse
+    {
+        $unit = Unit::find($id);
+        if (!$unit) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unit not found'
+            ], 404);
+        }
+
+        DB::beginTransaction();
+        try {
+            $jobIds = $request->input('job_ids');
+            $type = $request->input('type');
+            $totalReporting = $request->input('total_reporting');
+            $reportingNames = $request->input('reporting_names');
+
+            $syncData = [];
+            foreach ($jobIds as $jobId) {
+                $syncData[$jobId] = [
+                    'type' => $type,
+                    'total_reporting' => $totalReporting,
+                    'reporting_names' => json_encode($reportingNames)
+                ];
+            }
+
+            $unit->jobs()->syncWithoutDetaching($syncData);
+            DB::commit();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Jobs updated to unit successfully',
+                'data' => $unit->jobs()->get()
+            ], 201);
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to update jobs to unit',
                 'error' => $e->getMessage()
             ], 500);
         }

@@ -98,9 +98,9 @@ class EmployeeTimesheetController extends BaseController
         return $this->employeeTimesheetService->showEmployeeSchedule($request);
     }
 
-    public function showEmployeeScheduleById(Request $request): JsonResponse
+    public function scheduleById(Request $request): JsonResponse
     {
-        return $this->employeeTimesheetService->showEmployeeScheduleById($request);
+        return $this->employeeTimesheetService->scheduleById($request);
     }
 
     public function updateEmployeeSchedule(Request $request): JsonResponse

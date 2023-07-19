@@ -256,10 +256,14 @@ class EmployeeTimesheetService extends BaseService {
                 ->orderBy('period_id')
                 ->get();
             $groupedData = $schedule->groupBy(function ($item) {
-                $year = $item->period->year;
-                $month = $item->period->month;
-                $getDate = Carbon::parse($year . '-' . $month);
-                return $item->date . '-' . $getDate->format('F Y');
+                if ($item->period) {
+                    $year = $item->period->year;
+                    $month = $item->period->month;
+                    $getDate = Carbon::parse($year . '-' . $month);
+                    return $item->date . '-' . $getDate->format('F Y');
+                } else {
+                    return null;
+                }
             });
         } else if ($roles->hasRole('admin')) {
             $schedule = $schedule->where('kanwil_id', request()->query('unit_id'));
@@ -305,9 +309,8 @@ class EmployeeTimesheetService extends BaseService {
         ], 200);
     }
 
-    public function showEmployeeScheduleById($request): JsonResponse
+    public function scheduleById($request): JsonResponse
     {
-
         $schedule = EmployeeTimesheetSchedule::with(['timesheet', 'period'])
             ->when($request->date, function ($query) use ($request) {
                 $query->where('date', $request->date);
