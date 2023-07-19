@@ -42,7 +42,8 @@ class OvertimeService extends BaseService
         if ($user->inRoleLevel([Role::RoleAdmin])) {
             $overtimes->whereIn('unit_relation_id', $user->employee->getAllUnitID());
         } else if ($user->inRoleLevel([Role::RoleStaff])) {
-            $overtimes->join('overtime_employees', 'overtime_employees.overtime_id', '=', 'overtimes.id');
+            $overtimes->join('overtime_dates', 'overtime_dates.overtime_id', '=', 'overtimes.id');
+            $overtimes->join('overtime_employees', 'overtime_employees.overtime_date_id', '=', 'overtime_dates.id');
             $overtimes->where('overtime_employees.employee_id', '=', $user->employee_id);
         }
 
