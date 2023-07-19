@@ -9,7 +9,7 @@ use App\Http\Requests\Overtime\OvertimeCheckOutRequest;
 use App\Models\Employee;
 use App\Models\EmployeeAttendance;
 use App\Models\Job;
-use App\Models\Notification;
+use App\Models\EmployeeNotification;
 use App\Models\Overtime;
 use App\Models\OvertimeDate;
 use App\Models\OvertimeEmployee;
@@ -237,7 +237,7 @@ class OvertimeService extends BaseService
                     'Pelaksanaan Lember',
                     count($overtimeDates) == 0 ? $overtimeDates[0]['date'] : sprintf("%s - %s", $overtimeDates[0]['date'], $overtimeDates[count($overtimeDates) - 1]['date']),
                     'Lembur Pegawai',
-                    Notification::ReferenceOvertime,
+                    EmployeeNotification::ReferenceOvertime,
                     $overtime->id
                 );
             }

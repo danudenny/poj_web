@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $reference_id
  * @property bool $is_read
  */
-class Notification extends Model
+class EmployeeNotification extends Model
 {
     use HasFactory;
 

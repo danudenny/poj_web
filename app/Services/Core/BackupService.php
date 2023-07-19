@@ -16,7 +16,7 @@ use App\Models\EmployeeAttendance;
 use App\Models\EmployeeAttendanceHistory;
 use App\Models\EmployeeTimesheet;
 use App\Models\Job;
-use App\Models\Notification;
+use App\Models\EmployeeNotification;
 use App\Models\Role;
 use App\Models\Unit;
 use App\Models\User;
@@ -195,7 +195,7 @@ class BackupService extends BaseService
                     'Pelaksanaan Backup',
                     count($backupDates) == 0 ? $backupDate[0]['date'] : sprintf("%s - %s", $backupDates[0]['date'], $backupDates[count($backupDates) - 1]['date']),
                     'Backup Pegawai',
-                    Notification::ReferenceBackup,
+                    EmployeeNotification::ReferenceBackup,
                     $backup->id
                 );
             }
