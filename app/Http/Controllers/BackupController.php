@@ -39,13 +39,17 @@ class BackupController extends Controller
         return $this->backupService->approve($request, $id);
     }
 
-    public function checkIn(BackupCheckInRequest $request, int $id): JsonResponse
+    public function checkIn(BackupCheckInRequest $request): JsonResponse
     {
-        return $this->backupService->checkIn($request, $id);
+        return $this->backupService->checkIn($request);
     }
 
-    public function checkOut(BackupCheckOutRequest $request, int $id): JsonResponse
+    public function checkOut(BackupCheckOutRequest $request): JsonResponse
     {
-        return $this->backupService->checkOut($request, $id);
+        return $this->backupService->checkOut($request);
+    }
+
+    public function listEmployeeBackupTime(Request $request): JsonResponse {
+        return $this->backupService->listEmployeeBackup($request);
     }
 }

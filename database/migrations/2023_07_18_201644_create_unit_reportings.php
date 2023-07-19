@@ -14,9 +14,11 @@ return new class extends Migration
     public function up()
     {
         Schema::table('unit_jobs', function (Blueprint $table) {
-            $table->enum('type', ['normal', 'multiple', 'none'])->default('none');
-            $table->integer('total_reporting')->default(0);
-            $table->json('reporting_names')->nullable();
+            if (!Schema::hasColumns('unit_jobs', ['type', 'total_reporting', 'reporting_names'])) {
+                $table->enum('type', ['normal', 'multiple', 'none'])->default('none');
+                $table->integer('total_reporting')->default(0);
+                $table->json('reporting_names')->nullable();
+            }
         });
     }
 

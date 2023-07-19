@@ -20,6 +20,7 @@ use App\Models\Role;
 use App\Models\Unit;
 use App\Models\User;
 use App\Notifications\AssignBackupRequestNotification;
+use App\Services\BaseService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -30,7 +31,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
-class BackupService
+class BackupService extends BaseService
 {
     public function index(Request $request): JsonResponse
     {
@@ -66,7 +67,7 @@ class BackupService
         /**
          * @var Backup $backup
          */
-        $backup = Backup::query()->with(['unit', 'job', 'timesheet', 'assignee', 'backupHistory'])->find($id);
+        $backup = Backup::query()->with(['unit', 'job', 'backupHistory', 'backupTimes', 'backupEmployees'])->find($id);
         if (!$backup) {
             return response()->json([
                 'status' => 'error',
@@ -87,6 +88,26 @@ class BackupService
             'status' => 'success',
             'message' => 'Succcess fetch data',
             'data' => $backup,
+        ]);
+    }
+
+    public function listEmployeeBackup(Request $request) {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
+        $query = BackupEmployeeTime::query()->with(['backupTime.backup'])
+            ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
+            ->where('backup_times.start_time', '>=', Carbon::now()->addDays(-1)->format('Y-m-d H:i:s'))
+            ->where('employee_id', '=', $user->employee_id)
+            ->orderBy('backup_times.start_time', 'ASC')
+            ->select(['backup_employee_times.*']);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Succcess fetch data',
+            'data' => $this->list($query, $request),
         ]);
     }
 
@@ -143,6 +164,7 @@ class BackupService
             $backup->status = Backup::StatusAssigned;
             $backup->location_lat = $unit->lat;
             $backup->location_long = $unit->long;
+            $backup->timezone = $unitTimeZone;
             $backup->save();
 
             foreach ($backupDates as $backupDate) {
@@ -272,7 +294,7 @@ class BackupService
         }
     }
 
-    public function checkIn(BackupCheckInRequest $request, int $id) {
+    public function checkIn(BackupCheckInRequest $request) {
         try {
             /**
              * @var User $user
@@ -290,7 +312,6 @@ class BackupService
             $employeeBackup = BackupEmployeeTime::query()
                 ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
                 ->join('backups', 'backup_times.backup_id', '=', 'backups.id')
-                ->where('backup_employee_times.id', '=', $id)
                 ->where('backups.status', '!=', Backup::StatusRejected)
                 ->where('backup_times.end_time', '>', Carbon::now()->format('Y-m-d H:i:s'))
                 ->whereNull('backup_employee_times.check_in_time')
@@ -353,7 +374,7 @@ class BackupService
         }
     }
 
-    public function checkOut(BackupCheckOutRequest $request, int $id) {
+    public function checkOut(BackupCheckOutRequest $request) {
         try {
             /**
              * @var User $user
@@ -371,7 +392,6 @@ class BackupService
             $employeeBackup = BackupEmployeeTime::query()
                 ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
                 ->join('backups', 'backup_times.backup_id', '=', 'backups.id')
-                ->where('backup_employee_times.id', '=', $id)
                 ->where('backups.status', '!=', Backup::StatusRejected)
                 ->whereNotNull('backup_employee_times.check_in_time')
                 ->whereNull('backup_employee_times.check_out_time')

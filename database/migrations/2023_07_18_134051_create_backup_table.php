@@ -38,6 +38,10 @@ return new class extends Migration
             if (!Schema::hasColumns('backups', ['location_long'])) {
                 $table->float('location_long')->nullable();
             }
+
+            if (!Schema::hasColumns('timezone', ['location_long'])) {
+                $table->string('timezone')->nullable();
+            }
         });
 
         Schema::table('backup_histories', function (Blueprint $table) {
