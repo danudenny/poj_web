@@ -21,10 +21,24 @@
                                         </p>
                                     </div>
                                     <div class="row">
-                                        <div class="col-md-12">
+                                        <div class="col-md-6">
                                             <div class="mb-3">
                                                 <label class="form-label" for="name">Title</label>
                                                 <input class="form-control" id="title" type="text" v-model="approval.name" placeholder="Approval Title">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="name">Unit Level</label>
+                                                <select class="form-select digits" v-model="selectedUnitLevel" id="level" v-on:change="generateLevel">
+                                                    <option value="ho">Head Office</option>
+                                                    <option value="regional">Regional</option>
+                                                    <option value="corporate">Corporate</option>
+                                                    <option value="kanwil">Kanwil</option>
+                                                    <option value="area">Area</option>
+                                                    <option value="cabang">Cabang</option>
+                                                    <option value="outlet">Outlet</option>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
@@ -133,7 +147,8 @@ export default {
             appendedMultiselects: [],
             appendedMultiselectModels: [],
             filteredUsers: [],
-            ls: JSON.parse(localStorage.getItem('USER_STORAGE_KEY'))
+            ls: JSON.parse(localStorage.getItem('USER_STORAGE_KEY')),
+            selectedUnitLevel: ""
         }
     },
     created() {
@@ -225,6 +240,7 @@ export default {
                 name: this.approval.name,
                 approval_module_id: this.approval.approval_module_id.id,
                 is_active: true,
+                unit_level: this.selectedUnitLevel,
                 user_id: userIds,
             }).then(response => {
                 this.basic_success_alert(response.data.message)

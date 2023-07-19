@@ -18,6 +18,7 @@ class Approval extends Model
         'approval_module_id',
         'name',
         'is_active',
+        'unit_level'
     ];
 
     protected $hidden = [

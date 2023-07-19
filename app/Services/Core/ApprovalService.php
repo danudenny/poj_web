@@ -79,6 +79,7 @@ class ApprovalService extends BaseService
                 'approval_module_id' => $request->approval_module_id,
                 'name' => $request->name,
                 'is_active' => $request->is_active,
+                'unit_level' => $request->unit_level,
             ]);
             $approval->users()->attach($request->user_id);
             DB::commit();
@@ -145,6 +146,7 @@ class ApprovalService extends BaseService
                 'approval_module_id' => $request->approval_module_id,
                 'name' => $request->name,
                 'is_active' => $request->is_active,
+                'unit_level' => $request->unit_level,
             ]);
 
             $approval->users()->sync($request->user_id);

@@ -2,6 +2,7 @@
 
 namespace App\Services\Core;
 
+use App\Models\Approval;
 use App\Models\Employee;
 use App\Models\EmployeeAttendance;
 use App\Models\EmployeeAttendanceHistory;
@@ -316,6 +317,15 @@ class EmployeeAttendanceService extends BaseService {
             $getUser->is_normal_checkin = true;
             $getUser->is_normal_checkout = false;
             $getUser->save();
+
+            if ($isNeedApproval) {
+                $getApproval = Approval::with(['users', 'approvalModule'])
+                    ->whereHas('approvalModule', function ($query) {
+                        $query->where('name', 'Attendance');
+                    });
+                dd($getApproval->get());
+            }
+
 
             DB::commit();
 
