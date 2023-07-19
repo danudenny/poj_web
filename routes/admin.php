@@ -223,7 +223,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::get('', [BackupController::class, 'index']);
         Route::get('view/{id}', [BackupController::class, 'show']);
         Route::get('list-employee-backup', [BackupController::class, 'listEmployeeBackupTime']);
-        Route::get('get-active-backup/{id}', [BackupController::class, 'getActiveEmployeeData']);
+        Route::get('get-active-backup/{id}', [BackupController::class, 'getActiveEmployeeEvent']);
         Route::post('create', [BackupController::class, 'create']);
         Route::post('approve/{id}', [BackupController::class, 'approve']);
         Route::post('check-in/{id}', [BackupController::class, 'checkIn']);
