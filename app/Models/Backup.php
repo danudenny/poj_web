@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $status
  * @property float $location_lat
  * @property float $location_long
+ * @property string $timezone
  *
  * Relations:
  * @property-read Employee $requestorEmployee
