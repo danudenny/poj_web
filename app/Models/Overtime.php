@@ -11,10 +11,11 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read int $id
  * @property int $requestor_employee_id
  * @property int $unit_relation_id
+ * @property int $job_id
  * @property string|null $last_status
  * @property string|null $last_status_at
- * @property string $start_datetime
- * @property string $end_datetime
+ * @property string $start_date
+ * @property string $end_date
  * @property string $timezone
  * @property string $notes
  * @property string|null $image_url
@@ -25,7 +26,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read Employee $requestorEmployee
  * @property-read Unit $unit
  * @property-read OvertimeHistory[] $overtimeHistories
- * @property-read OvertimeEmployee[] $overtimeEmployees
+ * @property-read OvertimeDate[] $overtimeDates
  */
 class Overtime extends Model
 {
@@ -99,8 +100,8 @@ class Overtime extends Model
     /**
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function overtimeEmployees() {
-        return $this->hasMany(OvertimeEmployee::class, 'overtime_id');
+    public function overtimeDates() {
+        return $this->hasMany(OvertimeDate::class, 'overtime_id');
     }
 
     /**

@@ -8,6 +8,7 @@ use App\Http\Requests\Overtime\CreateOvertimeRequest;
 use App\Http\Requests\Overtime\OvertimeApprovalRequest;
 use App\Http\Requests\Overtime\OvertimeCheckOutRequest;
 use App\Services\Core\OvertimeService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class OvertimeController extends Controller
@@ -57,10 +58,11 @@ class OvertimeController extends Controller
     /**
      * @param OvertimeCheckInRequest $request
      * @param OvertimeService $service
-     * @return \Illuminate\Http\JsonResponse|null
+     * @param int $id
+     * @return JsonResponse|null
      */
-    public function checkIn(OvertimeCheckInRequest $request, OvertimeService $service) {
-        return  $service->checkIn($request);
+    public function checkIn(OvertimeCheckInRequest $request, OvertimeService $service, int $id) {
+        return  $service->checkIn($request, $id);
     }
 
     /**
@@ -68,7 +70,11 @@ class OvertimeController extends Controller
      * @param OvertimeService $service
      * @return \Illuminate\Http\JsonResponse
      */
-    public function checkOut(OvertimeCheckOutRequest $request, OvertimeService $service) {
-        return $service->checkOut($request);
+    public function checkOut(OvertimeCheckOutRequest $request, OvertimeService $service, int $id) {
+        return $service->checkOut($request, $id);
+    }
+
+    public function getActiveOvertime(Request $request, OvertimeService $service, int $id) {
+        return $service->getActiveOvertime($request, $id);
     }
 }

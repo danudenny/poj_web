@@ -16,6 +16,7 @@ use App\Models\EmployeeAttendance;
 use App\Models\EmployeeAttendanceHistory;
 use App\Models\EmployeeTimesheet;
 use App\Models\Job;
+use App\Models\Notification;
 use App\Models\Role;
 use App\Models\Unit;
 use App\Models\User;
@@ -23,12 +24,12 @@ use App\Notifications\AssignBackupRequestNotification;
 use App\Services\BaseService;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class BackupService extends BaseService
@@ -188,6 +189,15 @@ class BackupService extends BaseService
                 $backupEmployee->backup_id = $backup->id;
                 $backupEmployee->employee_id = $employeeID;
                 $backupEmployee->save();
+
+                $this->getNotificationService()->createNotification(
+                    $employeeID,
+                    'Pelaksanaan Backup',
+                    count($backupDates) == 0 ? $backupDate[0]['date'] : sprintf("%s - %s", $backupDates[0]['date'], $backupDates[count($backupDates) - 1]['date']),
+                    'Backup Pegawai',
+                    Notification::ReferenceBackup,
+                    $backup->id
+                );
             }
 
             $backupHistory = new BackupHistory();
@@ -294,7 +304,7 @@ class BackupService extends BaseService
         }
     }
 
-    public function checkIn(BackupCheckInRequest $request) {
+    public function checkIn(BackupCheckInRequest $request, int $id) {
         try {
             /**
              * @var User $user
@@ -310,14 +320,8 @@ class BackupService extends BaseService
              * @var BackupEmployeeTime $employeeBackup
              */
             $employeeBackup = BackupEmployeeTime::query()
-                ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
-                ->join('backups', 'backup_times.backup_id', '=', 'backups.id')
-                ->where('backups.status', '!=', Backup::StatusRejected)
-                ->where('backup_times.end_time', '>', Carbon::now()->format('Y-m-d H:i:s'))
-                ->whereNull('backup_employee_times.check_in_time')
-                ->where('backup_employee_times.employee_id', '=', $user->employee_id)
-                ->orderBy('backup_times.start_time', 'ASC')
-                ->select(['backup_employee_times.*'])
+                ->where('id', '=', $id)
+                ->whereNull('check_in_time')
                 ->first();
             if (!$employeeBackup) {
                 return response()->json([
@@ -374,7 +378,7 @@ class BackupService extends BaseService
         }
     }
 
-    public function checkOut(BackupCheckOutRequest $request) {
+    public function checkOut(BackupCheckOutRequest $request, int $id) {
         try {
             /**
              * @var User $user
@@ -390,14 +394,9 @@ class BackupService extends BaseService
              * @var BackupEmployeeTime $employeeBackup
              */
             $employeeBackup = BackupEmployeeTime::query()
-                ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
-                ->join('backups', 'backup_times.backup_id', '=', 'backups.id')
-                ->where('backups.status', '!=', Backup::StatusRejected)
-                ->whereNotNull('backup_employee_times.check_in_time')
-                ->whereNull('backup_employee_times.check_out_time')
-                ->where('backup_employee_times.employee_id', '=', $user->employee_id)
-                ->orderBy('backup_times.start_time', 'ASC')
-                ->select(['backup_employee_times.*'])
+                ->where('id', '=', $id)
+                ->whereNull('check_out_time')
+                ->whereNotNull('check_in_time')
                 ->first();
             if (!$employeeBackup) {
                 return response()->json([
@@ -455,5 +454,38 @@ class BackupService extends BaseService
                 'message' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function getActiveEmployeeDate(Request $request, int $id) {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
+        $backupEmployeeTime = BackupEmployeeTime::query()->with(['backupTime.backup'])
+            ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
+            ->where('backup_times.start_time', '>=', Carbon::now()->addDays(-1)->format('Y-m-d H:i:s'))
+            ->where('backup_times.backup_id', '=', $id)
+            ->where('backup_employee_times.employee_id', '=', $user->employee_id)
+            ->where(function(Builder $builder) {
+                $builder->orWhereNull('backup_employee_times.check_in_time')
+                    ->orWhereNull('backup_employee_times.check_out_time');
+            })
+            ->orderBy('backup_times.start_time', 'ASC')
+            ->select(['backup_employee_times.*'])
+            ->first();
+
+        if (!$backupEmployeeTime) {
+            return response()->json([
+                'status' => false,
+                'message' => 'There is no active backup!',
+            ], ResponseAlias::HTTP_BAD_REQUEST);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Success',
+            'data' => $backupEmployeeTime
+        ]);
     }
  }
