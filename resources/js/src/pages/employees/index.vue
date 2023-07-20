@@ -98,6 +98,15 @@ export default {
                         last_page: response.data.last_page,
                     }
                 },
+                ajaxURLGenerator: (url, config, params) => {
+                    let localFilter = {
+                        name: ''
+                    }
+                    params.filter.map((item) => {
+                        if (item.field === 'name') localFilter.name = item.value
+                    })
+                    return `${url}?name=${localFilter.name}`
+                },
                 layout: 'fitDataStretch',
                 columns: [
                     {
@@ -133,6 +142,8 @@ export default {
                 ],
                 pagination: true,
                 paginationMode: 'remote',
+                responsiveLayout: true,
+                filterMode:"remote",
                 paginationSize: this.pageSize,
                 paginationSizeSelector: [10, 20, 50, 100],
                 headerFilter: true,

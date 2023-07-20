@@ -62,6 +62,9 @@ class EmployeeService extends BaseService
                 $relationIds = array_column($flatUnit, 'relation_id');
 
                 $employeesData[] = $employees
+                    ->when($request->filled('name'), function(Builder $builder) use ($request) {
+                        $builder->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower(request()->query('name')).'%']);
+                    })
                     ->whereIn('kanwil_id', $relationIds)
                     ->orWhereIn('area_id', $relationIds)
                     ->orWhereIn('cabang_id', $relationIds)
@@ -69,6 +72,7 @@ class EmployeeService extends BaseService
                     ->with(['job', 'kanwil', 'area', 'cabang', 'outlet'])
                     ->paginate(10);
             }
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data retrieved successfully',

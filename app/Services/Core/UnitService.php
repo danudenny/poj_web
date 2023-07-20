@@ -24,29 +24,64 @@ class UnitService extends BaseService
      */
     public function index($data): JsonResponse
     {
+        $auth = auth()->user();
         try {
+            $highestPriorityRole = null;
+            $highestPriority = null;
+
+            foreach ($auth->roles as $role) {
+                if ($highestPriority === null || $role['priority'] < $highestPriority) {
+                    $highestPriorityRole = $role;
+                    $highestPriority = $role['priority'];
+                }
+            }
+
+            $lastUnit = $auth->employee->getLastUnit();
+            $relatedUnit = $auth->employee->getRelatedUnit();
             $parentLevel = intval($data->unit_level);
             $childLevel = $parentLevel + 1;
 
-            $units = DB::table('units as parent')
-                ->leftJoin('units as child', function ($join) use ($parentLevel, $childLevel) {
-                    $join->on('parent.relation_id', '=', 'child.parent_unit_id')
-                        ->where('child.unit_level', $childLevel);
-                })
-                ->select(
-                    'parent.id as parent_id',
-                    'parent.name as parent_name',
-                    'parent.unit_level as parent_unit_level',
-                    'parent.parent_unit_id as parent_parent_unit_id',
-                    'child.id as child_id',
-                    'child.name as child_name',
-                    'child.unit_level as child_unit_level',
-                    'child.parent_unit_id as child_parent_unit_id',
-                )
-                ->where('parent.unit_level', $parentLevel)
-                ->orderBy('parent.id')
-                ->orderBy('child.id')
-                ->get();
+            if ($highestPriorityRole->role_level === 'superadmin') {
+                $units = DB::table('units as parent')
+                    ->leftJoin('units as child', function ($join) use ($parentLevel, $childLevel) {
+                        $join->on('parent.relation_id', '=', 'child.parent_unit_id')
+                            ->where('child.unit_level', $childLevel);
+                    })
+                    ->select(
+                        'parent.id as parent_id',
+                        'parent.name as parent_name',
+                        'parent.unit_level as parent_unit_level',
+                        'parent.parent_unit_id as parent_parent_unit_id',
+                        'child.id as child_id',
+                        'child.name as child_name',
+                        'child.unit_level as child_unit_level',
+                        'child.parent_unit_id as child_parent_unit_id',
+                    )
+                    ->where('parent.unit_level', $parentLevel)
+                    ->orderBy('parent.id')
+                    ->orderBy('child.id')
+                    ->get();
+            } else if ($highestPriorityRole->role_level === 'admin') {
+                $units =  DB::table('units as parent')
+                    ->leftJoin('units as child', function ($join) use ($parentLevel, $childLevel) {
+                        $join->on('parent.relation_id', '=', 'child.parent_unit_id')
+                            ->where('child.unit_level', $childLevel);
+                    })
+                    ->select(
+                        'parent.id as parent_id',
+                        'parent.name as parent_name',
+                        'parent.unit_level as parent_unit_level',
+                        'parent.parent_unit_id as parent_parent_unit_id',
+                        'child.id as child_id',
+                        'child.name as child_name',
+                        'child.unit_level as child_unit_level',
+                        'child.parent_unit_id as child_parent_unit_id',
+                    )
+                    ->where('parent.unit_level', $parentLevel)
+                    ->orderBy('parent.id')
+                    ->orderBy('child.id')
+                    ->get();
+            }
 
             $nestedUnits = [];
 
