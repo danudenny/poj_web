@@ -61,6 +61,10 @@
                                             <label for="name">Durasi</label>
                                             <input type="text" class="form-control" v-model="backup.duration" disabled required>
                                         </div>
+                                        <div class="mt-2">
+                                            <label for="name">Berkas</label>
+                                            <input type="file" class="form-control" id="name" @change="onChangeFile">
+                                        </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="row" v-for="(item, index) in backup.dates" :key="index">
@@ -143,7 +147,8 @@ export default {
                 timesheet_id:1,
                 duration: null,
                 dates: {},
-                employee_ids: []
+                employee_ids: [],
+                file_url: null
             },
             selectedDateTimesheet: null,
             selectedJob: {
@@ -431,6 +436,24 @@ export default {
         },
         onSelectDateSheet(data) {
             this.selectedDateTimesheet = data
+        },
+        onChangeFile(e) {
+            let formData = new FormData()
+            formData.set('files[]', e.target.files[0])
+
+            this.$axios.post(`/api/v1/admin/incident/upload-image`, formData)
+                .then(response => {
+                    this.backup.file_url = response.data.urls[0]
+                })
+                .catch(error => {
+                    if(error.response.data.message instanceof Object) {
+                        for (const key in error.response.data.message) {
+                            useToast().error(error.response.data.message[key][0], { position: 'bottom-right' });
+                        }
+                    } else {
+                        useToast().error(error.response.data.message , { position: 'bottom-right' });
+                    }
+                });
         },
         onSubmitForm() {
             this.$axios.post(`/api/v1/admin/backup/create`, this.backup)

@@ -169,6 +169,7 @@ class BackupService extends BaseService
             $backup->location_lat = $unit->lat;
             $backup->location_long = $unit->long;
             $backup->timezone = $unitTimeZone;
+            $backup->file_url = $request->input('file_url');
             $backup->save();
 
             foreach ($backupDates as $backupDate) {

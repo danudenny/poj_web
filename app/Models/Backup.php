@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property float $location_lat
  * @property float $location_long
  * @property string $timezone
+ * @property string $file_url
  *
  * Relations:
  * @property-read Employee $requestorEmployee

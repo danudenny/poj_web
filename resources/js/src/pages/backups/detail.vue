@@ -7,6 +7,10 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mt-2">
+                                <label for="name">Unit Name</label>
+                                <input type="text" class="form-control" v-model="backup.unit.name" disabled>
+                            </div>
+                            <div class="mt-2">
                                 <label for="name">Requestor Name</label>
                                 <input type="text" class="form-control" v-model="backup.requestor_employee.name" disabled>
                             </div>
@@ -28,10 +32,14 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="mt-2">
-                                <label for="name">Unit Name</label>
-                                <input type="text" class="form-control" v-model="backup.unit.name" disabled>
-                            </div>
+                            <a
+                                class="btn btn-primary button-info mt-3"
+                                target="_blank"
+                                :href="backup.file_url"
+                                v-if="backup.file_url"
+                            >
+                                Buka Berkas
+                            </a>
                         </div>
                         <div class="col-md-6">
                             <div class="row" v-for="(item, index) in backup.backup_times" :key="index">
@@ -152,6 +160,7 @@ export default {
                 end_date: null,
                 shift_type: null,
                 duration: null,
+                file_url: null,
                 unit: {
                     name: null
                 },

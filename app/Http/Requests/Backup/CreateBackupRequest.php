@@ -31,7 +31,8 @@ class CreateBackupRequest extends FormRequest
             'shift_type' => ['required', Rule::in([Backup::TypeShift, Backup::TypeNonShift])],
             'timesheet_id' => ['nullable', Rule::requiredIf(($this->input('shift_type') == Backup::TypeShift))],
             'dates' => ['required', 'array'],
-            'employee_ids' => ['required']
+            'employee_ids' => ['required'],
+            'file_url' => ['nullable']
         ];
     }
 }
