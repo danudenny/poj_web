@@ -12,7 +12,6 @@
                                     <option value="superadmin">Superadmin</option>
                                     <option value="admin">Admin</option>
                                     <option value="staff">User / Staff</option>
-                                    <option value="guest">Guest</option>
                                 </select>
                             </div>
                             <div class="mb-3">
@@ -54,6 +53,9 @@ export default {
             selectAll: false,
             selectedPermission: [],
             selectedIds: [],
+            table: null,
+            currentPage: 1,
+            pageSize: 20,
         }
     },
     async mounted() {
@@ -75,7 +77,7 @@ export default {
         },
         async getPermissions() {
             await axios
-                .get(`/api/v1/admin/permission?per_page=1000`)
+                .get(`/api/v1/admin/permission?limit=10`)
                 .then(response => {
                     this.permissions = response.data.data.data;
                 })
@@ -84,9 +86,24 @@ export default {
                 });
         },
         async initializePermissionsTable() {
-            console.log(this.permissions);
-            const table = await new Tabulator(this.$refs.permissionsTable, {
-                data: this.permissions,
+            const ls = localStorage.getItem('my_app_token');
+            this.table = await new Tabulator(this.$refs.permissionsTable, {
+                ajaxURL: `/api/v1/admin/permission?limit=10`,
+                ajaxConfig: {
+                    headers: {
+                        Authorization: `Bearer ${ls}`,
+                    },
+                },
+                ajaxParams: {
+                    page: this.currentPage,
+                    size: this.pageSize,
+                },
+                ajaxResponse: function (url, params, response) {
+                    return {
+                        data: response.data.data,
+                        last_page: response.data.last_page,
+                    }
+                },
                 layout: 'fitDataStretch',
                 columns: [
                     {
@@ -104,15 +121,16 @@ export default {
                         headerFilter:"input"
                     }
                 ],
-                pagination: 'local',
-                paginationSize: 20,
+                pagination: true,
+                paginationMode: 'remote',
+                paginationSize: this.pageSize,
                 paginationSizeSelector: [10, 20, 50, 100],
                 headerFilter: true,
                 rowFormatter: (row) => {
 
                 },
             });
-            table.on("rowSelectionChanged", function(data, rows, selected, deselected)  {
+            this.table.on("rowSelectionChanged", function(data, rows, selected, deselected)  {
                 this.selectedPermission = rows.map(row => row.getData().id);
                 localStorage.setItem('selectedPermission', JSON.stringify(this.selectedPermission));
             })

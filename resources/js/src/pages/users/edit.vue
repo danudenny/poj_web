@@ -26,8 +26,14 @@
                             <div class="mb-3">
                                 <div class="mb-2">
                                     <label class="col-form-label">Roles</label>
-                                    <multiselect v-model="user.roles" tag-placeholder="Add this as new tag" placeholder="Select Roles"
-                                                 label="name" track-by="name" :options="roles" :multiple="true" :taggable="true" @tag="addTag">
+                                    <multiselect
+                                        v-model="user.roles"
+                                        placeholder="Select Roles"
+                                        label="name"
+                                        track-by="id"
+                                        :options="roles"
+                                        :multiple="true"
+                                        :taggable="false">
                                     </multiselect>
                                 </div>
                             </div>
@@ -85,7 +91,7 @@ export default {
                 });
         },
         async getRoles() {
-            await this.$axios.get(`/api/v1/admin/user/roles`)
+            await this.$axios.get(`/api/v1/admin/role`)
                 .then(res => {
                     this.roles = res.data.data;
                 })
@@ -114,7 +120,6 @@ export default {
                 .then(res => {
                     useToast().success(res.data.message , { position: 'bottom-right' });
                     this.$router.push('/management/users');
-                    console.log(res);
                 })
                 .catch(e => {
                     useToast().error(e.response.data.message , { position: 'bottom-right' });

@@ -19,8 +19,7 @@ class PermissionController extends BaseController
     public function index(Request $request)
     {
         try {
-            $result = $this->permissionService->index($request);
-            return $this->sendSuccess($result, self::SUCCESS_FETCH);
+            return $this->permissionService->index($request);
 
         } catch (\Exception | \InvalidArgumentException $error) {
             return $this->sendError($error->getMessage());

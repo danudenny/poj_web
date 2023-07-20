@@ -20,7 +20,11 @@ class PermissionService extends BaseService
                 $query->whereRaw('LOWER(name) like ?', [strtolower('%' . request()->query('name') . '%')]);
             });
 
-            return $this->list($permission, $data);
+            return response()->json([
+                'status' => true,
+                'message' => 'success',
+                'data' => $permission->paginate($data->limit ?? 10)
+            ], 200);
 
         } catch (InvalidArgumentException $e) {
             throw new InvalidArgumentException($e->getMessage());
@@ -60,7 +64,7 @@ class PermissionService extends BaseService
         try {
             $permission = new Permission();
             $permission->name = strtolower(str_replace(' ', '_', $request->name));
-            $permission->guard_name = 'web';
+            $permission->guard_name = 'sanctum';
             $permission->created_at = date('Y-m-d H:i:s');
 
             if (!$permission->save()) {
