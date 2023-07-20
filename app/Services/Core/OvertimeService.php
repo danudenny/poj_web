@@ -118,8 +118,11 @@ class OvertimeService extends BaseService
             ->with(['employee:employees.id,name', 'overtimeDate.overtime'])
             ->join('overtime_dates', 'overtime_dates.id', '=', 'overtime_employees.overtime_date_id')
             ->join('overtimes', 'overtimes.id', '=', 'overtime_dates.overtime_id')
-            ->where('overtime_employees.employee_id', '=', $user->employee_id)
             ->whereNotIn('overtimes.last_status', [OvertimeHistory::TypeRejected]);
+
+        if ($user->isHighestRole(Role::RoleStaff)) {
+            $query->where('overtime_employees.employee_id', '=', $user->employee_id);
+        }
 
         $query->select(['overtime_employees.*']);
         $query->orderBy('overtimes.start_date', 'DESC');
@@ -222,7 +225,7 @@ class OvertimeService extends BaseService
             $overtimeHistory->history_type = $overtime->last_status;
             $overtimeHistory->save();
 
-            if ($user->inRoleLevel([Role::RoleSuperAdministrator])) {
+            if ($user->inRoleLevel([Role::RoleSuperAdministrator, Role::RoleAdmin])) {
                 $overtime->last_status = OvertimeHistory::TypeApproved;
                 $overtime->last_status_at = Carbon::now();
                 $overtime->save();

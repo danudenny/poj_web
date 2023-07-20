@@ -273,11 +273,11 @@ class EventService extends BaseService
          */
         $user = $request->user();
 
-        $employeeEvents = EmployeeEvent::query()->with(['employee:employees.id,name', 'event:events.id,title,requestor_employee_id', 'event.requestorEmployee:employees.id,name'])
+        $employeeEvents = EmployeeEvent::query()->with(['employee:employees.id,name', 'event:events.id,title,requestor_employee_id,timezone', 'event.requestorEmployee:employees.id,name'])
             ->whereRaw("TO_CHAR(event_datetime::DATE, 'YYYY-mm') = TO_CHAR(CURRENT_DATE, 'YYYY-mm')")
-            ->orderBy('id', 'DESC');
+            ->orderBy('event_datetime', 'ASC');
 
-        if (!$user->inRoleLevel([Role::RoleSuperAdministrator])) {
+        if ($user->isHighestRole(Role::RoleStaff)) {
             $employeeEvents->where('employee_id', '=', $user->employee_id);
         }
 

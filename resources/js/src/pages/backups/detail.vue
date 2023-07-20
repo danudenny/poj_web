@@ -1,119 +1,148 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs main="Detail Incident Reporting"/>
+        <Breadcrumbs main="Detail Backup"/>
         <div class="col-sm-12">
             <div class="card">
                 <div class="card-body">
                     <div class="row">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
+                            <div class="mt-2">
+                                <label for="name">Requestor Name</label>
+                                <input type="text" class="form-control" v-model="backup.requestor_employee.name" disabled>
+                            </div>
+                            <div class="mt-2">
+                                <label for="name">Status</label>
+                                <input type="text" class="form-control" v-model="backup.status" disabled>
+                            </div>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mt-2">
-                                        <label for="name">Assignee Name</label>
-                                        <input type="text" class="form-control" v-model="backup.assignee.name" disabled>
-                                    </div>
-                                    <div class="mt-2">
-                                        <label for="name">Unit</label>
-                                        <input type="text" class="form-control" v-model="backup.unit.name" disabled>
-                                    </div>
-                                    <div class="mt-2">
-                                        <label for="name">Job</label>
-                                        <input type="text" class="form-control" v-model="backup.job.name" disabled>
-                                    </div>
-                                    <div class="mt-2">
-                                        <label for="name">Start Date</label>
-                                        <input type="text" class="form-control" v-model="backup.start_date" disabled>
-                                    </div>
-                                    <div class="mt-2">
-                                        <label for="name">End Date</label>
-                                        <input type="text" class="form-control" v-model="backup.end_date" disabled>
-                                    </div>
-                                    <div class="mt-2">
-                                        <label for="name">Shift Type</label>
-                                        <input type="text" class="form-control" v-model="backup.shift_type" disabled>
-                                    </div>
-                                    <div class="mt-2">
-                                        <label for="name">Duration</label>
-                                        <input type="text" class="form-control" v-model="backup.duration" disabled>
-                                    </div>
-                                    <div class="mt-2">
-                                        <p>Timesheet</p>
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <div class="mt-2">
-                                                    <label for="name">Name</label>
-                                                    <input type="text" class="form-control" v-model="backup.timesheet.name" disabled>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="mt-2">
-                                                    <label for="name">Start</label>
-                                                    <input type="text" class="form-control" v-model="backup.timesheet.start_time" disabled>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <div class="mt-2">
-                                                    <label for="name">End</label>
-                                                    <input type="text" class="form-control" v-model="backup.timesheet.end_time" disabled>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        <label for="name">Tanggal Mulai Lembur</label>
+                                        <input type="date" class="form-control" v-model="backup.start_date" disabled>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="row" v-for="(item, index) in backup.backup_history" :key="index">
-                                        <div class="col-md-12">
-                                            <div class="alert-border alert alert-primary" v-if="item.status !== 'reject'">
-                                                <table>
-                                                    <tr>
-                                                        <td>Status</td>
-                                                        <td>: {{item.status}}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Timestamp</td>
-                                                        <td>: {{item.created_at}}</td>
-                                                    </tr>
-                                                </table>
-                                            </div>
-                                            <div class="alert-border alert alert-danger" v-if="item.status === 'reject'">
-                                                <table>
-                                                    <tr>
-                                                        <td>Status</td>
-                                                        <td>: {{item.status}}</td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Timestamp</td>
-                                                        <td>: {{item.created_at}}</td>
-                                                    </tr>
-                                                </table>
-                                            </div>
-                                            <div v-if="index < (backup.backup_history.length - 1)">
-                                                <p align="center">
-                                                    <i class="fa fa-arrow-down history-arrow mb-3"/>
-                                                </p>
-                                            </div>
+                                    <div class="mt-2">
+                                        <label for="name">Tanggal Selesai Lembur</label>
+                                        <input type="date" class="form-control" v-model="backup.end_date" disabled>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <label for="name">Unit Name</label>
+                                <input type="text" class="form-control" v-model="backup.unit.name" disabled>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="row" v-for="(item, index) in backup.backup_times" :key="index">
+                                <div class="col-md-4">
+                                    <div class="mt-2">
+                                        <label for="name">Waktu Mulai</label>
+                                        <input type="text" class="form-control" v-model="item.start_time_with_timezone" disabled required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mt-2">
+                                        <label for="name">Waktu Selesai</label>
+                                        <input type="text" class="form-control" v-model="item.end_time_with_timezone" disabled required>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="mt-4">
+                                        <div
+                                            :class="'btn btn-primary mt-3'"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#detailOvertimeDate"
+                                            @click="onSelectOvertimeDate(item)"
+                                        >
+                                            Daftar Karyawan
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <hr/>
-                            <button class="btn btn-primary">Back</button>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer text-end">
+                    <button class="btn btn-secondary" @click="$router.push('/attendance/backup')">Back</button>&nbsp;
+                    <div
+                        class="btn btn-secondary button-info"
+                        data-bs-toggle="modal"
+                        data-bs-target="#historyModal"
+                    >
+                        History
+                    </div>&nbsp;
+                    <div
+                        class="btn btn-primary button-info"
+                        data-bs-toggle="modal"
+                        data-bs-target="#approvalModal"
+                        v-if="false"
+                    >
+                        Approval
+                    </div>
                 </div>
             </div>
+        </div>
+        <div class="modal fade" id="historyModal" ref="historyModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
+            <VerticalModalWithoutSave title="History">
+                <div class="row" v-for="(item, index) in backup.backup_history" :key="index">
+                    <div class="col-md-12">
+                        <div class="alert-border alert alert-primary" v-if="item.history_type !== 'rejected'">
+                            <table>
+                                <tr>
+                                    <td>Status</td>
+                                    <td>: {{item.status}}</td>
+                                </tr>
+                                <tr>
+                                    <td>Timestamp</td>
+                                    <td>: {{item.created_at}}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="alert-border alert alert-danger" v-if="item.history_type === 'rejected'">
+                            <table>
+                                <tr>
+                                    <td>Status</td>
+                                    <td>: {{item.status}}</td>
+                                </tr>
+                                <tr>
+                                    <td>Timestamp</td>
+                                    <td>: {{item.created_at}}</td>
+                                </tr>
+                                <tr>
+                                    <td>Notes</td>
+                                    <td>: {{item.notes}}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div v-if="index < (backup.backup_history.length - 1)">
+                            <p align="center">
+                                <i class="fa fa-arrow-down history-arrow mb-3"/>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </VerticalModalWithoutSave>
+        </div>
+        <div class="modal fade modal-lg" id="detailOvertimeDate" ref="detailOvertimeDate" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
+            <VerticalModalWithoutSave title="Daftar Karyawan">
+                <div class="row">
+                    <div ref="employeeTable"></div>
+                </div>
+            </VerticalModalWithoutSave>
         </div>
     </div>
 </template>
 
 <script>
 import VerticalModal from "@components/modal/verticalModal.vue";
+import VerticalModalWithoutSave from "@components/modal/verticalModalWithoutSave.vue";
+import {TabulatorFull as Tabulator} from "tabulator-tables";
 
 export default {
     components: {
-        VerticalModal
+        VerticalModal,
+        VerticalModalWithoutSave
     },
     data() {
         return {
@@ -129,16 +158,12 @@ export default {
                 job: {
                     name: null
                 },
-                timesheet: {
-                    start_time: null,
-                    end_time: null,
-                    name: null,
-                },
-                assignee: {
+                backup_history: [],
+                requestor_employee: {
                     name: null
-                },
-                backup_history: []
-            }
+                }
+            },
+            selectedBackupDate: null
         }
     },
     created() {
@@ -149,11 +174,48 @@ export default {
             this.$axios.get(`/api/v1/admin/backup/view/${this.$route.params.id}`)
                 .then(response => {
                     this.backup = response.data.data
-                    console.log(this.backup)
                 })
                 .catch(error => {
                     console.error(error);
                 });
+        },
+        generateEmployeeTable() {
+            const table = new Tabulator(this.$refs.employeeTable, {
+                data: this.selectedBackupDate.backup_employees,
+                layout: 'fitColumns',
+                columns: [
+                    {
+                        title: 'No',
+                        field: '',
+                        formatter: 'rownum',
+                        width: 10
+                    },
+                    {
+                        title: 'Name',
+                        field: 'employee.name',
+                    },
+                    {
+                        title: 'Check In Time',
+                        field: 'check_in_time_with_unit_timezone',
+                    },
+                    {
+                        title: 'Check Out Time',
+                        field: 'check_out_time_with_unit_timezone',
+                    },
+                ],
+                pagination: 'local',
+                paginationSize: 10,
+                paginationSizeSelector: [10, 20, 50, 100],
+                headerFilter: true,
+                paginationInitialPage:1,
+                rowFormatter: (row) => {
+                    //
+                }
+            });
+        },
+        onSelectOvertimeDate(data) {
+            this.selectedBackupDate = data
+            this.generateEmployeeTable()
         },
         onChangeBackupType(e) {
         },

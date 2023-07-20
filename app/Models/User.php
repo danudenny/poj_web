@@ -81,6 +81,33 @@ class User extends Authenticatable
         return false;
     }
 
+    public function isHighestRole(string $roleLevel): bool {
+        return $this->getHighestRole()->role_level == $roleLevel;
+    }
+
+    /**
+     * @return Role|null
+     */
+    public function getHighestRole() {
+        /**
+         * @var Role[] $roles
+         */
+        $roles = $this->roles;
+
+        /**
+         * @var Role|null $highestPriorityRole
+         */
+        $highestPriorityRole = null;
+
+        foreach ($roles as $role) {
+            if ($highestPriorityRole === null || $role->priority < $highestPriorityRole->priority) {
+                $highestPriorityRole = $role;
+            }
+        }
+
+        return $highestPriorityRole;
+    }
+
     public function employee(): BelongsTo
     {
         return $this->BelongsTo(Employee::class);

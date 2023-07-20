@@ -95,14 +95,14 @@ class UnitService extends BaseService
     public function paginatedListUnit(Request $request): JsonResponse
     {
         try {
+            /**
+             * @var User $user
+             */
             $user = $request->user();
 
             $query = Unit::query();
-            if ($user->inRoleLevel([Role::RoleSuperAdministrator])) {
-                $query->when($request->filled('name'), function(Builder $builder) use ($request) {
-                    $builder->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower(request()->query('name')).'%']);
-                });
-            } else {
+
+            if ($user->isHighestRole(Role::RoleAdmin)) {
                 /**
                  * @var Builder $query
                  */
@@ -111,12 +111,14 @@ class UnitService extends BaseService
                             Unit::query()->select(['units.*'])
                                 ->join('unit_data', 'units.parent_unit_id', '=', 'unit_data.relation_id')
                     ));
-
-                $query->when($request->filled('name'), function(Builder $builder) use ($request) {
-                    $builder->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower(request()->query('name')).'%']);
-                });
                 $query->orderBy('unit_level', 'ASC');
+            } else if ($user->isHighestRole(Role::RoleStaff)) {
+                $query->where('relation_id', '=', $user->employee->getLastUnitID());
             }
+
+            $query->when($request->filled('name'), function(Builder $builder) use ($request) {
+                $builder->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower(request()->query('name')).'%']);
+            });
 
             return response()->json([
                 'status' => 'success',

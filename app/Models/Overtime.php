@@ -38,41 +38,11 @@ class Overtime extends Model
     ];
 
     protected $appends = [
-        'check_in_time',
-        'check_out_time'
     ];
 
     protected $casts = [
         'created_at' => 'date:Y-m-d H:i:s'
     ];
-
-    /**
-     * @return string
-     */
-    public function getCheckInTimeAttribute(): string {
-        return $this->getCheckInTime()->format('Y-m-d H:i:s T');
-    }
-
-    /**
-     * @return string
-     */
-    public function getCheckOutTimeAttribute(): string {
-        return $this->getCheckOutTime()->format('Y-m-d H:i:s T');
-    }
-
-    /**
-     * @return Carbon
-     */
-    public function getCheckInTime(): Carbon {
-        return Carbon::parse($this->start_datetime, 'UTC')->setTimezone($this->timezone);
-    }
-
-    /**
-     * @return Carbon
-     */
-    public function getCheckOutTime(): Carbon {
-        return Carbon::parse($this->end_datetime, 'UTC')->setTimezone($this->timezone);
-    }
 
     public function getIsCanApproveAttribute(): bool {
         /**

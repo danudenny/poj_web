@@ -9,23 +9,39 @@
                             <form v-on:submit.prevent="onSubmitForm">
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <div ref="unitsTable"></div>
+                                        <label for="name">Select Unit</label>
+                                        <multiselect
+                                            v-model="selectedUnit"
+                                            placeholder="Select Unit"
+                                            label="name"
+                                            track-by="id"
+                                            :options="units"
+                                            :multiple="false"
+                                            :required="true"
+                                            @select="onUnitSelected"
+                                            @search-change="onUnitSearchName"
+                                        >
+                                        </multiselect>
                                     </div>
                                     <div class="col-md-6">
-                                        <div ref="jobsTable"></div>
+                                        <label for="name">Select Job</label>
+                                        <multiselect
+                                            v-model="selectedJob"
+                                            placeholder="Select Job"
+                                            label="name"
+                                            track-by="id"
+                                            :options="jobs"
+                                            :multiple="false"
+                                            :required="true"
+                                            :disabled="jobs.length === 0"
+                                            @select="onJobSelected"
+                                        >
+                                        </multiselect>
                                     </div>
                                 </div>
                                 <br/>
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <div class="mt-2">
-                                            <label for="name">Tanggal Mulai</label>
-                                            <input type="date" class="form-control" v-model="backup.start_date" required>
-                                        </div>
-                                        <div class="mt-2">
-                                            <label for="name">Tanggal Selesai</label>
-                                            <input type="date" class="form-control" v-model="backup.end_date" required>
-                                        </div>
                                         <div class="mt-2">
                                             <label for="status">Kategori Backup:</label>
                                             <select id="status" name="status" class="form-select" v-model="backup.shift_type" @change="onChangeBackupType" required>
@@ -34,14 +50,56 @@
                                             </select>
                                         </div>
                                         <div class="mt-2">
+                                            <label for="name">Tanggal Mulai</label>
+                                            <input type="date" class="form-control" v-model="backup.start_date" @change="onDateChanged" required>
+                                        </div>
+                                        <div class="mt-2">
+                                            <label for="name">Tanggal Selesai</label>
+                                            <input type="date" class="form-control" v-model="backup.end_date" @change="onDateChanged" :min="backup.start_date" required>
+                                        </div>
+                                        <div class="mt-2">
                                             <label for="name">Durasi</label>
-                                            <input type="number" class="form-control" v-model="backup.duration" required>
+                                            <input type="text" class="form-control" v-model="backup.duration" disabled required>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <div ref="timesheetTable" v-if="backup.shift_type === 'Shift'"></div>
+                                        <div class="row" v-for="(item, index) in backup.dates" :key="index">
+                                            <div class="col-md-3">
+                                                <div class="mt-2">
+                                                    <label for="name">Tanggal</label>
+                                                    <input type="date" class="form-control" :value="index" disabled required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="mt-2">
+                                                    <label for="name">Jam Mulai</label>
+                                                    <input type="time" class="form-control" v-model="backup.dates[index].start_time" :disabled="backup.shift_type === 'Shift'" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="mt-2">
+                                                    <label for="name">Jam Akhir</label>
+                                                    <input type="time" class="form-control" v-model="backup.dates[index].end_time" :disabled="backup.shift_type === 'Shift'" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="mt-4">
+                                                    <div
+                                                        :class="'btn btn-primary mt-3' + (backup.unit_relation_id === null ? ' disabled' : '')"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#timesheetModal"
+                                                        v-if="backup.shift_type === 'Shift'"
+                                                        @click="onSelectDateSheet(index)"
+                                                    >
+                                                        Pilih Timesheet
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+                                <br/>
+                                <br/>
                                 <div ref="employeeTable"></div>
                                 <br/>
                                 <button class="btn btn-primary">Simpan</button>
@@ -53,11 +111,20 @@
                 </div>
             </form>
         </div>
+        <div class="modal fade" id="timesheetModal" ref="timesheetModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
+            <VerticalModal :title="'Select Timesheet for ' + this.selectedDateTimesheet">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div ref="timesheetTable" v-if="backup.shift_type === 'Shift'"></div>
+                    </div>
+                </div>
+            </VerticalModal>
+        </div>
     </div>
 </template>
 
 <script>
-import VerticalModal from "@components/modal/verticalModal.vue";
+import VerticalModal from "@components/modal/verticalModalWithoutSave.vue";
 import {TabulatorFull as Tabulator} from "tabulator-tables";
 import {useToast} from "vue-toastification";
 
@@ -68,30 +135,38 @@ export default {
     data() {
         return {
             backup: {
-                unit_id: '',
-                job_id: '',
-                assignee_id: null,
-                shift_type: 'Shift',
-                timesheet_id: null,
+                unit_relation_id:null,
                 start_date: null,
                 end_date: null,
-                duration: null
+                job_id:null,
+                shift_type: 'Shift',
+                timesheet_id:1,
+                duration: null,
+                dates: {},
+                employee_ids: []
             },
+            selectedDateTimesheet: null,
             selectedJob: {
                 id: '',
                 odoo_id: ''
             },
             selectedUnit: {
-                id: '',
-                odoo_id: ''
+                id: null,
+                relation_id: null
+            },
+            selectedTimesheet: {
+                id: null,
+                start_time: null,
+                end_time: null,
+                is_active: null,
+                name: null,
+                unit_id: null
             },
             unitPagination: {
                 currentPage: 1,
-                pageSize: 10
-            },
-            jobPagination: {
-                currentPage: 1,
-                pageSize: 10
+                pageSize: 30,
+                name: '',
+                onSearch: true
             },
             timeSheetPagination: {
                 currentPage: 1,
@@ -100,205 +175,92 @@ export default {
             employeePagination: {
                 currentPage: 1,
                 pageSize: 10
-            }
+            },
+            units: [],
+            jobs: []
         }
     },
     mounted() {
-        this.generateUnitsTable()
-        this.generateJobsTable()
-        this.generateTimeSheetTable()
-        this.generateEmployeesTable()
+        this.getUnitsData()
     },
     methods: {
-        generateUnitsTable() {
-            const ls = localStorage.getItem('my_app_token')
-            const table = new Tabulator(this.$refs.unitsTable, {
-                ajaxURL: '/api/v1/admin/unit/paginated',
-                layout: 'fitColumns',
-                columns: [
-                    {
-                        formatter: "rowSelection",
-                        titleFormatter: "rowSelection",
-                        hozAlign: "center",
-                        headerSort: false,
-                        width: 10,
-                        titleFormatterParams: {
-                            rowRange: "active"
-                        },
-                        cellClick: function (e, cell) {
-                            cell.getRow()
-                        },
-                    },
-                    {
-                        title: 'Unit Name',
-                        field: 'name',
-                        headerFilter:"input"
-                    }
-                ],
-                selectable: 1,
-                pagination: true,
-                paginationMode: 'remote',
-                responsiveLayout: true,
-                filterMode:"remote",
-                paginationSize: this.unitPagination.pageSize,
-                ajaxConfig: {
-                    headers: {
-                        Authorization: `Bearer ${ls}`,
-                    },
-                },
-                ajaxParams: {
-                    page: this.unitPagination.currentPage,
-                    size: this.unitPagination.pageSize,
-                },
-                ajaxURLGenerator: (url, config, params) => {
-                    let localFilter = {
-                        name: ''
-                    }
-                    params.filter.map((item) => {
-                        if (item.field === 'name') localFilter.name = item.value
-                    })
-                    return `${url}?page=${params.page}&per_page=${params.size}&size=${params.size}&name=${localFilter.name}`
-                },
-                ajaxResponse: function (url, params, response) {
-                    return {
-                        data: response.data.data,
-                        last_page: response.data.last_page,
-                    }
-                },
-                paginationSizeSelector: [10, 20, 50, 100],
-                headerFilter: true,
-                rowFormatter: (row) => {
-                    if (this.selectedUnit.id === row.getData().id) {
-                        row.select()
-                    }
-                },
-            });
-            table.on("rowSelectionChanged", (data, rows, selected, deselected) => {
-                if(selected.length > 0) {
-                    this.selectedUnit = {
-                        id: selected[0].getData().id,
-                        odoo_id: selected[0].getData().relation_id
-                    }
-                }
-                if (selected.length === 0 && deselected.length > 0) {
-                    this.selectedUnit = {
-                        id: '',
-                        odoo_id: ''
-                    }
-                }
-                this.generateEmployeesTable()
-            })
+        getUnitsData() {
+            this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.unitPagination.pageSize}&page=${this.unitPagination.currentPage}&name=${this.unitPagination.name}`)
+                .then(response => {
+                    this.units = response.data.data.data
+                    this.unitPagination.onSearch = false
+                })
+                .catch(error => {
+                    console.error(error);
+                });
         },
-        generateJobsTable() {
-            const ls = localStorage.getItem('my_app_token')
-            const table = new Tabulator(this.$refs.jobsTable, {
-                ajaxURL: '/api/v1/admin/job',
-                layout: 'fitColumns',
-                columns: [
-                    {
-                        formatter: "rowSelection",
-                        titleFormatter: "rowSelection",
-                        hozAlign: "center",
-                        headerSort: false,
-                        width: 10,
-                        titleFormatterParams: {
-                            rowRange: "active"
-                        },
-                        cellClick: function (e, cell) {
-                            cell.getRow()
-                        },
-                    },
-                    {
-                        title: 'Job Name',
-                        field: 'name',
-                        headerFilter:"input"
-                    }
-                ],
-                selectable: 1,
-                pagination: true,
-                paginationMode: 'remote',
-                responsiveLayout: true,
-                filterMode:"remote",
-                paginationSize: this.jobPagination.pageSize,
-                ajaxConfig: {
-                    headers: {
-                        Authorization: `Bearer ${ls}`,
-                    },
-                },
-                ajaxParams: {
-                    page: this.jobPagination.currentPage,
-                    size: this.jobPagination.pageSize,
-                },
-                ajaxURLGenerator: (url, config, params) => {
-                    let localFilter = {
-                        name: ''
-                    }
-                    params.filter.map((item) => {
-                        if (item.field === 'name') localFilter.name = item.value
-                    })
-                    return `${url}?page=${params.page}&per_page=${params.size}&size=${params.size}&name=${localFilter.name}`
-                },
-                ajaxResponse: function (url, params, response) {
-                    return {
-                        data: response.data.data,
-                        last_page: response.data.last_page,
-                    }
-                },
-                paginationSizeSelector: [10, 20, 50, 100],
-                headerFilter: true,
-                rowFormatter: (row) => {
-                    if (this.selectedJob.id === row.getData().id) {
-                        row.select()
-                    }
-                },
-            });
-            table.on("rowSelectionChanged", (data, rows, selected, deselected) => {
-                if(selected.length > 0) {
-                    this.selectedJob = {
-                        id: selected[0].getData().id,
-                        odoo_id: selected[0].getData().odoo_job_id
-                    }
-                }
-                if (selected.length === 0 && deselected.length > 0) {
-                    this.selectedJob = {
-                        id: '',
-                        odoo_id: ''
-                    }
-                }
+        getJobsData() {
+            if (this.backup.unit_relation_id < 1) {
+                return
+            }
 
-                this.generateEmployeesTable()
-            })
+            this.$axios.get(`/api/v1/admin/job/${this.selectedUnit.id}`)
+                .then(response => {
+                    this.jobs = response.data.data
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        },
+        onUnitSearchName(val) {
+            this.unitPagination.name = val
+
+            if (!this.unitPagination.onSearch) {
+                this.unitPagination.onSearch = true
+                setTimeout(() => {
+                    this.getUnitsData()
+                }, 1000)
+            }
+        },
+        onUnitSelected(val) {
+            this.backup.unit_relation_id = this.selectedUnit.relation_id
+            this.jobs = []
+            this.getJobsData()
+            this.generateTimeSheetTable()
+            this.generateEmployeesTable()
+        },
+        onJobSelected() {
+            this.backup.job_id = this.selectedJob.id
+            this.generateEmployeesTable()
         },
         generateTimeSheetTable() {
             const ls = localStorage.getItem('my_app_token')
             const table = new Tabulator(this.$refs.timesheetTable, {
-                ajaxURL: '/api/v1/admin/employee-timesheet',
+                ajaxURL: `/api/v1/admin/employee-timesheet/${this.selectedUnit.id}`,
                 layout: 'fitColumns',
                 columns: [
-                    {
-                        formatter: "rowSelection",
-                        titleFormatter: "rowSelection",
-                        hozAlign: "center",
-                        headerSort: false,
-                        width: 10,
-                        titleFormatterParams: {
-                            rowRange: "active"
-                        },
-                        cellClick: function (e, cell) {
-                            cell.getRow()
-                        },
-                    },
                     {
                         title: 'Timtesheet Name',
                         field: 'name',
                     },
                     {
                         title: 'From',
-                        field: 'name',
+                        field: 'start_time',
                     },
                     {
                         title: 'To',
-                        field: 'name',
+                        field: 'end_time',
+                    },
+                    {
+                        title: 'Select',
+                        formatter: (cell, formatterParams, onRendered) => {
+                            return `<button class="button-icon button-success" data-bs-dismiss="modal" data-id="${cell.getRow().getData().id}"><i class="fa fa-arrow-right"></i> </button>`;
+                        },
+                        width: 70,
+                        hozAlign: 'center',
+                        sortable: false,
+                        cellClick: (e, cell) => {
+                            let data = cell.getRow().getData()
+                            this.backup.dates[this.selectedDateTimesheet] = {
+                                start_time: data.start_time,
+                                end_time: data.end_time
+                            }
+                        }
                     }
                 ],
                 selectable: 1,
@@ -334,29 +296,36 @@ export default {
                 paginationSizeSelector: [10, 20, 50, 100],
                 headerFilter: true,
                 rowFormatter: (row) => {
-                    if (this.backup.timesheet_id !== null && (this.backup.timesheet_id === row.getData().id)) {
-                        row.select()
-                    }
                 },
             });
             table.on("rowSelectionChanged", (data, rows, selected, deselected) => {
                 if(selected.length > 0) {
-                    this.backup.timesheet_id = selected[0].getData().id
+                    this.selectedTimesheet = selected[0].getData()
                 }
                 if (selected.length === 0 && deselected.length > 0) {
-                    this.backup.timesheet_id = ''
+                    this.selectedTimesheet = {
+                        id: null,
+                        start_time: null,
+                        end_time: null,
+                        is_active: null,
+                        name: null,
+                        unit_id: null
+                    }
                 }
             })
         },
         generateEmployeesTable() {
+            if (this.backup.unit_relation_id === null || this.backup.job_id === null) {
+                return
+            }
+
             const ls = localStorage.getItem('my_app_token')
             const table = new Tabulator(this.$refs.employeeTable, {
-                ajaxURL: '/api/v1/admin/employee',
+                ajaxURL: '/api/v1/admin/employee/paginated',
                 layout: 'fitColumns',
                 columns: [
                     {
                         formatter: "rowSelection",
-                        titleFormatter: "rowSelection",
                         hozAlign: "center",
                         width: 10,
                         headerSort: false,
@@ -373,11 +342,18 @@ export default {
                         headerFilter:"input"
                     },
                     {
+                        title: 'Work Email',
+                        field: 'work_email'
+                    },
+                    {
+                        title: 'Current Unit',
+                        field: 'last_unit.name'
+                    },
+                    {
                         title: 'Job Name',
                         field: 'job.name'
                     }
                 ],
-                selectable: 1,
                 pagination: true,
                 paginationMode: 'remote',
                 responsiveLayout: true,
@@ -399,7 +375,7 @@ export default {
                     params.filter.map((item) => {
                         if (item.field === 'name') localFilter.name = item.value
                     })
-                    return `${url}?page=${params.page}&size=${params.size}&name=${localFilter.name}&unit_id=${this.selectedUnit.odoo_id}&job_id=${this.selectedJob.odoo_id}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${localFilter.name}&unit_relation_id=${this.selectedUnit.relation_id}&job_id=${this.backup.job_id}`
                 },
                 ajaxResponse: function (url, params, response) {
                     return {
@@ -410,35 +386,53 @@ export default {
                 paginationSizeSelector: [10, 20, 50, 100],
                 headerFilter: true,
                 rowFormatter: (row) => {
-                    if (this.backup.assignee_id !== null && (this.backup.assignee_id === row.getData().id)) {
+                    if (this.backup.employee_ids.includes(row.getData().id)) {
                         row.select()
                     }
                 },
             });
             table.on("rowSelectionChanged", (data, rows, selected, deselected) => {
                 if(selected.length > 0) {
-                    this.backup.assignee_id = selected[0].getData().id
+                    this.backup.employee_ids.push(selected[0].getData().id)
                 }
-                if (selected.length === 0 && deselected.length > 0) {
-                    this.backup.assignee_id = ''
+                if (deselected.length > 0) {
+                    let deselectedID = deselected[0].getData().id
+                    this.backup.employee_ids = this.backup.employee_ids.filter((val) => {
+                        return deselectedID !== val
+                    })
                 }
             })
         },
         onChangeBackupType(e) {
             if (e.target.value === 'Shift') {
                 this.generateTimeSheetTable()
-            } else {
-                this.backup.timesheet_id = null
             }
         },
-        onSubmitForm() {
-            this.backup.unit_id = this.selectedUnit.id
-            this.backup.job_id = this.selectedJob.id
+        onDateChanged() {
+            if (this.backup.start_date != null && this.backup.end_date != null) {
+                let i = 0
+                let data = {}
 
+                for (let d = new Date(this.backup.start_date); d <= new Date(this.backup.end_date); d.setDate(d.getDate() + 1)) {
+                    i++
+                    data[d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + (d.getDate())).slice(-2)] = {
+                        start_time: null,
+                        end_time: null
+                    }
+                }
+
+                this.backup.dates = data
+                this.backup.duration = `${i} Hari`
+            }
+        },
+        onSelectDateSheet(data) {
+            this.selectedDateTimesheet = data
+        },
+        onSubmitForm() {
             this.$axios.post(`/api/v1/admin/backup/create`, this.backup)
                 .then(response => {
                     useToast().success("Success to create data", { position: 'bottom-right' });
-                    // this.$router.push({name: 'event_request_detail', params: {id: response.data.data.id}});
+                    this.$router.push({name: 'Backup', params: {}});
                 })
                 .catch(error => {
                     if(error.response.data.message instanceof Object) {

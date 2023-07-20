@@ -76,6 +76,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     // Begin Employee
     Route::group(['prefix' => 'employee'], function () {
         Route::get('/', [EmployeeController::class, 'index']);
+        Route::get('paginated', [EmployeeController::class, 'listPaginatedEmployee']);
         Route::get('view/{id}', [EmployeeController::class, 'view']);
         Route::get('sync-to-users', [EmployeeController::class, 'syncToUser']);
     });

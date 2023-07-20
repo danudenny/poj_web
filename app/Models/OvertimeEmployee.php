@@ -83,7 +83,7 @@ class OvertimeEmployee extends Model
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function employee() {
-        return $this->belongsTo(Employee::class, 'semployee_id');
+        return $this->belongsTo(Employee::class, 'employee_id');
     }
 
     /**

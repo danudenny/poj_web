@@ -242,7 +242,6 @@ export default {
                 columns: [
                     {
                         formatter: "rowSelection",
-                        titleFormatter: "rowSelection",
                         hozAlign: "center",
                         headerSort: false,
                         titleFormatterParams: {
@@ -463,6 +462,7 @@ export default {
             }
 
             this.event.event_attendances = this.selectedEmployees
+            this.event.time_event = this.event.time_event + ":00"
 
             this.$axios.post(`/api/v1/admin/event/create`, this.event)
                 .then(response => {

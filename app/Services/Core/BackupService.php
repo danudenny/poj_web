@@ -42,9 +42,9 @@ class BackupService extends BaseService
         $user = $request->user();
 
         $backups = Backup::query();
-        if ($user->inRoleLevel([Role::RoleAdmin])) {
+        if ($user->isHighestRole(Role::RoleAdmin)) {
             $backups->whereIn('unit_id', $user->employee->getAllUnitID());
-        } else if ($user->inRoleLevel([Role::RoleStaff])) {
+        } else if ($user->isHighestRole(Role::RoleStaff)) {
             $backups->where('requestor_employee_id', '=', $user->employee_id);
         }
 
@@ -68,7 +68,7 @@ class BackupService extends BaseService
         /**
          * @var Backup $backup
          */
-        $backup = Backup::query()->with(['unit', 'job', 'backupHistory', 'backupTimes', 'backupEmployees'])->find($id);
+        $backup = Backup::query()->with(['unit', 'job', 'backupHistory', 'backupTimes.backupEmployees', 'backupTimes.backupEmployees.employee:employees.id,name', 'backupEmployees', 'requestorEmployee:employees.id,name'])->find($id);
         if (!$backup) {
             return response()->json([
                 'status' => 'error',
@@ -101,9 +101,12 @@ class BackupService extends BaseService
         $query = BackupEmployeeTime::query()->with(['backupTime.backup'])
             ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
             ->where('backup_times.start_time', '>=', Carbon::now()->addDays(-1)->format('Y-m-d H:i:s'))
-            ->where('employee_id', '=', $user->employee_id)
             ->orderBy('backup_times.start_time', 'ASC')
             ->select(['backup_employee_times.*']);
+
+        if ($user->isHighestRole(Role::RoleStaff)) {
+            $query->where('employee_id', '=', $user->employee_id);
+        }
 
         return response()->json([
             'status' => 'success',

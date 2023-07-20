@@ -10,6 +10,7 @@ use Spatie\Permission\Models\Role as SpatieRole;
  * Attributes:
  * @property-read int $id
  * @property string $role_level
+ * @property int $priority
  */
 class Role extends SpatieRole
 {
