@@ -226,7 +226,7 @@ export default {
                 })
         },
         async getUsers() {
-            await this.$axios.get(`/api/v1/admin/employee?limit=15000`)
+            await this.$axios.get(`/api/v1/admin/employee?limit=3500`)
                 .then(response => {
                     this.users = response.data.data.data
                 })
