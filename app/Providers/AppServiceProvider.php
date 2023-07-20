@@ -68,8 +68,8 @@ class AppServiceProvider extends ServiceProvider
             if ($value->key == 'MAIL_ENCRYPTION') {
                 config(['mail.mailers.smtp.encryption' => $value->value]);
             }
-            if ($value->key == 'MAIL_PORT') {
-                config(['mail.mailers.smtp.port' => $value->value]);
+	    if ($value->key == 'MAIL_PORT') {
+                config(['mail.mailers.smtp.port' => intval($value->value)]);
             }
         }
 
