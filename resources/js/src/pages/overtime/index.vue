@@ -73,11 +73,11 @@ export default {
                     },
                     {
                         title: 'Start Time',
-                        field: 'check_in_time',
+                        field: 'start_date',
                     },
                     {
                         title: 'End Time',
-                        field: 'check_out_time',
+                        field: 'end_date',
                     },
                     {
                         title: 'Created At',
