@@ -310,7 +310,7 @@ class EventService extends BaseService
                 "Event",
                 EmployeeNotification::ReferenceEvent,
                 $event->id
-            );
+            )->withSendPushNotification()->send();
         }
     }
 

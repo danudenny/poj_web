@@ -240,7 +240,7 @@ class OvertimeService extends BaseService
             foreach ($employeeIDs as $employeeID) {
                 $this->getNotificationService()->createNotification(
                     $employeeID,
-                    'Pelaksanaan Lember',
+                    'Pelaksanaan Lembur',
                     count($overtimeDates) == 0 ? $overtimeDates[0]['date'] : sprintf("%s - %s", $overtimeDates[0]['date'], $overtimeDates[count($overtimeDates) - 1]['date']),
                     'Lembur Pegawai',
                     EmployeeNotification::ReferenceOvertime,
