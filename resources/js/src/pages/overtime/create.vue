@@ -161,7 +161,7 @@ export default {
             },
             unitPagination: {
                 currentPage: 1,
-                pageSize: 10,
+                pageSize: 50,
                 name: ''
             },
             timeSheetPagination: {

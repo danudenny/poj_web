@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\BaseService;
 use App\Services\MinioService;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -48,6 +49,40 @@ class UserService extends BaseService
             });
             $users->when(request()->filled('is_active'), function ($query) {
                 $query->where('is_active', '=', request()->query('is_active'));
+            });
+            $users->when(request()->filled('last_unit_id'), function (Builder $query) {
+                $query->leftJoin('employees', 'employees.id', '=', 'users.employee_id');
+                $query->select(['users.*']);
+
+                $lastUnitRelationID = request()->input('last_unit_id');
+
+                $query->where(function($builder) use ($lastUnitRelationID) {
+                        $builder->orWhere(function($builder) use ($lastUnitRelationID) {
+                            $builder->where('employees.outlet_id', '=', $lastUnitRelationID);
+                        })
+                        ->orWhere(function($builder) use ($lastUnitRelationID) {
+                            $builder->where('employees.outlet_id', '=', 0)
+                                ->where('employees.cabang_id', '=', $lastUnitRelationID);
+                        })
+                        ->orWhere(function($builder) use ($lastUnitRelationID) {
+                            $builder->where('employees.outlet_id', '=', 0)
+                                ->where('employees.cabang_id', '=', 0)
+                                ->where('employees.area_id', '=', $lastUnitRelationID);
+                        })
+                        ->orWhere(function($builder) use ($lastUnitRelationID) {
+                            $builder->where('employees.outlet_id', '=', 0)
+                                ->where('employees.cabang_id', '=', 0)
+                                ->where('employees.area_id', '=', 0)
+                                ->where('employees.kanwil_id', '=', $lastUnitRelationID);
+                        })
+                        ->orWhere(function($builder) use ($lastUnitRelationID) {
+                            $builder->where('employees.outlet_id', '=', 0)
+                                ->where('employees.cabang_id', '=', 0)
+                                ->where('employees.area_id', '=', 0)
+                                ->where('employees.kanwil_id', '=', 0)
+                                ->where('employees.corporate_id', '=', $lastUnitRelationID);
+                        });
+                });
             });
             $users->orderBy('name', 'asc');
 

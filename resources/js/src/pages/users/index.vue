@@ -11,16 +11,49 @@
                                 <h5>User List</h5>
                             </div>
                             <div class="card-body">
-                                <div class="d-flex justify-content-end mb-2">
-                                    <button class="btn btn-warning"  :disabled="syncLoading" type="button" @click="syncFromEmployee">
+                                <div>
+                                    <h5>
+                                        <i class="fa fa-filter text-warning"></i>&nbsp; Filter
+                                    </h5>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <multiselect
+                                                        v-model="selectedUnit"
+                                                        placeholder="Select Unit"
+                                                        label="name"
+                                                        track-by="id"
+                                                        :options="units"
+                                                        :multiple="false"
+                                                        :required="true"
+                                                        @select="onUnitSelected"
+                                                        @deselect="onUnitDeselected"
+                                                        @search-change="onUnitSearchName"
+                                                    >
+                                                    </multiselect>
+                                                </div>
+                                                <div class="col-md-6">
+
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="d-flex justify-content-end mb-2">
+                                                        <button class="btn btn-warning"  :disabled="syncLoading" type="button" @click="syncFromEmployee">
                                         <span v-if="syncLoading">
                                             <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
                                         </span>
-                                        <span v-else>
+                                                            <span v-else>
                                             <i class="fa fa-recycle"></i> &nbsp; Sync From Employee
                                         </span>
-                                    </button>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <br/>
                                 <div v-if="loading" class="text-center">
                                     <img src="../../assets/loader.gif" alt="loading" width="100">
                                 </div>
@@ -51,14 +84,38 @@ export default {
             currentPage: 1,
             pageSize: 10,
             filterName: '',
-            filterEmail: ''
+            filterEmail: '',
+            filter: {
+                unit_relation_id: ''
+            },
+            unitPagination: {
+                currentPage: 1,
+                pageSize: 100,
+                name: '',
+                onSearch: false
+            },
+            selectedUnit: {
+                relation_id: ''
+            },
+            units: []
         }
     },
     async mounted() {
         await this.getUsers();
+        this.getUnitsData();
         this.initializeUsersTable();
     },
     methods: {
+        getUnitsData() {
+            this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.unitPagination.pageSize}&page=${this.unitPagination.currentPage}&name=${this.unitPagination.name}`)
+                .then(response => {
+                    this.units = response.data.data.data
+                    this.unitPagination.onSearch = false
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        },
         startCountdown() {
             this.countdown = 1;
             this.timerId = setInterval(() => {
@@ -95,7 +152,7 @@ export default {
                         if (item.field === 'name') this.filterName = item.value
                         if (item.field === 'email') this.filterEmail = item.value
                     })
-                    return `${url}?page=${params.page}&size=${params.size}&name=${this.filterName}&email=${this.filterEmail}`
+                    return `${url}?page=${params.page}&size=${params.size}&name=${this.filterName}&email=${this.filterEmail}&last_unit_id=${this.filter.unit_relation_id}`
                 },
                 ajaxResponse: function (url, params, response) {
                     return {
@@ -122,6 +179,11 @@ export default {
                     {
                         title: 'Email',
                         field: 'email',
+                        headerFilter:"input"
+                    },
+                    {
+                        title: 'Unit',
+                        field: 'employee.last_unit.name',
                         headerFilter:"input"
                     },
                     {
@@ -209,7 +271,25 @@ export default {
                     this.syncLoading = false;
                     clearInterval(this.timerId);
                 });
-        }
+        },
+        onUnitSearchName(val) {
+            this.unitPagination.name = val
+
+            if (!this.unitPagination.onSearch) {
+                this.unitPagination.onSearch = true
+                setTimeout(() => {
+                    this.getUnitsData()
+                }, 1000)
+            }
+        },
+        onUnitSelected(val) {
+            this.filter.unit_relation_id = this.selectedUnit.relation_id
+            this.initializeUsersTable()
+        },
+        onUnitDeselected(val) {
+            this.filter.unit_relation_id = ''
+            this.initializeUsersTable()
+        },
     }
 }
 </script>
