@@ -29,22 +29,6 @@
                                         </div>
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label class="form-label" for="name">Unit Level</label>
-                                                <select class="form-select digits" v-model="selectedUnitLevel" id="level" v-on:change="generateLevel">
-                                                    <option value="ho">Head Office</option>
-                                                    <option value="regional">Regional</option>
-                                                    <option value="corporate">Corporate</option>
-                                                    <option value="kanwil">Kanwil</option>
-                                                    <option value="area">Area</option>
-                                                    <option value="cabang">Cabang</option>
-                                                    <option value="outlet">Outlet</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
                                                 <label class="form-label" for="name">Approval Type</label>
                                                 <multiselect
                                                     v-model="approval.approval_module_id"
@@ -56,60 +40,73 @@
                                                 </multiselect>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <div class="col-md-4">
                                             <div class="mb-3">
-                                                <label class="form-label" for="name">Level</label>
-                                                <select class="form-select digits" v-model="selectedLevel" id="level" v-on:change="generateLevel">
-                                                    <option>1</option>
-                                                    <option>2</option>
-                                                    <option>3</option>
-                                                    <option>4</option>
-                                                    <option>5</option>
+                                                <select class="form-select digits" v-model="selectedUnitLevel" @change="generateLevel">
+                                                    <option value="">-- Select Unit Level --</option>
+                                                    <option value="1">Head Office</option>
+                                                    <option value="2">Regional</option>
+                                                    <option value="3">Corporate</option>
+                                                    <option value="4">Kanwil</option>
+                                                    <option value="5">Area</option>
+                                                    <option value="6">Cabang</option>
+                                                    <option value="7">Outlet</option>
                                                 </select>
                                             </div>
                                         </div>
+                                        <div>
+                                            <div class="d-flex justify-content-end column-gap-2">
+                                                <div v-if="rows.length > 1">
+                                                    <button class="btn btn-outline-danger" @click="removeRow(index)">
+                                                        <i class="fa fa-times-circle"></i> Remove Last Row
+                                                    </button>
+                                                </div>
+                                                <button class="btn btn-outline-success" @click="addRow" v-if="rows.length < 5">
+                                                    <i class="fa fa-plus-circle"></i> Add More Approvals
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
+                                    <div v-for="(row, index) in rows" :key="index">
                                         <div class="row">
                                             <div class="col-md-6">
-                                                <div v-for="(divElement, index) in appendedOrganization" :key="divElement.id">
-                                                    <div class="mb-3">
-                                                        <label class="form-label" for="name">Organization {{index+1}}</label>
-                                                        <multiselect
-                                                            v-model="appendedOrganization[index]"
-                                                            placeholder="Select Organization"
-                                                            label="name"
-                                                            track-by="id"
-                                                            :options="organization"
-                                                            :multiple="false"
-                                                            @input="onOrganizationSelect(index)">
-                                                        >
-                                                        </multiselect>
-                                                    </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label" for="name">Organization {{ index + 1 }}</label>
+                                                    <multiselect
+                                                        v-model="row.selectedOrg"
+                                                        placeholder="Select Organization"
+                                                        label="name"
+                                                        track-by="id"
+                                                        :options="filteredUnit"
+                                                        :multiple="false"
+                                                        :close-on-select="true"
+                                                        @select="onOrganizationSelect(index)">
+                                                    </multiselect>
                                                 </div>
                                             </div>
                                             <div class="col-md-6">
-                                                <div v-for="(divElement, index) in appendedApprover" :key="divElement">
-                                                    <div class="mb-3">
-                                                        <label class="form-label" :for="'approver-' + index">Approver {{ index + 1 }}</label>
-                                                        <multiselect
-                                                            v-model="appendedApprover[index]"
-                                                            :id="'approver-' + index"
-                                                            placeholder="Select User"
-                                                            label="name"
-                                                            track-by="id"
-                                                            :options="filteredUsers[index]"
-                                                            :multiple="false"
-                                                        ></multiselect>
-                                                    </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Approver {{ index + 1 }}</label>
+                                                    <multiselect
+                                                        v-model="row.selectedUser"
+                                                        placeholder="Select User"
+                                                        label="name"
+                                                        track-by="id"
+                                                        :options="getFilteredUserOptions(index)"
+                                                        :multiple="false"
+                                                    ></multiselect>
                                                 </div>
                                             </div>
-
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="card-footer d-flex justify-content-end column-gap-2">
-                            <button class="btn btn-warning" type="button" @click="backToApproval">
+                            <button class="btn btn-warning" type="button">
                                 <i class="fa fa-arrow-circle-left"></i> &nbsp; Back
                             </button>
                             <button class="btn btn-primary" type="button" @click="saveChanges">
@@ -124,11 +121,12 @@
 </template>
 
 <script>
-import axios from "axios"
-
+import { useToast } from 'vue-toastification'
 export default {
     data() {
         return{
+            selectedOrg: [],
+            filteredUnit: [],
             approval: {
                 name: '',
                 approval_module_id: '',
@@ -148,7 +146,14 @@ export default {
             appendedMultiselectModels: [],
             filteredUsers: [],
             ls: JSON.parse(localStorage.getItem('USER_STORAGE_KEY')),
-            selectedUnitLevel: ""
+            selectedUnitLevel: "",
+            rows: [
+                {
+                    selectedUnitLevel: '',
+                    selectedOrg: null,
+                    selectedUser: null
+                }
+            ]
         }
     },
     created() {
@@ -156,33 +161,54 @@ export default {
         this.loadOrg()
         this.getUsers()
    },
-    watch: {
-        appendedOrganization: {
-            handler() {
-                this.appendedOrganization.forEach((organization, index) => {
-                    this.filteredUsers[index] = this.users.filter(
-                        (user) =>  {
-                            console.log(user.unit_id, organization.id)
-                            return user.unit_id === organization.id
-                        }
-                    );
-                });
-                console.log(this.filteredUsers)
-            },
-            deep: true,
-        },
-    },
     methods: {
+        addRow() {
+            if (this.rows.length < 5) {
+                this.rows.push({
+                    selectedUnitLevel: '',
+                    selectedOrg: null,
+                    selectedUser: null
+                });
+                this.filteredUsers.push([]);
+            }
+        },
+        removeRow(index) {
+            this.rows.splice(index, 1);
+            this.filteredUsers.splice(index, 1);
+        },
         onOrganizationSelect(index) {
-            this.appendedApprover[index] = null;
-
-            const selectedOrganization = this.appendedOrganization[index];
-            this.filteredUsers[index] = this.users.filter(
-                (user) => user.organizationId === selectedOrganization.id
-            );
+            const organizationId = this.rows[index].selectedOrg?.id;
+            this.filteredUsers[index] = this.users.filter(user => {
+                return (
+                    (user.kanwil != null && user.kanwil.id === organizationId) ||
+                    (user.area != null && user.area.id === organizationId) ||
+                    (user.cabang != null && user.cabang.id === organizationId) ||
+                    (user.outlet != null && user.outlet.id === organizationId)
+                );
+            });
+        },
+        generateLevel() {
+            this.filteredUnit = this.organization.filter(organization => {
+                return organization.unit_level === parseInt(this.selectedUnitLevel);
+            });
+        },
+        getFilteredUnitOptions(index) {
+            const selectedLevel = this.rows[index].selectedUnitLevel;
+            return this.organization.filter(organization => organization.unit_level === parseInt(selectedLevel));
+        },
+        getFilteredUserOptions(index) {
+            const organizationId = this.rows[index].selectedOrg?.id;
+            return this.users.filter(user => {
+                return (
+                    (user.kanwil != null && user.kanwil.id === organizationId) ||
+                    (user.area != null && user.area.id === organizationId) ||
+                    (user.cabang != null && user.cabang.id === organizationId) ||
+                    (user.outlet != null && user.outlet.id === organizationId)
+                );
+            });
         },
         async loadOrg() {
-            await this.$axios.get(`/api/v1/admin/approval/get-unit?id=${this.ls.unit_id}`)
+            await this.$axios.get(`/api/v1/admin/unit/related-unit`)
                 .then(response => {
                     this.organization = response.data.data
                 })
@@ -200,42 +226,20 @@ export default {
                 })
         },
         async getUsers() {
-            await this.$axios.get(`/api/v1/admin/employee?unit_id=${this.ls.unit_id}`)
+            await this.$axios.get(`/api/v1/admin/employee?limit=15000`)
                 .then(response => {
-                    this.users = response.data.data
+                    this.users = response.data.data.data
                 })
                 .catch(error => {
                     console.error(error)
                 })
         },
-        generateLevel(){
-            this.appendedApprover = [];
-            this.appendedOrganization = [];
-            for (let i = 0; i < this.selectedLevel; i++) {
-                this.appendedApprover.push(this.appendLevelApprover());
-                this.appendedOrganization.push(this.appendLevelOrganization());
-            }
-        },
-        appendLevelOrganization() {
-            this.appendedMultiselects.push(this.generateMultiselect());
-            this.appendedMultiselectModels.push(null);
-            return document.createElement('div');
-        },
-        appendLevelApprover() {
-            this.appendedMultiselects.push(this.generateMultiselect());
-            this.appendedMultiselectModels.push(null);
-            return document.createElement('div');
-        },
-        generateMultiselect() {
-            return {
-                id: Math.random()
-            };
-        },
         async saveChanges(){
             let userIds = []
-            this.appendedApprover.forEach((element, index) => {
-                userIds.push(element.id)
+            this.rows.forEach(row => {
+                userIds.push(row.selectedUser.id)
             })
+
             await this.$axios.post('/api/v1/admin/approval/create', {
                 name: this.approval.name,
                 approval_module_id: this.approval.approval_module_id.id,
@@ -243,55 +247,13 @@ export default {
                 unit_level: this.selectedUnitLevel,
                 user_id: userIds,
             }).then(response => {
-                this.basic_success_alert(response.data.message)
+                useToast().success(response.data.message)
                 this.$router.push('/approval')
             }).catch(error => {
-                this.warning_alert_state(error.response.data.message)
+                useToast().error(error.response.data.message)
             })
 
-        },
-        backToApproval(){
-            this.basic_warning_alert()
-        },
-        basic_warning_alert:function(){
-            this.$swal({
-                icon: 'warning',
-                title:"Cancel?",
-                text:'You will back to Approval Page, your data will not saved!',
-                showCancelButton: true,
-                confirmButtonText: 'Yes',
-                confirmButtonColor: '#e64942',
-                cancelButtonText: 'Cancel',
-                cancelButtonColor: '#efefef',
-            }).then((result)=>{
-                if(result.value){
-                    this.$router.push('/approval')
-                }else{
-                    setTimeout(()=>{
-                        this.$swal({
-                            text:'Continue Create Data!',
-                            icon: 'info',
-                        });
-                    }, 1000)
-                }
-            });
-        },
-        basic_success_alert:function(message){
-            this.$swal({
-                icon: 'success',
-                title:'Success',
-                text:message,
-                type:'success'
-            });
-        },
-        warning_alert_state: function (message) {
-            this.$swal({
-                icon: "error",
-                title: "Failed!",
-                text: message,
-                type: "error",
-            });
-        },
+        }
     }
 }
 </script>

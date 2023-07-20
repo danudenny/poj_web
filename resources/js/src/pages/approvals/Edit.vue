@@ -143,11 +143,7 @@ export default {
                     {
                         title: 'Approver Name',
                         field: 'name',
-                    },
-                    {
-                        title: 'Units Name',
-                        field: 'employee.unit.name',
-                    },
+                    }
                 ],
                 paginationInitialPage:1,
             });
@@ -186,7 +182,7 @@ export default {
             };
         },
         backToApproval(){
-            this.basic_warning_alert()
+            this.$router.push('/approval')
         },
         basic_warning_alert:function(){
             this.$swal({
