@@ -31,7 +31,7 @@ class Employee extends Model
 {
     use HasFactory;
 
-    protected $appends = ['status'];
+    protected $appends = ['status', 'last_unit'];
 
 
     public function getStatusAttribute()
@@ -41,6 +41,13 @@ class Employee extends Model
         } else {
             return "In Active";
         }
+    }
+
+    /**
+     * @return Unit|null
+     */
+    public function getLastUnitAttribute() {
+        return $this->getLastUnit();
     }
 
     /**

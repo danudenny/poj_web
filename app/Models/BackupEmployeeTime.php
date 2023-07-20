@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * Relations:
  * @property-read BackupTime $backupTime
+ * @property-read Employee $employee
  */
 class BackupEmployeeTime extends Model
 {
@@ -81,5 +82,9 @@ class BackupEmployeeTime extends Model
 
     public function backupTime(): BelongsTo {
         return $this->belongsTo(BackupTime::class, 'backup_time_id');
+    }
+
+    public function employee(): BelongsTo {
+        return $this->belongsTo(Employee::class, 'employee_id');
     }
 }

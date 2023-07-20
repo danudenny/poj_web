@@ -5,7 +5,9 @@ namespace App\Services\Core;
 use App\Helpers\UnitHelper;
 use App\Jobs\SyncEmployeesJob;
 use App\Models\Employee;
+use App\Models\Role;
 use App\Models\Unit;
+use App\Models\User;
 use App\Services\BaseService;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
@@ -149,6 +151,84 @@ class EmployeeService extends BaseService
                 'message' => 'Employee failed to update',
                 'data' => $e->getMessage()
             ]);
+        }
+    }
+
+    public function listPaginatedEmployees(Request $request) {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
+        try {
+            $employees = Employee::query()->with(['kanwil', 'area', 'cabang', 'outlet', 'job']);
+
+            $lastUnitRelationID = $request->get('last_unit_relation_id');
+            $unitRelationID = $request->get('unit_relation_id');
+
+            if ($user->isHighestRole(Role::RoleAdmin)) {
+                $unitRelationID = $user->employee->getLastUnitID();
+            } else if ($user->isHighestRole(Role::RoleStaff)) {
+                $lastUnitRelationID = $user->employee->getLastUnitID();
+            }
+
+            $employees->when($request->input('job_id'), function (Builder $builder) use ($request) {
+                $builder->leftJoin('jobs', 'jobs.odoo_job_id', '=', 'employees.job_id')
+                    ->where('jobs.id', '=', $request->input('job_id'));
+            });
+
+            $employees->when($lastUnitRelationID, function (Builder $builder) use ($lastUnitRelationID) {
+                $builder->where(function(Builder $builder) use ($lastUnitRelationID) {
+                    $builder->orWhere(function(Builder $builder) use ($lastUnitRelationID) {
+                        $builder->where('outlet_id', '=', $lastUnitRelationID);
+                    })
+                        ->orWhere(function(Builder $builder) use ($lastUnitRelationID) {
+                            $builder->where('outlet_id', '=', 0)
+                                ->where('cabang_id', '=', $lastUnitRelationID);
+                        })
+                        ->orWhere(function(Builder $builder) use ($lastUnitRelationID) {
+                            $builder->where('outlet_id', '=', 0)
+                                ->where('cabang_id', '=', 0)
+                                ->where('area_id', '=', $lastUnitRelationID);
+                        })
+                        ->orWhere(function(Builder $builder) use ($lastUnitRelationID) {
+                            $builder->where('outlet_id', '=', 0)
+                                ->where('cabang_id', '=', 0)
+                                ->where('area_id', '=', 0)
+                                ->where('kanwil_id', '=', $lastUnitRelationID);
+                        })
+                        ->orWhere(function(Builder $builder) use ($lastUnitRelationID) {
+                            $builder->where('outlet_id', '=', 0)
+                                ->where('cabang_id', '=', 0)
+                                ->where('area_id', '=', 0)
+                                ->where('kanwil_id', '=', 0)
+                                ->where('corporate_id', '=', $lastUnitRelationID);
+                        });
+                });
+            });
+
+            $employees->when($unitRelationID, function(Builder $builder) use ($unitRelationID) {
+                $builder->where(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('outlet_id', '=', $unitRelationID)
+                        ->orWhere('cabang_id', '=', $unitRelationID)
+                        ->orWhere('area_id', '=', $unitRelationID)
+                        ->orWhere('kanwil_id', '=', $unitRelationID)
+                        ->orWhere('corporate_id', '=', $unitRelationID);
+                });
+            });
+
+            $employees->select(['employees.*']);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data retrieved successfully',
+                'data' => $this->list($employees, $request)
+            ]);
+
+        } catch (\InvalidArgumentException $e) {
+            throw new \InvalidArgumentException($e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception(self::SOMETHING_WRONG.' : '.$e);
         }
     }
  }

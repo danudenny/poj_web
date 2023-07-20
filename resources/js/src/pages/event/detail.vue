@@ -261,7 +261,7 @@ export default {
                     },
                     {
                         title: 'Event Date',
-                        field: 'event_date',
+                        field: 'date_time_with_timezone',
                         headerFilter:"input"
                     },
                 ],

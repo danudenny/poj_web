@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -39,6 +40,62 @@ class EmployeeEvent extends Model
         'created_at',
         'updated_at'
     ];
+
+    protected $appends = [
+        'event_date_time_with_timezone',
+        'check_in_time_with_location_timezone',
+        'check_out_time_with_location_timezone',
+        'check_in_time_with_employee_timezone',
+        'check_out_time_with_employee_timezone'
+    ];
+
+    public function getEventDateTimeWithTimezoneAttribute() {
+        return Carbon::parse($this->event_datetime)->setTimezone($this->event->timezone)->format('Y-m-d H:i:s T');
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCheckInTimeWithEmployeeTimezoneAttribute(): string|null {
+        if (is_null($this->check_in_time)) {
+            return null;
+        }
+
+        return Carbon::parse($this->check_in_time)->setTimezone($this->check_in_timezone)->format('Y-m-d H:i:s T');
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCheckOutTimeWithEmployeeTimezoneAttribute(): string|null {
+        if (is_null($this->check_out_time)) {
+            return null;
+        }
+
+        return Carbon::parse($this->check_out_time)->setTimezone($this->check_out_timezone)->format('Y-m-d H:i:s T');
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCheckInTimeWithLocationTimezoneAttribute(): string|null {
+        if (is_null($this->check_in_time)) {
+            return null;
+        }
+
+        return Carbon::parse($this->check_in_time)->setTimezone($this->event->timezone)->format('Y-m-d H:i:s T');
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCheckOutTimeWithLocationTimezoneAttribute(): string|null {
+        if (is_null($this->check_out_time)) {
+            return null;
+        }
+
+        return Carbon::parse($this->check_out_time)->setTimezone($this->event->timezone)->format('Y-m-d H:i:s T');
+    }
 
     public function event() {
         return $this->belongsTo(Event::class, 'event_id');

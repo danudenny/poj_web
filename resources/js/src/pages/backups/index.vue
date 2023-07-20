@@ -66,8 +66,8 @@ export default {
                         width: 100
                     },
                     {
-                        title: 'Name',
-                        field: 'assignee.name',
+                        title: 'Requestor Name',
+                        field: 'requestor_employee.name',
                         headerFilter:"input"
                     },
                     {

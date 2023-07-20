@@ -32,7 +32,7 @@ class CreateOvertimeRequest extends FormRequest
             'dates' => ['required', 'array'],
             'employee_ids' => ['required'],
             'notes' => ['required'],
-            'image_url' => ['nullable', 'url']
+            'image_url' => ['nullable']
         ];
     }
 }

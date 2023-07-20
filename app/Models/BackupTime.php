@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Attributes:
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * Relations:
  * @property-read Backup $backup
+ * @property-read BackupEmployeeTime[] $backupEmployees
  */
 class BackupTime extends Model
 {
@@ -25,11 +27,9 @@ class BackupTime extends Model
     protected $appends = [
         'start_time_with_timezone',
         'end_time_with_timezone',
+        'unit_start_time',
+        'unit_end_time'
     ];
-
-    public function backup(): BelongsTo {
-        return $this->belongsTo(Backup::class, 'backup_id');
-    }
 
     /**
      * @return string|null
@@ -43,5 +43,27 @@ class BackupTime extends Model
      */
     public function getEndTimeWithTimezoneAttribute(): string|null {
         return Carbon::parse($this->end_time)->setTimezone($this->backup->timezone)->format('Y-m-d H:i:s T');
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getUnitStartTimeAttribute(): string|null {
+        return Carbon::parse($this->start_time)->setTimezone($this->backup->timezone)->format('Y-m-d H:i:s');
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getUnitEndTimeAttribute(): string|null {
+        return Carbon::parse($this->end_time)->setTimezone($this->backup->timezone)->format('Y-m-d H:i:s');
+    }
+
+    public function backup(): BelongsTo {
+        return $this->belongsTo(Backup::class, 'backup_id');
+    }
+
+    public function backupEmployees(): HasMany {
+        return $this->hasMany(BackupEmployeeTime::class, 'backup_time_id');
     }
 }

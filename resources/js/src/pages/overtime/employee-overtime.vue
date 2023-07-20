@@ -36,13 +36,13 @@
                             <div class="col-md-6">
                                 <div class="mt-2">
                                     <label for="name">Start Time</label>
-                                    <input type="text" class="form-control" v-model="selectedData.overtime.check_in_time" disabled>
+                                    <input type="text" class="form-control" v-model="selectedData.overtime_date.start_time_with_timezone" disabled>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mt-2">
                                     <label for="name">End Time</label>
-                                    <input type="text" class="form-control" v-model="selectedData.overtime.check_out_time" disabled>
+                                    <input type="text" class="form-control" v-model="selectedData.overtime_date.end_time_with_timezone" disabled>
                                 </div>
                             </div>
                         </div>
@@ -122,9 +122,9 @@ export default {
                 employee: {
                     name: null,
                 },
-                overtime: {
-                    check_in_time: null,
-                    check_out_time: null
+                overtime_date: {
+                    start_time_with_timezone: null,
+                    end_time_with_timezone: null
                 }
             },
             pageSize: 10,
@@ -155,11 +155,11 @@ export default {
                     },
                     {
                         title: 'Start Time',
-                        field: 'overtime.check_in_time',
+                        field: 'overtime_date.start_time_with_timezone',
                     },
                     {
                         title: 'End Time',
-                        field: 'overtime.check_out_time',
+                        field: 'overtime_date.end_time_with_timezone',
                     },
                     {
                         title: 'Check In Time',
@@ -221,6 +221,7 @@ export default {
         },
         viewData(data) {
             this.selectedData = data
+            console.log(this.selectedData)
             this.$refs.showModalButton.click()
             this.generateCheckInMap()
             this.generateCheckOutMap()
