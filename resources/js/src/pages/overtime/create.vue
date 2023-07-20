@@ -41,7 +41,7 @@
                         <div class="col-md-6">
                             <div class="mt-2">
                                 <label for="name">Tanggal Mulai</label>
-                                <input type="date" class="form-control" v-model="overtime.start_date" @change="onDateChanged" required>
+                                <input type="date" class="form-control" v-model="overtime.start_date" :min="today" @change="onDateChanged" required>
                             </div>
                             <div class="mt-2">
                                 <label for="name">Tanggal Selesai</label>
@@ -172,11 +172,15 @@ export default {
                 currentPage: 1,
                 pageSize: 10,
             },
+            today: '',
             units: [],
             jobs: []
         }
     },
     mounted() {
+        let d = new Date();
+        this.today = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + (d.getDate())).slice(-2)
+
         this.getUnitsData()
     },
     methods: {
