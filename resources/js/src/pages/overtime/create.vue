@@ -40,13 +40,6 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mt-2">
-                                <label for="status">Kategori Lembur:</label>
-                                <select id="status" name="status" class="form-select" v-model="overtime.shift_type" @change="onChangeOvertimeType" required>
-                                    <option value="Shift" :selected="overtime.shift_type === 'Shift' ? 'selected' : ''">Shift</option>
-                                    <option value="Non Shift" :selected="overtime.shift_type === 'Non Shift' ? 'selected' : ''">Non Shift</option>
-                                </select>
-                            </div>
-                            <div class="mt-2">
                                 <label for="name">Tanggal Mulai</label>
                                 <input type="date" class="form-control" v-model="overtime.start_date" @change="onDateChanged" required>
                             </div>
@@ -142,7 +135,7 @@ export default {
                 start_date: null,
                 end_date: null,
                 duration: null,
-                shift_type: 'Shift',
+                shift_type: 'Non Shift',
                 timesheet_id: 1,
                 dates: {},
                 employee_ids: [],
