@@ -222,12 +222,12 @@ class Employee extends Model
         return $lastData;
     }
 
-    public function getRelatedUnit(): array
+    public function getRelatedUnit(): mixed
     {
         $workLocation = $this->getLastUnit();
         $parentRelationId = $workLocation->relation_id;
 
-        $otherUnits = Unit::with('children')->where('parent_unit_id', $parentRelationId)
+        $otherUnits = Unit::with(['children'])->where('parent_unit_id', $parentRelationId)
             ->where('id', '!=', $workLocation->id)
             ->get();
 

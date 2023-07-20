@@ -46,17 +46,27 @@ class WorkReportingService
             if ($roles->contains('superadmin')) {
                 $workReporting = WorkReporting::query();
             } elseif ($roles->contains('admin')) {
-                $workReporting = WorkReporting::query();
-                if ($empUnit->unit_level === 3) {
-                    $workReporting->where('employee.corporate_id', $empUnit->relation_id);
-                } elseif ($empUnit->unit_level === 4) {
-                    $workReporting->where('employee.kanwil_id', $empUnit->relation_id);
-                } elseif ($empUnit->unit_level === 5) {
-                    $workReporting->where('employee.area_id', $empUnit->relation_id);
-                } elseif ($empUnit->unit_level === 6) {
-                    $workReporting->where('employee.cabang_id', $empUnit->relation_id);
-                } elseif ($empUnit->unit_level === 7) {
-                    $workReporting->where('employee.outlet_id', $empUnit->relation_id);
+                $workReporting = WorkReporting::with('employee');
+                if ($empUnit['unit_level'] === 3) {
+                    $workReporting->whereHas('employee', function ($query) use ($empUnit) {
+                        $query->where('corporate_id', $empUnit['relation_id']);
+                    });
+                } elseif ($empUnit['unit_level'] === 4) {
+                    $workReporting->whereHas('employee', function ($query) use ($empUnit) {
+                        $query->where('kanwil_id', $empUnit['relation_id']);
+                    });
+                } elseif ($empUnit['unit_level'] === 5) {
+                    $workReporting->whereHas('employee', function ($query) use ($empUnit) {
+                        $query->where('area_id', $empUnit['relation_id']);
+                    });
+                } elseif ($empUnit['unit_level'] === 6) {
+                    $workReporting->whereHas('employee', function ($query) use ($empUnit) {
+                        $query->where('cabang_id', $empUnit['relation_id']);
+                    });
+                } elseif ($empUnit['unit_level'] === 7) {
+                    $workReporting->whereHas('employee', function ($query) use ($empUnit) {
+                        $query->where('outlet_id', $empUnit['relation_id']);
+                    });
                 }
             } elseif ($roles->contains('staff')) {
                 $workReporting = WorkReporting::query()->where('employee_id', auth()->user()->employee_id);

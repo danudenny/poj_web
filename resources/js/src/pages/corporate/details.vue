@@ -169,7 +169,7 @@
                                     <td class="text-center">{{job.total_reporting}}</td>
                                     <td class="text-center">{{job.reporting_type.toUpperCase()}}</td>
                                     <td class="text-center">
-                                        <span v-if="job.reporting_names === 'null'" class="badge badge-warning" v-for="rNames in JSON.parse(job.reporting_names)">{{rNames}}</span>
+                                        <span v-if="job.reporting_names !== null" class="badge badge-warning" v-for="rNames in JSON.parse(job.reporting_names)">{{rNames}}</span>
                                         <span v-else class="badge badge-danger">-</span>
                                     </td>
                                     <td>

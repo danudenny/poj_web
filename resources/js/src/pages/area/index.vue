@@ -1,6 +1,6 @@
 <template>
     <div className="container-fluid">
-        <Breadcrumbs title="Area"/>
+        <Breadcrumbs title="Corporate"/>
 
         <div className="container-fluid">
             <div className="email-wrap bookmark-wrap">
@@ -24,7 +24,7 @@
                                 <div v-if="loading" className="text-center">
                                     <img src="../../assets/loader.gif" alt="loading" width="100">
                                 </div>
-                                <div ref="areaTable"></div>
+                                <div ref="corporateTable"></div>
                             </div>
                         </div>
                     </div>
@@ -41,7 +41,7 @@ import axios from 'axios';
 export default {
     data() {
         return {
-            areas: [],
+            corporates: [],
             loading: false,
             syncLoading: false,
             table: null,
@@ -50,8 +50,8 @@ export default {
         }
     },
     async mounted() {
-        await this.getArea();
-        this.initializeAreaTable();
+        await this.getCorporate();
+        this.initializeCorporateTable();
     },
     methods: {
         startCountdown() {
@@ -60,19 +60,19 @@ export default {
                 this.countdown++;
             }, 1000);
         },
-        async getArea() {
+        async getCorporate() {
             this.loading = true;
             await this.$axios.get(`/api/v1/admin/unit?unit_level=5`)
                 .then(response => {
-                    this.areas = response.data.data;
+                    this.corporates = response.data.data;
                 })
                 .catch(error => {
                     console.error(error);
                 });
         },
-        initializeAreaTable() {
-            this.table = new Tabulator(this.$refs.areaTable, {
-                data: this.areas,
+        initializeCorporateTable() {
+            this.table = new Tabulator(this.$refs.corporateTable, {
+                data: this.corporates,
                 layout: 'fitColumns',
                 columns: [
                     {
@@ -136,8 +136,8 @@ export default {
                     if (await response.data.status === 201) {
                         this.syncLoading = false;
                         this.loading = false;
-                        await this.getArea()
-                        this.initializeAreaTable()
+                        await this.getCorporate()
+                        this.initializeCorporateTable()
                         useToast().success(response.data.message);
                     } else {
                         this.syncLoading = false;

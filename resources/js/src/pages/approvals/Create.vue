@@ -106,7 +106,7 @@
                             </div>
                         </div>
                         <div class="card-footer d-flex justify-content-end column-gap-2">
-                            <button class="btn btn-warning" type="button">
+                            <button class="btn btn-warning" type="button" @click="this.$router.push('/approval')">
                                 <i class="fa fa-arrow-circle-left"></i> &nbsp; Back
                             </button>
                             <button class="btn btn-primary" type="button" @click="saveChanges">

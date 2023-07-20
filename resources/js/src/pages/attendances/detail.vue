@@ -134,12 +134,15 @@
                                     </div>
                                 </div>
                             </div>
-                            <hr/>
-                            <button class="btn btn-primary">Back</button>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer text-end">
+                    <div class="d-flex justify-content-end">
+                        <button class="btn btn-warning" @click="this.$router.push('/attendance')">
+                            <i class="fa fa-arrow-left"></i>&nbsp; Back
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

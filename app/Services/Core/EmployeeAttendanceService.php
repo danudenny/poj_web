@@ -2,6 +2,7 @@
 
 namespace App\Services\Core;
 
+use App\Helpers\UnitHelper;
 use App\Models\Approval;
 use App\Models\Employee;
 use App\Models\EmployeeAttendance;
@@ -30,56 +31,56 @@ class EmployeeAttendanceService extends BaseService {
     }
     public function index(Request $request): JsonResponse
     {
+        $auth = Auth::user();
         $roles = Auth::user()->roles;
         try {
             $attendances = EmployeeAttendance::query();
+            $attendancesData = [];
+
             $attendances->with(['employee', 'employee.kanwil', 'employee.area', 'employee.cabang', 'employee.outlet', 'employee.employeeDetail', 'employee.employeeDetail.employeeTimesheet', 'employeeAttendanceHistory']);
             $attendances->when($request->name, function ($query) use ($request) {
                 $query->whereHas('employee', function (Builder $query) use ($request) {
                     $query->whereRaw('LOWER(name) LIKE ?', [strtolower('%' . request()->query('name') . '%')]);
                 });
             });
-            $attendances->when($request->check_in, function ($query) use ($request) {
-                $query->whereDate('real_check_in', '>=', $request->check_in);
-            });
-            $attendances->when($request->check_out, function ($query) use ($request) {
-                $query->whereDate('real_check_out', '<=', $request->check_out);
-            });
-            $attendances->when($request->attendance_types, function ($query) use ($request) {
-                $query->where('attendance_types', $request->attendance_types);
-            });
-            $attendances->when($request->checkin_type, function ($query) use ($request) {
-                $query->where('checkin_type', $request->checkin_type);
-            });
-            $attendances->when($request->is_need_approval, function ($query) use ($request) {
-                $query->where('is_need_approval', $request->is_need_approval);
-            });
-            $attendances->orderBy('created_at', 'desc');
 
+            $highestPriorityRole = null;
+            $highestPriority = null;
 
-//            foreach ($roles as $role) {
-//                if ($role->role_level === 'superadmin') {
-//                    $attendances = $attendances->paginate($request->get('limit', 10));
-//                } else if ($role->role_level === 'staff') {
-//                    $attendances = $attendances->where('employee_id', Auth::user()->employee_id)
-//                        ->paginate($request->get('limit', 10));
-//                } else if ($role->role_level === 'admin') {
-//                    $attendances = $attendances->whereHas('employee', function (Builder $query) use ($roles) {
-//                        $query->where('kanwil_id', $roles->kanwil_id)
-//                            ->orWhere('area_id', $roles->area_id)
-//                            ->orWhere('cabang_id', $roles->cabang_id)
-//                            ->orWhere('outlet_id', $roles->outlet_id);
-//                    });
-//                } else {
-//                    $attendances = $attendances->where('employee_id', Auth::user()->employee_id)
-//                        ->paginate($request->get('limit', 10));
-//                }
-//            }
+            foreach ($roles as $role) {
+                if ($highestPriority === null || $role['priority'] < $highestPriority) {
+                    $highestPriorityRole = $role;
+                    $highestPriority = $role['priority'];
+                }
+            }
+
+            if ($highestPriorityRole->role_level === 'superadmin') {
+                $attendancesData = $attendances->paginate($request->get('limit', 10));
+            } else if ($highestPriorityRole->role_level === 'staff') {
+                $attendancesData = $attendances->where('employee_id', Auth::user()->employee_id)
+                    ->paginate($request->get('limit', 10));
+            } else if ($highestPriorityRole->role_level === 'admin') {
+                $empUnit = $auth->employee->getRelatedUnit();
+                $lastUnit = $auth->employee->getLastUnit();
+                $empUnit[] = $lastUnit;
+                $flatUnit = UnitHelper::flattenUnits($empUnit);
+                $relationIds = array_column($flatUnit, 'relation_id');
+                $attendancesData = $attendances->whereHas('employee', function (Builder $query) use ($relationIds) {
+                     $query->whereIn('kanwil_id', $relationIds)
+                         ->orWhereIn('area_id', $relationIds)
+                         ->orWhereIn('cabang_id', $relationIds)
+                         ->orWhereIn('outlet_id', $relationIds);
+                })->paginate(10);
+
+            } else {
+                $attendancesData = $attendances->where('employee_id', Auth::user()->employee_id)
+                    ->paginate($request->get('limit', 10));
+            }
 
             return response()->json([
                 'status' => true,
                 'message' => 'Success get data!',
-                'data' => $this->list($attendances, $request)
+                'data' => $attendancesData
             ]);
         } catch (Exception $e) {
             return response()->json([

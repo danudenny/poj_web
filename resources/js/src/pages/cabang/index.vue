@@ -11,8 +11,8 @@
                                 <h5>Cabang List</h5>
                             </div>
                             <div className="card-body">
-                                <div class="d-flex justify-content-end mb-2">
-                                    <button class="btn btn-warning" :disabled="syncLoading" type="button" @click="syncFromERP">
+                                <div className="d-flex justify-content-end mb-2">
+                                    <button className="btn btn-warning" :disable="syncLoading" type="button" @click="syncFromERP">
                                         <span v-if="syncLoading">
                                             <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
                                         </span>
@@ -24,7 +24,7 @@
                                 <div v-if="loading" className="text-center">
                                     <img src="../../assets/loader.gif" alt="loading" width="100">
                                 </div>
-                                <div ref="cabangTable"></div>
+                                <div ref="corporateTable"></div>
                             </div>
                         </div>
                     </div>
@@ -41,7 +41,7 @@ import axios from 'axios';
 export default {
     data() {
         return {
-            cabangs: [],
+            corporates: [],
             loading: false,
             syncLoading: false,
             table: null,
@@ -50,8 +50,8 @@ export default {
         }
     },
     async mounted() {
-        await this.getCabang();
-        this.initializeCabangTable();
+        await this.getCorporate();
+        this.initializeCorporateTable();
     },
     methods: {
         startCountdown() {
@@ -60,19 +60,19 @@ export default {
                 this.countdown++;
             }, 1000);
         },
-        async getCabang() {
+        async getCorporate() {
             this.loading = true;
             await this.$axios.get(`/api/v1/admin/unit?unit_level=6`)
                 .then(response => {
-                    this.cabangs = response.data.data;
+                    this.corporates = response.data.data;
                 })
                 .catch(error => {
                     console.error(error);
                 });
         },
-        initializeCabangTable() {
-            this.table = new Tabulator(this.$refs.cabangTable, {
-                data: this.cabangs,
+        initializeCorporateTable() {
+            this.table = new Tabulator(this.$refs.corporateTable, {
+                data: this.corporates,
                 layout: 'fitColumns',
                 columns: [
                     {
@@ -87,7 +87,7 @@ export default {
                         headerFilter: "input"
                     },
                     {
-                        title: 'Jumlah Outlet',
+                        title: 'Jumlah Cabang',
                         field: '',
                         hozAlign: 'center',
                         headerHozAlign: 'center',
@@ -136,8 +136,8 @@ export default {
                     if (await response.data.status === 201) {
                         this.syncLoading = false;
                         this.loading = false;
-                        await this.getCabang()
-                        this.initializeCabangTable()
+                        await this.getCorporate()
+                        this.initializeCorporateTable()
                         useToast().success(response.data.message);
                     } else {
                         this.syncLoading = false;

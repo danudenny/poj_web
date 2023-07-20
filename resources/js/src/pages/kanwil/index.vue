@@ -131,7 +131,7 @@ export default {
 
             await axios.create({
                 baseURL: import.meta.env.VITE_SYNC_ODOO_URL,
-            }).get('/sync-corporates')
+            }).get('/sync-kanwil')
                 .then(async (response) => {
                     if (await response.data.status === 201) {
                         this.syncLoading = false;
