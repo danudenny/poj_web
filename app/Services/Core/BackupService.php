@@ -42,9 +42,7 @@ class BackupService extends BaseService
         $user = $request->user();
 
         $backups = Backup::query();
-        if ($user->isHighestRole(Role::RoleAdmin)) {
-            $backups->whereIn('unit_id', $user->employee->getAllUnitID());
-        } else if ($user->isHighestRole(Role::RoleStaff)) {
+        if ($user->isHighestRole(Role::RoleStaff)) {
             $backups->where('requestor_employee_id', '=', $user->employee_id);
         }
 
@@ -74,15 +72,6 @@ class BackupService extends BaseService
                 'status' => 'error',
                 'message' => 'Backup id not found',
             ], 404);
-        }
-
-        if (!$user->hasRole(Role::RoleSuperAdministrator)) {
-            if (!in_array($backup->unit_id, $user->employee->getAllUnitID())) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Unit id not found',
-                ], 404);
-            }
         }
 
         return response()->json([

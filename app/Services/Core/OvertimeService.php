@@ -39,9 +39,7 @@ class OvertimeService extends BaseService
 
         $overtimes = Overtime::query()->with(['requestorEmployee:employees.id,name', 'unit:units.relation_id,name']);
 
-        if ($user->inRoleLevel([Role::RoleAdmin])) {
-            $overtimes->whereIn('unit_relation_id', $user->employee->getAllUnitID());
-        } else if ($user->inRoleLevel([Role::RoleStaff])) {
+        if ($user->inRoleLevel([Role::RoleStaff])) {
             $overtimes->join('overtime_dates', 'overtime_dates.overtime_id', '=', 'overtimes.id');
             $overtimes->join('overtime_employees', 'overtime_employees.overtime_date_id', '=', 'overtime_dates.id');
             $overtimes->where('overtime_employees.employee_id', '=', $user->employee_id);
@@ -81,9 +79,7 @@ class OvertimeService extends BaseService
                 'overtimeDates', 'overtimeDates.overtimeEmployees', 'overtimeDates.overtimeEmployees.employee:employees.id,name'
             ])->where('overtimes.id', '=', $id);
 
-        if ($user->inRoleLevel([Role::RoleAdmin])) {
-            $query->whereIn('unit_relation_id', $user->employee->getAllUnitID());
-        } else if ($user->inRoleLevel([Role::RoleStaff])) {
+        if ($user->isHighestRole(Role::RoleStaff)) {
             $query->join('overtime_dates', 'overtime_dates.overtime_id', '=', 'overtimes.id');
             $query->join('overtime_employees', 'overtime_employees.overtime_date_id', '=', 'overtime_dates.id');
             $query->where('overtime_employees.employee_id', '=', $user->employee_id);
