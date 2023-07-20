@@ -37,7 +37,10 @@ class RoleService extends BaseService
             });
             $roles->orderBy('id', 'asc');
 
-            return $this->list($roles, $data);
+            return response()->json([
+                'status' => 'success',
+                'data' => $roles->get()
+            ], 200);
 
         } catch (InvalidArgumentException $e) {
             throw new InvalidArgumentException($e->getMessage());

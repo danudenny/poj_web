@@ -130,11 +130,11 @@ export default {
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilter:"input",
-                        width: 150,
+                        width: 300,
                         formatter: function(row) {
-                            return row.getData().roles.map(function(role) {
+                           return row.getData().roles.map(function(role) {
                                 return `<span class='badge badge-danger '>${role.name.toUpperCase()}</span>`;
-                            }).join(", ");
+                            }).join(" ");
                         }
                     },
                     {
