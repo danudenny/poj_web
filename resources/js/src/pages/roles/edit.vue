@@ -21,7 +21,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-sm-6">
+                        <div class="col-sm-8">
                             <div ref="permissionsTable"></div>
                         </div>
                     </div>
@@ -50,12 +50,15 @@ export default {
             permissions: [],
             selectAll: false,
             selectedPermission: [],
-            selectedIds: []
+            selectedIds: [],
+            currentPage: 1,
+            pageSize: 20,
+            table: null
         }
     },
     async mounted() {
         await this.getRole();
-        await this.getPermissions();
+        // await this.getPermissions();
         await this.initializePermissionsTable();
     },
     methods: {
@@ -81,8 +84,24 @@ export default {
                 });
         },
         async initializePermissionsTable() {
-            const table = await new Tabulator(this.$refs.permissionsTable, {
-                data: this.permissions,
+            const ls = localStorage.getItem('my_app_token');
+            this.table = await new Tabulator(this.$refs.permissionsTable, {
+                ajaxURL: '/api/v1/admin/permission?limit=20',
+                ajaxConfig: {
+                    headers: {
+                        Authorization: `Bearer ${ls}`,
+                    },
+                },
+                ajaxParams: {
+                    page: this.currentPage,
+                    size: this.pageSize,
+                },
+                ajaxResponse: function (url, params, response) {
+                    return {
+                        data: response.data.data,
+                        last_page: response.data.last_page,
+                    }
+                },
                 layout: 'fitDataStretch',
                 columns: [
                     {
@@ -100,7 +119,9 @@ export default {
                         headerFilter:"input"
                     }
                 ],
-                pagination: 'local',
+                paginationMode: 'remote',
+                progressiveLoad: 'scroll',
+                height: 500,
                 paginationSize: 20,
                 paginationSizeSelector: [10, 20, 50, 100],
                 headerFilter: true,
@@ -114,10 +135,27 @@ export default {
                     }
                 },
             });
-            table.on("rowSelectionChanged", function(data, rows, selected, deselected)  {
+            this.table.on("rowSelectionChanged", function(data, rows, selected, deselected)  {
                 this.selectedPermission = rows.map(row => row.getData().id);
                 localStorage.setItem('selectedPermission', JSON.stringify(this.selectedPermission));
             })
+            this.table.on("pageChanged", (page) => {
+                console.log(page)
+                this.currentPage = page;
+                this.reselectRowsOnPageChange();
+            });
+        },
+        reselectRowsOnPageChange() {
+            this.table.deselectRow();
+
+            const currentPageRows = this.table.getPage();
+            currentPageRows.forEach(row => {
+                const rowId = row.getData().id;
+                const selectedRow = this.selectedRowsData.find(rowData => rowData.id === rowId);
+                if (selectedRow) {
+                    row.select();
+                }
+            });
         },
         async updateRole(){
             const getData = JSON.parse(localStorage.getItem('selectedPermission'))

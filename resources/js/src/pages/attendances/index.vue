@@ -10,76 +10,10 @@
                             <h5>Attendances List</h5>
                         </div>
                         <div class="card-body">
-                            <div>
-                                <h5>
-                                    <i class="fa fa-filter text-warning"></i>&nbsp; Filter
-                                </h5>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <div class="row">
-                                            <div class="col-md-3">
-                                                <div class="form-group">
-                                                    <label for="name">Name</label>
-                                                    <input type="text" class="form-control" v-model="filter.name" id="name" v-on:keyup="getAttendances">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="name">Date Range</label>
-                                                    <VueDatePicker v-model="date" range multi-calendars @update:model-value="getAttendances"/>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="form-group">
-                                                    <label for="name">Location</label>
-                                                    <select class="form-control" v-model="filter.location" v-on:change="getAttendances">
-                                                        <option value="">-- Select Location --</option>
-                                                        <option value="onsite">OnSite</option>
-                                                        <option value="offsite">OffSite</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div v-if="loading" class="text-center">
+                                <img src="../../assets/loader.gif" alt="loading" width="100">
                             </div>
-                            <hr>
-                            <div class="table-responsive">
-                                <table class="table table-striped table-hover">
-                                    <thead>
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Name</th>
-                                        <th>Check-In</th>
-                                        <th>Check-Out</th>
-                                        <th>Location</th>
-                                        <th>Approved</th>
-                                        <th>Action</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <tr v-for="(item, index) in attendances">
-                                        <td>{{index + 1}}</td>
-                                        <td class="text-center">{{item.employee.name}}</td>
-                                        <td class="text-center">{{item.real_check_in}}</td>
-                                        <td class="text-center">{{item.real_check_out}}</td>
-                                        <td class="text-center">
-                                            <span class="badge badge-success" v-if="item.checkin_type === 'onsite'">OnSite</span>
-                                            <span class="badge badge-danger" v-else>OffSite</span>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge badge-success" v-if="item.approved">Yes</span>
-                                            <span class="badge badge-danger" v-else>No</span>
-                                        </td>
-                                        <td>
-                                            <button class="button-icon button-info" @click="viewData(item.id)">
-                                                <i class="fa fa-eye text-center"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                            <div ref="attendanceTable"></div>
                         </div>
                     </div>
                 </div>
@@ -91,6 +25,7 @@
 <script>
 import axios from "axios"
 import Datepicker from "vue3-datepicker";
+import {TabulatorFull as Tabulator} from "tabulator-tables";
 
 export default {
     components: {
@@ -107,14 +42,15 @@ export default {
             date: null,
             attendances: [],
             formattedCheckIn: "",
-            formattedCheckOut: ""
+            formattedCheckOut: "",
+            table: null,
+            loading: false,
+            currentPage: 1,
+            pageSize: 10,
         }
     },
     mounted() {
-        this.getAttendances()
-        if (this.filter.check_in && this.filter.check_out) {
-            this.date = [this.filter.check_in, this.filter.check_out];
-        }
+        this.initializeAttendanceTable()
     },
     methods: {
         formatDate(date) {
@@ -144,6 +80,87 @@ export default {
                 .catch(error => {
                     console.log(error)
                 })
+        },
+        initializeAttendanceTable() {
+            const ls = localStorage.getItem('my_app_token')
+            this.table = new Tabulator(this.$refs.attendanceTable, {
+                paginationCounter:"rows",
+                ajaxURL: '/api/v1/admin/attendance',
+                ajaxConfig: {
+                    headers: {
+                        Authorization: `Bearer ${ls}`,
+                    },
+                },
+                ajaxParams: {
+                    page: this.currentPage,
+                    size: this.pageSize,
+                },
+                ajaxResponse: function (url, params, response) {
+                    return {
+                        data: response.data.data,
+                        last_page: response.data.last_page,
+                    }
+                },
+                layout: 'fitDataStretch',
+                columns: [
+                    {
+                        title: 'No',
+                        field: '',
+                        formatter: 'rownum',
+                    },
+                    {
+                        title: 'Name',
+                        field: 'employee.name',
+                        headerFilter:"input"
+                    },
+                    {
+                        title: 'Check In',
+                        field: 'real_check_in',
+                        headerFilter:"date"
+                    },
+                    {
+                        title: 'Check Out',
+                        field: 'real_check_out',
+                        headerFilter:"date"
+                    },
+                    {
+                        title: 'Approved',
+                        field: 'approved',
+                        headerFilter:"input",
+                        formatter: function(value) {
+                            if (value === 'true') {
+                                return '<span class="badge badge-success">Approved</span>'
+                            } else {
+                                return '<span class="badge badge-danger">Not Approved</span>'
+                            }
+                        }
+                    },
+                    {
+                        title: '',
+                        formatter: this.viewDetailsFormatter,
+                        width: 100,
+                        hozAlign: 'center',
+                        sortable: false,
+                        cellClick: (e, cell) => {
+                            this.viewData(cell.getRow().getData().id);
+                        }
+                    },
+                ],
+                pagination: true,
+                paginationMode: 'remote',
+                paginationSize: this.pageSize,
+                paginationSizeSelector: [10, 20, 50, 100],
+                headerFilter: true,
+                paginationInitialPage:1,
+                rowFormatter: (row) => {
+                    //
+                },
+                placeholder: 'No Data Available',
+            });
+            this.loading = false
+        },
+        viewDetailsFormatter(cell, formatterParams, onRendered) {
+            return `<button class="button-icon button-success" data-id="${cell.getRow().getData().id}"><i class="fa fa-eye"></i> </button>`;
         },
         viewData(id) {
             this.$router.push({name: 'Detail Attendance', params: {id}});

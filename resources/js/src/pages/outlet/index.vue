@@ -14,7 +14,7 @@
                                 <div className="d-flex justify-content-end mb-2">
                                     <button className="btn btn-warning" :disable="syncLoading" type="button" @click="syncFromERP">
                                         <span v-if="syncLoading">
-                                            <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ progress }}s)
+                                            <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
                                         </span>
                                         <span v-else>
                                             <i class="fa fa-recycle"></i> &nbsp; Sync From ERP
@@ -24,7 +24,7 @@
                                 <div v-if="loading" className="text-center">
                                     <img src="../../assets/loader.gif" alt="loading" width="100">
                                 </div>
-                                <div ref="outletTable"></div>
+                                <div ref="corporateTable"></div>
                             </div>
                         </div>
                     </div>
@@ -41,38 +41,38 @@ import axios from 'axios';
 export default {
     data() {
         return {
-            outlets: [],
+            corporates: [],
             loading: false,
             syncLoading: false,
             table: null,
-            progress: 0,
+            countdown: 0,
             timerId: null
         }
     },
     async mounted() {
-        await this.getOutlet();
-        this.initializeOutletTable();
+        await this.getCorporate();
+        this.initializeCorporateTable();
     },
     methods: {
-        startProgress() {
-            this.progress = 0;
+        startCountdown() {
+            this.countdown = 1;
             this.timerId = setInterval(() => {
-                this.progress++;
+                this.countdown++;
             }, 1000);
         },
-        async getOutlet() {
+        async getCorporate() {
             this.loading = true;
             await this.$axios.get(`/api/v1/admin/unit?unit_level=7`)
                 .then(response => {
-                    this.outlets = response.data.data;
+                    this.corporates = response.data.data;
                 })
                 .catch(error => {
                     console.error(error);
                 });
         },
-        initializeOutletTable() {
-            this.table = new Tabulator(this.$refs.outletTable, {
-                data: this.outlets,
+        initializeCorporateTable() {
+            this.table = new Tabulator(this.$refs.corporateTable, {
+                data: this.corporates,
                 layout: 'fitColumns',
                 columns: [
                     {
@@ -87,7 +87,7 @@ export default {
                         headerFilter: "input"
                     },
                     {
-                        title: 'Jumlah Subsidiary',
+                        title: 'Jumlah Cabang',
                         field: '',
                         hozAlign: 'center',
                         headerHozAlign: 'center',
@@ -126,7 +126,7 @@ export default {
         async syncFromERP() {
             this.syncLoading = true;
             this.loading = true;
-            this.startProgress();
+            this.startCountdown();
             this.table.destroy();
 
             await axios.create({
@@ -136,8 +136,8 @@ export default {
                     if (await response.data.status === 201) {
                         this.syncLoading = false;
                         this.loading = false;
-                        await this.getOutlet()
-                        this.initializeOutletTable()
+                        await this.getCorporate()
+                        this.initializeCorporateTable()
                         useToast().success(response.data.message);
                     } else {
                         this.syncLoading = false;
@@ -148,7 +148,6 @@ export default {
                     useToast().error("Failed to Sync Data! Check if connection are stable");
                 }).finally(() => {
                     this.syncLoading = false;
-                    this.progress = 100;
                     clearInterval(this.timerId);
                 });
         }

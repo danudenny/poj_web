@@ -259,6 +259,8 @@ class UnitService extends BaseService
                 $datas = Unit::all();
             } else {
                 $empUnit = auth()->user()->employee->getRelatedUnit();
+                $lastUnit = auth()->user()->employee->getLastUnit();
+                $empUnit[] = $lastUnit;
                 $datas = UnitHelper::flattenUnits($empUnit);
             }
         }

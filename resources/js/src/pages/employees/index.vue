@@ -57,7 +57,6 @@ export default {
         }
     },
     async mounted() {
-        await this.getEmployees();
         this.initializeEmployeesTable();
     },
     methods: {
@@ -79,7 +78,6 @@ export default {
                     console.error(error);
                 });
         },
-
         initializeEmployeesTable() {
             const ls = localStorage.getItem('my_app_token')
             this.table = new Tabulator(this.$refs.employeesTable, {
