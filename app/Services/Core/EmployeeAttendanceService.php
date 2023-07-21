@@ -324,9 +324,7 @@ class EmployeeAttendanceService extends BaseService {
                     ->whereHas('approvalModule', function ($query) {
                         $query->where('name', 'Attendance');
                     });
-                dd($getApproval->get());
             }
-
 
             DB::commit();
 
