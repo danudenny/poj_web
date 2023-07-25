@@ -3,7 +3,10 @@
 namespace App\Services\Core;
 
 use App\Http\Resources\RoleResource;
+use App\Http\Resources\UserProfileCollection;
 use App\Http\Resources\UserResource;
+use App\Http\Resources\UserRolePermissionResource;
+use App\Models\Employee;
 use App\Models\Role;
 use App\Models\Unit;
 use App\Models\User;
@@ -410,15 +413,12 @@ class UserService extends BaseService
 
     public function profile() {
         $auth = auth()->user();
-        $user = User::with(['employee', 'employee.job', 'roles', 'roles.permissions'])->where('id', $auth->id)
-            ->first();
-
-        $user['unit'] = $user->employee->getLastUnit();
+        $user = User::with(['roles', 'employee'])->find($auth->id);
 
         return response()->json([
             'status' => 'success',
             'message' => 'User profile fetched successfully',
-            'data' => $user
+            'data' => UserRolePermissionResource::make($user)
         ], 200);
     }
 }

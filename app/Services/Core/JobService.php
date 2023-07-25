@@ -26,13 +26,13 @@ class JobService extends BaseService
                     ->orWhere('u.relation_id', '=', DB::raw('CAST(e.cabang_id AS BIGINT)'))
                     ->orWhere('u.relation_id', '=', DB::raw('CAST(e.outlet_id AS BIGINT)'));
             })
-            ->where('u.id', $id)
+            ->when($id, function ($query, $id) {
+                $query->where('u.id', $id);
+            })
             ->groupBy('j.id', 'u.id');
 
         $jobs = DB::table(DB::raw("({$subquery->toSql()}) as d"))
             ->mergeBindings($subquery)
-            ->leftJoin('unit_jobs as uj', 'd.id', '=', 'uj.job_id')
-            ->select('d.*', 'uj.unit_id', 'uj.is_camera', 'uj.is_upload', 'uj.is_reporting', 'uj.is_mandatory_reporting')
             ->get();
 
 

@@ -36,10 +36,9 @@ class UnitService extends BaseService
                 }
             }
 
-            $lastUnit = $auth->employee->getLastUnit();
-            $relatedUnit = $auth->employee->getRelatedUnit();
             $parentLevel = intval($data->unit_level);
             $childLevel = $parentLevel + 1;
+            $employees = [];
 
             if ($highestPriorityRole->role_level === 'superadmin') {
                 $units = DB::table('units as parent')
@@ -55,7 +54,7 @@ class UnitService extends BaseService
                         'child.id as child_id',
                         'child.name as child_name',
                         'child.unit_level as child_unit_level',
-                        'child.parent_unit_id as child_parent_unit_id',
+                        'child.parent_unit_id as child_parent_unit_id'
                     )
                     ->where('parent.unit_level', $parentLevel)
                     ->orderBy('parent.id')
@@ -99,7 +98,7 @@ class UnitService extends BaseService
                         'name' => $unit->parent_name,
                         'unit_level' => $unit->parent_unit_level,
                         'parent_unit_id' => $unit->parent_parent_unit_id,
-                        'child' => []
+                        'child' => [],
                     ];
 
                     $nestedUnits[$unit->parent_id] = $parentUnit;

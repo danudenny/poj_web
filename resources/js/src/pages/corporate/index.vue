@@ -46,7 +46,8 @@ export default {
             syncLoading: false,
             table: null,
             countdown: 0,
-            timerId: null
+            timerId: null,
+            totalEmployee: null
         }
     },
     async mounted() {
@@ -100,7 +101,6 @@ export default {
                         formatter: this.viewDetailsFormatter,
                         width: 70,
                         hozAlign: 'center',
-                        sortable: false,
                         cellClick: (e, cell) => {
                             this.viewData(cell.getRow().getData().id);
                         }

@@ -87,15 +87,6 @@ export default {
                         headerFilter: "input"
                     },
                     {
-                        title: 'Jumlah Cabang',
-                        field: '',
-                        hozAlign: 'center',
-                        headerHozAlign: 'center',
-                        formatter: function(value) {
-                            return `<span class="badge badge-${value.getData().child.length === 0 ? 'danger': 'success'}">${value.getData().child.length}</span>`
-                        }
-                    },
-                    {
                         title: '',
                         formatter: this.viewDetailsFormatter,
                         width: 70,

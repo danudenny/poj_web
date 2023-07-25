@@ -1,7 +1,7 @@
 <template>
     <li class="profile-nav onhover-dropdown pe-0 py-0">
       <div class="media profile-media">
-        <img class="b-r-10 img-40" :src="this.profileImg ?? avatars" alt="" />
+        <img class="b-r-10 img-40" :src="avatars" alt="" />
         <div class="media-body">
           <span>{{ user.name }}</span>
           <p class="mb-0 font-roboto">
@@ -12,18 +12,7 @@
       <ul class="profile-dropdown onhover-show-div">
         <li>
           <router-link to="/profile">
-            <vue-feather type="user"></vue-feather><span>Account </span>
-          </router-link>
-        </li>
-        <!-- <li>
-          <vue-feather type="mail"></vue-feather><span>Inbox</span>
-        </li> -->
-        <!-- <li>
-          <vue-feather type="file-text"></vue-feather><span>Taskboard</span>
-        </li> -->
-        <li>
-          <router-link to="/">
-            <vue-feather type="settings"></vue-feather><span>Settings</span>
+            <vue-feather type="user"></vue-feather><span>Profile</span>
           </router-link>
         </li>
         <li>

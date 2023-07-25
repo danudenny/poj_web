@@ -63,8 +63,7 @@ export default {
         },
         async getDepartments() {
             this.loading = true;
-            const unitId = JSON.parse(localStorage.getItem('USER_STORAGE_KEY'));
-            await this.$axios.get(`/api/v1/admin/department?company_id=${parseInt(unitId.unit_id)}`)
+            await this.$axios.get(`/api/v1/admin/department`)
                 .then(response => {
                     this.departments = response.data.data;
                 })

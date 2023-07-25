@@ -110,7 +110,7 @@ class User extends Authenticatable
 
     public function employee(): BelongsTo
     {
-        return $this->BelongsTo(Employee::class);
+        return $this->BelongsTo(Employee::class, 'employee_id');
     }
 
     public function approvals(): BelongsToMany

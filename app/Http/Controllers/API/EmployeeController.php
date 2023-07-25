@@ -50,4 +50,5 @@ class EmployeeController extends BaseController
     public function listPaginatedEmployee(Request $request): JsonResponse {
         return $this->employeeService->listPaginatedEmployees($request);
     }
+
 }
