@@ -15,9 +15,6 @@ class DepartmentService
         $department->when('name', function ($query) use ($request) {
             $query->where('name', 'like', '%' . $request->name . '%');
         });
-        $department->when('company_id', function ($query) use ($request) {
-            $query->where('company_id', $request->company_id);
-        });
 
         return response()->json([
             'status' => 'success',

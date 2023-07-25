@@ -2,12 +2,15 @@
     <div class="container-fluid">
         <Breadcrumbs :title="$route.name"/>
         <div class="col-sm-12">
-            <div class="d-flex justify-content-end m-3">
-                <button class="btn btn-info" @click="$router.push('/areas')">
-                    <i class="icofont icofont-double-left"></i>&nbsp;Back
-                </button>
-            </div>
             <div class="card">
+                <div className="card-header bg-primary">
+                    <div class="d-flex justify-content-between">
+                        <h5>{{item.name}}</h5>
+                        <button class="btn btn-sm btn-outline-warning" @click="$router.push('/areas')">
+                            <i class="icofont icofont-double-left"></i>&nbsp;Back
+                        </button>
+                    </div>
+                </div>
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
@@ -17,6 +20,7 @@
                                 <li class="nav-item"><a class="nav-link" id="pills-job-tab" data-bs-toggle="pill" href="#pills-job" role="tab" aria-controls="pills-job" aria-selected="false"><i class="icofont icofont-file-document"></i>Jobs</a></li>
                                 <li class="nav-item"><a class="nav-link" id="pills-timesheet-tab" data-bs-toggle="pill" href="#pills-timesheet" role="tab" aria-controls="pills-timesheet" aria-selected="false"><i class="icofont icofont-clock-time"></i>Timesheet</a></li>
                                 <li class="nav-item"><a class="nav-link" id="pills-reporting-tab" data-bs-toggle="pill" href="#pills-reporting" role="tab" aria-controls="pills-reporting" aria-selected="false"><i class="icofont icofont-calendar"></i>Reporting</a></li>
+                                <li class="nav-item"><a class="nav-link" id="pills-employee-tab" data-bs-toggle="pill" href="#pills-employee" role="tab" aria-controls="pills-employee" aria-selected="false"><i class="icofont icofont-users"></i>Employee</a></li>
                             </ul>
                         </div>
                     </div>
@@ -224,6 +228,9 @@
                                 </tbody>
                             </table>
                         </div>
+                        <div class="tab-pane fade" id="pills-employee" role="tabpanel" aria-labelledby="pills-employee-tab">
+                            <Employee :id="paramsId"/>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -238,10 +245,12 @@ import {useToast} from 'vue-toastification';
 import {TabulatorFull as Tabulator} from "tabulator-tables";
 import Timesheet from "./timesheet.vue";
 import AssignWorkReporting from "@/pages/area/modal/assignWorkReporting.vue";
+import Employee from "./employee.vue";
 
 export default {
     components: {
         Timesheet,
+        Employee,
         AssignWorkReporting
     },
     data() {

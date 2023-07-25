@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Attributes:
@@ -14,4 +15,14 @@ use Illuminate\Database\Eloquent\Model;
 class BackupEmployee extends Model
 {
     use HasFactory;
+
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
+    }
+
+    public function backup(): BelongsTo
+    {
+        return $this->belongsTo(Backup::class);
+    }
 }

@@ -17,8 +17,8 @@
                                     </h5>
                                     <div class="row">
                                         <div class="col-md-12">
-                                            <div class="row">
-                                                <div class="col-md-3">
+                                            <div class="row d-flex justify-content-between">
+                                                <div class="col-md-4">
                                                     <multiselect
                                                         v-model="selectedUnit"
                                                         placeholder="Select Unit"
@@ -33,10 +33,7 @@
                                                     >
                                                     </multiselect>
                                                 </div>
-                                                <div class="col-md-6">
-
-                                                </div>
-                                                <div class="col-md-3">
+                                                <div class="col-md-4">
                                                     <div class="d-flex justify-content-end mb-2">
                                                         <button class="btn btn-warning"  :disabled="syncLoading" type="button" @click="syncFromEmployee">
                                         <span v-if="syncLoading">
@@ -134,6 +131,7 @@ export default {
                     console.error(error);
                 });
         },
+        groupBy: 'employee.last_unit.name',
         initializeUsersTable() {
             const ls = localStorage.getItem('my_app_token')
             this.table = new Tabulator(this.$refs.usersTable, {

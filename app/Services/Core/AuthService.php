@@ -51,7 +51,6 @@ class AuthService extends BaseService
                 $user = UserMobileResource::make($user);
             }
 
-
             return [
                 'token' => $token,
                 'user' => $user

@@ -11,6 +11,9 @@
 
         @vite(['resources/js/src/main.js', 'resources/js/src/assets/scss/app.scss'])
         <style>
+            .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links > li .sidebar-submenu li a {
+                font-size: 12px !important;
+            }
             .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links > li.sidebar-list:hover > a:hover {
                 background-color: #0A5640 !important;
                 fill: red;
@@ -52,6 +55,12 @@
             .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links > li .sidebar-link.active {
                 background-color: #0A5640 !important;
                 margin-bottom: 0 !important;
+            }
+            .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links li:last-child {
+                margin-bottom: 0 !important;
+            }
+            .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links > li:last-child .sidebar-link {
+                margin-bottom: 20px !important;
             }
 
         </style>

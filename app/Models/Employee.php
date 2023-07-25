@@ -153,7 +153,7 @@ class Employee extends Model
 
     public function user(): HasOne
     {
-        return $this->HasOne(User::class);
+        return $this->HasOne(User::class, 'employee_id');
     }
 
     public function job(): HasOne
@@ -169,6 +169,11 @@ class Employee extends Model
     public function timesheetSchedules(): HasMany
     {
         return $this->hasMany(EmployeeTimesheetSchedule::class, 'employee_id');
+    }
+
+    public function corporate(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class, 'corporate_id', 'relation_id')->where('unit_level', 3);
     }
 
     public function kanwil(): BelongsTo
@@ -232,5 +237,20 @@ class Employee extends Model
             ->get();
 
         return $otherUnits->toArray();
+    }
+
+    public function units(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class, 'unit_id', 'relation_id');
+    }
+
+    public function overtime(): HasMany
+    {
+        return $this->hasMany(OvertimeEmployee::class, 'employee_id');
+    }
+
+    public function backup(): HasMany
+    {
+        return $this->hasMany(BackupEmployee::class, 'employee_id')->with(['employee', 'backup']);
     }
 }

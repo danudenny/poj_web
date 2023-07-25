@@ -2,12 +2,15 @@
     <div class="container-fluid">
         <Breadcrumbs :title="$route.name"/>
         <div class="col-sm-12">
-            <div class="d-flex justify-content-end m-3">
-                <button class="btn btn-info" @click="$router.push('/corporates')">
-                    <i class="icofont icofont-double-left"></i>&nbsp;Back
-                </button>
-            </div>
             <div class="card">
+                <div className="card-header bg-primary">
+                    <div class="d-flex justify-content-between">
+                        <h5>{{item.name}}</h5>
+                        <button class="btn btn-sm btn-outline-warning" @click="$router.push('/corporates')">
+                            <i class="icofont icofont-double-left"></i>&nbsp;Back
+                        </button>
+                    </div>
+                </div>
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
@@ -17,6 +20,7 @@
                                 <li class="nav-item"><a class="nav-link" id="pills-job-tab" data-bs-toggle="pill" href="#pills-job" role="tab" aria-controls="pills-job" aria-selected="false"><i class="icofont icofont-file-document"></i>Jobs</a></li>
                                 <li class="nav-item"><a class="nav-link" id="pills-timesheet-tab" data-bs-toggle="pill" href="#pills-timesheet" role="tab" aria-controls="pills-timesheet" aria-selected="false"><i class="icofont icofont-clock-time"></i>Timesheet</a></li>
                                 <li class="nav-item"><a class="nav-link" id="pills-reporting-tab" data-bs-toggle="pill" href="#pills-reporting" role="tab" aria-controls="pills-reporting" aria-selected="false"><i class="icofont icofont-calendar"></i>Reporting</a></li>
+                                <li class="nav-item"><a class="nav-link" id="pills-employee-tab" data-bs-toggle="pill" href="#pills-employee" role="tab" aria-controls="pills-employee" aria-selected="false"><i class="icofont icofont-users"></i>Employee</a></li>
                             </ul>
                         </div>
                     </div>
@@ -80,11 +84,20 @@
                                                 Unit Kantor Wilayah
                                                 <input class="form-control mt-2" type="text" v-model="search" @input="handleInputChange" placeholder="Search">
                                             </th>
+                                            <th></th>
                                         </tr>
                                         </thead>
                                         <tbody>
                                         <tr v-for="(it, index) in item.child" :key="it" v-if="item.child && item.child.length > 0">
                                             <td>{{ it.name }}</td>
+                                            <td>
+                                                <button class="btn btn-success btn-xs" @click="this.$router.push({
+                                                    name: 'Kanwil Detail',
+                                                    params: { id: it.id }
+                                                })">
+                                                    <i class="fa fa-eye"></i> View
+                                                </button>
+                                            </td>
                                         </tr>
                                         <tr v-else>
                                             <td><span>No Data Available</span></td>
@@ -224,6 +237,9 @@
                                 </tbody>
                             </table>
                         </div>
+                        <div class="tab-pane fade" id="pills-employee" role="tabpanel" aria-labelledby="pills-employee-tab">
+                            <Employee :id="paramsId" />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -237,12 +253,14 @@ import axios from 'axios';
 import {useToast} from 'vue-toastification';
 import {TabulatorFull as Tabulator} from "tabulator-tables";
 import Timesheet from "./timesheet.vue";
+import Employee from "./employee.vue";
 import AssignWorkReporting from "@/pages/corporate/modal/assignWorkReporting.vue";
 
 export default {
     components: {
         Timesheet,
-        AssignWorkReporting
+        AssignWorkReporting,
+        Employee
     },
     data() {
         return {

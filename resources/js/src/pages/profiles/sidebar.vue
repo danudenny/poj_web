@@ -68,7 +68,7 @@
                     <div class="tab-content">
                         <basicInformation v-if="!isLoading" :employee="employeeData"/>
                         <companyInformation v-if="!isLoading" :employee="employeeData"/>
-                        <timesheetInformation v-if="!isLoading" :profile="profile"/>
+                        <timesheetInformation v-if="!isLoading" :profile="schedules"/>
                     </div>
                 </div>
             </div>
@@ -98,7 +98,7 @@ export default {
     },
     async created() {
         await this.getProfile();
-        await this.fetchExistingData();
+        // await this.fetchExistingData();
         // await this.getTimesheet();
     },
     methods: {
@@ -122,7 +122,10 @@ export default {
         },
         async getProfile() {
             await this.$axios.get('api/v1/admin/user/profile').then(response => {
-                this.profile = response.data
+                this.profile = response.data.data
+                this.employeeData = response.data.data.employee
+                this.schedules = response.data.data.time_schedules
+                this.isLoading = false;
             }).catch(error => {
                 console.error(error);
             });
@@ -130,7 +133,8 @@ export default {
         async fetchExistingData() {
             await this.$axios.get(`api/v1/admin/employee/view/${this.profile.employee_id}`)
                 .then(response => {
-                    this.employeeData = response.data.data
+                    this.employeeData = response.data.data.employee
+
                     this.isLoading = false;
                 })
                 .catch(error => {

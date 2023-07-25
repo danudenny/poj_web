@@ -29,6 +29,8 @@ use App\Http\Controllers\API\OutletController;
 use App\Http\Controllers\API\UnitController;
 
 
+Route::get('admin/employee/sync-to-users', [EmployeeController::class, 'syncToUser']);
+
 Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () {
 //Route::group(['prefix' => 'admin'], function () {
 
@@ -78,7 +80,6 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::get('/', [EmployeeController::class, 'index']);
         Route::get('paginated', [EmployeeController::class, 'listPaginatedEmployee']);
         Route::get('view/{id}', [EmployeeController::class, 'view']);
-        Route::get('sync-to-users', [EmployeeController::class, 'syncToUser']);
     });
     // End Employee
 

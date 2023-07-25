@@ -92,8 +92,10 @@ $dark-datatable-sorting: #1c212b;
 $dark-datatable-sorting-even: #22262f;
 $dark-even-hover-sorting: #191e27;
 
+.tabulator { font-size: 13px !important; }
+
 //General tag settings
-$body-font-size: 14px;
+$body-font-size: 12px;
 $body-font-color: $theme-body-font-color;
 $ul-padding-left: 0px;
 $ancher-color: var(--theme-deafult);
