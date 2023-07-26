@@ -26,55 +26,76 @@ class UserRolePermissionResource extends JsonResource
         $overtime = $this->employee->overtime;
         $backup = $this->employee->backup;
 
-        $periods = $schedule->map(function ($schedule) {
-            $timezone = getTimezoneV2(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
-            $scheduleDate = Carbon::createFromDate($schedule->period->year, $schedule->period->month, $schedule->date, $timezone);
-
-            return [
-                'date' => $scheduleDate->format('d F Y'),
-                'name' => $schedule->timesheet->name,
-                'start_time' => $schedule->timesheet->start_time,
-                'end_time' => $schedule->timesheet->end_time,
-            ];
-        })->unique()->values();
-
-        $timesheet['daily'] = $periods->map(function ($period) {
-            return [
-                'date' => $period['date'],
-                'name' => $period['name'],
-                'start_time' => $period['start_time'],
-                'end_time' => $period['end_time'],
-            ];
-        });
-
-        $overtimeDate = $overtime->map(function ($overtime) {
-            return $overtime->overtimeDate;
-        })->unique()->values();
-
-        $timesheet['overtime'] = $overtimeDate->map(function ($overtimeDate) {
-            $timezone = getTimezoneV2(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
-            return [
-                'date' => Carbon::parse($overtimeDate->date, 'UTC')->addDay(1)->setTimezone($timezone)->format('d F Y'),
-                'start_time' => Carbon::parse($overtimeDate->start_time, 'UTC')->setTimezone($timezone)->format('H:i'),
-                'end_time' => Carbon::parse($overtimeDate->end_time, 'UTC')->setTimezone($timezone)->format('H:i'),
-            ];
-        })->values();
-
-        $backupDate = $backup->map(function ($backup) {
-            return $backup->backup;
-        })->unique()->values();
-
-        $timesheet['backup'] = $backupDate->map(function ($backupDate) {
-            return $backupDate->backupTimes->map(function ($backupTime) {
+        if (!$schedule) {
+            $periods = $schedule->map(function ($schedule) {
                 $timezone = getTimezoneV2(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
+                $scheduleDate = Carbon::createFromDate($schedule->period->year, $schedule->period->month, $schedule->date, $timezone);
 
                 return [
-                    'date' => Carbon::parse($backupTime->backup_date, 'UTC')->addDay(1)->setTimezone($timezone)->format('d F Y'),
-                    'start_time' => Carbon::parse($backupTime->start_time, 'UTC')->setTimezone($timezone)->format('H:i'),
-                    'end_time' => Carbon::parse($backupTime->end_time, 'UTC')->setTimezone($timezone)->format('H:i'),
+                    'date' => $scheduleDate->format('d F Y'),
+                    'name' => $schedule->timesheet->name,
+                    'start_time' => $schedule->timesheet->start_time,
+                    'end_time' => $schedule->timesheet->end_time,
+                ];
+            })->unique()->values();
+
+            $timesheet['daily'] = $periods->map(function ($period) {
+                return [
+                    'date' => $period['date'],
+                    'name' => $period['name'],
+                    'start_time' => $period['start_time'],
+                    'end_time' => $period['end_time'],
                 ];
             });
-        })->collapse()->unique()->values();
+
+            $overtimeDate = $overtime->map(function ($overtime) {
+                return $overtime->overtimeDate;
+            })->unique()->values();
+
+            $timesheet['overtime'] = $overtimeDate->map(function ($overtimeDate) {
+                $timezone = getTimezoneV2(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
+                return [
+                    'date' => Carbon::parse($overtimeDate->date, 'UTC')->addDay(1)->setTimezone($timezone)->format('d F Y'),
+                    'start_time' => Carbon::parse($overtimeDate->start_time, 'UTC')->setTimezone($timezone)->format('H:i'),
+                    'end_time' => Carbon::parse($overtimeDate->end_time, 'UTC')->setTimezone($timezone)->format('H:i'),
+                ];
+            })->values();
+
+            $backupDate = $backup->map(function ($backup) {
+                return $backup->backup;
+            })->unique()->values();
+
+            $timesheet['backup'] = $backupDate->map(function ($backupDate) {
+                return $backupDate->backupTimes->map(function ($backupTime) {
+                    $timezone = getTimezoneV2(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
+
+                    return [
+                        'date' => Carbon::parse($backupTime->backup_date, 'UTC')->addDay(1)->setTimezone($timezone)->format('d F Y'),
+                        'start_time' => Carbon::parse($backupTime->start_time, 'UTC')->setTimezone($timezone)->format('H:i'),
+                        'end_time' => Carbon::parse($backupTime->end_time, 'UTC')->setTimezone($timezone)->format('H:i'),
+                    ];
+                });
+            })->collapse()->unique()->values();
+        }
+
+        //get user last units
+        $lastUnit = $this->employee->last_unit;
+
+        $jobMisc =  $this->employee->job;
+        $job = $jobMisc->units->map(function ($job) use ($lastUnit) {
+            if ($job->pivot->unit_id === $lastUnit->id) {
+                $data = [
+                    'is_camera' => $job->pivot->is_camera,
+                    'is_upload' => $job->pivot->is_upload,
+                    'is_reporting' => $job->pivot->is_reporting,
+                    'is_mandatory_reporting' => $job->pivot->is_mandatory_reporting,
+                    'total_reporting' => $job->pivot->total_reporting,
+                ];
+
+                return array_filter($data, fn ($value) => !is_null($value) && $value !== '');
+            }
+            return null;
+        });
 
         return [
             'id' => $this->id,
@@ -96,6 +117,7 @@ class UserRolePermissionResource extends JsonResource
             'employee' => $this->employee->unsetRelation('timesheetSchedules')->unsetRelation('overtime')->unsetRelation('backup')->unsetRelation('job'),
             'time_schedules' => $timesheet,
             'job' => $this->employee->job,
+            'misc' => array_filter($job->all()),
         ];
     }
 }
