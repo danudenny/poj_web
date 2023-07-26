@@ -11,7 +11,7 @@
                         </div>
                         <div class="card-body">
                             <div class="d-flex justify-content-end">
-                                <button class="btn btn-warning" @click="this.$router.push('/timesheet-assign')">
+                                <button class="btn btn-warning" @click="this.$router.push('/timesheet-assignment')">
                                     <i class="fa fa-arrow-left"></i> Back
                                 </button>
                             </div>

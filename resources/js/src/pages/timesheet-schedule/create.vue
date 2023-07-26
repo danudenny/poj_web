@@ -60,7 +60,7 @@
                         </div>
                         <div class="card-footer text-start">
                             <button class="btn btn-primary m-r-10" @click="saveSchedule">Save</button>
-                            <button class="btn btn-secondary" @click="$router.push('/timesheet-assign')">Back</button>
+                            <button class="btn btn-secondary" @click="$router.push('/timesheet-assignment')">Back</button>
                         </div>
                     </div>
                 </div>
