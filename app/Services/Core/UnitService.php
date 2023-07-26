@@ -286,18 +286,18 @@ class UnitService extends BaseService
 
     public function getRelatedUnit(): JsonResponse
     {
-        $roles = auth()->user()->roles;
+        $role = auth()->user()->getHighestRole();
         $datas = [];
-        foreach ($roles as $role) {
-            if ($role->role_level === 'superadmin') {
-                $datas = Unit::all();
-            } else {
-                $empUnit = auth()->user()->employee->getRelatedUnit();
-                $lastUnit = auth()->user()->employee->getLastUnit();
-                $empUnit[] = $lastUnit;
-                $datas = UnitHelper::flattenUnits($empUnit);
-            }
+
+        if ($role->role_level === 'superadmin') {
+            $datas = Unit::all();
+        } else {
+            $empUnit = auth()->user()->employee->getRelatedUnit();
+            $lastUnit = auth()->user()->employee->getLastUnit();
+            $empUnit[] = $lastUnit;
+            $datas = UnitHelper::flattenUnits($empUnit);
         }
+
         return response()->json([
             'status' => 'success',
             'message' => 'Success Fetch Data',
