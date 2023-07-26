@@ -40,6 +40,8 @@ return [
             'queue' => 'default',
             'retry_after' => 1200,
             'after_commit' => false,
+            'reserved_at' => null,
+            'attempts' => null
         ],
 
         'beanstalkd' => [

@@ -1,4 +1,7 @@
 <template>
+    <div v-if="isLoading" className="text-center">
+        <img src="../../assets/loader.gif" alt="loading" width="100">
+    </div>
     <div class="col-xl-4 box-col-6">
         <div class="md-sidebar"><a class="btn btn-primary md-sidebar-toggle" @click="collapse()">bookmark filter</a>
             <div class="md-sidebar-aside job-left-aside custom-scrollbar" :class="filtered ? 'open' : ''">
@@ -121,6 +124,7 @@ export default {
             this.filtered = !this.filtered
         },
         async getProfile() {
+            this.isLoading = true
             await this.$axios.get('api/v1/admin/user/profile').then(response => {
                 this.profile = response.data.data
                 this.employeeData = response.data.data.employee
