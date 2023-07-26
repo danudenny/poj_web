@@ -268,7 +268,7 @@ export default {
                     params.filter.map((item) => {
                         if (item.field === 'name') localFilter.name = item.value
                     })
-                    return `${url}?page=${params.page}&per_page=${params.size}&name=${localFilter.name}&unit_relation_id=${this.overtime.unit_relation_id}&job_id=${this.overtime.job_id}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${localFilter.name}&last_unit_relation_id=${this.overtime.unit_relation_id}&job_id=${this.overtime.job_id}`
                 },
                 ajaxResponse: function (url, params, response) {
                     return {

@@ -9,7 +9,7 @@
                             <form v-on:submit.prevent="onSubmitForm">
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <label for="name">Select Unit</label>
+                                        <label for="name">Select Destination Unit</label>
                                         <multiselect
                                             v-model="selectedUnit"
                                             placeholder="Select Unit"
@@ -24,7 +24,7 @@
                                         </multiselect>
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="name">Select Job</label>
+                                        <label for="name">Select Destination Job</label>
                                         <multiselect
                                             v-model="selectedJob"
                                             placeholder="Select Job"
@@ -104,6 +104,26 @@
                                 </div>
                                 <br/>
                                 <br/>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label for="name">Select Employee Unit</label>
+                                        <multiselect
+                                            v-model="selectedEmployeeUnit"
+                                            placeholder="Select Employee Unit"
+                                            label="name"
+                                            track-by="id"
+                                            :options="employeeUnits"
+                                            :multiple="false"
+                                            :required="true"
+                                            @select="onEmployeeUnitSelected"
+                                            @search-change="onEmployeeUnitSearchName"
+                                        >
+                                        </multiselect>
+                                    </div>
+                                    <div class="col-md-6">
+                                    </div>
+                                </div>
+                                <br/>
                                 <div ref="employeeTable"></div>
                                 <br/>
                                 <button class="btn btn-primary">Simpan</button>
@@ -159,6 +179,10 @@ export default {
                 id: null,
                 relation_id: null
             },
+            selectedEmployeeUnit: {
+                id: null,
+                relation_id: null
+            },
             selectedTimesheet: {
                 id: null,
                 start_time: null,
@@ -168,6 +192,12 @@ export default {
                 unit_id: null
             },
             unitPagination: {
+                currentPage: 1,
+                pageSize: 30,
+                name: '',
+                onSearch: true
+            },
+            employeeUnitPagination: {
                 currentPage: 1,
                 pageSize: 30,
                 name: '',
@@ -183,6 +213,7 @@ export default {
             },
             units: [],
             jobs: [],
+            employeeUnits: [],
             today: ''
         }
     },
@@ -191,6 +222,7 @@ export default {
         this.today = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + (d.getDate())).slice(-2)
 
         this.getUnitsData()
+        this.getEmployeeUnitsData()
     },
     methods: {
         getUnitsData() {
@@ -198,6 +230,16 @@ export default {
                 .then(response => {
                     this.units = response.data.data.data
                     this.unitPagination.onSearch = false
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        },
+        getEmployeeUnitsData() {
+            this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.employeeUnitPagination.pageSize}&page=${this.employeeUnitPagination.currentPage}&name=${this.employeeUnitPagination.name}`)
+                .then(response => {
+                    this.employeeUnits = response.data.data.data
+                    this.employeePagination.onSearch = false
                 })
                 .catch(error => {
                     console.error(error);
@@ -226,16 +268,27 @@ export default {
                 }, 1000)
             }
         },
+        onEmployeeUnitSearchName(val) {
+            this.employeeUnits.name = val
+
+            if (!this.employeeUnits.onSearch) {
+                this.employeeUnits.onSearch = true
+                setTimeout(() => {
+                    this.getEmployeeUnitsData()
+                }, 1000)
+            }
+        },
         onUnitSelected(val) {
             this.backup.unit_relation_id = this.selectedUnit.relation_id
             this.jobs = []
             this.getJobsData()
             this.generateTimeSheetTable()
+        },
+        onEmployeeUnitSelected(val) {
             this.generateEmployeesTable()
         },
         onJobSelected() {
             this.backup.job_id = this.selectedJob.id
-            this.generateEmployeesTable()
         },
         generateTimeSheetTable() {
             const ls = localStorage.getItem('my_app_token')
@@ -324,7 +377,7 @@ export default {
             })
         },
         generateEmployeesTable() {
-            if (this.backup.unit_relation_id === null || this.backup.job_id === null) {
+            if (this.selectedEmployeeUnit.relation_id === null) {
                 return
             }
 
@@ -384,7 +437,7 @@ export default {
                     params.filter.map((item) => {
                         if (item.field === 'name') localFilter.name = item.value
                     })
-                    return `${url}?page=${params.page}&per_page=${params.size}&name=${localFilter.name}&unit_relation_id=${this.selectedUnit.relation_id}&job_id=${this.backup.job_id}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${localFilter.name}&last_unit_relation_id=${this.selectedEmployeeUnit.relation_id}`
                 },
                 ajaxResponse: function (url, params, response) {
                     return {

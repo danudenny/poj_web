@@ -240,12 +240,18 @@ class EmployeeService extends BaseService
                     $unitRelationID = $user->employee->getLastUnitID();
                 }
             } else if ($user->isHighestRole(Role::RoleStaff)) {
-                $lastUnitRelationID = $user->employee->getLastUnitID();
+                if (!$lastUnitRelationID) {
+                    $lastUnitRelationID = $user->employee->getLastUnitID();
+                }
             }
 
             $employees->when($request->input('job_id'), function (Builder $builder) use ($request) {
                 $builder->leftJoin('jobs', 'jobs.odoo_job_id', '=', 'employees.job_id')
                     ->where('jobs.id', '=', $request->input('job_id'));
+            });
+
+            $employees->when($request->input('name'), function (Builder $builder) use ($request) {
+                $builder->whereRaw('LOWER(employees.name) LIKE ?', ["%" . $request->input('name') . "%"]);
             });
 
             $employees->when($lastUnitRelationID, function (Builder $builder) use ($lastUnitRelationID) {
