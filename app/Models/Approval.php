@@ -18,7 +18,8 @@ class Approval extends Model
         'approval_module_id',
         'name',
         'is_active',
-        'unit_level'
+        'unit_level',
+        'unit_id'
     ];
 
     protected $hidden = [
@@ -40,5 +41,10 @@ class Approval extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(Employee::class, 'approval_users', 'approval_id', 'user_id');
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class);
     }
 }
