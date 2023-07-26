@@ -140,11 +140,12 @@ class OvertimeService extends BaseService
              * @var User $user
              */
             $user = $request->user();
+            $lastUnit = $user->employee->last_unit;
 
             /**
              * @var Unit $unit
              */
-            $unit = Unit::query()->where('id', '=', $request->input('unit_relation_id', $user->employee->getLastUnitID()))->first();
+            $unit = Unit::query()->where('id', '=', $lastUnit->id)->first();
             if (!$unit) {
                 return response()->json([
                     'status' => false,
