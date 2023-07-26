@@ -16,6 +16,11 @@ class UserMobileResource extends JsonResource
      */
     public function toArray($request): array
     {
+        $role = $this->roles->pluck('name');
+        $permission = $this->roles->map(function ($role) {
+            return $role->permissions;
+        })->collapse()->pluck('name')->unique()->values();
+
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -37,7 +42,8 @@ class UserMobileResource extends JsonResource
             'is_backup_checkout' => $this->is_backup_checkout,
             'is_overtime_checkout' => $this->is_overtime_checkout,
             'is_longshift_checkout' => $this->is_longshift_checkout,
-            'roles' => RoleResource::collection($this->whenLoaded('roles')),
+            'roles' => $role,
+            'permissions' => $permission,
         ];
     }
 }
