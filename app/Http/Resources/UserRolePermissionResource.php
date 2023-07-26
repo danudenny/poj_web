@@ -26,7 +26,7 @@ class UserRolePermissionResource extends JsonResource
         $overtime = $this->employee->overtime;
         $backup = $this->employee->backup;
 
-        if (!$schedule) {
+        if ($schedule) {
             $periods = $schedule->map(function ($schedule) {
                 $timezone = getTimezoneV2(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
                 $scheduleDate = Carbon::createFromDate($schedule->period->year, $schedule->period->month, $schedule->date, $timezone);
@@ -78,9 +78,7 @@ class UserRolePermissionResource extends JsonResource
             })->collapse()->unique()->values();
         }
 
-        //get user last units
         $lastUnit = $this->employee->last_unit;
-
         $jobMisc =  $this->employee->job;
         $job = $jobMisc->units->map(function ($job) use ($lastUnit) {
             if ($job->pivot->unit_id === $lastUnit->id) {
