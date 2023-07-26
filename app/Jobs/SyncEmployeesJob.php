@@ -26,50 +26,46 @@ class SyncEmployeesJob implements ShouldQueue
         //
     }
 
-    public function handle()
+    public function handle(): void
     {
         $employees = Employee::all();
-        $users = User::all();
+        $users = User::whereIn('employee_id', $employees->pluck('id'))->get();
 
-        Employee::chunk(1000, function ($employees) use ($users) {
-            $employees->each(function ($employee) use ($users) {
-                $user = $users->where('employee_id', $employee->id)->first();
+        $employees->chunk(1000, function ($employeesChunk) use ($users) {
+            $usersChunk = $users->whereIn('employee_id', $employeesChunk->pluck('id'));
 
-                if ($user) {
-                    $user->name = $employee->name;
-                    $user->email = $employee->work_email;
-                    $user->email_verified_at = now();
-                    $user->password = '$2y$10$m54GoOajOHJ4AYs2VnfP7e3hPBf3pJw.Omimsct0m6gDcHCt8hTHi';
-                    $user->is_active = true;
-                    $user->created_at = now();
-                    $user->updated_at = now();
-                    $user->employee_id = $employee->id;
-                    $user->save();
+            User::withoutBroadcasting(function () use ($usersChunk, $employeesChunk) {
+                foreach ($usersChunk as $user) {
+                    $employee = $employeesChunk->firstWhere('id', $user->employee_id);
 
-                    $user->assignRole('staff');
-                } else {
-                    User::create([
-                        'employee_id' => $employee->id,
+                    $userData = [
                         'name' => $employee->name,
                         'email' => $employee->work_email,
                         'email_verified_at' => now(),
                         'password' => '$2y$10$m54GoOajOHJ4AYs2VnfP7e3hPBf3pJw.Omimsct0m6gDcHCt8hTHi',
                         'is_active' => true,
-                        'created_at' => now(),
-                        'updated_at' => now(),
                         'is_new' => true,
-                    ])->assignRole('staff');
+                    ];
+
+                    if ($user->exists) {
+                        $user->update($userData);
+                    } else {
+                        $userData['created_at'] = now();
+                        $userData['updated_at'] = now();
+
+                        $user = User::create($userData);
+                    }
+
+                    $user->assignRole('staff');
                 }
             });
         });
-//        // Check for deleted records
-        $users->each(function ($user) use ($employees) {
-            if (!$employees->contains('id', $user->employee_id)) {
-                if ($user->name !== 'Superadmin') {
-                    $user->delete();
-                }
-            }
+
+        $usersToDelete = $users->filter(function ($user) use ($employees) {
+            return !$employees->contains('id', $user->employee_id) && $user->name !== 'Superadmin';
         });
 
+        User::destroy($usersToDelete->pluck('id')->toArray());
     }
+
 }
