@@ -112,11 +112,12 @@ class BackupService extends BaseService
              * @var User $user
              */
             $user = $request->user();
+            $lastUnit = $user->employee->last_unit;
 
             /**
              * @var Unit $unit
              */
-            $unit = Unit::query()->where('relation_id', '=', $request->input('unit_relation_id'))->first();
+            $unit = Unit::query()->where('id', '=', $lastUnit->id)->first();
             if (!$unit) {
                 return response()->json([
                     'status' => false,
@@ -135,7 +136,7 @@ class BackupService extends BaseService
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
-            $unitTimeZone = getTimezoneV2($unit->lat, $unit->long);
+            $unitTimeZone = getTimezone($unit->lat, $unit->long);
 
             $employeeIDs = $request->input('employee_ids', []);
             $backupDates = $this->generateBackupDateData($request->input('dates'), $employeeIDs, $unitTimeZone);
