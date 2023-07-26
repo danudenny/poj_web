@@ -54,7 +54,7 @@ class UserRolePermissionResource extends JsonResource
         $timesheet['overtime'] = $overtimeDate->map(function ($overtimeDate) {
             $timezone = getTimezoneV2(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
             return [
-                'date' => Carbon::parse($overtimeDate->date)->format('d F Y'),
+                'date' => Carbon::parse($overtimeDate->date, 'UTC')->addDay(1)->setTimezone($timezone)->format('d F Y'),
                 'start_time' => Carbon::parse($overtimeDate->start_time, 'UTC')->setTimezone($timezone)->format('H:i'),
                 'end_time' => Carbon::parse($overtimeDate->end_time, 'UTC')->setTimezone($timezone)->format('H:i'),
             ];
@@ -69,7 +69,7 @@ class UserRolePermissionResource extends JsonResource
                 $timezone = getTimezoneV2(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
 
                 return [
-                    'date' => Carbon::parse($backupTime->backup_date)->format('d F Y'),
+                    'date' => Carbon::parse($backupTime->backup_date, 'UTC')->addDay(1)->setTimezone($timezone)->format('d F Y'),
                     'start_time' => Carbon::parse($backupTime->start_time, 'UTC')->setTimezone($timezone)->format('H:i'),
                     'end_time' => Carbon::parse($backupTime->end_time, 'UTC')->setTimezone($timezone)->format('H:i'),
                 ];
