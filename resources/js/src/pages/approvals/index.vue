@@ -16,40 +16,43 @@
                                 </button>
                             </div>
                             <hr>
-                            <table class="table table-striped table-hover table-responsive">
-                                <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Name</th>
-                                    <th>Approval Module</th>
-                                    <th>Level</th>
-                                    <th>Active</th>
-                                    <th>Action</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr v-for="(item, index) in approvals">
-                                    <td>{{index + 1}}</td>
-                                    <td class="text-center">{{item.name}}</td>
-                                    <td class="text-center">{{item.approval_module.name}}</td>
-                                    <td class="text-center">
-                                        <span class="badge badge-info">{{item.approval_users.length}}</span>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge badge-success" v-if="item.is_active">Active</span>
-                                        <span class="badge badge-danger" v-else>Inactive</span>
-                                    </td>
-                                    <td>
-                                        <button class="button-icon button-info" @click="editData(item.id)">
-                                            <i class="fa fa-pencil text-center"></i>
-                                        </button>
-                                        <button class="button-icon button-danger">
-                                            <i class="fa fa-trash text-center" @click="deleteData(item.id)"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
+                            <div class="d-flex justify-content-start row mb-3">
+                                <div class="col-md-4">
+                                    <multiselect
+                                        v-model="selectedWorkingArea"
+                                        placeholder="Select Working Area"
+                                        label="name"
+                                        track-by="id"
+                                        :options="workingArea"
+                                        :multiple="false"
+                                        :close-on-select="true"
+                                        @select="onSelectWorkingArea"
+                                        >
+                                    </multiselect>
+                                </div>
+                                <div class="col-md-4">
+                                    <multiselect
+                                        v-model="selectedApprovalModule"
+                                        placeholder="Select Approval Module"
+                                        label="name"
+                                        track-by="id"
+                                        :options="approvalModule"
+                                        :multiple="false"
+                                        :close-on-select="true"
+                                        @select="onSelectApprovalModule"
+                                    >
+                                    </multiselect>
+                                </div>
+                                <div class="col-md-4">
+                                    <button class="btn btn-warning" type="button" @click="resetFilter">
+                                        <i class="fa fa-refresh"></i> &nbsp; Reset Filter
+                                    </button>
+                                </div>
+                            </div>
+                            <div v-if="loading" class="text-center">
+                                <img src="../../assets/loader.gif" alt="loading" width="100">
+                            </div>
+                            <div ref="approvalTable"></div>
                         </div>
                     </div>
                 </div>
@@ -61,7 +64,7 @@
 <script>
 import {useToast} from "vue-toastification"
 import VerticalModal from "@components/modal/verticalModal.vue";
-
+import {TabulatorFull as Tabulator} from 'tabulator-tables';
 
 export default {
     components: {
@@ -70,24 +73,135 @@ export default {
     data() {
         return {
             approvals: [],
+            table: null,
+            loading: false,
+            currentPage: 1,
+            pageSize: 10,
+            filterName: '',
+            filterWorkingArea: '',
+            filterApprovalModule: '',
+            workingArea: [],
+            selectedWorkingArea: [],
+            selectedApprovalModule: [],
+            approvalModule: [],
         }
     },
-    created() {
-        this.getApproval();
+    async mounted() {
+        this.initApprovalTable();
+        await this.getWorkingArea();
+        await this.getApprovalModule()
     },
     methods: {
-        async getApproval() {
-            await this.$axios.get('/api/v1/admin/approval')
+        initApprovalTable() {
+            const ls = localStorage.getItem('my_app_token')
+            this.table = new Tabulator(this.$refs.approvalTable, {
+                paginationCounter:"rows",
+                ajaxURL: '/api/v1/admin/approval',
+                ajaxConfig: {
+                    headers: {
+                        Authorization: `Bearer ${ls}`,
+                    },
+                },
+                ajaxParams: {
+                    page: this.currentPage,
+                    size: this.pageSize,
+                },
+                ajaxResponse: function (url, params, response) {
+                    return {
+                        data: response.data.data,
+                        last_page: response.data.last_page,
+                    }
+                },
+                layout: 'fitColumns',
+                renderHorizontal:"virtual",
+                height: '100%',
+                frozenColumn:2,
+                columns: [
+                    {
+                        title: 'No',
+                        field: '',
+                        formatter: 'rownum',
+                        hozAlign: 'center',
+                        headerHozAlign: 'center',
+                        width: 70,
+                    },
+                    {
+                        title: 'Name',
+                        field: 'name',
+                        headerHozAlign: 'center',
+                    },
+                    {
+                        title: 'Approval Module',
+                        field: 'approval_module.name',
+                        clearable:true,
+                        hozAlign: 'center',
+                        headerHozAlign: 'center',
+                    },
+                    {
+                        title: 'Units',
+                        field: 'unit.name',
+                        hozAlign: 'center',
+                        headerHozAlign: 'center',
+                    },
+                    {
+                        title: 'Levels',
+                        field: '',
+                        headerHozAlign: 'center',
+                        hozAlign: 'center',
+                        formatter: function(cell){
+                            let data = cell.getRow().getData().approval_users;
+                            return `<span class="badge badge-primary">${data.length}</span> `;;
+                        }
+                    },
+                    {
+                        title: '',
+                        formatter: this.viewDetailsFormatter,
+                        width: 100,
+                        hozAlign: 'center',
+                        cellClick: (e, cell) => {
+                            this.viewData(cell.getRow().getData().id);
+                        }
+                    },
+                ],
+                pagination: true,
+                paginationMode: 'remote',
+                filterMode:"remote",
+                paginationSize: this.pageSize,
+                paginationSizeSelector: [10, 20, 50, 100],
+                headerFilter: true,
+                paginationInitialPage:1,
+                placeholder: 'No Data Available'
+            });
+            this.loading = false;
+        },
+        async getWorkingArea() {
+            await this.$axios.get('api/v1/admin/unit/related-unit')
                 .then(response => {
-                    this.approvals = response.data.data.data
-                    console.log(this.approvals)
-                    // this.approval.map((item, index) => {
-                    //     console.log(item.users)
-                    // })
+                    this.workingArea = response.data.data;
                 })
                 .catch(error => {
-                    console.log(error)
+                    console.log(error);
+                });
+        },
+        async getApprovalModule() {
+            await this.$axios.get('api/v1/admin/approval-module')
+                .then(response => {
+                    this.approvalModule = response.data.data.data;
                 })
+                .catch(error => {
+                    console.log(error);
+                });
+        },
+        onSelectWorkingArea() {
+            this.table.setData(`/api/v1/admin/approval?unit_id=${this.selectedWorkingArea.id}&approval_module_id=${this.selectedApprovalModule.id || ''}`);
+        },
+        onSelectApprovalModule() {
+            this.table.setData(`/api/v1/admin/approval?unit_id=${this.selectedWorkingArea.id || ''}&approval_module_id=${this.selectedApprovalModule.id}`);
+        },
+        resetFilter() {
+            this.selectedWorkingArea = [];
+            this.selectedApprovalModule = [];
+            this.table.setData(`/api/v1/admin/approval`);
         },
         createData() {
             this.$router.push({ path: '/approval/create' })

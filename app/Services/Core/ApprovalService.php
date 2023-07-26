@@ -18,12 +18,15 @@ class ApprovalService extends BaseService
     {
         try {
             $approvals = Approval::query();
-            $approvals->with(['approvalModule', 'approvalUsers']);
+            $approvals->with(['approvalModule', 'approvalUsers', 'unit']);
             $approvals->when($request->name, function($q) use ($request) {
                 $q->where('name', 'LIKE', '%' . $request->name . '%');
             });
             $approvals->when($request->approval_module_id, function($q) use ($request) {
                 $q->where('approval_module_id', $request->approval_module_id);
+            });
+            $approvals->when($request->unit_id, function($q) use ($request) {
+                $q->where('unit_id', $request->unit_id);
             });
 
             return response()->json([
@@ -80,6 +83,7 @@ class ApprovalService extends BaseService
                 'name' => $request->name,
                 'is_active' => $request->is_active,
                 'unit_level' => $request->unit_level,
+                'unit_id' => $request->unit_id
             ]);
             $approval->users()->attach($request->user_id);
             DB::commit();

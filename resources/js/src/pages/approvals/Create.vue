@@ -179,6 +179,7 @@ export default {
         onOrganizationSelect(index) {
             const organizationId = this.rows[index].selectedOrg?.id;
             this.filteredUsers[index] = this.users.filter(user => {
+                console.log(user)
                 return (
                     (user.kanwil != null && user.kanwil.id === organizationId) ||
                     (user.area != null && user.area.id === organizationId) ||
@@ -246,6 +247,7 @@ export default {
                 is_active: true,
                 unit_level: this.selectedUnitLevel,
                 user_id: userIds,
+                unit_id: this.rows[0].selectedOrg.id
             }).then(response => {
                 useToast().success(response.data.message)
                 this.$router.push('/approval')
