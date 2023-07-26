@@ -10,7 +10,7 @@
                 <a class="logo">
                   <img
                       class="img-fluid for-light"
-                      src="http://192.168.100.73:9000/att-poj-bucket/logo/logo_poj-removebg-preview.png"
+                      src="http://alakad.optimajasa.co.id:9000/att-poj-bucket/logo/logo_poj-removebg-preview.png"
                       alt="looginpage"
                       width="250"
                   />
