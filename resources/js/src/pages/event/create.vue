@@ -154,7 +154,25 @@
                             </form>
                         </div>
                         <div class="col-md-6">
-                            <div id="map" class="mb-4" v-if="event.location_type === 'external'"></div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <label for="address_lat_long">Search Address</label>
+                                    <multiselect
+                                        v-model="selectedAddress"
+                                        placeholder="Search Address"
+                                        label="display_name"
+                                        track-by="id"
+                                        :options="listAddress"
+                                        :multiple="false"
+                                        :required="true"
+                                        @search-change="onUnitSearchAddress"
+                                        @select="onAddressSelected"
+                                    >
+                                    </multiselect>
+                                </div>
+                            </div>
+                            <br/>
+                            <div id="map" class="mb-4 localMap" v-if="event.location_type === 'external'"></div>
                             <div ref="unitsTable" v-if="event.location_type === 'internal'"></div>
 
                             <hr/>
@@ -217,6 +235,10 @@ export default {
                 first: null,
                 second: null
             },
+            addressQuery: {
+                name: null,
+                onSearch: false
+            },
             currentPage: 1,
             pageSize: 10,
             filterName: "",
@@ -226,6 +248,8 @@ export default {
             map: null,
             marker: null,
             selectedEmployees: [],
+            listAddress: [],
+            selectedAddress: null,
             selectedUnitID: null,
         }
     },
@@ -411,6 +435,13 @@ export default {
                     this.event.address = resp.data.display_name
                 })
         },
+        fetchListAddress() {
+            this.$axios.get(`https://nominatim.openstreetmap.org/search?q=${this.addressQuery.name}&format=json&polygon=1&addressdetails=1`)
+                .then(resp => {
+                    this.listAddress = resp.data
+                    this.addressQuery.onSearch = false
+                })
+        },
         onChangeFile(e) {
             let formData = new FormData()
             formData.set('files[]', e.target.files[0])
@@ -485,10 +516,42 @@ export default {
             } else if (e.target.value === 'internal') {
                 this.generateUnitsTable()
             }
+        },
+        onUnitSearchAddress(val) {
+            this.addressQuery.name = val
+
+            if (!this.addressQuery.onSearch) {
+                this.addressQuery.onSearch = true
+                setTimeout(() => {
+                    this.fetchListAddress()
+                }, 1000)
+            }
+        },
+        onAddressSelected() {
+            if (this.selectedAddress === null) {
+                return
+            }
+
+            this.event.latitude = this.selectedAddress.lat
+            this.event.longitude = this.selectedAddress.lon
+            this.event.address = this.selectedAddress.display_name
+
+            if(this.marker != null) {
+                this.map.removeLayer(this.marker)
+            }
+
+            this.marker = L.marker([this.event.latitude, this.event.longitude], {icon: L.icon({
+                    iconUrl: '/marker-icon.png'
+                })}).addTo(this.map)
+
+            this.map.setView([this.event.latitude, this.event.longitude], 16)
         }
     },
 };
 </script>
 
 <style>
+.localMap {
+    z-index: 1 !important;
+}
 </style>

@@ -80,6 +80,16 @@ export default {
                         field: 'end_date',
                     },
                     {
+                        title: 'File',
+                        formatter: (cell, formatterParams, onRendered) => {
+                            if (cell.getRow().getData().image_url) {
+                                return `<a target="_blank" class="button-icon button-success p-2" href="${cell.getRow().getData().image_url}"><i class="fa fa-file"></i> </a>`;
+                            } else {
+                                return "-"
+                            }
+                        }
+                    },
+                    {
                         title: 'Created At',
                         field: 'created_at',
                     },

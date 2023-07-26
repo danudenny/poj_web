@@ -6,6 +6,8 @@ use App\Http\Requests\Overtime\OvertimeCheckInRequest;
 use App\Http\Requests\Overtime\CreateOvertimeRequest;
 use App\Http\Requests\Overtime\OvertimeApprovalRequest;
 use App\Http\Requests\Overtime\OvertimeCheckOutRequest;
+use App\Models\Backup;
+use App\Models\BackupEmployeeTime;
 use App\Models\Employee;
 use App\Models\EmployeeAttendance;
 use App\Models\Job;
@@ -180,6 +182,48 @@ class OvertimeService extends BaseService
                     'status' => false,
                     'message' => 'There is no dates',
                 ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            foreach ($overtimeDates as $overtimeDateData) {
+                foreach ($employeeIDs as $employeeID) {
+                    $isExistOvertime = OvertimeEmployee::query()
+                        ->join('overtime_dates', 'overtime_dates.id', '=', 'overtime_employees.overtime_date_id')
+                        ->join('overtimes', 'overtimes.id', '=', 'overtime_dates.overtime_id')
+                        ->where('overtime_employees.employee_id', '=', $employeeID)
+                        ->where('overtimes.last_status', '!=', OvertimeHistory::TypeRejected)
+                        ->where('overtime_dates.date', '=', $overtimeDateData['date'])
+                        ->exists();
+                    if ($isExistOvertime) {
+                        /**
+                         * @var Employee $employee
+                         */
+                        $employee = Employee::query()->where('id', '=', $employeeID)->first();
+
+                        return response()->json([
+                            'status' => false,
+                            'message' => sprintf("%s has active overtime in %s", $employee->name, $overtimeDateData['date']),
+                        ], ResponseAlias::HTTP_BAD_REQUEST);
+                    }
+
+                    $isExistBackup = BackupEmployeeTime::query()
+                        ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
+                        ->join('backups', 'backups.id', '=', 'backup_times.backup_id')
+                        ->where('status', '!=', Backup::StatusRejected)
+                        ->where('backup_times.backup_date', '=', $overtimeDateData['date'])
+                        ->where('backup_employee_times.employee_id', '=', $employeeID)
+                        ->exists();
+                    if ($isExistBackup) {
+                        /**
+                         * @var Employee $employee
+                         */
+                        $employee = Employee::query()->where('id', '=', $employeeID)->first();
+
+                        return response()->json([
+                            'status' => false,
+                            'message' => sprintf("%s has active backup in %s", $employee->name, $overtimeDateData['date']),
+                        ], ResponseAlias::HTTP_BAD_REQUEST);
+                    }
+                }
             }
 
             DB::beginTransaction();

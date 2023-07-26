@@ -2,24 +2,33 @@
     <div class="container-fluid">
         <Breadcrumbs main="Detail Incident Reporting"/>
         <div class="col-sm-12">
-            <form class="card">
+            <div class="card">
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Kategori Event</label>
-                                <input class="form-control" type="text" v-model="event.event_type" disabled>
+                            <div class="mt-2">
+                                <label for="status">Kategori Event:</label>
+                                <select id="status" name="status" class="form-select" v-model="event.event_type" required :disabled="!isEdit">
+                                    <option value="anggaran" :selected="event.event_type === 'anggaran' ? 'selected' : ''">Anggaran</option>
+                                    <option value="non-anggaran" :selected="event.event_type === 'non-anggaran' ? 'selected' : ''">Non Anggaran</option>
+                                </select>
+                                <br/>
                             </div>
                             <div class="mb-3">
+                                <div class="mt-2" v-if="isEdit">
+                                    <label for="name">Foto Tema</label>
+                                    <input type="file" class="form-control" id="name" @change="onChangeFile" required>
+                                    <br/>
+                                </div>
                                 <img class="image-theme" :src="event.image_url"/>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Judul Event</label>
-                                <input class="form-control" type="text" v-model="event.title" disabled>
+                                <input class="form-control" type="text" v-model="event.title" :disabled="!isEdit">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Deskripsi Event</label>
-                                <textarea class="form-control chronology-text-area" v-model="event.description" disabled>{{event.description}}</textarea>
+                                <textarea class="form-control chronology-text-area" v-model="event.description" :disabled="!isEdit">{{event.description}}</textarea>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Alamat</label>
@@ -27,7 +36,7 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Tanggal Event</label>
-                                <input class="form-control" type="text" v-model="event.date_event" disabled>
+                                <input class="form-control" type="date" v-model="event.date_event" disabled>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Waktu Event</label>
@@ -103,6 +112,30 @@
                     <button class="btn btn-secondary" @click="$router.push('/event')">Back</button>&nbsp
                     <div
                         class="btn btn-primary button-info"
+                        v-if="this.event.last_status === 'draft' && this.isEdit"
+                        data-bs-toggle="modal"
+                        data-bs-target="#editEvent"
+                    >
+                        <span>Simpan</span>
+                    </div>
+                    <button
+                        class="btn btn-primary button-info"
+                        v-if="this.event.last_status === 'draft' && !this.isEdit"
+                        @click="onEdit"
+                    >
+                        <span>Edit</span>
+                    </button>
+                    &nbsp
+                    <div
+                        class="btn btn-primary button-info"
+                        data-bs-toggle="modal"
+                        data-bs-target="#publishEvent"
+                        v-if="this.event.last_status === 'draft' && !this.isEdit"
+                    >
+                        <span>Publish</span>
+                    </div>
+                    <div
+                        class="btn btn-primary button-info"
                         data-bs-toggle="modal"
                         data-bs-target="#approvalModal"
                         v-if="this.event.is_can_approve"
@@ -110,7 +143,7 @@
                         Approval
                     </div>
                 </div>
-            </form>
+            </div>
         </div>
         <div class="modal fade" id="approvalModal" ref="approvalModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
             <VerticalModal title="Approval Modal" @save="eventRequestApproval()">
@@ -127,6 +160,24 @@
                             <label for="name">Note:</label>
                             <input type="text" class="form-control" id="reason" v-model="approval.notes" required>
                         </div>
+                    </div>
+                </div>
+            </VerticalModal>
+        </div>
+        <div class="modal fade" id="publishEvent" ref="publishEvent" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
+            <VerticalModal title="Publish Event?" @save="onPublish()">
+                <div class="row">
+                    <div class="col-md-12">
+                        <p>Are you sure want to publish this event?</p>
+                    </div>
+                </div>
+            </VerticalModal>
+        </div>
+        <div class="modal fade" id="editEvent" ref="editEvent" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
+            <VerticalModal title="Edit Event?" @save="onUpdateEvent()">
+                <div class="row">
+                    <div class="col-md-12">
+                        <p>Are you sure want to edit this event?</p>
                     </div>
                 </div>
             </VerticalModal>
@@ -178,6 +229,7 @@ export default {
                 status: null,
                 reason: null,
             },
+            isEdit: false,
             mapContainer: null,
             map: null,
             marker: null,
@@ -280,6 +332,61 @@ export default {
                 .then(response => {
                     useToast().success("Success to update data", { position: 'bottom-right' });
                     this.getEvent()
+                })
+                .catch(error => {
+                    if(error.response.data.message instanceof Object) {
+                        for (const key in error.response.data.message) {
+                            useToast().error(error.response.data.message[key][0], { position: 'bottom-right' });
+                        }
+                    } else {
+                        useToast().error(error.response.data.message , { position: 'bottom-right' });
+                    }
+                });
+        },
+        onPublish() {
+            this.$axios.post(`/api/v1/admin/event/publish/${this.$route.params.id}`, this.approval)
+                .then(response => {
+                    useToast().success("Success to publish event", { position: 'bottom-right' });
+                    this.getEvent()
+                })
+                .catch(error => {
+                    if(error.response.data.message instanceof Object) {
+                        for (const key in error.response.data.message) {
+                            useToast().error(error.response.data.message[key][0], { position: 'bottom-right' });
+                        }
+                    } else {
+                        useToast().error(error.response.data.message , { position: 'bottom-right' });
+                    }
+                });
+        },
+        onUpdateEvent() {
+            this.$axios.post(`/api/v1/admin/event/edit/${this.$route.params.id}`, this.event)
+                .then(response => {
+                    useToast().success("Success to edit event", { position: 'bottom-right' });
+                    this.getEvent()
+                    this.isEdit = false
+                })
+                .catch(error => {
+                    if(error.response.data.message instanceof Object) {
+                        for (const key in error.response.data.message) {
+                            useToast().error(error.response.data.message[key][0], { position: 'bottom-right' });
+                        }
+                    } else {
+                        useToast().error(error.response.data.message , { position: 'bottom-right' });
+                    }
+                    this.isEdit = false
+                });
+        },
+        onEdit() {
+            this.isEdit = !this.isEdit
+        },
+        onChangeFile(e) {
+            let formData = new FormData()
+            formData.set('files[]', e.target.files[0])
+
+            this.$axios.post(`/api/v1/admin/incident/upload-image`, formData)
+                .then(response => {
+                    this.event.image_url = response.data.urls[0]
                 })
                 .catch(error => {
                     if(error.response.data.message instanceof Object) {

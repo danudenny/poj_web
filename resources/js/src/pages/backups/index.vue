@@ -71,6 +71,11 @@ export default {
                         headerFilter:"input"
                     },
                     {
+                        title: 'Shift Type',
+                        field: 'shift_type',
+                        headerFilter:"input"
+                    },
+                    {
                         title: 'Location',
                         field: 'unit.name',
                         headerFilter:"input"
@@ -84,6 +89,25 @@ export default {
                         title: 'End Date',
                         field: 'end_date',
                         headerFilter:"date"
+                    },
+                    {
+                        title: 'Duration (in Days)',
+                        field: 'duration',
+                    },
+                    {
+                        title: 'File',
+                        formatter: (cell, formatterParams, onRendered) => {
+                            if (cell.getRow().getData().file_url) {
+                                return `<a target="_blank" class="button-icon button-success p-2" href="${cell.getRow().getData().file_url}"><i class="fa fa-file"></i> </a>`;
+                            } else {
+                                return "-"
+                            }
+                        }
+                    },
+                    {
+                        title: 'Created At',
+                        field: 'created_at',
+                        headerFilter:"input"
                     },
                     {
                         title: '',

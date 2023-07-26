@@ -6,6 +6,7 @@ use App\Http\Requests\Event\CheckInEventRequest;
 use App\Http\Requests\Event\CheckOutEventRequest;
 use App\Http\Requests\Event\CreateEventRequest;
 use App\Http\Requests\Event\EventApprovalRequest;
+use App\Http\Requests\Event\UpdateEventRequest;
 use App\Models\ApprovalModule;
 use App\Models\ApprovalUser;
 use App\Models\EmployeeAttendance;
@@ -69,7 +70,7 @@ class EventService extends BaseService
 
             $event = new Event();
             $event->requestor_employee_id = $user->employee_id;
-            $event->last_status = Event::StatusPending;
+            $event->last_status = Event::StatusDraft;
             $event->event_type = $request->input('event_type');
             $event->image_url = $request->input('image_url');
             $event->title = $request->input('title');
@@ -86,10 +87,6 @@ class EventService extends BaseService
             $event->repeat_every = $request->input('repeat_every');
             $event->repeat_days = $request->input('repeat_days');
             $event->repeat_end_date = $request->input('repeat_end_date');
-
-            if ($event->event_type == Event::EventTypeNonAnggaran) {
-                $event->last_status = Event::StatusApprove;
-            }
 
             /**
              * @var int[] $eventAttendances
@@ -154,6 +151,112 @@ class EventService extends BaseService
             $eventHistory->status = $event->last_status;
             $eventHistory->save();
 
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'data' => $event
+            ], Response::HTTP_OK);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function updateEvent(UpdateEventRequest $request, int $id) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            /**
+             * @var Event $event
+             */
+            $event = Event::query()
+                ->where('requestor_employee_id', '=', $user->employee_id)
+                ->where('last_status', '=', Event::StatusDraft)
+                ->where('id', '=', $id)
+                ->first();
+            if (is_null($event)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Event is not found!'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            DB::beginTransaction();
+
+            if ($eventType = $request->input('event_type')) {
+                $event->event_type = $eventType;
+            }
+            if ($imageURL = $request->input('image_url')) {
+                $event->image_url = $imageURL;
+            }
+            if ($title = $request->input('title')) {
+                $event->title = $title;
+            }
+            if ($description = $request->input('description')) {
+                $event->description = $description;
+            }
+
+            $event->save();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success!'
+            ]);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function publish(Request $request, int $id) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            /**
+             * @var Event $event
+             */
+            $event = Event::query()
+                ->where('requestor_employee_id', '=', $user->employee_id)
+                ->where('last_status', '=', Event::StatusDraft)
+                ->where('id', '=', $id)
+                ->first();
+            if (is_null($event)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Event is not found!'
+                ], Response::HTTP_BAD_REQUEST);
+            }
+
+            DB::beginTransaction();
+
+            $event->last_status = Event::StatusPending;
+            if ($event->event_type == Event::EventTypeNonAnggaran) {
+                $event->last_status = Event::StatusApprove;
+            }
+
+            $event->save();
+
+            $eventHistory = new EventHistory();
+            $eventHistory->event_id = $event->id;
+            $eventHistory->employee_id = $user->employee_id;
+            $eventHistory->status = $event->last_status;
+            $eventHistory->save();
+
             if ($event->last_status == Event::StatusApprove) {
                 $this->spreadEventDates($event);
             }
@@ -162,8 +265,8 @@ class EventService extends BaseService
 
             return response()->json([
                 'status' => true,
-                'data' => $event
-            ], Response::HTTP_OK);
+                'message' => 'Success!'
+            ]);
         } catch (\Throwable $exception) {
             DB::rollBack();
             return response()->json([

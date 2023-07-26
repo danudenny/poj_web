@@ -46,6 +46,7 @@ class Event extends Model
     const LocationTypeInternal = "internal";
     const LocationTypeExternal = "external";
 
+    const StatusDraft = "draft";
     const StatusPending = "pending";
     const StatusApprove = "approve";
     const StatusReject = "reject";

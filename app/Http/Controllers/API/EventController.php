@@ -7,6 +7,8 @@ use App\Http\Requests\Event\CheckInEventRequest;
 use App\Http\Requests\Event\CheckOutEventRequest;
 use App\Http\Requests\Event\CreateEventRequest;
 use App\Http\Requests\Event\EventApprovalRequest;
+use App\Http\Requests\Event\UpdateEventRequest;
+use App\Models\Event;
 use App\Services\Core\EventService;
 use Illuminate\Http\Request;
 
@@ -30,6 +32,14 @@ class EventController extends Controller
 
     public function approve(EventApprovalRequest $request, EventService $service, int $id) {
         return $service->eventApproval($request, $id);
+    }
+
+    public function publish(Request $request, EventService $service, int $id) {
+        return $service->publish($request, $id);
+    }
+
+    public function update(UpdateEventRequest $request, EventService $service, int $id) {
+        return $service->updateEvent($request, $id);
     }
 
     public function checkIn(CheckInEventRequest $request, EventService $service, int $id) {
