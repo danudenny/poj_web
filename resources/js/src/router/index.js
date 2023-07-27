@@ -58,6 +58,7 @@ import DetailAttendance from '../pages/attendances/detail.vue';
 import Backup from '../pages/backups/index.vue';
 import CreateBackup from '../pages/backups/create.vue';
 import DetailBackup from '../pages/backups/detail.vue';
+import EmployeeBackup from '../pages/backups/employee-backup.vue';
 
 // Profile
 import Profile from '../pages/profiles/index.vue';
@@ -502,6 +503,16 @@ const routes =[
                 component: DetailBackup,
                 meta: {
                     title: 'POJ - Detail Backup',
+                    requiresAuth: true,
+                    permission: 'backup_list',
+                },
+            },
+            {
+                path: 'employee-backup',
+                name: 'Employee Backup',
+                component: EmployeeBackup,
+                meta: {
+                    title: 'POJ - Employee Backup',
                     requiresAuth: true,
                     permission: 'backup_list',
                 },

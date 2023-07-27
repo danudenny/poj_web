@@ -244,7 +244,13 @@ class EmployeeService extends BaseService
 
             if ($user->isHighestRole(Role::RoleAdmin)) {
                 if (!$unitRelationID) {
-                    $unitRelationID = $user->employee->getLastUnitID();
+                    $defaultUnitRelationID = $user->employee->getLastUnitID();
+
+                    if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                        $defaultUnitRelationID = $requestUnitRelationID;
+                    }
+
+                    $unitRelationID = $defaultUnitRelationID;
                 }
             } else if ($user->isHighestRole(Role::RoleStaff)) {
                 if (!$lastUnitRelationID) {

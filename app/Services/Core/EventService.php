@@ -20,6 +20,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\BaseService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -28,8 +29,45 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 class EventService extends BaseService
 {
     public function index(Request $request) {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
         $query = Event::query();
-        $query->orderBy('id', 'DESC');
+
+        if ($user->isHighestRole(Role::RoleStaff)) {
+            $query->where('events.requestor_employee_id', '=', $user->employee_id);
+        } else if ($user->isHighestRole(Role::RoleAdmin)) {
+            $query->join('event_attendances', 'event_attendances.event_id', '=', 'events.id');
+            $query->join('employees', 'employees.id', '=', 'event_attendances.employee_id');
+            $query->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'events.requestor_employee_id');
+
+            $query->where(function(Builder $builder) use ($user) {
+                $lastUnitID = $user->employee->getLastUnitID();
+                if ($requestUnitID = $this->getRequestedUnitID()) {
+                    $lastUnitID = $requestUnitID;
+                }
+
+                $builder->orWhere(function(Builder $builder) use ($lastUnitID) {
+                    $builder->orWhere('employees.outlet_id', '=', $lastUnitID)
+                        ->orWhere('employees.cabang_id', '=', $lastUnitID)
+                        ->orWhere('employees.area_id', '=', $lastUnitID)
+                        ->orWhere('employees.kanwil_id', '=', $lastUnitID)
+                        ->orWhere('employees.corporate_id', '=', $lastUnitID);
+                })->orWhere(function(Builder $builder) use ($lastUnitID) {
+                    $builder->orWhere('reqEmployee.outlet_id', '=', $lastUnitID)
+                        ->orWhere('reqEmployee.cabang_id', '=', $lastUnitID)
+                        ->orWhere('reqEmployee.area_id', '=', $lastUnitID)
+                        ->orWhere('reqEmployee.kanwil_id', '=', $lastUnitID)
+                        ->orWhere('reqEmployee.corporate_id', '=', $lastUnitID);
+                })->orWhere('events.requestor_employee_id', '=', $user->employee_id);
+            });
+        }
+
+        $query->orderBy('events.id', 'DESC');
+        $query->select(['events.*']);
+        $query->groupBy('events.id');
 
         return response()->json([
             'status' => 'success',
@@ -377,11 +415,27 @@ class EventService extends BaseService
         $user = $request->user();
 
         $employeeEvents = EmployeeEvent::query()->with(['employee:employees.id,name', 'event:events.id,title,requestor_employee_id,timezone', 'event.requestorEmployee:employees.id,name'])
-            ->whereRaw("TO_CHAR(event_datetime::DATE, 'YYYY-mm') = TO_CHAR(CURRENT_DATE, 'YYYY-mm')")
-            ->orderBy('event_datetime', 'ASC');
+            ->whereRaw("TO_CHAR(employee_events.event_datetime::DATE, 'YYYY-mm') = TO_CHAR(CURRENT_DATE, 'YYYY-mm')")
+            ->orderBy('employee_events.event_datetime', 'ASC');
 
         if ($user->isHighestRole(Role::RoleStaff)) {
-            $employeeEvents->where('employee_id', '=', $user->employee_id);
+            $employeeEvents->where('employee_events.employee_id', '=', $user->employee_id);
+        } else if ($user->isHighestRole(Role::RoleAdmin)) {
+            $employeeEvents->join('employees', 'employees.id', '=', 'employee_events.employee_id');
+            $employeeEvents->where(function(Builder $builder) use ($user) {
+                $lastUnitID = $user->employee->getLastUnitID();
+                if ($requestUnitID = $this->getRequestedUnitID()) {
+                    $lastUnitID = $requestUnitID;
+                }
+
+                $builder->where(function(Builder $builder) use ($lastUnitID) {
+                    $builder->orWhere('employees.outlet_id', '=', $lastUnitID)
+                        ->orWhere('employees.cabang_id', '=', $lastUnitID)
+                        ->orWhere('employees.area_id', '=', $lastUnitID)
+                        ->orWhere('employees.kanwil_id', '=', $lastUnitID)
+                        ->orWhere('employees.corporate_id', '=', $lastUnitID);
+                });
+            });
         }
 
         return response()->json([

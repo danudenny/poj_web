@@ -9,6 +9,7 @@ use App\Models\Employee;
 use App\Models\Incident;
 use App\Models\IncidentHistory;
 use App\Models\IncidentImage;
+use App\Models\Role;
 use App\Models\User;
 use App\Services\BaseService;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,17 +22,44 @@ use Illuminate\Validation\ValidationException;
 class IncidentService extends BaseService
 {
     public function index(Request $request) {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
         $query = Incident::query();
         $query->when($request->filled('category'), function (Builder $query) use ($request) {
-            $query->where('category', '=', $request->query('category'));
+            $query->where('incidents.category', '=', $request->query('category'));
         });
         $query->when($request->filled('name'), function (Builder $query) use ($request) {
-            $query->whereRaw('LOWER(name) LIKE ?', [strtolower('%' . $request->query('name') . '%')]);
+            $query->whereRaw('LOWER(incidents.name) LIKE ?', [strtolower('%' . $request->query('name') . '%')]);
         });
         $query->when($request->filled('status'), function (Builder $query) use ($request) {
-            $query->where('last_status', '=', $request->query('status'));
+            $query->where('incidents.last_status', '=', $request->query('status'));
         });
-        $query->orderBy('id', 'desc');
+
+        if ($user->isHighestRole(Role::RoleStaff)) {
+            $query->where('incidents.employee_id', '=', $user->employee_id);
+        } else if ($user->isHighestRole(Role::RoleAdmin)) {
+            $query->join('employees', 'employees.id', '=', 'incidents.employee_id');
+            $query->where(function(Builder $builder) use ($user) {
+                $lastUnitID = $user->employee->getLastUnitID();
+                if ($requestUnitID = $this->getRequestedUnitID()) {
+                    $lastUnitID = $requestUnitID;
+                }
+
+                $builder->orWhere(function(Builder $builder) use ($lastUnitID) {
+                    $builder->orWhere('employees.outlet_id', '=', $lastUnitID)
+                        ->orWhere('employees.cabang_id', '=', $lastUnitID)
+                        ->orWhere('employees.area_id', '=', $lastUnitID)
+                        ->orWhere('employees.kanwil_id', '=', $lastUnitID)
+                        ->orWhere('employees.corporate_id', '=', $lastUnitID);
+                })->orWhere('incidents.employee_id', '=', $user->employee_id);
+            });
+        }
+
+        $query->select(['incidents.*']);
+        $query->orderBy('incidents.id', 'desc');
 
         return response()->json([
             'status' => 'success',

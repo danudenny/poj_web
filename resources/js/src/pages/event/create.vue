@@ -162,6 +162,7 @@
                                         placeholder="Search Address"
                                         label="display_name"
                                         track-by="id"
+                                        :disabled="event.location_type === 'internal'"
                                         :options="listAddress"
                                         :multiple="false"
                                         :required="true"
@@ -267,6 +268,7 @@ export default {
                     {
                         formatter: "rowSelection",
                         hozAlign: "center",
+                        width: 20,
                         headerSort: false,
                         titleFormatterParams: {
                             rowRange: "active"
@@ -279,6 +281,10 @@ export default {
                         title: 'Employee Name',
                         field: 'name',
                         headerFilter:"input"
+                    },
+                    {
+                        title: 'Unit',
+                        field: 'last_unit.name',
                     }
                 ],
                 pagination: true,

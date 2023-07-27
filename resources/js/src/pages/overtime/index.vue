@@ -83,7 +83,7 @@ export default {
                         title: 'File',
                         formatter: (cell, formatterParams, onRendered) => {
                             if (cell.getRow().getData().image_url) {
-                                return `<a target="_blank" class="button-icon button-success p-2" href="${cell.getRow().getData().image_url}"><i class="fa fa-file"></i> </a>`;
+                                return `<a target="_blank" class="button-icon button-success p-2 mt-3" href="${cell.getRow().getData().image_url}"><i class="fa fa-file"></i> </a>`;
                             } else {
                                 return "-"
                             }

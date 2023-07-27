@@ -149,12 +149,14 @@ export default {
                     {
                         title: 'Employee Name',
                         field: 'employee.name',
-                        headerFilter:"input"
+                    },
+                    {
+                        title: 'Employee Work Email',
+                        field: 'employee.work_email',
                     },
                     {
                         title: 'Unit',
                         field: 'unit.name',
-                        headerFilter:"input"
                     },
                     {
                         title: '',

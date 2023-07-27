@@ -22,7 +22,7 @@ class AdminUnitService extends BaseService
      */
     public function index(Request $request) {
         try {
-            $query = AdminUnit::query()->with(['unit', 'employee:employees.id,name']);
+            $query = AdminUnit::query()->with(['unit', 'employee:employees.id,name,work_email']);
             $query->where('is_active', '=', true);
             $query->orderBy('id', 'DESC');
 

@@ -41,10 +41,33 @@ class OvertimeService extends BaseService
 
         $overtimes = Overtime::query()->with(['requestorEmployee:employees.id,name', 'unit:units.relation_id,name']);
 
-        if ($user->inRoleLevel([Role::RoleStaff])) {
+        if ($user->isHighestRole(Role::RoleStaff)) {
+            $overtimes->where('overtimes.requestor_employee_id', '=', $user->employee_id);
+        } else if ($user->isHighestRole(Role::RoleAdmin)) {
             $overtimes->join('overtime_dates', 'overtime_dates.overtime_id', '=', 'overtimes.id');
             $overtimes->join('overtime_employees', 'overtime_employees.overtime_date_id', '=', 'overtime_dates.id');
-            $overtimes->where('overtime_employees.employee_id', '=', $user->employee_id);
+            $overtimes->join('employees', 'employees.id', '=', 'overtime_employees.employee_id');
+            $overtimes->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'overtimes.requestor_employee_id');
+            $overtimes->where(function(Builder $builder) use ($user) {
+                $lastUnitID = $user->employee->getLastUnitID();
+                if ($requestUnitID = $this->getRequestedUnitID()) {
+                    $lastUnitID = $requestUnitID;
+                }
+
+                $builder->orWhere(function(Builder $builder) use ($lastUnitID) {
+                    $builder->orWhere('employees.outlet_id', '=', $lastUnitID)
+                        ->orWhere('employees.cabang_id', '=', $lastUnitID)
+                        ->orWhere('employees.area_id', '=', $lastUnitID)
+                        ->orWhere('employees.kanwil_id', '=', $lastUnitID)
+                        ->orWhere('employees.corporate_id', '=', $lastUnitID);
+                })->orWhere(function(Builder $builder) use ($lastUnitID) {
+                    $builder->orWhere('reqEmployee.outlet_id', '=', $lastUnitID)
+                        ->orWhere('reqEmployee.cabang_id', '=', $lastUnitID)
+                        ->orWhere('reqEmployee.area_id', '=', $lastUnitID)
+                        ->orWhere('reqEmployee.kanwil_id', '=', $lastUnitID)
+                        ->orWhere('reqEmployee.corporate_id', '=', $lastUnitID);
+                })->orWhere('overtimes.requestor_employee_id', '=', $user->employee_id);
+            });
         }
 
         $overtimes->when($request->filled('unit_name'), function(Builder $builder) use ($request) {
@@ -60,6 +83,7 @@ class OvertimeService extends BaseService
         });
 
         $overtimes->select(['overtimes.*']);
+        $overtimes->groupBy(['overtimes.id']);
         $overtimes->orderBy('overtimes.id', 'DESC');
 
         return response()->json([
@@ -120,6 +144,22 @@ class OvertimeService extends BaseService
 
         if ($user->isHighestRole(Role::RoleStaff)) {
             $query->where('overtime_employees.employee_id', '=', $user->employee_id);
+        } else if ($user->isHighestRole(Role::RoleAdmin)) {
+            $query->join('employees', 'employees.id', '=', 'overtime_employees.employee_id');
+            $query->where(function(Builder $builder) use ($user) {
+                $lastUnitID = $user->employee->getLastUnitID();
+                if ($requestUnitID = $this->getRequestedUnitID()) {
+                    $lastUnitID = $requestUnitID;
+                }
+
+                $builder->where(function(Builder $builder) use ($lastUnitID) {
+                    $builder->orWhere('employees.outlet_id', '=', $lastUnitID)
+                        ->orWhere('employees.cabang_id', '=', $lastUnitID)
+                        ->orWhere('employees.area_id', '=', $lastUnitID)
+                        ->orWhere('employees.kanwil_id', '=', $lastUnitID)
+                        ->orWhere('employees.corporate_id', '=', $lastUnitID);
+                });
+            });
         }
 
         $query->select(['overtime_employees.*']);
@@ -147,7 +187,7 @@ class OvertimeService extends BaseService
             /**
              * @var Unit $unit
              */
-            $unit = Unit::query()->where('id', '=', $lastUnit->id)->first();
+            $unit = Unit::query()->where('relation_id', '=', $request->input('unit_relation_id'))->first();
             if (!$unit) {
                 return response()->json([
                     'status' => false,
@@ -166,6 +206,13 @@ class OvertimeService extends BaseService
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
+            if ($unit->lat == null || $unit->long == null) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unit don\'t have latitude and longitude',
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
             /**
              *  NOTES:
              *
@@ -174,7 +221,7 @@ class OvertimeService extends BaseService
              *  datetime, and also to matching with User current location timezone.
              */
 
-            $unitTimeZone = getTimezone($unit->lat, $unit->long);
+            $unitTimeZone = getTimezoneV2($unit->lat, $unit->long);
 
             $employeeIDs = $request->input('employee_ids', []);
             $overtimeDates = $this->generateOvertimeDateData($request->input('dates'), $employeeIDs, $unitTimeZone);
@@ -192,7 +239,15 @@ class OvertimeService extends BaseService
                         ->join('overtimes', 'overtimes.id', '=', 'overtime_dates.overtime_id')
                         ->where('overtime_employees.employee_id', '=', $employeeID)
                         ->where('overtimes.last_status', '!=', OvertimeHistory::TypeRejected)
-                        ->where('overtime_dates.date', '=', $overtimeDateData['date'])
+                        ->where(function(Builder $builder) use ($overtimeDateData) {
+                            $builder->orWhere(function(Builder $builder) use ($overtimeDateData) {
+                                $builder->where( 'overtime_dates.start_time', '<', $overtimeDateData['start_time'])
+                                    ->where('overtime_dates.end_time', '>', $overtimeDateData['start_time']);
+                            })->orWhere(function(Builder $builder) use ($overtimeDateData) {
+                                $builder->where('overtime_dates.start_time', '<', $overtimeDateData['end_time'])
+                                    ->where('overtime_dates.end_time', '>', $overtimeDateData['end_time']);
+                            });
+                        })
                         ->exists();
                     if ($isExistOvertime) {
                         /**
@@ -210,8 +265,16 @@ class OvertimeService extends BaseService
                         ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
                         ->join('backups', 'backups.id', '=', 'backup_times.backup_id')
                         ->where('status', '!=', Backup::StatusRejected)
-                        ->where('backup_times.backup_date', '=', $overtimeDateData['date'])
                         ->where('backup_employee_times.employee_id', '=', $employeeID)
+                        ->where(function(Builder $builder) use ($overtimeDateData) {
+                            $builder->orWhere(function(Builder $builder) use ($overtimeDateData) {
+                                $builder->where( 'backup_times.start_time', '<', $overtimeDateData['start_time'])
+                                    ->where('backup_times.end_time', '>', $overtimeDateData['start_time']);
+                            })->orWhere(function(Builder $builder) use ($overtimeDateData) {
+                                $builder->where('backup_times.start_time', '<', $overtimeDateData['end_time'])
+                                    ->where('backup_times.end_time', '>', $overtimeDateData['end_time']);
+                            });
+                        })
                         ->exists();
                     if ($isExistBackup) {
                         /**

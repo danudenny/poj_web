@@ -45,11 +45,39 @@ class BackupService extends BaseService
 
         $backups = Backup::query();
         if ($user->isHighestRole(Role::RoleStaff)) {
-            $backups->where('requestor_employee_id', '=', $user->employee_id);
+            $backups->where('backups.requestor_employee_id', '=', $user->employee_id);
+        } else if ($user->isHighestRole(Role::RoleAdmin)) {
+            $backups->join('backup_times', 'backup_times.backup_id', '=', 'backups.id');
+            $backups->join('backup_employee_times', 'backup_times.id', '=', 'backup_employee_times.backup_time_id');
+            $backups->join('employees', 'employees.id', '=', 'backup_employee_times.employee_id');
+            $backups->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'backups.requestor_employee_id');
+
+            $backups->where(function(Builder $builder) use ($user) {
+                $lastUnitID = $user->employee->getLastUnitID();
+                if ($requestUnitID = $this->getRequestedUnitID()) {
+                    $lastUnitID = $requestUnitID;
+                }
+
+                $builder->orWhere(function(Builder $builder) use ($lastUnitID) {
+                    $builder->orWhere('employees.outlet_id', '=', $lastUnitID)
+                        ->orWhere('employees.cabang_id', '=', $lastUnitID)
+                        ->orWhere('employees.area_id', '=', $lastUnitID)
+                        ->orWhere('employees.kanwil_id', '=', $lastUnitID)
+                        ->orWhere('employees.corporate_id', '=', $lastUnitID);
+                })->orWhere(function(Builder $builder) use ($lastUnitID) {
+                    $builder->orWhere('reqEmployee.outlet_id', '=', $lastUnitID)
+                        ->orWhere('reqEmployee.cabang_id', '=', $lastUnitID)
+                        ->orWhere('reqEmployee.area_id', '=', $lastUnitID)
+                        ->orWhere('reqEmployee.kanwil_id', '=', $lastUnitID)
+                        ->orWhere('reqEmployee.corporate_id', '=', $lastUnitID);
+                })->orWhere('backups.requestor_employee_id', '=', $user->employee_id);
+            });
         }
 
         $backups->with(['unit:units.relation_id,name', 'job:jobs.odoo_job_id,name', 'requestorEmployee:employees.id,name']);
-        $backups->orderBy('created_at', 'desc');
+        $backups->select(['backups.*']);
+        $backups->groupBy('backups.id');
+        $backups->orderBy('backups.id', 'desc');
 
         return response()->json([
             'status' => 'success',
@@ -89,7 +117,7 @@ class BackupService extends BaseService
          */
         $user = $request->user();
 
-        $query = BackupEmployeeTime::query()->with(['backupTime.backup'])
+        $query = BackupEmployeeTime::query()->with(['backupTime.backup', 'employee:employees.id,name'])
             ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
             ->where('backup_times.start_time', '>=', Carbon::now()->addDays(-1)->format('Y-m-d H:i:s'))
             ->orderBy('backup_times.start_time', 'ASC')
@@ -97,6 +125,22 @@ class BackupService extends BaseService
 
         if ($user->isHighestRole(Role::RoleStaff)) {
             $query->where('employee_id', '=', $user->employee_id);
+        } else if ($user->isHighestRole(Role::RoleAdmin)) {
+            $query->join('employees', 'employees.id', '=', 'backup_employee_times.employee_id');
+            $query->where(function(Builder $builder) use ($user) {
+                $lastUnitID = $user->employee->getLastUnitID();
+                if ($requestUnitID = $this->getRequestedUnitID()) {
+                    $lastUnitID = $requestUnitID;
+                }
+
+                $builder->where(function(Builder $builder) use ($lastUnitID) {
+                    $builder->orWhere('employees.outlet_id', '=', $lastUnitID)
+                        ->orWhere('employees.cabang_id', '=', $lastUnitID)
+                        ->orWhere('employees.area_id', '=', $lastUnitID)
+                        ->orWhere('employees.kanwil_id', '=', $lastUnitID)
+                        ->orWhere('employees.corporate_id', '=', $lastUnitID);
+                });
+            });
         }
 
         return response()->json([
@@ -112,12 +156,11 @@ class BackupService extends BaseService
              * @var User $user
              */
             $user = $request->user();
-            $lastUnit = $user->employee->last_unit;
 
             /**
              * @var Unit $unit
              */
-            $unit = Unit::query()->where('id', '=', $lastUnit->id)->first();
+            $unit = Unit::query()->where('relation_id', '=', $request->input('unit_relation_id'))->first();
             if (!$unit) {
                 return response()->json([
                     'status' => false,
@@ -136,7 +179,14 @@ class BackupService extends BaseService
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
-            $unitTimeZone = getTimezone($unit->lat, $unit->long);
+            if ($unit->lat == null || $unit->long == null) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unit latitude or longitude is empty',
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            $unitTimeZone = getTimezoneV2($unit->lat, $unit->long);
 
             $employeeIDs = $request->input('employee_ids', []);
             $backupDates = $this->generateBackupDateData($request->input('dates'), $employeeIDs, $unitTimeZone);
@@ -154,7 +204,15 @@ class BackupService extends BaseService
                         ->join('overtimes', 'overtimes.id', '=', 'overtime_dates.overtime_id')
                         ->where('overtime_employees.employee_id', '=', $employeeID)
                         ->where('overtimes.last_status', '!=', OvertimeHistory::TypeRejected)
-                        ->where('overtime_dates.date', '=', $backupDateData['date'])
+                        ->where(function(Builder $builder) use ($backupDateData) {
+                            $builder->orWhere(function(Builder $builder) use ($backupDateData) {
+                                $builder->where( 'overtime_dates.start_time', '<', $backupDateData['start_time'])
+                                    ->where('overtime_dates.end_time', '>', $backupDateData['start_time']);
+                            })->orWhere(function(Builder $builder) use ($backupDateData) {
+                                $builder->where('overtime_dates.start_time', '<', $backupDateData['end_time'])
+                                    ->where('overtime_dates.end_time', '>', $backupDateData['end_time']);
+                            });
+                        })
                         ->exists();
                     if ($isExistOvertime) {
                         /**
@@ -172,8 +230,16 @@ class BackupService extends BaseService
                         ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
                         ->join('backups', 'backups.id', '=', 'backup_times.backup_id')
                         ->where('status', '!=', Backup::StatusRejected)
-                        ->where('backup_times.backup_date', '=', $backupDateData['date'])
                         ->where('backup_employee_times.employee_id', '=', $employeeID)
+                        ->where(function(Builder $builder) use ($backupDateData) {
+                            $builder->orWhere(function(Builder $builder) use ($backupDateData) {
+                                $builder->where( 'backup_times.start_time', '<', $backupDateData['start_time'])
+                                    ->where('backup_times.end_time', '>', $backupDateData['start_time']);
+                            })->orWhere(function(Builder $builder) use ($backupDateData) {
+                                $builder->where('backup_times.start_time', '<', $backupDateData['end_time'])
+                                    ->where('backup_times.end_time', '>', $backupDateData['end_time']);
+                            });
+                        })
                         ->exists();
                     if ($isExistBackup) {
                         /**

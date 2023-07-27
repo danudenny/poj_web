@@ -185,6 +185,15 @@
             "permission" : "backup_list"
         },
         {
+            "title": "Employee Backup",
+            "icon": "copy",
+            "iconf": "fill-copy",
+            "type": "link",
+            "active": false,
+            "path": "/attendance/employee-backup",
+            "permission" : "backup_list"
+        },
+        {
             "title": "Overtime",
             "icon": "clock",
             "iconf": "clock",
