@@ -26,6 +26,7 @@ use App\Notifications\AssignBackupRequestNotification;
 use App\Services\BaseService;
 use Carbon\Carbon;
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -439,8 +440,8 @@ class BackupService extends BaseService
             }
 
             $backup = $employeeBackup->backupTime->backup;
-            $employeeTimezone = getTimezoneV2($dataLocation['latitude'], $dataLocation['longitude']);
-            $distance = calculateDistance($backup->location_lat, $backup->location_long, $dataLocation['latitude'], $dataLocation['longitude']);
+            $employeeTimezone = getTimezone(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
+            $distance = calculateDistance($backup->location_lat, $backup->location_long, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
 
             $checkInType = EmployeeAttendance::TypeOnSite;
             if ($distance > $backup->unit->radius) {
@@ -489,6 +490,12 @@ class BackupService extends BaseService
                 'status' => false,
                 'message' => $e->getMessage(),
             ], 500);
+        } catch (GuzzleException $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -520,8 +527,8 @@ class BackupService extends BaseService
             }
 
             $backup = $employeeBackup->backupTime->backup;
-            $employeeTimezone = getTimezoneV2($dataLocation['latitude'], $dataLocation['longitude']);
-            $distance = calculateDistance($backup->location_lat, $backup->location_long, $dataLocation['latitude'], $dataLocation['longitude']);
+            $employeeTimezone = getTimezone(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
+            $distance = calculateDistance($backup->location_lat, $backup->location_long,floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
 
             $checkOutType = EmployeeAttendance::TypeOnSite;
             if ($distance > $backup->unit->radius) {
