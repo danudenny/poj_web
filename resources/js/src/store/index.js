@@ -48,8 +48,8 @@ export default createStore({
             let adminUnits = localStorage.getItem(ADMIN_UNIT_KEY)
 
             if (adminUnits === null || adminUnits === "") {
-                await axios.get('api/v1/admin/user/profile').then(response => {
-                    state.adminUnits = response.data.data.active_units
+                await axios.get('api/v1/admin/admin_unit/my').then(response => {
+                    state.adminUnits = response.data.data
                     localStorage.setItem(ADMIN_UNIT_KEY, JSON.stringify(state.adminUnits))
                 }).catch(error => {
                     console.error(error);

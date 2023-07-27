@@ -74,6 +74,10 @@ class BackupService extends BaseService
             });
         }
 
+        $backups->when($request->filled('status'), function (Builder $builder) use ($request) {
+            $builder->where('backups.status', '=', $request->input('status'));
+        });
+
         $backups->with(['unit:units.relation_id,name', 'job:jobs.odoo_job_id,name', 'requestorEmployee:employees.id,name']);
         $backups->select(['backups.*']);
         $backups->groupBy('backups.id');

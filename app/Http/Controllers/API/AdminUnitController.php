@@ -37,4 +37,8 @@ class AdminUnitController extends Controller
     public function remove(RemoveAdminUnitRequest $request, AdminUnitService $service, int $id) {
         return $service->remove($request, $id);
     }
+
+    public function myAdminUnits(Request $request, AdminUnitService $service) {
+        return $service->myAdminUnit($request);
+    }
 }

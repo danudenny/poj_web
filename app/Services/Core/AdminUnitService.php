@@ -145,4 +145,45 @@ class AdminUnitService extends BaseService
             ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    public function myAdminUnit(Request $request) {
+        try {
+            /**
+             * @var Employee $employee
+             */
+            $employee = $request->user()->employee;
+
+            $activeAdminUnit = [];
+            $activeAdminUnit[] = [
+                'unit_relation_id' => $employee->getLastUnit()->relation_id,
+                'name' => $employee->getLastUnit()->name . " (Default)"
+            ];
+
+            /**
+             * @var AdminUnit[] $adminUnits
+             */
+            $adminUnits = AdminUnit::query()
+                ->where('employee_id', '=', $employee->id)
+                ->where('is_active', '=', true)
+                ->get();
+
+            foreach ($adminUnits as $adminUnit) {
+                $activeAdminUnit[] = [
+                    'unit_relation_id' => $adminUnit->unit_relation_id,
+                    'name' => $adminUnit->unit->name
+                ];
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success',
+                'data' => $activeAdminUnit
+            ]);
+        } catch (\Throwable $exception) {
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }

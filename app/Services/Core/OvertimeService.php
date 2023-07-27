@@ -41,6 +41,10 @@ class OvertimeService extends BaseService
 
         $overtimes = Overtime::query()->with(['requestorEmployee:employees.id,name', 'unit:units.relation_id,name']);
 
+        $overtimes->when($request->filled('status'), function (Builder $builder) use ($request) {
+            $builder->where('overtimes.last_status', '=', $request->input('status'));
+        });
+
         if ($user->isHighestRole(Role::RoleStaff)) {
             $overtimes->where('overtimes.requestor_employee_id', '=', $user->employee_id);
         } else if ($user->isHighestRole(Role::RoleAdmin)) {

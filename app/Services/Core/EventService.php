@@ -36,6 +36,10 @@ class EventService extends BaseService
 
         $query = Event::query();
 
+        $query->when($request->filled('status'), function(Builder $builder) use ($request) {
+            $builder->where('events.last_status', '=', $request->input('status'));
+        });
+
         if ($user->isHighestRole(Role::RoleStaff)) {
             $query->where('events.requestor_employee_id', '=', $user->employee_id);
         } else if ($user->isHighestRole(Role::RoleAdmin)) {
