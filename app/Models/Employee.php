@@ -265,6 +265,10 @@ class Employee extends Model
             ->where('employee_events.employee_id', '=', $this->id)
             ->where('employee_events.is_need_absence', '=', true)
             ->whereRaw('employee_events.event_datetime::DATE = ?', [Carbon::now()->format('Y-m-d')])
+            ->where(function(Builder $builder) {
+                $builder->orWhereNull('employee_events.check_in_time')
+                    ->orWhereNull('employee_events.check_out_time');
+            })
             ->first();
 
         return $employeeEvent;
@@ -287,6 +291,10 @@ class Employee extends Model
 //            ->where('overtime_dates.start_time', '<', $startNow)
 //            ->where('overtime_dates.end_time', '>', $endNow)
             ->select(['overtime_employees.*'])
+            ->where(function(Builder $builder) {
+                $builder->orWhereNull('overtime_employees.check_in_time')
+                    ->orWhereNull('overtime_employees.check_out_time');
+            })
             ->first();
 
         return $overtime;
@@ -307,6 +315,10 @@ class Employee extends Model
             ->where('backup_employee_times.employee_id', '=', $this->id)
             ->whereRaw('(backup_times.start_time::DATE = ? OR backup_times.end_time::DATE = ?)', [$today, $today])
             ->select(['backup_employee_times.*'])
+            ->where(function(Builder $builder) {
+                $builder->orWhereNull('backup_employee_times.check_in_time')
+                    ->orWhereNull('backup_employee_times.check_out_time');
+            })
             ->first();
 
         return $employeeBackup;

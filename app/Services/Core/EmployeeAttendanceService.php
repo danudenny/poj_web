@@ -582,6 +582,7 @@ class EmployeeAttendanceService extends BaseService {
                 'employee_id' => $employee->id,
                 'system_current_time' => Carbon::now()->format('Y-m-d H:i:s'),
                 'current_time_with_timezone' => null,
+                'timezone' => null,
                 'latitude' => $request->input('latitude'),
                 'longitude' => $request->input('longitude'),
             ];
@@ -596,6 +597,7 @@ class EmployeeAttendanceService extends BaseService {
             $timezone = getTimezoneV2($metaData['latitude'], $metaData['longitude']);
 
             $metaData['current_time_with_timezone'] = Carbon::now()->setTimezone($timezone)->format('Y-m-d H:i:s');
+            $metaData['timezone'] = $timezone;
 
             $activeSchedule = [
                 'attendance' => [
