@@ -9,6 +9,7 @@ use App\Models\Unit;
 use App\Models\User;
 use App\Services\BaseService;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -16,6 +17,11 @@ class ApprovalService extends BaseService
 {
     public function index($request): JsonResponse
     {
+        $user = auth()->user();
+        $roles = $user->roles;
+        $lastUnit = $user->employee->last_unit;
+        $highestRoles = $roles->sortBy('priority')->first();
+
         try {
             $approvals = Approval::query();
             $approvals->with(['approvalModule', 'approvalUsers', 'unit']);
@@ -28,6 +34,16 @@ class ApprovalService extends BaseService
             $approvals->when($request->unit_id, function($q) use ($request) {
                 $q->where('unit_id', $request->unit_id);
             });
+
+             if ($highestRoles->role_level === 'admin') {
+                $empUnit = $user->employee->getRelatedUnit();
+                $lastUnit = $user->employee->getLastUnit();
+                $empUnit[] = $lastUnit;
+                $flatUnit = UnitHelper::flattenUnits($empUnit);
+                $relationIds = array_column($flatUnit, 'relation_id');
+                $relationIds[] = $lastUnit->id;
+                $approvals->whereIn('unit_id', $relationIds);
+            }
 
             return response()->json([
                 'status' => 'success',

@@ -68,6 +68,8 @@ class EmployeeTimesheetService extends BaseService {
             $data->start_time = $request->start_time;
             $data->end_time = $request->end_time;
             $data->is_active = $request->is_active;
+            $data->days = $request->days;
+            $data->shift_type = $request->shift_type;
 
             if (!$data->save()) {
                 throw new Exception('Failed to save data');
@@ -129,6 +131,8 @@ class EmployeeTimesheetService extends BaseService {
             $data->start_time = $request->start_time;
             $data->end_time = $request->end_time;
             $data->is_active = $request->is_active ?? true;
+            $data->days = $request->days;
+            $data->shift_type = $request->shift_type;
 
             if (!$data->save()) {
                 throw new Exception('Failed to update data');

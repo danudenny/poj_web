@@ -17,7 +17,13 @@ class EmployeeTimesheet extends Model
         'start_time',
         'end_time',
         'is_active',
-        'unit_id'
+        'unit_id',
+        'days',
+        'shift_type',
+    ];
+
+    protected $casts = [
+        'days' => 'array',
     ];
 
     public function employeeDetails(): HasMany

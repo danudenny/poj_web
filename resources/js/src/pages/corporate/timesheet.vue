@@ -13,7 +13,8 @@
                 <th>Name</th>
                 <th>From</th>
                 <th>To</th>
-                <th>Active</th>
+                <th>Shift Type</th>
+                <th>Days</th>
                 <th>Action</th>
             </tr>
             </thead>
@@ -24,8 +25,15 @@
                 <td class="text-center">{{item.start_time}}</td>
                 <td class="text-center">{{item.end_time}}</td>
                 <td class="text-center">
-                    <span class="badge badge-success" v-if="item.is_active">Active</span>
-                    <span class="badge badge-danger" v-else>Inactive</span>
+                    <span class="badge badge-warning" v-if="item.shift_type === 'shift'">Shift</span>
+                    <span class="badge badge-primary" v-else>Non Shift</span>
+                </td>
+                <td class="text-center">
+                    <span v-if="!item.days" class="badge badge-danger">N/A</span>
+                    <template v-else v-for="(day, index) in item.days">
+                        <span class="badge badge-success">{{ day }}</span>
+                        <br v-if="(index + 1) % 3 === 0 && index + 1 !== item.days.length">
+                    </template>
                 </td>
                 <td>
                     <button class="button-icon button-info" data-bs-toggle="modal"
@@ -41,7 +49,7 @@
         </table>
     </div>
     <div>
-        <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
+        <div class="modal fade modal-lg" id="exampleModalCenter" tabindex="-1" role="dialog"
              aria-labelledby="exampleModalCenter" aria-hidden="true">
             <VerticalModal :title="modalTitle" @save="saveChanges">
                 <div class="row">
@@ -51,17 +59,38 @@
                             <input type="text" class="form-control" id="name" v-model="timesheet.name" required>
                         </div>
 
-                        <div class="mt-1">
+                        <div class="mt-3">
+                            <label for="name">Shift Type :</label>
+                            <select id="status" class="form-select" v-model="timesheet.shift_type" required @change="onChangeShiftType">
+                                <option value='shift'>Shift</option>
+                                <option value='non_shift'>Non Shift</option>
+                            </select>
+                        </div>
+
+                        <div class="mt-3" v-if="timesheet.shift_type === 'non_shift'">
+                            <label for="time_start">Select Days:</label>
+                            <div class="d-flex column-gap-3">
+                                <input type="checkbox" id="monday" name="monday" value="monday" v-model="timesheet.days"> Monday
+                                <input type="checkbox" id="tuesday" name="tuesday" value="tuesday" v-model="timesheet.days"> Tuesday
+                                <input type="checkbox" id="wednesday" name="wednesday" value="wednesday" v-model="timesheet.days"> Wednesday
+                                <input type="checkbox" id="thursday" name="thursday" value="thursday" v-model="timesheet.days"> Thursday
+                                <input type="checkbox" id="friday" name="friday" value="friday" v-model="timesheet.days"> Friday
+                                <input type="checkbox" id="saturday" name="saturday" value="saturday" v-model="timesheet.days"> Saturday
+                                <input type="checkbox" id="sunday" name="sunday" value="sunday" v-model="timesheet.days"> Sunday
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
                             <label for="time_start">Start Time:</label>
-                            <input type="text" class="form-control" id="time_start" v-model="timesheet.start_time" required>
+                            <input type="text" class="form-control" id="time_start" v-model="timesheet.start_time">
                         </div>
 
-                        <div class="mt-1">
+                        <div class="mt-3">
                             <label for="time_end">End Time:</label>
-                            <input type="text" class="form-control" id="time_end" v-model="timesheet.end_time" required>
+                            <input type="text" class="form-control" id="time_end" v-model="timesheet.end_time">
                         </div>
 
-                        <div class="mt-1">
+                        <div class="mt-3">
                             <label for="status">Status:</label>
                             <select id="status" class="form-select" v-model="timesheet.is_active" required>
                                 <option :value=true>Active</option>
@@ -74,7 +103,7 @@
         </div>
     </div>
     <div>
-        <div class="modal fade" id="updateModal" tabindex="-1" role="dialog"
+        <div class="modal fade modal-lg" id="updateModal" tabindex="-1" role="dialog"
              aria-labelledby="exampleModalCenter" aria-hidden="true">
             <VerticalModal :title="modalUpdateTitle" @save="updateTimesheet(singleTimesheet.id)">
                 <div class="row">
@@ -82,6 +111,27 @@
                         <div>
                             <label for="name">Name:</label>
                             <input type="text" class="form-control" id="name" v-model="singleTimesheet.name" required>
+                        </div>
+
+                        <div class="mt-3">
+                            <label for="name">Shift Type :</label>
+                            <select id="status" class="form-select" v-model="singleTimesheet.shift_type" required @change="onChangeShiftType">
+                                <option :value="'shift'" :selected="singleTimesheet.shift_type === 'shift'">Shift</option>
+                                <option :value="'non_shift'" :selected="singleTimesheet.shift_type === 'non_shift'">Non Shift</option>
+                            </select>
+                        </div>
+
+                        <div class="mt-3" v-if="singleTimesheet.shift_type === 'non_shift'">
+                            <label for="time_start">Select Days:</label>
+                            <div class="d-flex column-gap-3">
+                                <input type="checkbox" id="monday" name="days" value="monday" :checked="isDaySelected('monday')" @change="toggleDay('monday')"> Monday
+                                <input type="checkbox" id="tuesday" name="days" value="tuesday" :checked="isDaySelected('tuesday')" @change="toggleDay('tuesday')"> Tuesday
+                                <input type="checkbox" id="wednesday" name="days" value="wednesday" :checked="isDaySelected('wednesday')" @change="toggleDay('wednesday')"> Wednesday
+                                <input type="checkbox" id="thursday" name="days" value="thursday" :checked="isDaySelected('thursday')" @change="toggleDay('thursday')"> Thursday
+                                <input type="checkbox" id="friday" name="days" value="friday" :checked="isDaySelected('friday')" @change="toggleDay('friday')"> Friday
+                                <input type="checkbox" id="saturday" name="days" value="saturday" :checked="isDaySelected('saturday')" @change="toggleDay('saturday')"> Saturday
+                                <input type="checkbox" id="sunday" name="days" value="sunday" :checked="isDaySelected('sunday')" @change="toggleDay('sunday')"> Sunday
+                            </div>
                         </div>
 
                         <div class="mt-1">
@@ -125,19 +175,24 @@ export default {
             modalUpdateTitle: "Update Employee Timesheet Master Data",
             timesheetData: [],
             page: 1,
+            selectedDays: [],
             timesheet: {
-
                 name: '',
                 start_time: '',
+                shift_type: '',
                 end_time: '',
+                days: [],
                 is_active: true
             },
             singleTimesheet: {
                 name: '',
                 start_time: '',
                 end_time: '',
-                is_active: true
-            }
+                is_active: true,
+                days: [],
+                shift_type: ''
+            },
+            days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
         }
     },
     created() {
@@ -233,6 +288,27 @@ export default {
                 }
             });
         },
+        onChangeShiftType() {
+            if (this.singleTimesheet.shift_type === 'shift') {
+                this.singleTimesheet.days = null;
+            }
+        },
+        isDaySelected(day) {
+            if (this.singleTimesheet.days) {
+                return this.singleTimesheet.days.includes(day);
+            }
+       },
+        toggleDay(day) {
+            if (!this.singleTimesheet.days) {
+                this.singleTimesheet.days = [];
+            }
+            const index = this.singleTimesheet.days.indexOf(day);
+            if (index === -1) {
+                this.singleTimesheet.days.push(day);
+            } else {
+                this.singleTimesheet.days.splice(index, 1);
+            }
+        },
     }
 }
 </script>
@@ -254,13 +330,13 @@ export default {
 }
 
 .badge {
-    font-size: 12px;
+    font-size: 10px;
     padding: 5px 10px;
-    border-radius: 20px;
+    border-radius: 5px;
     font-weight: 500;
-    text-transform: uppercase;
+    text-transform: capitalize;
     letter-spacing: 1px;
-    margin: 0 5px;
+    margin: 5px 5px;
 }
 
 .badge-success {
