@@ -122,7 +122,8 @@ export default {
                         headerFilter:"input"
                     }
                 ],
-                pagination: true,
+                progressiveLoad: 'scroll',
+                height: '600px',
                 paginationMode: 'remote',
                 paginationSize: this.pageSize,
                 paginationSizeSelector: [10, 20, 50, 100],

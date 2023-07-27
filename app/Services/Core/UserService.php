@@ -36,6 +36,10 @@ class UserService extends BaseService
      */
     public function index($data): mixed
     {
+        $lastUnit = auth()->user()->employee->last_unit;
+
+
+        $roles = auth()->user()->roles->sortBy('priority')->first();
         try {
             $users = User::query();
             $users->with(['roles:name', 'employee']);

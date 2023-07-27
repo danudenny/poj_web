@@ -166,7 +166,7 @@ export default {
                         if (item.field === 'cabang.name') this.filterCabang = item.value
                         if (item.field === 'outlet.name') this.filterOutlet = item.value
                     })
-                    return `${url}?page=${params.page}&size=${params.size}&name=${this.filterName}&email=${this.filterEmail}&kanwil=${this.filterKanwil}&area=${this.filterArea}&cabang=${this.filterCabang}&outlet=${this.filterOutlet}&job=${this.filterJob}&corporate=${this.filterCorporate}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&email=${this.filterEmail}&kanwil=${this.filterKanwil}&area=${this.filterArea}&cabang=${this.filterCabang}&outlet=${this.filterOutlet}&job=${this.filterJob}&corporate=${this.filterCorporate}`
                 },
                 layout: 'fitData',
                 renderHorizontal:"virtual",

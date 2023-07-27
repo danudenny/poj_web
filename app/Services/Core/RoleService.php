@@ -112,6 +112,7 @@ class RoleService extends BaseService
         try {
             $role = new Role();
             $role->name = strtolower(str_replace(' ', '_', $request->name));
+            $role->guard_name = 'web';
             $role->created_at = date('Y-m-d H:i:s');
 
             if (!$role->save()) {

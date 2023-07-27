@@ -121,7 +121,7 @@ class EmployeeService extends BaseService
             });
 
             if ($highestPriorityRole->role_level === 'superadmin') {
-                $employeesData = $employees->paginate($request->get('limit', 10));
+                $employeesData = $employees->paginate($request->get('per_page', 10));
             } else if ($highestPriorityRole->role_level === 'staff') {
                 $employeesData = $employees->where('id', '=', $auth->employee_id);
             } else if ($highestPriorityRole->role_level === 'admin') {
@@ -142,7 +142,7 @@ class EmployeeService extends BaseService
                     ->orWhereIn('cabang_id', $relationIds)
                     ->orWhereIn('outlet_id', $relationIds)
                     ->with(['job', 'kanwil', 'area', 'cabang', 'outlet'])
-                    ->paginate(10);
+                    ->paginate($request->get('per_page', 10));
             }
 
             return response()->json([

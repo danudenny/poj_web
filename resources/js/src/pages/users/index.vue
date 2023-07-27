@@ -80,6 +80,7 @@ export default {
             timerId: null,
             currentPage: 1,
             pageSize: 10,
+            perPage: 10,
             filterName: '',
             filterEmail: '',
             filter: {
@@ -151,7 +152,7 @@ export default {
                         if (item.field === 'name') this.filterName = item.value
                         if (item.field === 'email') this.filterEmail = item.value
                     })
-                    return `${url}?page=${params.page}&size=${params.size}&name=${this.filterName}&email=${this.filterEmail}&last_unit_id=${this.filter.unit_relation_id}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&email=${this.filterEmail}&last_unit_id=${this.filter.unit_relation_id}`
                 },
                 ajaxResponse: function (url, params, response) {
                     return {
@@ -162,6 +163,7 @@ export default {
                 layout: 'fitColumns',
                 fitColumns: true,
                 responsiveLayout: true,
+                height: '100%',
                 filterMode:"remote",
                 columns: [
                     {

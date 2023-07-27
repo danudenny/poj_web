@@ -85,7 +85,7 @@
             "children": [
                 {
                     "path": "/regionals",
-                    "title": "Regional",
+                    "title": "Operating Units",
                     "type": "link",
                     "active": false,
                     "permission" : "regional_list"
