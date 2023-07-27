@@ -13,6 +13,8 @@ import authentication from '../helpers/authentication';
 import axios from 'axios';
 
 const TOKEN_STORAGE_KEY = 'my_app_token';
+const ADMIN_UNIT_KEY = "admin_unit";
+const ACTIVE_UNIT_RELATION_KEY = "active_unit_relation";
 
 export default createStore({
   state:{
@@ -24,7 +26,7 @@ export default createStore({
       avatar: '',
       roles: [],
       permissions: [],
-      account: null,
+      adminUnits: null,
       activeAdminUnit: null
   },
   getters:{
@@ -39,17 +41,46 @@ export default createStore({
     permissions: (state) => {
         return state.permissions
     },
-    account: async (state) => {
-        if (state.account === null) {
-            await axios.get('api/v1/admin/user/profile').then(response => {
-                state.account = response.data.data
-                state.activeAdminUnit = state.account.active_units[0]
-                axios.defaults.headers['X-Unit-Relation-ID'] = state.activeAdminUnit.unit_relation_id
-            }).catch(error => {
-                console.error(error);
-            });
+    adminUnits: async (state) => {
+        if (state.adminUnits === null) {
+
+            let activeUnit = localStorage.getItem(ACTIVE_UNIT_RELATION_KEY)
+            let adminUnits = localStorage.getItem(ADMIN_UNIT_KEY)
+
+            if (adminUnits === null || adminUnits === "") {
+                await axios.get('api/v1/admin/user/profile').then(response => {
+                    state.adminUnits = response.data.data.active_units
+                    localStorage.setItem(ADMIN_UNIT_KEY, JSON.stringify(state.adminUnits))
+                }).catch(error => {
+                    console.error(error);
+                });
+            } else {
+                state.adminUnits = JSON.parse(adminUnits)
+            }
+
+            if (activeUnit === null || activeUnit === "") {
+                state.activeAdminUnit = state.adminUnits[0]
+                localStorage.setItem(ACTIVE_UNIT_RELATION_KEY, JSON.stringify(state.activeAdminUnit))
+            } else {
+                let parsedActiveUnit = JSON.parse(activeUnit)
+                let isExist = false
+
+                state.adminUnits.forEach((val) => {
+                    if (val.unit_relation_id === parsedActiveUnit.unit_relation_id) {
+                        isExist = true
+                    }
+                })
+
+                if (!isExist) {
+                    parsedActiveUnit = state.adminUnits[0]
+                }
+
+                state.activeAdminUnit = parsedActiveUnit
+            }
+
+            axios.defaults.headers['X-Unit-Relation-ID'] = state.activeAdminUnit.unit_relation_id
         }
-        return state.account
+        return state.adminUnits
     }
   },
   mutations: {
@@ -84,6 +115,13 @@ export default createStore({
           state.avatar = user.avatar;
           localStorage.setItem('USER_AVATAR', user.avatar);
       },
+      setActiveAdminUnit(state, data) {
+          state.activeAdminUnit = data
+          localStorage.setItem(ACTIVE_UNIT_RELATION_KEY, JSON.stringify(state.activeAdminUnit))
+
+          axios.defaults.headers['X-Unit-Relation-ID'] = data.unit_relation_id
+          window.location.reload()
+      },
       clearToken(state){
         state.token = null;
         localStorage.removeItem(TOKEN_STORAGE_KEY);
@@ -106,6 +144,14 @@ export default createStore({
           state.avatar = '';
           localStorage.removeItem('USER_AVATAR');
       },
+      clearAdminUnits(state) {
+          state.adminUnits = null
+          localStorage.removeItem(ADMIN_UNIT_KEY)
+      },
+      clearActiveAdminUnits(state) {
+          state.activeAdminUnit = null
+          localStorage.removeItem(ACTIVE_UNIT_RELATION_KEY)
+      }
     },
     actions: {
       setLang ({ commit }, payload) {
@@ -120,6 +166,7 @@ export default createStore({
             commit('setRoles', user.roles);
             commit('setPermissions', user.permissions);
             commit('setAvatar', user);
+
           } catch (e) {
             commit('clearToken');
             localStorage.removeItem(TOKEN_STORAGE_KEY);
@@ -133,6 +180,8 @@ export default createStore({
               commit('clearRoles');
               commit('clearPermissions');
               commit('clearAvatar');
+              commit('clearAdminUnits');
+              commit('clearActiveAdminUnits');
               localStorage.removeItem(TOKEN_STORAGE_KEY);
               localStorage.removeItem('USER_STORAGE_KEY');
               localStorage.removeItem('USER_AVATAR');

@@ -25,8 +25,6 @@
 
 <script>
 
-import axios from "axios";
-
 export default {
     name: 'Notifications',
     data() {
@@ -36,8 +34,8 @@ export default {
         };
     },
     async mounted() {
-        let acc = await this.$store.getters.account
-        this.adminUnits = acc.active_units
+        this.adminUnits = await this.$store.getters.adminUnits
+        this.$store.getters.activeAdminUnit
     },
     methods: {
         listUnitOpen() {
@@ -45,7 +43,7 @@ export default {
         },
         onChangeActiveUnit(data) {
             this.$store.state.activeAdminUnit = data
-            this.$axios.defaults.headers['X-Unit-Relation-ID'] = data.unit_relation_id
+            this.$store.commit('setActiveAdminUnit', data)
         }
     },
 };
