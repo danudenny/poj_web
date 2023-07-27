@@ -3,7 +3,7 @@
     <img
       style="height: 49px;"
       class="img-fluid for-light"
-      src="http://alakad.optimajasa.co.id:9000/att-poj-bucket/logo/logo_poj-removebg-preview.png"
+      src="http://alakad.optimajasa.co.id:9000/att-poj-bucket/logo/Logo_Aplikasi_Absen-2-1-removebg-preview (1).png"
       alt=""
       width="160"
     /><img

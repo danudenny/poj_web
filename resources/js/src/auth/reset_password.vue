@@ -10,9 +10,9 @@
                                 <a class="logo">
                                     <img
                                         class="img-fluid for-light"
-                                        src="http://alakad.optimajasa.co.id:9000/att-poj-bucket/logo/logo_poj-removebg-preview.png"
+                                        src="http://alakad.optimajasa.co.id:9000/att-poj-bucket/logo/Logo_Aplikasi_Absen-2-2-removebg-preview (1).png"
                                         alt="loginpage"
-                                        width="250"
+                                        width="150"
                                     />
                                     <img class="img-fluid for-dark" src="../assets/images/logo/logo_dark.png" alt="looginpage" />
                                 </a>
