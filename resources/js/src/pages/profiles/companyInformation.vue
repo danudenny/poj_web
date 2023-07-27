@@ -10,7 +10,7 @@
                         <div class="col-md-12 col-sm-12">
                             <div class="mb-3">
                                 <label>Office</label>
-                                <input class="form-control" :value="workingArea.name" readonly type="text">
+                                <input class="form-control" :value="employee.last_unit.name" readonly type="text">
                             </div>
                         </div>
                         <div class="col-md-12 col-sm-12">
@@ -47,6 +47,7 @@ export default {
     methods: {
         getWorkingArea() {
             const hierarchy = [
+                this.employee.corporate,
                 this.employee.kanwil,
                 this.employee.area,
                 this.employee.cabang,
