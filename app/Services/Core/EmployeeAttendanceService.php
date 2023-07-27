@@ -141,8 +141,8 @@ class EmployeeAttendanceService extends BaseService {
             $day = $schedule['date'];
             $year = $schedule['period']['year'];
             $month = $schedule['period']['month'];
-            $carbonDate = Carbon::create($year, $month, $day)->format('Y-m-d');
-
+            $currentDate = Carbon::createFromDate($year, $month, $day);
+            $carbonDate = $currentDate->format('Y-m-d');
             if ($carbonDate === $now->format('Y-m-d')) {
                 $empSchedule = $schedule;
             }
@@ -155,7 +155,7 @@ class EmployeeAttendanceService extends BaseService {
             ], 400);
         }
 
-        $workLocation = $this->getLastUnit($filteredUnitData);
+        $workLocation = \auth()->user()->employee->last_unit;
 
         // BEGIN : Check if time is in range
         $employeeTimeZone = getTimezone($request->lat, $request->long);
@@ -493,6 +493,83 @@ class EmployeeAttendanceService extends BaseService {
                 'data' => $e->getMessage()
             ]);
         }
+    }
+
+    public function approve($request, $id): JsonResponse
+    {
+        $items = [];
+        $user = \auth()->user();
+        $lastUnit = $user->employee->last_unit;
+        $findApproval = Approval::where('unit_id', $lastUnit->id)->get();
+        $findApproval->map(function ($item) {
+            $item->users = $item->users->map(function ($user) {
+                return [
+                    'id' => $user->user->id,
+                    'name' => $user->user->name,
+                    'email' => $user->user->email,
+                    'fcm_token' => $user->user->fcm_token,
+                ];
+            });
+            return $item;
+        });
+
+        $getAttendance = EmployeeAttendance::where('id', $id)->where('is_need_approval', true)->first();
+        if (!$getAttendance) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Data not found!'
+            ]);
+        }
+
+        DB::beginTransaction();
+        try {
+            $getAttendance->is_need_approval = false;
+            $getAttendance->approved = true;
+            if (!$getAttendance->save()) {
+                DB::rollBack();
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Failed save data!'
+                ]);
+            }
+
+            $getHistory = EmployeeAttendanceHistory::where('employee_attendances_id', $id)->first();
+            $getHistory->status = 'approved';
+
+            if (!$getHistory->save()) {
+                DB::rollBack();
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Failed save data hostory!'
+                ]);
+            }
+            $getUser = $getHistory->employee->user;
+
+            fcm()
+                ->to([$getUser->fcm_token])
+                ->priority('high')
+                ->timeToLive(0)
+                ->notification([
+                    'title' => 'Approval',
+                    'body' => 'Your attendance has been approved!',
+                ])
+                ->enableResponseLog()
+                ->send();
+
+            DB::commit();
+            return response()->json([
+                'status' => true,
+                'message' => 'Success save data!'
+            ]);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+
+
     }
 
 }
