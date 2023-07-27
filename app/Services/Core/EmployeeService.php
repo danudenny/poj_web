@@ -113,7 +113,7 @@ class EmployeeService extends BaseService
             });
 
             $employees->when($request->filled('name'), function(Builder $builder) use ($request) {
-                $builder->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower(request()->query('name')).'%']);
+                $builder->where('employees.name', 'ILIKE', '%'.request()->query('name').'%');
             });
 
             $employees->when($request->filled('email'), function(Builder $builder) use ($request) {

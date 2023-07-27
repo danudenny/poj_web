@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read Unit $kanwil
  * @property-read Unit $corporate
  * @property-read EmployeeAttendance[] $attendances
+ * @property-read EmployeeTimesheetSchedule[] $timesheetSchedules
  */
 class Employee extends Model
 {
@@ -252,5 +255,60 @@ class Employee extends Model
     public function backup(): HasMany
     {
         return $this->hasMany(BackupEmployee::class, 'employee_id')->with(['employee', 'backup']);
+    }
+
+    public function getActiveEvent(): EmployeeEvent|null {
+        /**
+         * @var EmployeeEvent|null $employeeEvent
+         */
+        $employeeEvent = EmployeeEvent::query()
+            ->where('employee_events.employee_id', '=', $this->id)
+            ->where('employee_events.is_need_absence', '=', true)
+            ->whereRaw('employee_events.event_datetime::DATE = ?', [Carbon::now()->format('Y-m-d')])
+            ->first();
+
+        return $employeeEvent;
+    }
+
+    public function getActiveOvertime(): OvertimeEmployee|null {
+        $startNow = Carbon::now()->addMinutes(10)->format('Y-m-d H:i:s');
+        $endNow = Carbon::now()->addMinutes(-10)->format('Y-m-d H:i:s');
+        $today = Carbon::now()->format('Y-m-d');
+
+        /**
+         * @var OvertimeEmployee|null $overtime
+         */
+        $overtime = OvertimeEmployee::query()
+            ->join('overtime_dates', 'overtime_dates.id', '=', 'overtime_employees.overtime_date_id')
+            ->join('overtimes', 'overtimes.id', '=', 'overtime_dates.overtime_id')
+            ->where('overtime_employees.employee_id', '=', $this->id)
+            ->where('overtimes.last_status', '!=', OvertimeHistory::TypeRejected)
+            ->whereRaw('(overtime_dates.start_time::DATE = ? OR overtime_dates.end_time::DATE = ?)', [$today, $today])
+//            ->where('overtime_dates.start_time', '<', $startNow)
+//            ->where('overtime_dates.end_time', '>', $endNow)
+            ->select(['overtime_employees.*'])
+            ->first();
+
+        return $overtime;
+    }
+
+    public function getActiveBackup(): BackupEmployeeTime|null {
+        $startNow = Carbon::now()->addMinutes(10)->format('Y-m-d H:i:s');
+        $endNow = Carbon::now()->addMinutes(-10)->format('Y-m-d H:i:s');
+        $today = Carbon::now()->format('Y-m-d');
+
+        /**
+         * @var BackupEmployeeTime|null $employeeBackup
+         */
+        $employeeBackup = BackupEmployeeTime::query()
+            ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
+            ->join('backups', 'backups.id', '=', 'backup_times.backup_id')
+            ->where('status', '!=', Backup::StatusRejected)
+            ->where('backup_employee_times.employee_id', '=', $this->id)
+            ->whereRaw('(backup_times.start_time::DATE = ? OR backup_times.end_time::DATE = ?)', [$today, $today])
+            ->select(['backup_employee_times.*'])
+            ->first();
+
+        return $employeeBackup;
     }
 }

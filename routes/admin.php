@@ -164,6 +164,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::post('check-in', [EmployeeAttendanceController::class, 'checkIn']);
         Route::post('check-out', [EmployeeAttendanceController::class, 'checkOut']);
         Route::put('approve/{id}', [EmployeeAttendanceController::class, 'approve']);
+        Route::post('my-active-schedule', [EmployeeAttendanceController::class, 'getActiveeSchedule']);
     });
     // End employee attendance
 

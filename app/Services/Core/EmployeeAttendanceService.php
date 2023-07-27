@@ -20,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Arr;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class EmployeeAttendanceService extends BaseService {
 
@@ -568,8 +569,83 @@ class EmployeeAttendanceService extends BaseService {
                 'message' => $e->getMessage()
             ]);
         }
-
-
     }
 
+    public function getActiveAttendance(Request $request) {
+        try {
+            /**
+             * @var Employee $employee
+             */
+            $employee = $request->user()->employee;
+
+            $metaData = [
+                'employee_id' => $employee->id,
+                'system_current_time' => Carbon::now()->format('Y-m-d H:i:s'),
+                'current_time_with_timezone' => null,
+                'latitude' => $request->input('latitude'),
+                'longitude' => $request->input('longitude'),
+            ];
+
+            if ($metaData['latitude'] == null || $metaData['longitude'] == null) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Invalid Location"
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            $timezone = getTimezoneV2($metaData['latitude'], $metaData['longitude']);
+
+            $metaData['current_time_with_timezone'] = Carbon::now()->setTimezone($timezone)->format('Y-m-d H:i:s');
+
+            $activeSchedule = [
+                'attendance' => [
+                    'normal' => null,
+                    'event' => null,
+                    'overtime' => null,
+                    'backup' => null,
+                ],
+                'meta_data' => $metaData
+            ];
+
+            if ($event = $employee->getActiveEvent()) {
+                $activeSchedule['attendance']['event'] = [
+                    'start_time' => Carbon::parse($event->event_datetime)->setTimezone($timezone)->format('Y-m-d H:i:s'),
+                    'check_in_time' => $event->check_in_time ? Carbon::parse($event->check_in_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
+                    'check_out_time' => $event->check_out_time ? Carbon::parse($event->check_out_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
+                    'reference_id' => $event->id
+                ];
+            }
+
+            if ($overtime = $employee->getActiveOvertime()) {
+                $activeSchedule['attendance']['overtime'] = [
+                    'start_time' => Carbon::parse($overtime->overtimeDate->start_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
+                    'end_time' => Carbon::parse($overtime->overtimeDate->end_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
+                    'check_in_time' => $overtime->check_in_time ? Carbon::parse($overtime->check_in_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
+                    'check_out_time' => $overtime->check_out_time ? Carbon::parse($overtime->check_out_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
+                    'reference_id' => $overtime->id
+                ];
+            }
+
+            if ($backup = $employee->getActiveBackup()) {
+                $activeSchedule['attendance']['backup'] = [
+                    'start_time' => Carbon::parse($backup->backupTime->start_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
+                    'end_time' => Carbon::parse($backup->backupTime->end_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
+                    'check_in_time' => $backup->check_in_time ? Carbon::parse($backup->check_in_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
+                    'check_out_time' => $backup->check_out_time ? Carbon::parse($backup->check_out_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
+                    'reference_id' => $backup->id
+                ];
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success',
+                'data' => $activeSchedule
+            ]);
+        } catch (\Throwable $exception) {
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }

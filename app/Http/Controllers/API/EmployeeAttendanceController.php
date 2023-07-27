@@ -4,11 +4,17 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
+use App\Models\Employee;
+use App\Models\User;
 use App\Services\Core\EmployeeAttendanceService;
+use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class EmployeeAttendanceController extends BaseController
 {
@@ -47,5 +53,9 @@ class EmployeeAttendanceController extends BaseController
     public function approve(Request $request, $id): JsonResponse
     {
         return $this->employeeAttendanceService->approve($request, $id);
+    }
+
+    public function getActiveeSchedule(Request $request) {
+        return $this->employeeAttendanceService->getActiveAttendance($request);
     }
 }

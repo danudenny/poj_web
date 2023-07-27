@@ -4,8 +4,18 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Attributes:
+ * @property-read int $id
+ * @property string $start_time
+ * @property string $end_time
+ *
+ * Relations:
+ * @property-read Unit $unit
+ */
 class EmployeeTimesheet extends Model
 {
     use HasFactory;
@@ -33,5 +43,10 @@ class EmployeeTimesheet extends Model
     public function timesheetSchedules(): HasMany
     {
         return $this->hasMany(EmployeeTimesheetSchedule::class, 'timesheet_id');
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class, 'unit_id');
     }
 }
