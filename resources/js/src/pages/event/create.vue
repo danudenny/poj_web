@@ -33,9 +33,16 @@
                                         <option value="external" :selected="event.location_type === 'external' ? 'selected' : ''">External</option>
                                     </select>
                                 </div>
+                                <br/>
+                                <div class="form-group mb-0">
+                                    <div class="checkbox p-0">
+                                        <input id="is_address_free_text" type="checkbox" v-model="isFreeTextAddress">
+                                        <label class="text-muted" for="is_address_free_text">Isi Manual Alamat?</label>
+                                    </div>
+                                </div>
                                 <div class="mt-2">
                                     <label for="name">Alamat</label>
-                                    <textarea class="form-control" v-model="event.address" required disabled></textarea>
+                                    <textarea class="form-control" v-model="event.address" required :disabled="!isFreeTextAddress"></textarea>
                                 </div>
                                 <div class="mt-2">
                                     <label for="name">Tanggal</label>
@@ -240,6 +247,7 @@ export default {
                 name: null,
                 onSearch: false
             },
+            isFreeTextAddress: false,
             currentPage: 1,
             pageSize: 10,
             filterName: "",
