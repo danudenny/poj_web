@@ -180,8 +180,8 @@ class EmployeeService extends BaseService
 
     public function syncToUser(): JsonResponse
     {
-        SyncEmployeesJob::dispatch();
-        return response()->json(['message' => 'Success']);
+        dispatch(new SyncEmployeesJob());
+        return response()->json(['message' => 'Your Synchronization is running on background. Refresh after 5 minutes to see the result.']);
     }
 
     public function update($request, $id): JsonResponse
