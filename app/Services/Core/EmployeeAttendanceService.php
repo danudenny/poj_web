@@ -165,7 +165,7 @@ class EmployeeAttendanceService extends BaseService {
                 'message' => 'Work location not found!'
             ], 400);
         }
-        $companyTimeZone = getTimezone($workLocation->lat, $workLocation->long);
+        $companyTimeZone = getTimezone(floatval($workLocation->lat), floatval($workLocation->long));
 
         $employeeTimesheetStartTime = Carbon::parse($empSchedule['timesheet']['start_time'], $companyTimeZone);
         $employeeTimesheetEndTime = Carbon::parse($empSchedule['timesheet']['end_time'], $companyTimeZone);
@@ -399,7 +399,7 @@ class EmployeeAttendanceService extends BaseService {
 
         // BEGIN : Check if time is in range
         $employeeTimeZone = getTimezone($request->lat, $request->long);
-        $companyTimeZone = getTimezone($workLocation->lat, $workLocation->long);
+        $companyTimeZone = getTimezone(floatval($workLocation->lat), floatval($workLocation->long));
 
         $employeeTimesheetStartTime = Carbon::parse($empSchedule['timesheet']['start_time'], $companyTimeZone);
         $employeeTimesheetEndTime = Carbon::parse($empSchedule['timesheet']['end_time'], $companyTimeZone);
