@@ -43,4 +43,9 @@ class EmployeeAttendanceController extends BaseController
     {
         return $this->employeeAttendanceService->checkOut($request);
     }
+
+    public function approve(Request $request, $id): JsonResponse
+    {
+        return $this->employeeAttendanceService->approve($request, $id);
+    }
 }

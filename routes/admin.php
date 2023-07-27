@@ -163,6 +163,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::get('view/{id}', [EmployeeAttendanceController::class, 'view']);
         Route::post('check-in', [EmployeeAttendanceController::class, 'checkIn']);
         Route::post('check-out', [EmployeeAttendanceController::class, 'checkOut']);
+        Route::put('approve/{id}', [EmployeeAttendanceController::class, 'approve']);
     });
     // End employee attendance
 
