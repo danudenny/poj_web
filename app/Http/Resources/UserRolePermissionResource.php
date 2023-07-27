@@ -29,9 +29,9 @@ class UserRolePermissionResource extends JsonResource
         $overtime = $this->employee->overtime;
         $backup = $this->employee->backup;
 
-        if (!$schedule) {
+        if ($schedule) {
             $periods = $schedule->map(function ($schedule) {
-                $timezone = getTimezoneV2(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
+                $timezone = getTimezone(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
                 $scheduleDate = Carbon::createFromDate($schedule->period->year, $schedule->period->month, $schedule->date, $timezone);
 
                 return [
@@ -56,7 +56,7 @@ class UserRolePermissionResource extends JsonResource
             })->unique()->values();
 
             $timesheet['overtime'] = $overtimeDate->map(function ($overtimeDate) {
-                $timezone = getTimezoneV2(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
+                $timezone = getTimezone(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
                 return [
                     'date' => Carbon::parse($overtimeDate->date, 'UTC')->addDay(1)->setTimezone($timezone)->format('d F Y'),
                     'start_time' => Carbon::parse($overtimeDate->start_time, 'UTC')->setTimezone($timezone)->format('H:i'),
@@ -70,7 +70,7 @@ class UserRolePermissionResource extends JsonResource
 
             $timesheet['backup'] = $backupDate->map(function ($backupDate) {
                 return $backupDate->backupTimes->map(function ($backupTime) {
-                    $timezone = getTimezoneV2(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
+                    $timezone = getTimezone(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
 
                     return [
                         'date' => Carbon::parse($backupTime->backup_date, 'UTC')->addDay(1)->setTimezone($timezone)->format('d F Y'),
@@ -81,9 +81,7 @@ class UserRolePermissionResource extends JsonResource
             })->collapse()->unique()->values();
         }
 
-        //get user last units
         $lastUnit = $this->employee->last_unit;
-
         $jobMisc =  $this->employee->job;
         $job = $jobMisc->units->map(function ($job) use ($lastUnit) {
             if ($job->pivot->unit_id === $lastUnit->id) {

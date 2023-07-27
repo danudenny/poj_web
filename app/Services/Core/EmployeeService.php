@@ -173,12 +173,12 @@ class EmployeeService extends BaseService
 
     public function syncToUser(): JsonResponse
     {
-        dispatch(new SyncEmployeesJob());
+        SyncEmployeesJob::dispatch();
         return response()->json(['message' => 'Success']);
-
     }
 
-    public function update($request, $id) {
+    public function update($request, $id): JsonResponse
+    {
         $empExists = Employee::find($id);
         if (!$empExists) {
             return response()->json([

@@ -142,11 +142,12 @@ class OvertimeService extends BaseService
              * @var User $user
              */
             $user = $request->user();
+            $lastUnit = $user->employee->last_unit;
 
             /**
              * @var Unit $unit
              */
-            $unit = Unit::query()->where('relation_id', '=', $request->input('unit_relation_id', $user->employee->getLastUnitID()))->first();
+            $unit = Unit::query()->where('id', '=', $lastUnit->id)->first();
             if (!$unit) {
                 return response()->json([
                     'status' => false,
@@ -173,7 +174,7 @@ class OvertimeService extends BaseService
              *  datetime, and also to matching with User current location timezone.
              */
 
-            $unitTimeZone = getTimezoneV2($unit->lat, $unit->long);
+            $unitTimeZone = getTimezone($unit->lat, $unit->long);
 
             $employeeIDs = $request->input('employee_ids', []);
             $overtimeDates = $this->generateOvertimeDateData($request->input('dates'), $employeeIDs, $unitTimeZone);

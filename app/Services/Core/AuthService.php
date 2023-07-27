@@ -46,7 +46,7 @@ class AuthService extends BaseService
 
             $token = $user->createToken('authToken')->plainTextToken;
             if (!$data['mobile']) {
-                $user = UserRolePermissionResource::make($user);
+                $user = UserMobileResource::make($user);
             } else {
                 $user = UserMobileResource::make($user);
             }
