@@ -22,6 +22,7 @@ use App\Models\User;
 use App\Services\BaseService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +32,7 @@ class OvertimeService extends BaseService
 {
     /**
      * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function index(Request $request) {
         /**
@@ -134,7 +135,7 @@ class OvertimeService extends BaseService
 
     /**
      * @param CreateOvertimeRequest $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function create(CreateOvertimeRequest $request) {
         try {
@@ -335,7 +336,7 @@ class OvertimeService extends BaseService
     /**
      * @param OvertimeApprovalRequest $request
      * @param int $id
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
     public function approval(OvertimeApprovalRequest $request, int $id) {
         try {
@@ -433,11 +434,11 @@ class OvertimeService extends BaseService
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
-            $employeeTimezone = getTimezoneV2($dataLocation['latitude'], $dataLocation['longitude']);
+            $employeeTimezone = getTimezone(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
 
             $workLocation = $user->employee->getLastUnit();
             $overtimeRequest = $employeeOvertime->overtimeDate->overtime;
-            $distance = calculateDistance($overtimeRequest->location_lat, $overtimeRequest->location_long, $dataLocation['latitude'], $dataLocation['longitude']);
+            $distance = calculateDistance($overtimeRequest->location_lat, $overtimeRequest->location_long, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
 
             $checkInType = EmployeeAttendance::TypeOnSite;
             if ($distance > $workLocation->radius) {
@@ -497,7 +498,8 @@ class OvertimeService extends BaseService
         }
     }
 
-    public function checkOut(OvertimeCheckOutRequest $request, int $id) {
+    public function checkOut(OvertimeCheckOutRequest $request, int $id): JsonResponse
+    {
         try {
             /**
              * @var User $user
@@ -533,10 +535,10 @@ class OvertimeService extends BaseService
                 ->orderBy('id', 'DESC')
                 ->first();
 
-            $employeeTimezone = getTimezoneV2($dataLocation['latitude'], $dataLocation['longitude']);
+            $employeeTimezone = getTimezone(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
             $workLocation = $employeeOvertime->overtimeDate->overtime->unit;
             $overtimeRequest = $employeeOvertime->overtimeDate->overtime;
-            $distance = calculateDistance($overtimeRequest->location_lat, $overtimeRequest->location_long, $dataLocation['latitude'], $dataLocation['longitude']);
+            $distance = calculateDistance($overtimeRequest->location_lat, $overtimeRequest->location_long, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
 
             $checkOutType = EmployeeAttendance::TypeOnSite;
             if ($distance > $workLocation->radius) {
