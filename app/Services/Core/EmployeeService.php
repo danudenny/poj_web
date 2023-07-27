@@ -126,8 +126,15 @@ class EmployeeService extends BaseService
                 $employeesData = $employees->where('id', '=', $auth->employee_id);
             } else if ($highestPriorityRole->role_level === 'admin') {
                 $empUnit = $auth->employee->getRelatedUnit();
-                $flatUnit = UnitHelper::flattenUnits($empUnit);
-                $relationIds = array_column($flatUnit, 'relation_id');
+
+                $relationIds = [];
+
+                if ($requestRelationID = $this->getRequestedUnitID()) {
+                    $relationIds[] = $requestRelationID;
+                } else {
+                    $flatUnit = UnitHelper::flattenUnits($empUnit);
+                    $relationIds = array_column($flatUnit, 'relation_id');
+                }
 
                 $employeesData[] = $employees
                     ->whereIn('kanwil_id', $relationIds)
@@ -251,7 +258,7 @@ class EmployeeService extends BaseService
             });
 
             $employees->when($request->input('name'), function (Builder $builder) use ($request) {
-                $builder->whereRaw('LOWER(employees.name) LIKE ?', ["%" . $request->input('name') . "%"]);
+                $builder->where('employees.name', "ILIKE", "%" . $request->input('name') . "%");
             });
 
             $employees->when($lastUnitRelationID, function (Builder $builder) use ($lastUnitRelationID) {

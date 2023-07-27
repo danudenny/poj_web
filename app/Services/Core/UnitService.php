@@ -138,15 +138,20 @@ class UnitService extends BaseService
             $query = Unit::query();
 
             if ($user->isHighestRole(Role::RoleAdmin)) {
+                $defaultUnitID = $user->employee->getLastUnitID();
+
+                if ($requestRelationID = $this->getRequestedUnitID()) {
+                    $defaultUnitID = $requestRelationID;
+                }
+
                 /**
                  * @var Builder $query
                  */
                 $query = Unit::query()->from('unit_data')
-                    ->withRecursiveExpression('unit_data', Unit::query()->where('relation_id', '=', $user->employee->getLastUnitID())->unionAll(
+                    ->withRecursiveExpression('unit_data', Unit::query()->where('relation_id', '=', $defaultUnitID)->unionAll(
                             Unit::query()->select(['units.*'])
                                 ->join('unit_data', 'units.parent_unit_id', '=', 'unit_data.relation_id')
                     ));
-                $query->orderBy('unit_level', 'ASC');
             } else if ($user->isHighestRole(Role::RoleStaff)) {
                 $query->where('relation_id', '=', $user->employee->getLastUnitID());
             }
@@ -154,6 +159,8 @@ class UnitService extends BaseService
             $query->when($request->filled('name'), function(Builder $builder) use ($request) {
                 $builder->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower(request()->query('name')).'%']);
             });
+
+            $query->orderBy('unit_level', 'ASC');
 
             return response()->json([
                 'status' => 'success',

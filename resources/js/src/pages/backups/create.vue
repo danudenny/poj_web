@@ -334,6 +334,7 @@ export default {
                 ajaxConfig: {
                     headers: {
                         Authorization: `Bearer ${ls}`,
+                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
                     },
                 },
                 ajaxParams: {
@@ -424,6 +425,7 @@ export default {
                 ajaxConfig: {
                     headers: {
                         Authorization: `Bearer ${ls}`,
+                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
                     },
                 },
                 ajaxParams: {

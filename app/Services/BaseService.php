@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use App\Services\Core\NotificationService;
 use Illuminate\Support\Arr;
 use Symfony\Component\HttpFoundation\File\File;
@@ -119,5 +120,21 @@ abstract class BaseService
             $this->notificationService = new NotificationService();
         }
         return $this->notificationService;
+    }
+
+    protected function getRequestedUnitID(): int|null {
+
+        /**
+         * @var User $user
+         */
+        $user = request()->user();
+
+        $requestID = (int) request()->header('X-Unit-Relation-ID');
+
+        if ($user->employee->getLastUnitID() == $requestID) {
+            return null;
+        }
+
+        return $requestID;
     }
 }
