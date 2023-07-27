@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\AdminUnitController;
 use App\Http\Controllers\API\ApprovalController;
 use App\Http\Controllers\API\ApprovalModuleController;
 use App\Http\Controllers\API\CabangController;
@@ -299,4 +300,10 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::get('', [NotificationController::class, 'index']);
     });
     // End Notificataion
+
+    Route::group(['prefix' => 'admin_unit', 'middleware' => ['auth:sanctum']], function() {
+        Route::get('', [AdminUnitController::class, 'index']);
+        Route::post('create', [AdminUnitController::class, 'create']);
+        Route::delete('remove/{id}', [AdminUnitController::class, 'remove']);
+    });
 });

@@ -43,6 +43,15 @@
             "permission" : "permission_list"
         },
         {
+            "title": "Admin Unit",
+            "icon": "anchor",
+            "iconf": "fill-learning",
+            "type": "link",
+            "active": false,
+            "path": "/management/admin-unit",
+            "permission" : "admin_unit"
+        },
+        {
             "headTitle1": "MASTER DATA",
             "headTitle2": "Master data management",
             "type": "headtitle",

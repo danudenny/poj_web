@@ -98,6 +98,9 @@ import CreateOvertime from "../pages/overtime/create.vue";
 import DetailOvertime from "../pages/overtime/detail.vue";
 import EmployeeOvertime from "../pages/overtime/employee-overtime.vue";
 
+// Admin Unit
+import AdminUnit from "../pages/admin-unit/index.vue";
+
 //Error page
 import Error from  '../components/error.vue';
 
@@ -297,16 +300,26 @@ const routes =[
               permission : 'employee_list',
           }
         },
-      {
-          path: '/management/department',
-          name: 'department-list',
-          component: Department,
-          meta: {
-              title: 'POJ - Department List',
-              requiresAuth: true,
-              permission : 'department_list',
-          }
-      },
+          {
+              path: '/management/department',
+              name: 'department-list',
+              component: Department,
+              meta: {
+                  title: 'POJ - Department List',
+                  requiresAuth: true,
+                  permission : 'department_list',
+              }
+          },
+          {
+              path: '/management/admin-unit',
+              name: 'List Admin Unit',
+              component: AdminUnit,
+              meta: {
+                  title: 'POJ - Admin Unit',
+                  requiresAuth: true,
+                  permission : 'admin_unit',
+              }
+          },
       ]
     },
     {

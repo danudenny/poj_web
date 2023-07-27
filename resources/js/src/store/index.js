@@ -10,6 +10,7 @@ import timesheetSchedule from "./modules/timesheetSchedule"
 // import common from './modules/common';
 // import { users } from './modules/users';
 import authentication from '../helpers/authentication';
+import axios from 'axios';
 
 const TOKEN_STORAGE_KEY = 'my_app_token';
 
@@ -22,7 +23,9 @@ export default createStore({
       user: null,
       avatar: '',
       roles: [],
-      permissions: []
+      permissions: [],
+      account: null,
+      activeAdminUnit: null
   },
   getters:{
     langIcon: (state)=>{ return state.langIcon},
@@ -36,6 +39,18 @@ export default createStore({
     permissions: (state) => {
         return state.permissions
     },
+    account: async (state) => {
+        if (state.account === null) {
+            await axios.get('api/v1/admin/user/profile').then(response => {
+                state.account = response.data.data
+                state.activeAdminUnit = state.account.active_units[0]
+                axios.defaults.headers['X-Unit-Relation-ID'] = state.activeAdminUnit.unit_relation_id
+            }).catch(error => {
+                console.error(error);
+            });
+        }
+        return state.account
+    }
   },
   mutations: {
       changeLang (state, payload) {

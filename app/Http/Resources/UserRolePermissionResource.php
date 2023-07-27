@@ -2,6 +2,9 @@
 
 namespace App\Http\Resources;
 
+use App\Models\AdminUnit;
+use App\Models\Employee;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Http\Request;
@@ -97,6 +100,32 @@ class UserRolePermissionResource extends JsonResource
             return null;
         });
 
+        /**
+         * @var Employee $employee
+         */
+        $employee = $this->employee;
+
+        $activeAdminUnit = [];
+        $activeAdminUnit[] = [
+            'unit_relation_id' => $employee->getLastUnit()->relation_id,
+            'name' => $employee->getLastUnit()->name
+        ];
+
+        /**
+         * @var AdminUnit[] $adminUnits
+         */
+        $adminUnits = AdminUnit::query()
+            ->where('employee_id', '=', $employee->id)
+            ->where('is_active', '=', true)
+            ->get();
+
+        foreach ($adminUnits as $adminUnit) {
+            $activeAdminUnit[] = [
+                'unit_relation_id' => $adminUnit->unit_relation_id,
+                'name' => $adminUnit->unit->name
+            ];
+        }
+
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -118,6 +147,7 @@ class UserRolePermissionResource extends JsonResource
             'time_schedules' => $timesheet,
             'job' => $this->employee->job,
             'misc' => array_filter($job->all()),
+            'active_units' => $activeAdminUnit
         ];
     }
 }

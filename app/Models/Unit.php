@@ -13,6 +13,7 @@ use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
 /**
  * Attributes:
  * @property-read int $id
+ * @property string $name
  * @property int $relation_id
  * @property float $lat
  * @property float $long
