@@ -15,8 +15,9 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 import Multiselect from 'vue-multiselect';
 import "vue-multiselect/dist/vue-multiselect.css";
 import axios from 'axios';
-import '@vuepic/vue-datepicker/dist/main.css';
 import 'tabulator-tables/dist/css/tabulator.min.css';
+import '@vuepic/vue-datepicker/dist/main.css';
+
 
 const token = localStorage.getItem(store.TOKEN_STORAGE_KEY);
 if (token) {
