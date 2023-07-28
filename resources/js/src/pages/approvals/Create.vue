@@ -179,8 +179,8 @@ export default {
         onOrganizationSelect(index) {
             const organizationId = this.rows[index].selectedOrg?.id;
             this.filteredUsers[index] = this.users.filter(user => {
-                console.log(user)
                 return (
+                    (user.corporate != null && user.corporate.id === organizationId) ||
                     (user.kanwil != null && user.kanwil.id === organizationId) ||
                     (user.area != null && user.area.id === organizationId) ||
                     (user.cabang != null && user.cabang.id === organizationId) ||
@@ -201,6 +201,7 @@ export default {
             const organizationId = this.rows[index].selectedOrg?.id;
             return this.users.filter(user => {
                 return (
+                    (user.corporate != null && user.corporate.id === organizationId) ||
                     (user.kanwil != null && user.kanwil.id === organizationId) ||
                     (user.area != null && user.area.id === organizationId) ||
                     (user.cabang != null && user.cabang.id === organizationId) ||
@@ -227,7 +228,7 @@ export default {
                 })
         },
         async getUsers() {
-            await this.$axios.get(`/api/v1/admin/employee?limit=3500`)
+            await this.$axios.get(`/api/v1/admin/employee?per_page=3500`)
                 .then(response => {
                     this.users = response.data.data.data
                 })
