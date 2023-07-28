@@ -22,10 +22,21 @@
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label>Date :</label>
-                                            <select v-model="date" class="form-control" >
-                                                <option value="">Select Date</option>
-                                                <option :value="td" v-for="td in totalDays">{{ td }}</option>
-                                            </select>
+                                            <Datepicker
+                                                autoApply
+                                                :model-value="date"
+                                                @update:model-value="handleDate"
+                                                data-language="en"
+                                                placeholder="Select Date"
+                                                :enable-time-picker="false"
+                                                hide-offset-dates
+                                                :min-date="new Date()"
+                                                :max-date="getCurrentMonthEndDate()"
+                                                disable-month-year-select
+                                                :highlight-week-days="[0, 6]"
+                                                :no-swipe="true"
+                                            >
+                                            </Datepicker>
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label>Unit :</label>
@@ -69,10 +80,14 @@
     </div>
 </template>
 <script>
-import {TabulatorFull as Tabulator} from "tabulator-tables";
+import {TabulatorFull as Tabulator, PersistenceModule as Persistence} from "tabulator-tables";
 import {useToast} from "vue-toastification";
+import Datepicker from '@vuepic/vue-datepicker';
 
 export default {
+    components: {
+        Datepicker
+    },
     data() {
         return {
             employees: [],
@@ -83,16 +98,20 @@ export default {
             periods: [],
             loading: false,
             period_id: 0,
-            date: 0,
+            date: new Date(),
             timesheet_id: 0,
             workingArea: {},
             currentPage: 1,
             pageSize: 10,
             filterName: "",
-            filterUnit: "",
+            filterUnitId: "",
             units: [],
             selectedOptions: [],
             visibleOptions: [],
+            table: null,
+            lastDayOfCurrentMonth: null,
+            selectedDate: 0,
+            selectedEmployeeIds: []
         }
     },
     async mounted() {
@@ -100,11 +119,25 @@ export default {
         await this.getTotalDays();
         await this.getEmployee();
         await this.getUnit();
-        await this.initializeEmployeeTable();
+        this.initializeEmployeeTable()
+        this.getCurrentMonthEndDate();
     },
     methods: {
-        async selectedUnit() {
-            await this.getTimesheet(this.selectedOptions.id)
+        handleDate(e) {
+            const date = new Date(e);
+            this.date = date;
+            this.selectedDate = date.getDate();
+        },
+        getCurrentMonthEndDate() {
+            const currentDate = new Date();
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            const firstDayOfNextMonth = new Date(year, month + 1, 1);
+            return new Date(firstDayOfNextMonth.getTime() - 1);
+        },
+         selectedUnit() {
+            this.table.setFilter('unit_id', "=", this.selectedOptions.id);
+            this.getTimesheet(this.selectedOptions.id)
         },
         async getUnit() {
             await this.$axios.get(`api/v1/admin/unit/related-unit`)
@@ -140,7 +173,6 @@ export default {
                 await this.$axios.get(`api/v1/admin/employee-timesheet/${id}`)
                     .then(response => {
                         this.timesheets = response.data.data.data;
-                        console.log(this.timesheets)
                     }).catch(error => {
                         console.error(error);
                     });
@@ -158,19 +190,20 @@ export default {
                     console.error(error);
                 });
         },
-        async initializeEmployeeTable() {
+        initializeEmployeeTable() {
             const ls = localStorage.getItem('my_app_token')
-            const table = await new Tabulator(this.$refs.employeeTable, {
-                // data: this.employees,
+            this.table = new Tabulator(this.$refs.employeeTable, {
                 ajaxURL: '/api/v1/admin/employee',
                 layout: 'fitColumns',
                 columns: [
                     {
                         formatter: "rowSelection",
-                        titleFormatter: "rowSelection",
                         hozAlign: "center",
                         width: 100,
                         headerSort: false,
+                        titleFormatterParams: {
+                            rowRange: "active"
+                        },
                         cellClick: function (e, cell) {
                             cell.getRow()
                         },
@@ -220,8 +253,9 @@ export default {
                 ajaxURLGenerator: (url, config, params) => {
                     params.filter.map((item) => {
                         if (item.field === 'name') this.filterName = item.value
+                        if (item.field === 'unit_id') this.filterUnitId = item.value
                     })
-                    return `${url}?page=${params.page}&size=${params.size}&name=${this.filterName}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&unit_id=${this.filterUnitId}`
                 },
                 ajaxResponse: function (url, params, response) {
                     return {
@@ -231,11 +265,12 @@ export default {
                 },
                 paginationSizeSelector: [10, 20, 50, 100],
                 headerFilter: true,
+                selectable: true,
                 rowFormatter: (row) => {
 
                 },
-            });
-            table.on("rowSelectionChanged", function(data, rows, selected, deselected)  {
+           });
+            this.table.on("rowSelectionChanged", function(data, rows, selected, deselected)  {
                 this.selectedEmployees = rows.map(row => row.getData().id);
                 localStorage.setItem('selectedEmployees', JSON.stringify(this.selectedEmployees));
             })
@@ -247,7 +282,7 @@ export default {
                 employee_ids: ls,
                 period_id: this.period_id,
                 timesheet_id: this.timesheet_id,
-                date: this.date,
+                date: this.selectedDate,
             }).then(response => {
                 localStorage.removeItem('selectedEmployees');
                 useToast().success(response.data.message , { position: 'bottom-right' });
