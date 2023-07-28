@@ -171,7 +171,7 @@ class BackupService extends BaseService
                     'status' => false,
                     'message' => 'Unit not exist',
                 ], ResponseAlias::HTTP_BAD_REQUEST);
-            }
+	    }
 
             /**
              * @var Job $job
@@ -191,7 +191,9 @@ class BackupService extends BaseService
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
-            $unitTimeZone = getTimezoneV2($unit->lat, $unit->long);
+	    $lat = floatval(str_replace(',', '.', $unit->lat));
+	    $long = floatval(str_replace(',', '.', $unit->long));
+            $unitTimeZone = getTimezone($lat, $long);
 
             $employeeIDs = $request->input('employee_ids', []);
             $backupDates = $this->generateBackupDateData($request->input('dates'), $employeeIDs, $unitTimeZone);
@@ -271,8 +273,8 @@ class BackupService extends BaseService
             $backup->shift_type = $request->input('shift_type');
             $backup->duration = count($backupDates);
             $backup->status = Backup::StatusAssigned;
-            $backup->location_lat = $unit->lat;
-            $backup->location_long = $unit->long;
+            $backup->location_lat = $lat;
+            $backup->location_long = $long;
             $backup->timezone = $unitTimeZone;
             $backup->file_url = $request->input('file_url');
             $backup->save();
