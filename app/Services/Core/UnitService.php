@@ -120,14 +120,16 @@ class UnitService extends BaseService
                 }
             }
 
-            $nestedUnits = array_values($nestedUnits);
             if ($highestPriorityRole->role_level === 'admin') {
+                $latestUnit = auth()->user()->employee->last_unit;
+                $nestedUnits[] = $latestUnit;
                 $nestedUnits = array_filter($nestedUnits, function ($unit) {
                     return array_filter(auth()->user()->employee->getRelatedUnit(), function ($emp) use ($unit) {
                         return $emp['id'] === $unit['id'];
                     });
                 });
             }
+            $nestedUnits = array_values($nestedUnits);
 
             return response()->json([
                 'status' => 'success',
