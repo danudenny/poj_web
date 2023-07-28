@@ -136,7 +136,7 @@ export default {
             return new Date(firstDayOfNextMonth.getTime() - 1);
         },
          selectedUnit() {
-            this.table.setFilter('unit_id', "=", this.selectedOptions.id);
+            this.table.setFilter('last_unit_relation_id', "=", this.selectedOptions.relation_id);
             this.getTimesheet(this.selectedOptions.id)
         },
         async getUnit() {
@@ -193,7 +193,7 @@ export default {
         initializeEmployeeTable() {
             const ls = localStorage.getItem('my_app_token')
             this.table = new Tabulator(this.$refs.employeeTable, {
-                ajaxURL: '/api/v1/admin/employee',
+                ajaxURL: '/api/v1/admin/employee/paginated',
                 layout: 'fitColumns',
                 columns: [
                     {
@@ -253,9 +253,9 @@ export default {
                 ajaxURLGenerator: (url, config, params) => {
                     params.filter.map((item) => {
                         if (item.field === 'name') this.filterName = item.value
-                        if (item.field === 'unit_id') this.filterUnitId = item.value
+                        if (item.field === 'last_unit_relation_id') this.filterUnitId = item.value
                     })
-                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&unit_id=${this.filterUnitId}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&last_unit_relation_id=${this.filterUnitId}`
                 },
                 ajaxResponse: function (url, params, response) {
                     return {
