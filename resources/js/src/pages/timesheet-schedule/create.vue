@@ -220,6 +220,7 @@ export default {
                         formatter: (cell, formatterParams) => {
                             const wd = cell.getData();
                             const hierarchy = [
+                                wd.corporate,
                                 wd.kanwil,
                                 wd.area,
                                 wd.cabang,
