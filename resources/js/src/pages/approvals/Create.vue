@@ -97,6 +97,7 @@
                                                         track-by="id"
                                                         :options="getFilteredUserOptions(index)"
                                                         :multiple="false"
+                                                        @search-change="asyncFindUser"
                                                     ></multiselect>
                                                 </div>
                                             </div>
@@ -162,6 +163,19 @@ export default {
         this.getUsers()
    },
     methods: {
+        // asyncFindUser (query) {
+        //     this.isLoading = true
+        //     if (query.length > 2) {
+        //         this.$axios.get(`/api/v1/admin/employee?name=${query}&unit_id=${this.rows[0].selectedOrg.id}`)
+        //         .then(response => {
+        //             this.users = response.data.data.data
+        //             this.isLoading = false
+        //         })
+        //         .catch(error => {
+        //             console.log(error)
+        //         })
+        //     }
+        // },
         addRow() {
             if (this.rows.length < 5) {
                 this.rows.push({
@@ -228,7 +242,7 @@ export default {
                 })
         },
         async getUsers() {
-            await this.$axios.get(`/api/v1/admin/employee?per_page=3500`)
+            await this.$axios.get(`/api/v1/admin/employee?per_page=11000`)
                 .then(response => {
                     this.users = response.data.data.data
                 })
