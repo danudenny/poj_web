@@ -18,6 +18,16 @@ use InvalidArgumentException;
 
 class UnitService extends BaseService
 {
+    function getLastUnit($data) {
+        $lastData = null;
+        foreach ($data as $item) {
+            if ($item === null) {
+                break;
+            }
+            $lastData = $item;
+        }
+        return $lastData;
+    }
     /**
      * @param $data
      * @return JsonResponse
@@ -111,6 +121,13 @@ class UnitService extends BaseService
             }
 
             $nestedUnits = array_values($nestedUnits);
+            if ($highestPriorityRole->role_level === 'admin') {
+                $nestedUnits = array_filter($nestedUnits, function ($unit) {
+                    return array_filter(auth()->user()->employee->getRelatedUnit(), function ($emp) use ($unit) {
+                        return $emp['id'] === $unit['id'];
+                    });
+                });
+            }
 
             return response()->json([
                 'status' => 'success',
