@@ -78,6 +78,9 @@ class BackupService extends BaseService
         $backups->when($request->filled('status'), function (Builder $builder) use ($request) {
             $builder->where('backups.status', '=', $request->input('status'));
         });
+        $backups->when($request->filled('requestor_employee_id'), function (Builder $builder) use ($request) {
+            $builder->where('backups.requestor_employee_id', '=', $request->input('requestor_employee_id'));
+        });
 
         $backups->with(['unit:units.relation_id,name', 'job:jobs.odoo_job_id,name', 'requestorEmployee:employees.id,name']);
         $backups->select(['backups.*']);
@@ -275,6 +278,11 @@ class BackupService extends BaseService
             $backup->location_long = $unit->long;
             $backup->timezone = $unitTimeZone;
             $backup->file_url = $request->input('file_url');
+
+            if ($user->inRoleLevel([Role::RoleStaff, Role::RoleSuperAdministrator])) {
+                $backup->status = Backup::StatusApproved;
+            }
+
             $backup->save();
 
             foreach ($backupDates as $backupDate) {

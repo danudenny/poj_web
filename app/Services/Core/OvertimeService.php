@@ -86,6 +86,9 @@ class OvertimeService extends BaseService
             $builder->join('employees', 'employees.id', '=', 'overtimes.requestor_employee_id')
                 ->whereRaw('LOWER(employees.name) LIKE ?', ['%'.strtolower($request->query('requestor_name')).'%']);
         });
+        $overtimes->when($request->filled('requestor_employee_id'), function(Builder $builder) use ($request) {
+            $builder->where('overtimes.requestor_employee_id', '=', $request->input('requestor_employee_id'));
+        });
 
         $overtimes->select(['overtimes.*']);
         $overtimes->groupBy(['overtimes.id']);
@@ -310,6 +313,11 @@ class OvertimeService extends BaseService
             $overtime->timezone = $unitTimeZone;
             $overtime->notes = $request->input('notes');
             $overtime->image_url = $request->input('image_url');
+
+            if ($user->inRoleLevel([Role::RoleStaff, Role::RoleSuperAdministrator])) {
+                $overtime->last_status = OvertimeHistory::TypeApproved;
+            }
+
             $overtime->save();
 
             foreach ($overtimeDates as $overtimeDateData) {
