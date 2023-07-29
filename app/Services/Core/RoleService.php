@@ -110,10 +110,21 @@ class RoleService extends BaseService
 
         DB::beginTransaction();
         try {
+
+            $priority = 0;
+            if ($request->role_level == 'superadmin') {
+                $priority = 1;
+            } elseif ($request->role_level == 'admin') {
+                $priority = 2;
+            } elseif ($request->role_level == 'staff') {
+                $priority = 3;
+            }
+
             $role = new Role();
             $role->name = strtolower(str_replace(' ', '_', $request->name));
+            $role->role_level = $request->role_level;
             $role->guard_name = 'web';
-            $role->created_at = date('Y-m-d H:i:s');
+            $role->priority =  $priority;
 
             if (!$role->save()) {
                 throw new Exception(self::DB_FAILED, 500);
@@ -157,7 +168,20 @@ class RoleService extends BaseService
                 throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
 
+            $priority = 0;
+            if ($request->role_level == 'superadmin') {
+                $priority = 1;
+            } elseif ($request->role_level == 'admin') {
+                $priority = 2;
+            } elseif ($request->role_level == 'staff') {
+                $priority = 3;
+            }
+
             $role->name = strtolower(str_replace(' ', '_', $request->name));
+            $role->role_level = $request->role_level;
+            $role->is_active = $request->is_active;
+            $role->guard_name = 'web';
+            $role->priority =  $priority;
             $role->updated_at = date('Y-m-d H:i:s');
 
             if (!$role->save()) {
