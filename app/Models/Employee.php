@@ -274,7 +274,7 @@ class Employee extends Model
         return $employeeEvent;
     }
 
-    public function getActiveOvertime(): OvertimeEmployee|null {
+    public function getActiveOvertime($timezone = 'UTC'): OvertimeEmployee|null {
         $startNow = Carbon::now()->addMinutes(10)->format('Y-m-d H:i:s');
         $endNow = Carbon::now()->addMinutes(-10)->format('Y-m-d H:i:s');
         $today = Carbon::now()->format('Y-m-d');
@@ -287,20 +287,22 @@ class Employee extends Model
             ->join('overtimes', 'overtimes.id', '=', 'overtime_dates.overtime_id')
             ->where('overtime_employees.employee_id', '=', $this->id)
             ->where('overtimes.last_status', '!=', OvertimeHistory::TypeRejected)
-            ->whereRaw('(overtime_dates.start_time::DATE = ? OR overtime_dates.end_time::DATE = ?)', [$today, $today])
-//            ->where('overtime_dates.start_time', '<', $startNow)
-//            ->where('overtime_dates.end_time', '>', $endNow)
+            ->whereRaw(`(
+                            (overtime_dates.start_time::timestamp without time zone at time zone 'UTC' at time zone '${timezone}')::DATE = (CURRENT_TIMESTAMP at time zone '${timezone}')::DATE OR
+                            (overtime_dates.end_time::timestamp without time zone at time zone 'UTC' at time zone '${timezone}')::DATE = (CURRENT_TIMESTAMP at time zone '${timezone}')::DATE
+                        )`)
             ->select(['overtime_employees.*'])
             ->where(function(Builder $builder) {
                 $builder->orWhereNull('overtime_employees.check_in_time')
                     ->orWhereNull('overtime_employees.check_out_time');
             })
+            ->orderBy('overtime_dates.start_time', 'ASC')
             ->first();
 
         return $overtime;
     }
 
-    public function getActiveBackup(): BackupEmployeeTime|null {
+    public function getActiveBackup($timezone = 'UTC'): BackupEmployeeTime|null {
         $startNow = Carbon::now()->addMinutes(10)->format('Y-m-d H:i:s');
         $endNow = Carbon::now()->addMinutes(-10)->format('Y-m-d H:i:s');
         $today = Carbon::now()->format('Y-m-d');
@@ -313,12 +315,16 @@ class Employee extends Model
             ->join('backups', 'backups.id', '=', 'backup_times.backup_id')
             ->where('status', '!=', Backup::StatusRejected)
             ->where('backup_employee_times.employee_id', '=', $this->id)
-            ->whereRaw('(backup_times.start_time::DATE = ? OR backup_times.end_time::DATE = ?)', [$today, $today])
+            ->whereRaw(`(
+                    (backup_times.start_time::timestamp without time zone at time zone 'UTC' at time zone '${$timezone}')::DATE = (CURRENT_TIMESTAMP at time zone '${$timezone}')::DATE OR
+                    (backup_times.end_time::timestamp without time zone at time zone 'UTC' at time zone '${$timezone}')::DATE = (CURRENT_TIMESTAMP at time zone '${$timezone}')::DATE
+                )`)
             ->select(['backup_employee_times.*'])
             ->where(function(Builder $builder) {
                 $builder->orWhereNull('backup_employee_times.check_in_time')
                     ->orWhereNull('backup_employee_times.check_out_time');
             })
+            ->orderBy('backup_times.start_time', 'ASC')
             ->first();
 
         return $employeeBackup;

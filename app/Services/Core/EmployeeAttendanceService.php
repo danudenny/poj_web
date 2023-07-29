@@ -613,7 +613,7 @@ class EmployeeAttendanceService extends BaseService {
                 ];
             }
 
-            if ($overtime = $employee->getActiveOvertime()) {
+            if ($overtime = $employee->getActiveOvertime($timezone)) {
                 $activeSchedule['attendance']['overtime'] = [
                     'start_time' => Carbon::parse($overtime->overtimeDate->start_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'end_time' => Carbon::parse($overtime->overtimeDate->end_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
@@ -623,7 +623,7 @@ class EmployeeAttendanceService extends BaseService {
                 ];
             }
 
-            if ($backup = $employee->getActiveBackup()) {
+            if ($backup = $employee->getActiveBackup($timezone)) {
                 $activeSchedule['attendance']['backup'] = [
                     'start_time' => Carbon::parse($backup->backupTime->start_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'end_time' => Carbon::parse($backup->backupTime->end_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
