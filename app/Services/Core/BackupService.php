@@ -158,6 +158,36 @@ class BackupService extends BaseService
         ]);
     }
 
+    public function detailBackupEmployee(Request $request, int $id) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            $backupEmployee = BackupEmployeeTime::query()->with(['backupTime.backup', 'employee:employees.id,name'])
+                ->where('id', '=', $id)
+                ->first();
+            if (!$backupEmployee) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Employee Backup Not Found",
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Succcess fetch data',
+                'data' => $backupEmployee,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     public function create(CreateBackupRequest $request) {
         try {
             /**

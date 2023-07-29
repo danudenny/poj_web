@@ -180,6 +180,33 @@ class OvertimeService extends BaseService
         ], Response::HTTP_OK);
     }
 
+    public function detailEmployeeOvertime(Request $request, int $id) {
+        try {
+            $employeeOvertime = OvertimeEmployee::query()
+                ->with(['employee:employees.id,name', 'overtimeDate.overtime'])
+                ->where('id', '=', $id)
+                ->first();
+
+            if (!$employeeOvertime) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Employee Overtime Not Found",
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Succcess fetch data',
+                'data' => $employeeOvertime,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     /**
      * @param CreateOvertimeRequest $request
      * @return JsonResponse

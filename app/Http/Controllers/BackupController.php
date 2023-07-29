@@ -56,4 +56,8 @@ class BackupController extends Controller
     public function getActiveEmployeeEvent(Request $request, int $id): JsonResponse {
         return $this->backupService->getActiveEmployeeDate($request, $id);
     }
+
+    public function getDetailEmployeeBackup(Request $request, int $id) {
+        return $this->backupService->detailBackupEmployee($request, $id);
+    }
 }

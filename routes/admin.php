@@ -229,6 +229,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::get('view/{id}', [BackupController::class, 'show']);
         Route::get('list-employee-backup', [BackupController::class, 'listEmployeeBackupTime']);
         Route::get('get-active-backup/{id}', [BackupController::class, 'getActiveEmployeeEvent']);
+        Route::get('view-employee/{id}', [BackupController::class, 'getDetailEmployeeBackup']);
         Route::post('create', [BackupController::class, 'create']);
         Route::post('approve/{id}', [BackupController::class, 'approve']);
         Route::post('check-in/{id}', [BackupController::class, 'checkIn']);
@@ -290,6 +291,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     Route::group(['prefix' => 'overtime', 'middleware' => ['auth:sanctum']], function () {
         Route::get('/', [OvertimeController::class, 'index']);
         Route::get('/view/{id}', [OvertimeController::class, 'view']);
+        Route::get('/view-employee/{id}', [OvertimeController::class, 'getDetailEmployeeOvertime']);
         Route::get('/employee-overtime', [OvertimeController::class, 'employee_overtimes']);
         Route::post('', [OvertimeController::class, 'create']);
         Route::post('approval/{id}', [OvertimeController::class, 'approval']);
