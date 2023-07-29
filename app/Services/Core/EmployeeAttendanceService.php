@@ -179,11 +179,6 @@ class EmployeeAttendanceService extends BaseService {
         $adjustedStartTime = $employeeTimesheetStartTime->copy()->subMinutes($workLocation->early_buffer)->setTimezone($companyTimeZone);
         $adjustedEndTime = $employeeTimesheetEndTime->copy()->subMinutes($workLocation->late_buffer)->setTimezone($companyTimeZone);
 
-        if (!$parseRequestedTime->between($adjustedStartTime, $adjustedEndTime)) {
-            return response()->json([
-                'message' => 'Check in time must be between ' . $employeeTimesheetStartTime->toTimeString('minutes') . ' and ' . $employeeTimesheetEndTime->toTimeString('minutes')
-            ], 400);
-        }
         // END : Check if time is in range
 
         // BEGIN : Check if employee has checked in today
