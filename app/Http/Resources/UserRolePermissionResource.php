@@ -133,6 +133,7 @@ class UserRolePermissionResource extends JsonResource
             'fcm_token' => $this->fcm_token,
             'roles' => $role,
             'permissions' => $permission,
+            'employee_id' => $this->employee_id,
             'is_normal_checkin' => $this->is_normal_checkin,
             'is_backup_checkin' => $this->is_backup_checkin,
             'is_overtime_checkin' => $this->is_overtime_checkin,
