@@ -117,34 +117,34 @@
                                         <div class="form-group mb-0">
                                             <div class="checkbox p-0" v-if="event.date_event">
                                                 <input id="repeat_is_monthly_fixed" type="checkbox" v-model="event.repeat_is_monthly_fixed">
-                                                <label class="text-muted" for="repeat_is_monthly_fixed">Setiap {{ (new Date(Date.parse(event.date_event))).getDate() }} {{ months[(new Date(Date.parse(event.date_event))).getMonth()] }}</label>
+                                                <label class="text-muted" for="repeat_is_monthly_fixed">Setiap tanggal {{ (new Date(Date.parse(event.date_event))).getDate() }}</label>
                                             </div>
                                         </div>
                                         <div v-if="event.repeat_is_monthly_fixed === false">
                                             <br/>
-                                            <p>Setiap</p>
+                                            <p>Setiap Minggu</p>
                                             <div class="row">
                                                 <div class="col-md-6">
                                                     <div class="mt-2">
                                                         <select id="status" name="status" class="form-select" v-model="monthlyFormat.first" required>
-                                                            <option value="first" :selected="monthlyFormat.first === 'first' ? 'selected' : ''">First</option>
-                                                            <option value="second" :selected="monthlyFormat.first === 'second' ? 'selected' : ''">Second</option>
-                                                            <option value="third" :selected="monthlyFormat.first === 'third' ? 'selected' : ''">Third</option>
-                                                            <option value="fourth" :selected="monthlyFormat.first === 'fourth' ? 'selected' : ''">Fourth</option>
-                                                            <option value="last" :selected="monthlyFormat.first === 'last' ? 'selected' : ''">Last</option>
+                                                            <option value="first" :selected="monthlyFormat.first === 'first' ? 'selected' : ''">Pertama</option>
+                                                            <option value="second" :selected="monthlyFormat.first === 'second' ? 'selected' : ''">Ke Dua</option>
+                                                            <option value="third" :selected="monthlyFormat.first === 'third' ? 'selected' : ''">Ke Tiga</option>
+                                                            <option value="fourth" :selected="monthlyFormat.first === 'fourth' ? 'selected' : ''">Ke Empat</option>
+                                                            <option value="last" :selected="monthlyFormat.first === 'last' ? 'selected' : ''">Terakhir</option>
                                                         </select>
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <div class="mt-2">
                                                         <select id="status" name="status" class="form-select" v-model="monthlyFormat.second" required>
-                                                            <option value="sunday" :selected="monthlyFormat.second === 'sunday' ? 'selected' : ''">Sunday</option>
-                                                            <option value="monday" :selected="monthlyFormat.second === 'monday' ? 'selected' : ''">Monday</option>
-                                                            <option value="tuesday" :selected="monthlyFormat.second === 'tuesday' ? 'selected' : ''">Tuesday</option>
-                                                            <option value="wednesday" :selected="monthlyFormat.second === 'wednesday' ? 'selected' : ''">Wednesday</option>
-                                                            <option value="thursday" :selected="monthlyFormat.second === 'thursday' ? 'selected' : ''">Thursday</option>
-                                                            <option value="friday" :selected="monthlyFormat.second === 'friday' ? 'selected' : ''">Friday</option>
-                                                            <option value="saturday" :selected="monthlyFormat.second === 'saturday' ? 'selected' : ''">Saturday</option>
+                                                            <option value="sunday" :selected="monthlyFormat.second === 'sunday' ? 'selected' : ''">Minggu</option>
+                                                            <option value="monday" :selected="monthlyFormat.second === 'monday' ? 'selected' : ''">Senin</option>
+                                                            <option value="tuesday" :selected="monthlyFormat.second === 'tuesday' ? 'selected' : ''">Selasa</option>
+                                                            <option value="wednesday" :selected="monthlyFormat.second === 'wednesday' ? 'selected' : ''">Rabu</option>
+                                                            <option value="thursday" :selected="monthlyFormat.second === 'thursday' ? 'selected' : ''">Kamis</option>
+                                                            <option value="friday" :selected="monthlyFormat.second === 'friday' ? 'selected' : ''">Jumat</option>
+                                                            <option value="saturday" :selected="monthlyFormat.second === 'saturday' ? 'selected' : ''">Sabtu</option>
                                                         </select>
                                                     </div>
                                                 </div>
@@ -335,7 +335,9 @@ export default {
             });
             table.on("rowSelectionChanged", (data, rows, selected, deselected) => {
                 if(selected.length > 0) {
-                    this.selectedEmployees.push(selected[0].getData().id)
+                    if (!this.selectedEmployees.includes(selected[0].getData().id)) {
+                        this.selectedEmployees.push(selected[0].getData().id)
+                    }
                 }
                 if (deselected.length > 0) {
                     let deselectedID = deselected[0].getData().id

@@ -258,6 +258,8 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::post('/check-out/{id}', [EventController::class, 'checkOut']);
         Route::post('/publish/{id}', [EventController::class, 'publish']);
         Route::post('/edit/{id}', [EventController::class, 'update']);
+        Route::delete('/remove-attendance/{id}', [EventController::class, 'removeAttendance']);
+        Route::post('/add-attendance/{id}', [EventController::class, 'addAttendance']);
         Route::get('get-active-event/{id}', [EventController::class, 'getActiveEmployeeEvent']);
     });
     // End Event

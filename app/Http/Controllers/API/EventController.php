@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Event\AddNewAttendanceRequest;
 use App\Http\Requests\Event\CheckInEventRequest;
 use App\Http\Requests\Event\CheckOutEventRequest;
 use App\Http\Requests\Event\CreateEventRequest;
@@ -52,5 +53,13 @@ class EventController extends Controller
 
     public function getActiveEmployeeEvent(Request $request, EventService $service, int $id) {
         return $service->getActiveEventEmployee($request, $id);
+    }
+
+    public function removeAttendance(Request $request, EventService $service, int $id) {
+        return $service->removeAttendance($request, $id);
+    }
+
+    public function addAttendance(AddNewAttendanceRequest $request, EventService $service, int $id) {
+        return $service->addNewAttendance($request, $id);
     }
 }

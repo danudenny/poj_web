@@ -30,6 +30,26 @@ class UpdateEventRequest extends FormRequest
             'image_url' => ['nullable'],
             'title' => ['nullable', 'max:225'],
             'description' => ['nullable'],
+            'is_change_schedule' => ['nullable', 'boolean'],
+            'repeat_type' => [
+                'nullable',
+                Rule::requiredIf($this->input('is_repeat', false) == true && $this->input('is_change_schedule', false) == true),
+                Rule::in(Event::RepeatTypeDaily, Event::RepeatTypeWeekly, Event::RepeatTypeMonthly, Event::RepeatTypeYearly),
+            ],
+            'repeat_every' => [
+                'nullable',
+                Rule::requiredIf((bool) $this->input('is_repeat', false) == true && $this->input('is_change_schedule', false) == true),
+                'numeric'
+            ],
+            'repeat_end_date' => [
+                'nullable',
+                Rule::requiredIf((bool) $this->input('is_repeat', false) == true && $this->input('is_change_schedule', false) == true),
+                'date_format:Y-m-d'
+            ],
+            'repeat_days' => [
+                'nullable',
+                Rule::requiredIf($this->input('repeat_type') == Event::RepeatTypeWeekly || $this->input('repeat_type') == Event::RepeatTypeMonthly),
+            ]
         ];
     }
 }

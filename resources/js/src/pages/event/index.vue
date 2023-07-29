@@ -68,6 +68,11 @@ export default {
                     },
                     {
                         title: 'Type',
+                        field: 'requestor_employee.name',
+                        headerFilter:"input"
+                    },
+                    {
+                        title: 'Type',
                         field: 'event_type',
                         headerFilter:"input"
                     },

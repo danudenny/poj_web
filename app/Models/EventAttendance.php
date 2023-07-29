@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * Attributes:
  * @property-read Employee $employee
+ * @property-read Event $event
  */
 class EventAttendance extends Model
 {
@@ -21,5 +22,9 @@ class EventAttendance extends Model
 
     public function employee(): BelongsTo {
         return $this->belongsTo(Employee::class, 'employee_id');
+    }
+
+    public function event(): BelongsTo {
+        return $this->belongsTo(Event::class, 'event_id');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services\Core;
 
+use App\Http\Requests\Event\AddNewAttendanceRequest;
 use App\Http\Requests\Event\CheckInEventRequest;
 use App\Http\Requests\Event\CheckOutEventRequest;
 use App\Http\Requests\Event\CreateEventRequest;
@@ -34,7 +35,7 @@ class EventService extends BaseService
          */
         $user = $request->user();
 
-        $query = Event::query();
+        $query = Event::query()->with(['requestorEmployee:employees.id,name']);
 
         $query->when($request->filled('status'), function(Builder $builder) use ($request) {
             $builder->where('events.last_status', '=', $request->input('status'));
@@ -86,14 +87,14 @@ class EventService extends BaseService
          */
         $event = Event::query()->with([
             'eventDates',
-            'eventAttendances', 'eventAttendances.employee:employees.id,name',
+            'eventAttendances', 'eventAttendances.employee:employees.id,name,outlet_id,cabang_id,area_id,kanwil_id,corporate_id',
             'eventHistories', 'eventHistories.employee:employees.id,name'
         ])->find($id);
         if (is_null($event)) {
             return response()->json([
                 'status' => false,
                 'message' => 'Event is not found!'
-            ], Response::HTTP_BAD_REQUEST);
+            ], ResponseAlias::HTTP_BAD_REQUEST);
         }
 
         return response()->json([
@@ -139,19 +140,19 @@ class EventService extends BaseService
                 return response()->json([
                     'status' => false,
                     'message' => 'End date is required!'
-                ], Response::HTTP_BAD_REQUEST);
+                ], ResponseAlias::HTTP_BAD_REQUEST);
             }
             if ($event->is_repeat && (Carbon::parse($event->repeat_end_date)->lessThan(Carbon::parse($event->date_event)))) {
                 return response()->json([
                     'status' => false,
                     'message' => 'End date cannot less than event date!'
-                ], Response::HTTP_BAD_REQUEST);
+                ], ResponseAlias::HTTP_BAD_REQUEST);
             }
             if ($event->is_repeat && (Carbon::parse($event->repeat_end_date)->lessThan(Carbon::today()))) {
                 return response()->json([
                     'status' => false,
                     'message' => 'End date cannot less than today!'
-                ], Response::HTTP_BAD_REQUEST);
+                ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
             $eventDates = $this->generateEventDate($event);
@@ -159,7 +160,7 @@ class EventService extends BaseService
                 return response()->json([
                     'status' => false,
                     'message' => 'There is no event dates!'
-                ], Response::HTTP_BAD_REQUEST);
+                ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
             $timezone = getTimezoneV2($event->latitude, $event->longitude);
@@ -198,13 +199,13 @@ class EventService extends BaseService
             return response()->json([
                 'status' => true,
                 'data' => $event
-            ], Response::HTTP_OK);
+            ], ResponseAlias::HTTP_OK);
         } catch (\Throwable $exception) {
             DB::rollBack();
             return response()->json([
                 'status' => false,
                 'message' => $exception->getMessage()
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -227,10 +228,59 @@ class EventService extends BaseService
                 return response()->json([
                     'status' => false,
                     'message' => 'Event is not found!'
-                ], Response::HTTP_BAD_REQUEST);
+                ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
             DB::beginTransaction();
+
+            $isChangeSchedule = (bool) $request->input('is_change_schedule', false);
+            if ($isChangeSchedule) {
+                $event->is_repeat = (bool) $request->input('is_repeat');
+                $event->repeat_type = $request->input('repeat_type');
+                $event->repeat_every = $request->input('repeat_every');
+                $event->repeat_days = $request->input('repeat_days');
+                $event->repeat_end_date = $request->input('repeat_end_date');
+
+                if ($event->is_repeat && $event->repeat_end_date == '') {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'End date is required!'
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
+                if ($event->is_repeat && (Carbon::parse($event->repeat_end_date)->lessThan(Carbon::parse($event->date_event)))) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'End date cannot less than event date!'
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
+                if ($event->is_repeat && (Carbon::parse($event->repeat_end_date)->lessThan(Carbon::today()))) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'End date cannot less than today!'
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
+
+                $isSuccess = EventDate::query()->where('event_id', '=', $event->id)->delete();
+
+                $eventDates = $this->generateEventDate($event);
+                if (count($eventDates) == 0) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'There is no event dates!'
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
+
+                foreach ($eventDates as $eventDate) {
+                    $eventDateTime = Carbon::parse(sprintf("%s %s", $eventDate->event_date, $eventDate->event_time), $event->timezone)->setTimezone('UTC');
+                    $eventDate->event_id = $event->id;
+                    $eventDate->event_datetime = $eventDateTime->format('Y-m-d H:i:s');
+
+                    unset($eventDate->event_date);
+                    unset($eventDate->event_time);
+
+                    $eventDate->save();
+                }
+            }
 
             if ($eventType = $request->input('event_type')) {
                 $event->event_type = $eventType;
@@ -258,7 +308,109 @@ class EventService extends BaseService
             return response()->json([
                 'status' => false,
                 'message' => $exception->getMessage()
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function removeAttendance(Request $request, int $id) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            /**
+             * @var EventAttendance $eventAttendance
+             */
+            $eventAttendance = EventAttendance::query()->where('id', '=', $id)->first();
+            if (!$eventAttendance) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Event attendance is not found!'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            if ($user->isHighestRole(Role::RoleStaff)) {
+                if ($eventAttendance->event->requestor_employee_id != $user->employee_id) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'You don\'t have access to delete this attendance'
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
+            }
+
+            if ($eventAttendance->event->last_status != Event::StatusDraft) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Event already published'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            DB::beginTransaction();
+            $eventAttendance->delete();
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success!'
+            ]);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function addNewAttendance(AddNewAttendanceRequest $request, int $id) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            /**
+             * @var Event $event
+             */
+            $event = Event::query()->where('id', '=', $id)
+                ->where('last_status', '=', Event::StatusDraft)
+                ->first();
+            if (!$event) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Event is not found!'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            DB::beginTransaction();
+
+            /**
+             * @var int[] $employeeIDs
+             */
+            $employeeIDs = $request->input('employee_ids', []);
+
+            foreach ($employeeIDs as $employeeID) {
+                if (!(EventAttendance::query()->where('event_id', '=', $event->id)->where('employee_id', '=', $employeeID)->exists())) {
+                    $eventAttendance = new EventAttendance();
+                    $eventAttendance->event_id = $event->id;
+                    $eventAttendance->employee_id = $employeeID;
+                    $eventAttendance->save();
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success!'
+            ]);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -281,7 +433,7 @@ class EventService extends BaseService
                 return response()->json([
                     'status' => false,
                     'message' => 'Event is not found!'
-                ], Response::HTTP_BAD_REQUEST);
+                ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
             DB::beginTransaction();
@@ -314,7 +466,7 @@ class EventService extends BaseService
             return response()->json([
                 'status' => false,
                 'message' => $exception->getMessage()
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -347,7 +499,7 @@ class EventService extends BaseService
             if (!$isValidToCreate) {
                 return response()->json([
                     'message' => 'You don\'t have access to do approval!'
-                ], Response::HTTP_BAD_REQUEST);
+                ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
             /**
@@ -358,7 +510,7 @@ class EventService extends BaseService
                 return response()->json([
                     'status' => false,
                     'message' => 'Event is not found!'
-                ], Response::HTTP_BAD_REQUEST);
+                ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
             /**
@@ -371,13 +523,13 @@ class EventService extends BaseService
                 return response()->json([
                     'status' => false,
                     'message' => 'Event already approved!'
-                ], Response::HTTP_BAD_REQUEST);
+                ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
             if ($approvalUsers[count($eventHistories)]->user_id != $user->id) {
                 return response()->json([
                     'message' => 'Last approver not doing approval!'
-                ], Response::HTTP_BAD_REQUEST);
+                ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
             DB::beginTransaction();
@@ -403,12 +555,12 @@ class EventService extends BaseService
             return response()->json([
                 'status' => true,
                 'data' => 'Success'
-            ], Response::HTTP_OK);
+            ], ResponseAlias::HTTP_OK);
         } catch (\Throwable $exception) {
             return response()->json([
                 'status' => false,
                 'message' => $exception->getMessage()
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
