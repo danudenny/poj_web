@@ -360,7 +360,7 @@ class EmployeeAttendanceService extends BaseService {
     {
         $empData = auth()->user()->employee;
 
-        $filteredUnitData = [$empData->kanwil,$empData->area,$empData->cabang,$empData->outlet];
+        $filteredUnitData = [$empData->corporate, $empData->kanwil,$empData->area,$empData->cabang,$empData->outlet];
         $timesheetSchedules = $empData->timesheetSchedules;
 
         if (!$timesheetSchedules) {
@@ -420,7 +420,7 @@ class EmployeeAttendanceService extends BaseService {
         }
 
         $employeeTimeZone = getTimezone($request->lat, $request->long);
-        $companyTimeZone = getTimezone($workLocation['lat'], $workLocation['long']);
+        $companyTimeZone = getTimezone(floatval($workLocation['lat']), floatval($workLocation['long']));
         $checkInData = $empData->attendances->first();
 
         if (!auth()->user()->is_normal_checkin) {
