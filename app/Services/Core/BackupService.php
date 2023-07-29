@@ -174,7 +174,7 @@ class BackupService extends BaseService
                     'status' => false,
                     'message' => 'Unit not exist',
                 ], ResponseAlias::HTTP_BAD_REQUEST);
-	    }
+	        }
 
             /**
              * @var Job $job
@@ -194,8 +194,8 @@ class BackupService extends BaseService
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
-	    $lat = floatval(str_replace(',', '.', $unit->lat));
-	    $long = floatval(str_replace(',', '.', $unit->long));
+            $lat = floatval(str_replace(',', '.', $unit->lat));
+            $long = floatval(str_replace(',', '.', $unit->long));
             $unitTimeZone = getTimezone($lat, $long);
 
             $employeeIDs = $request->input('employee_ids', []);

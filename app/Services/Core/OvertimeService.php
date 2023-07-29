@@ -229,7 +229,9 @@ class OvertimeService extends BaseService
              *  datetime, and also to matching with User current location timezone.
              */
 
-            $unitTimeZone = getTimezone($unit->lat, $unit->long);
+            $lat = floatval(str_replace(',', '.', $unit->lat));
+            $long = floatval(str_replace(',', '.', $unit->long));
+            $unitTimeZone = getTimezone($lat, $long);
 
             $employeeIDs = $request->input('employee_ids', []);
             $overtimeDates = $this->generateOvertimeDateData($request->input('dates'), $employeeIDs, $unitTimeZone);
@@ -308,8 +310,8 @@ class OvertimeService extends BaseService
             $overtime->end_date = $overtimeDates[count($overtimeDates) - 1]['date'];
             $overtime->last_status = OvertimeHistory::TypePending;
             $overtime->last_status_at = Carbon::now();
-            $overtime->location_lat = $unit->lat;
-            $overtime->location_long = $unit->long;
+            $overtime->location_lat = $lat;
+            $overtime->location_long = $long;
             $overtime->timezone = $unitTimeZone;
             $overtime->notes = $request->input('notes');
             $overtime->image_url = $request->input('image_url');
