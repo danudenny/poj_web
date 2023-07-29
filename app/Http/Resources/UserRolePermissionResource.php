@@ -50,48 +50,47 @@ class UserRolePermissionResource extends JsonResource
                     'end_time' => $period['end_time'],
                 ];
             });
-
-            $overtimeDate = $overtime->map(function ($overtime) {
-                return $overtime->overtimeDate;
-            })->unique()->values();
-
-            $timesheet['overtime'] = $overtimeDate->map(function ($overtimeDate) {
-                $timezone = getTimezone(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
-                return [
-                    'date' => Carbon::parse($overtimeDate->date, 'UTC')->addDay(1)->setTimezone($timezone)->format('d F Y'),
-                    'start_time' => Carbon::parse($overtimeDate->start_time, 'UTC')->setTimezone($timezone)->format('H:i'),
-                    'end_time' => Carbon::parse($overtimeDate->end_time, 'UTC')->setTimezone($timezone)->format('H:i'),
-                ];
-            })->values();
-
-            $backupDate = $backup->map(function ($backup) {
-                return $backup->backup;
-            })->unique()->values();
-
-            $timesheet['backup'] = $backupDate->map(function ($backupDate) {
-                return $backupDate->backupTimes->map(function ($backupTime) {
-                    $timezone = getTimezone(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
-
-                    return [
-                        'date' => Carbon::parse($backupTime->backup_date, 'UTC')->addDay(1)->setTimezone($timezone)->format('d F Y'),
-                        'start_time' => Carbon::parse($backupTime->start_time, 'UTC')->setTimezone($timezone)->format('H:i'),
-                        'end_time' => Carbon::parse($backupTime->end_time, 'UTC')->setTimezone($timezone)->format('H:i'),
-                    ];
-                });
-            })->collapse()->unique()->values();
         }
 
-        $lastUnit = $this->employee->last_unit;
-	$jobMisc =  $this->employee->job;
-	$job = $lastUnit->jobs->map(function ($job) use ($lastUnit) {
-                $data = [
-                    'is_camera' => $job->pivot->is_camera,
-                    'is_upload' => $job->pivot->is_upload,
-                    'is_reporting' => $job->pivot->is_mandatory_reporting,
-                    'total_reporting' => $job->pivot->total_reporting,
-                ];
+        $overtimeDate = $overtime->map(function ($overtime) {
+            return $overtime->overtimeDate;
+        })->unique()->values();
 
-                return array_filter($data, fn ($value) => !is_null($value) && $value !== '');
+        $timesheet['overtime'] = $overtimeDate->map(function ($overtimeDate) {
+            $timezone = getTimezone(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
+            return [
+                'date' => Carbon::parse($overtimeDate->date, 'UTC')->addDay(1)->setTimezone($timezone)->format('d F Y'),
+                'start_time' => Carbon::parse($overtimeDate->start_time, 'UTC')->setTimezone($timezone)->format('H:i'),
+                'end_time' => Carbon::parse($overtimeDate->end_time, 'UTC')->setTimezone($timezone)->format('H:i'),
+            ];
+        })->values();
+
+        $backupDate = $backup->map(function ($backup) {
+            return $backup->backup;
+        })->unique()->values();
+
+        $timesheet['backup'] = $backupDate->map(function ($backupDate) {
+            return $backupDate->backupTimes->map(function ($backupTime) {
+                $timezone = getTimezone(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
+
+                return [
+                    'date' => Carbon::parse($backupTime->backup_date, 'UTC')->addDay(1)->setTimezone($timezone)->format('d F Y'),
+                    'start_time' => Carbon::parse($backupTime->start_time, 'UTC')->setTimezone($timezone)->format('H:i'),
+                    'end_time' => Carbon::parse($backupTime->end_time, 'UTC')->setTimezone($timezone)->format('H:i'),
+                ];
+            });
+        })->collapse()->unique()->values();
+
+        $lastUnit = $this->employee->last_unit;
+	    $job = $lastUnit->jobs->map(function ($job) use ($lastUnit) {
+            $data = [
+                'is_camera' => $job->pivot->is_camera,
+                'is_upload' => $job->pivot->is_upload,
+                'is_reporting' => $job->pivot->is_mandatory_reporting,
+                'total_reporting' => $job->pivot->total_reporting,
+            ];
+
+            return array_filter($data, fn ($value) => !is_null($value) && $value !== '');
         });
 
         /**
