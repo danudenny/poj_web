@@ -399,6 +399,10 @@ class OvertimeService extends BaseService
             $startTime = Carbon::createFromFormat('Y-m-d H:i:s', sprintf('%s %s:00', $sortedDate, $data['start_time']), $timezone)->setTimezone('UTC');
             $endTime = Carbon::createFromFormat('Y-m-d H:i:s', sprintf('%s %s:00', $sortedDate, $data['end_time']), $timezone)->setTimezone('UTC');
 
+            if ($endTime->lessThan($startTime)) {
+                $endTime->addDays(1);
+            }
+
             $results[] = [
                 'date' => $startTime->format('Y-m-d'),
                 'start_time' => $startTime->format('Y-m-d H:i:s'),
