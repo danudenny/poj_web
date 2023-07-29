@@ -270,6 +270,7 @@ class EmployeeTimesheetService extends BaseService {
                 }
             });
         } else if ($roles->hasRole('admin')) {
+            $schedule = $schedule->where('corporate_id', request()->query('unit_id'));
             $schedule = $schedule->where('kanwil_id', request()->query('unit_id'));
             $schedule = $schedule->orWhere('area_id', request()->query('unit_id'));
             $schedule = $schedule->orWhere('cabang_id', request()->query('unit_id'));

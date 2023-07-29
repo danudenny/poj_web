@@ -18,6 +18,16 @@ use InvalidArgumentException;
 
 class UnitService extends BaseService
 {
+    function getLastUnit($data) {
+        $lastData = null;
+        foreach ($data as $item) {
+            if ($item === null) {
+                break;
+            }
+            $lastData = $item;
+        }
+        return $lastData;
+    }
     /**
      * @param $data
      * @return JsonResponse
@@ -62,6 +72,18 @@ class UnitService extends BaseService
                     ->orderBy('child.id')
                     ->get();
             } else if ($highestPriorityRole->role_level === 'admin') {
+                $empUnit = $auth->employee->getRelatedUnit();
+                $lastUnit = $auth->employee->getLastUnit();
+                $empUnit[] = $lastUnit;
+                $relationIds = [];
+
+                if ($requestRelationID = $this->getRequestedUnitID()) {
+                    $relationIds[] = $requestRelationID;
+                } else {
+                    $flatUnit = UnitHelper::flattenUnits($empUnit);
+                    $relationIds = array_column($flatUnit, 'relation_id');
+                }
+
                 $units =  DB::table('units as parent')
                     ->leftJoin('units as child', function ($join) use ($parentLevel, $childLevel) {
                         $join->on('parent.relation_id', '=', 'child.parent_unit_id')
@@ -78,6 +100,8 @@ class UnitService extends BaseService
                         'child.parent_unit_id as child_parent_unit_id',
                     )
                     ->where('parent.unit_level', $parentLevel)
+                    ->whereIn('parent.parent_unit_id', $relationIds)
+                    ->orWhereIn('child.parent_unit_id', $relationIds)
                     ->orderBy('parent.id')
                     ->orderBy('child.id')
                     ->get();
@@ -110,6 +134,15 @@ class UnitService extends BaseService
                 }
             }
 
+//            if ($highestPriorityRole->role_level === 'admin') {
+//                $latestUnit = auth()->user()->employee->last_unit;
+//                $nestedUnits[] = $latestUnit;
+//                $nestedUnits = array_filter($nestedUnits, function ($unit) {
+//                    return array_filter(auth()->user()->employee->getRelatedUnit(), function ($emp) use ($unit) {
+//                        return $emp['id'] === $unit['id'];
+//                    });
+//                });
+//            }
             $nestedUnits = array_values($nestedUnits);
 
             return response()->json([

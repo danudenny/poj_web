@@ -229,7 +229,7 @@ class OvertimeService extends BaseService
              *  datetime, and also to matching with User current location timezone.
              */
 
-            $unitTimeZone = getTimezoneV2($unit->lat, $unit->long);
+            $unitTimeZone = getTimezone($unit->lat, $unit->long);
 
             $employeeIDs = $request->input('employee_ids', []);
             $overtimeDates = $this->generateOvertimeDateData($request->input('dates'), $employeeIDs, $unitTimeZone);
