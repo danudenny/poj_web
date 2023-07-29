@@ -82,20 +82,16 @@ class UserRolePermissionResource extends JsonResource
         }
 
         $lastUnit = $this->employee->last_unit;
-        $jobMisc =  $this->employee->job;
-        $job = $jobMisc->units->map(function ($job) use ($lastUnit) {
-            if ($job->pivot->unit_id === $lastUnit->id) {
+	$jobMisc =  $this->employee->job;
+	$job = $lastUnit->jobs->map(function ($job) use ($lastUnit) {
                 $data = [
                     'is_camera' => $job->pivot->is_camera,
                     'is_upload' => $job->pivot->is_upload,
-                    'is_reporting' => $job->pivot->is_reporting,
-                    'is_mandatory_reporting' => $job->pivot->is_mandatory_reporting,
+                    'is_reporting' => $job->pivot->is_mandatory_reporting,
                     'total_reporting' => $job->pivot->total_reporting,
                 ];
 
                 return array_filter($data, fn ($value) => !is_null($value) && $value !== '');
-            }
-            return null;
         });
 
         /**
