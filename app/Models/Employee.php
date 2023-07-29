@@ -287,10 +287,10 @@ class Employee extends Model
             ->join('overtimes', 'overtimes.id', '=', 'overtime_dates.overtime_id')
             ->where('overtime_employees.employee_id', '=', $this->id)
             ->where('overtimes.last_status', '!=', OvertimeHistory::TypeRejected)
-            ->whereRaw(`(
-                            (overtime_dates.start_time::timestamp without time zone at time zone 'UTC' at time zone '${timezone}')::DATE = (CURRENT_TIMESTAMP at time zone '${timezone}')::DATE OR
-                            (overtime_dates.end_time::timestamp without time zone at time zone 'UTC' at time zone '${timezone}')::DATE = (CURRENT_TIMESTAMP at time zone '${timezone}')::DATE
-                        )`)
+            ->where(function(Builder $builder) use ($timezone) {
+                $builder->orWhereRaw("(overtime_dates.start_time::timestamp without time zone at time zone 'UTC' at time zone '$timezone')::DATE = (CURRENT_TIMESTAMP at time zone '$timezone')::DATE")
+                    ->orWhereRaw("(overtime_dates.end_time::timestamp without time zone at time zone 'UTC' at time zone '$timezone')::DATE = (CURRENT_TIMESTAMP at time zone '$timezone')::DATE");
+            })
             ->select(['overtime_employees.*'])
             ->where(function(Builder $builder) {
                 $builder->orWhereNull('overtime_employees.check_in_time')
@@ -315,10 +315,10 @@ class Employee extends Model
             ->join('backups', 'backups.id', '=', 'backup_times.backup_id')
             ->where('status', '!=', Backup::StatusRejected)
             ->where('backup_employee_times.employee_id', '=', $this->id)
-            ->whereRaw(`(
-                    (backup_times.start_time::timestamp without time zone at time zone 'UTC' at time zone '${$timezone}')::DATE = (CURRENT_TIMESTAMP at time zone '${$timezone}')::DATE OR
-                    (backup_times.end_time::timestamp without time zone at time zone 'UTC' at time zone '${$timezone}')::DATE = (CURRENT_TIMESTAMP at time zone '${$timezone}')::DATE
-                )`)
+            ->where(function(Builder $builder) use ($timezone) {
+                $builder->orWhereRaw("(backup_times.start_time::timestamp without time zone at time zone 'UTC' at time zone '$timezone')::DATE = (CURRENT_TIMESTAMP at time zone '$timezone')::DATE")
+                    ->orWhereRaw("(backup_times.end_time::timestamp without time zone at time zone 'UTC' at time zone '$timezone')::DATE = (CURRENT_TIMESTAMP at time zone '$timezone')::DATE");
+            })
             ->select(['backup_employee_times.*'])
             ->where(function(Builder $builder) {
                 $builder->orWhereNull('backup_employee_times.check_in_time')
