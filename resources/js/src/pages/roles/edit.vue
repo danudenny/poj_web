@@ -64,7 +64,7 @@ export default {
     methods: {
         async getPermissions() {
             await axios
-                .get(`/api/v1/admin/permission?per_page=1000`)
+                .get(`/api/v1/admin/permission`)
                 .then(response => {
                     this.permissions = response.data.data.data;
                 })
@@ -86,7 +86,7 @@ export default {
         async initializePermissionsTable() {
             const ls = localStorage.getItem('my_app_token');
             this.table = await new Tabulator(this.$refs.permissionsTable, {
-                ajaxURL: '/api/v1/admin/permission?limit=20',
+                ajaxURL: '/api/v1/admin/permission',
                 ajaxConfig: {
                     headers: {
                         Authorization: `Bearer ${ls}`,
