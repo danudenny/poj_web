@@ -1,8 +1,7 @@
 <template>
     <li class="onhover-dropdown">
-        <div class="notification-box">
-            <vue-feather type="database" @click="listUnitOpen()"></vue-feather
-            >
+        <div>
+            <vue-feather type="database" @click="listUnitOpen()"></vue-feather>
             <span class="badge rounded-pill badge-secondary"></span>
         </div>
         <div
