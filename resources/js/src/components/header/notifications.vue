@@ -1,6 +1,6 @@
 <template>
   <li class="onhover-dropdown">
-    <div class="notification-box">
+    <div>
       <vue-feather type="bell" @click="notification_open()"></vue-feather
       >
       <span class="badge rounded-pill badge-secondary"></span>
