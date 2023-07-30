@@ -226,7 +226,7 @@ class EmployeeTimesheetService extends BaseService {
                     return response()->json([
                         'status' => 'error',
                         'message' => 'Failed to save data',
-                        'data' => ''
+                        'data' => $schedule
                     ], 500);
                 }
             }
@@ -235,7 +235,7 @@ class EmployeeTimesheetService extends BaseService {
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data updated successfully',
-                'data' => ''
+                'data' => $schedule
             ], 200);
         } catch (Exception $e) {
             DB::rollBack();
@@ -290,7 +290,7 @@ class EmployeeTimesheetService extends BaseService {
         return response()->json([
             'status' => 'success',
             'message' => 'Data fetched successfully',
-            'data' => $groupedData
+            'data' => $schedule
         ], 200);
     }
 

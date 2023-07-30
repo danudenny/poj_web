@@ -188,6 +188,12 @@ export default {
                         width: 200,
                         frozen: true,
                         headerHozAlign: 'center',
+                        formatter: function (cell, formatterParams, onRendered) {
+                            return `<span class="text-danger-emphasis"><b>${cell.getValue()}</b></span>`;
+                        },
+                        cellClick: (e, cell) => {
+                            this.viewData(cell.getRow().getData().id);
+                        }
                     },
                     {
                         title: 'Jobs',

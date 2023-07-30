@@ -9,14 +9,20 @@
                     <div class="row">
                         <div class="col-md-12 col-sm-12">
                             <div class="mb-3">
+                                <label>Current Work</label>
+                                <input class="form-control" :value="employee.current_work || '-'" readonly type="text">
+                            </div>
+                        </div>
+                        <div class="col-md-12 col-sm-12">
+                            <div class="mb-3">
                                 <label>Office</label>
-                                <input class="form-control" :value="employee.last_unit.name" readonly type="text">
+                                <input class="form-control" :value="employee.employee.last_unit.name" readonly type="text">
                             </div>
                         </div>
                         <div class="col-md-12 col-sm-12">
                             <div class="mb-3">
                                 <label>Job</label>
-                                <input class="form-control" :value="employee.job.name" readonly type="text">
+                                <input class="form-control" :value="employee.employee.job.name" readonly type="text">
                             </div>
                         </div>
                     </div>
@@ -47,11 +53,11 @@ export default {
     methods: {
         getWorkingArea() {
             const hierarchy = [
-                this.employee.corporate,
-                this.employee.kanwil,
-                this.employee.area,
-                this.employee.cabang,
-                this.employee.outlet
+                this.employee.employee.corporate,
+                this.employee.employee.kanwil,
+                this.employee.employee.area,
+                this.employee.employee.cabang,
+                this.employee.employee.outlet
             ];
 
             const sortedHierarchy = hierarchy

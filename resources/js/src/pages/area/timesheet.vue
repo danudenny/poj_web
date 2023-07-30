@@ -82,12 +82,12 @@
 
                         <div class="mt-3">
                             <label for="time_start">Start Time:</label>
-                            <input type="text" class="form-control" id="time_start" v-model="timesheet.start_time">
+                            <input type="time" class="form-control" id="time_start" v-model="timesheet.start_time">
                         </div>
 
                         <div class="mt-3">
                             <label for="time_end">End Time:</label>
-                            <input type="text" class="form-control" id="time_end" v-model="timesheet.end_time">
+                            <input type="time" class="form-control" id="time_end" v-model="timesheet.end_time">
                         </div>
 
                         <div class="mt-3">
@@ -136,12 +136,12 @@
 
                         <div class="mt-1">
                             <label for="time_start">Start Time:</label>
-                            <input type="text" class="form-control" id="time_start" v-model="singleTimesheet.start_time" required>
+                            <input type="time" class="form-control" id="time_start" v-model="singleTimesheet.start_time" required>
                         </div>
 
                         <div class="mt-1">
                             <label for="time_end">End Time:</label>
-                            <input type="text" class="form-control" id="time_end" v-model="singleTimesheet.end_time" required>
+                            <input type="time" class="form-control" id="time_end" v-model="singleTimesheet.end_time" required>
                         </div>
 
                         <div class="mt-1">
