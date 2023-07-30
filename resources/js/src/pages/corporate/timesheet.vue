@@ -2,7 +2,7 @@
     <div>
         <div class="d-flex justify-content-end mb-2">
             <button class="btn btn-success" type="button" data-bs-toggle="modal"
-                    data-bs-target="#exampleModalCenter">
+                    data-bs-target="#exampleModalCenter" @click="showModal">
                 <i class="fa fa-plus"></i> &nbsp; Create
             </button>
         </div>
@@ -49,9 +49,9 @@
         </table>
     </div>
     <div>
-        <div class="modal fade modal-lg" id="exampleModalCenter" tabindex="-1" role="dialog"
+        <div v-if="isModalVisible" class="modal fade modal-lg" id="exampleModalCenter" ref="createModal" tabindex="-1" role="dialog"
              aria-labelledby="exampleModalCenter" aria-hidden="true">
-            <VerticalModal :title="modalTitle" @save="saveChanges">
+            <VerticalModal ref="verticalModal" :title="modalTitle" @save="saveChanges" @close="closeModal">
                 <div class="row">
                     <div class="col-md-12">
                         <div>
@@ -82,12 +82,12 @@
 
                         <div class="mt-3">
                             <label for="time_start">Start Time:</label>
-                            <input type="text" class="form-control" id="time_start" v-model="timesheet.start_time">
+                            <input type="time" class="form-control" id="time_start" v-model="timesheet.start_time">
                         </div>
 
                         <div class="mt-3">
                             <label for="time_end">End Time:</label>
-                            <input type="text" class="form-control" id="time_end" v-model="timesheet.end_time">
+                            <input type="time" class="form-control" id="time_end" v-model="timesheet.end_time">
                         </div>
 
                         <div class="mt-3">
@@ -103,9 +103,9 @@
         </div>
     </div>
     <div>
-        <div class="modal fade modal-lg" id="updateModal" tabindex="-1" role="dialog"
+        <div class="modal fade modal-lg" id="updateModal" ref="updateModal" tabindex="-1" role="dialog"
              aria-labelledby="exampleModalCenter" aria-hidden="true">
-            <VerticalModal :title="modalUpdateTitle" @save="updateTimesheet(singleTimesheet.id)">
+            <VerticalModal :title="modalUpdateTitle" @save="updateTimesheet(singleTimesheet.id)" @close="closeModal">
                 <div class="row">
                     <div class="col-md-12">
                         <div>
@@ -159,6 +159,7 @@
 </template>
 <script>
 import VerticalModal from "@components/modal/verticalModal.vue";
+import {useToast} from "vue-toastification";
 export default {
     props: {
         id: {
@@ -192,11 +193,13 @@ export default {
                 days: [],
                 shift_type: ''
             },
-            days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+            days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+            isModalVisible: false,
         }
     },
     created() {
         this.getTimesheet()
+        this.isModalVisible = true;
     },
     methods: {
         async getTimesheet() {
@@ -207,17 +210,29 @@ export default {
                 console.log(error);
             }
         },
+        showModal() {
+            this.isModalVisible = true;
+        },
+        closeModal() {
+            this.timesheet.name = '';
+            this.timesheet.start_time = '';
+            this.timesheet.end_time = '';
+            this.timesheet.shift_type = '';
+            this.timesheet.days = [];
+            this.timesheet.is_active = false;
+            console.log('close')
+            this.isModalVisible = false;
+
+        },
         saveChanges() {
             this.$axios.post(`api/v1/admin/employee-timesheet/create/${this.id}`, this.timesheet)
                 .then(() => {
-                    this.basic_success_alert("Data saved successfully!");
+                    useToast().success("Data saved successfully!");
                     this.getTimesheet();
-                    this.$nextTick(() => {
-                        this.$refs.modal.$el.setAttribute('data-bs-dismiss', 'modal');
-                    });
+                    this.$refs.verticalModal.closeModal()
                 })
                 .catch(error => {
-                    this.warning_alert_state(error.message);
+                    useToast().warning(error.message);
                 });
         },
         deleteTimesheet(id) {
@@ -275,16 +290,12 @@ export default {
                 if(result.value){
                     this.$axios.delete(`api/v1/admin/employee-timesheet/delete/${id}`)
                         .then(() => {
-                            this.basic_success_alert("Data successfully deleted!");
+                            useToast().success("Data deleted successfully!");
                             this.getTimesheet();
                         })
                         .catch(error => {
                             this.warning_alert_state(error.message);
                         });
-                }else{
-                    this.$swal({
-                        text:'Your data is safe!'
-                    });
                 }
             });
         },

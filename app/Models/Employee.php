@@ -204,6 +204,11 @@ class Employee extends Model
         return $this->hasOne(LateCheckin::class);
     }
 
+    public function partner(): HasOne
+    {
+        return $this->hasOne(Partner::class, 'id', 'customer_id');
+    }
+
     public function attendances(): HasMany
     {
         return $this->hasMany(EmployeeAttendance::class)->orderBy('id', 'desc');

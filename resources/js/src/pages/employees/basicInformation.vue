@@ -3,6 +3,8 @@
         <div class="card mb-0">
             <div class="card-header d-flex bg-primary">
                 <h5 class="mb-0">Basic Information</h5>
+                <button type="button" class="btn btn-secondary ms-auto" @click="$router.push('/management/employees')">
+                    <i class="fa fa-rotate-left"></i>&nbsp; Back</button>
             </div>
             <div class="card-body p-4">
                 <div class="taskadd">

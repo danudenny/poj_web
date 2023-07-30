@@ -70,7 +70,7 @@
                 <div class="ps-0">
                     <div class="tab-content">
                         <basicInformation v-if="!isLoading" :employee="employeeData"/>
-                        <companyInformation v-if="!isLoading" :employee="employeeData"/>
+                        <companyInformation v-if="!isLoading" :employee="profile"/>
                         <timesheetInformation v-if="!isLoading" :profile="schedules"/>
                     </div>
                 </div>
