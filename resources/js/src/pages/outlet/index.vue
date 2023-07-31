@@ -1,6 +1,6 @@
 <template>
     <div className="container-fluid">
-        <Breadcrumbs title="Outlet"/>
+        <Breadcrumbs main="Outlet"/>
 
         <div className="container-fluid">
             <div className="email-wrap bookmark-wrap">

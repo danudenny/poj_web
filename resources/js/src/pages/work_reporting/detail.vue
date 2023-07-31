@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs title="Work Reporting Detail"/>
+        <Breadcrumbs main="Work Reporting Detail"/>
 
         <div class="container-fluid">
             <div class="email-wrap bookmark-wrap">

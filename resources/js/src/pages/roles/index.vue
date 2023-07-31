@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs title="Role List"/>
+        <Breadcrumbs main="Role List"/>
 
         <div class="container-fluid">
             <div class="email-wrap bookmark-wrap">

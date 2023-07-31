@@ -1,5 +1,5 @@
 <template>
-    <Breadcrumbs title="General Settings" />
+    <Breadcrumbs main="General Settings" />
 
     <div class="container-fluid">
         <div class="email-wrap bookmark-wrap">
