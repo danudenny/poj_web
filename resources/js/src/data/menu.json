@@ -236,10 +236,28 @@
             "permission" : "assesment_list"
         },
         {
-            "headTitle1": "CONTENT",
-            "headTitle2": "Content management",
+            "headTitle1": "Leave Management",
+            "headTitle2": "Leave management",
             "type": "headtitle",
             "permission" : "content_list"
+        },
+        {
+            "title": "Leave Request",
+            "icon": "message-circle",
+            "iconf": "message-circle",
+            "type": "link",
+            "active": false,
+            "path": "/leave-request",
+            "permission" : "incident_reporting"
+        },
+        {
+            "title": "Leave Report",
+            "icon": "file-text",
+            "iconf": "file-text",
+            "type": "link",
+            "active": false,
+            "path": "/leave-report",
+            "permission" : "incident_reporting"
         },
         {
             "headTitle1": "REPORT",
@@ -249,8 +267,8 @@
         },
         {
             "title": "Incident Reporting",
-            "icon": "alert-circle",
-            "iconf": "alert-circle",
+            "icon": "file-text",
+            "iconf": "file-text",
             "type": "link",
             "active": false,
             "path": "/incident-reporting",
@@ -258,8 +276,8 @@
         },
         {
             "title": "Work Reporting",
-            "icon": "alert-circle",
-            "iconf": "alert-circle",
+            "icon": "file-text",
+            "iconf": "file-text",
             "type": "link",
             "active": false,
             "path": "/work-reporting",

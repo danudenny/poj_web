@@ -1,5 +1,5 @@
 <template>
-    <Breadcrumbs title="Timesheet Assignment Edit" />
+    <Breadcrumbs main="Timesheet Assignment Edit" />
 
     <div class="container-fluid">
         <div class="email-wrap bookmark-wrap">

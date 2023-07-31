@@ -1,5 +1,5 @@
 <template>
-    <Breadcrumbs title="Approvals / Edit Approval" />
+    <Breadcrumbs main="Approvals / Edit Approval" />
 
     <div class="container-fluid">
         <div class="email-wrap bookmark-wrap">

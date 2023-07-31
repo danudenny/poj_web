@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs title="Regional"/>
+        <Breadcrumbs main="Regional"/>
 
         <div class="container-fluid">
             <div class="email-wrap bookmark-wrap">

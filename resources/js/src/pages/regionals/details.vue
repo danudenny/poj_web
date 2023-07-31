@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs title="Regional Detail"/>
+        <Breadcrumbs main="Regional Detail"/>
         <div class="col-sm-12">
             <form class="card">
                 <div class="card-body">

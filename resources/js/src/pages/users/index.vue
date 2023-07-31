@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs title="User Management"/>
+        <Breadcrumbs main="User Management"/>
 
         <div class="container-fluid">
             <div class="email-wrap bookmark-wrap">

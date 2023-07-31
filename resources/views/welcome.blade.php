@@ -60,6 +60,9 @@
             .page-wrapper.compact-wrapper .page-body-wrapper div.sidebar-wrapper .sidebar-main .sidebar-links > li:last-child .sidebar-link {
                 margin-bottom: 20px !important;
             }
+            .page-wrapper .sidebar-main-title h6, .page-wrapper .sidebar-main-title .h6 {
+                font-size: 13px !important;
+            }
 
         </style>
         @vite(['resources/js/src/main.js', 'resources/js/src/assets/scss/app.scss'])

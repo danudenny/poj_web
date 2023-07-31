@@ -102,6 +102,10 @@ import DetailOvertime from "../pages/overtime/detail.vue";
 import EmployeeOvertime from "../pages/overtime/employee-overtime.vue";
 import ListApprovalOvertime from "../pages/overtime/list-approval.vue";
 
+// Leave
+import LeaveRequest from "../pages/leaves/leave-request.vue";
+import LeaveReport from "../pages/leaves/leave-report.vue";
+
 // Admin Unit
 import AdminUnit from "../pages/admin-unit/index.vue";
 
@@ -752,6 +756,38 @@ const routes =[
                     requiresAuth: true,
                     permission: 'outlet_list',
                 }
+            },
+        ]
+    },
+    {
+        path: '/leave-request',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Leave Request',
+                component: LeaveRequest,
+                meta: {
+                    title: 'POJ - Leave Request',
+                    requiresAuth: true,
+                    permission: 'incident_reporting',
+                },
+            },
+        ]
+    },
+    {
+        path: '/leave-report',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Leave Report',
+                component: LeaveReport,
+                meta: {
+                    title: 'POJ - Leave Report',
+                    requiresAuth: true,
+                    permission: 'incident_reporting',
+                },
             },
         ]
     },

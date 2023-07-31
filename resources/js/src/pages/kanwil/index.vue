@@ -1,6 +1,6 @@
 <template>
     <div className="container-fluid">
-        <Breadcrumbs title="Kantor Wilayah"/>
+        <Breadcrumbs main="Kantor Wilayah"/>
 
         <div className="container-fluid">
             <div className="email-wrap bookmark-wrap">
