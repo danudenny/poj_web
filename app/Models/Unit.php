@@ -18,6 +18,8 @@ use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
  * @property float $lat
  * @property float $long
  * @property float $radius
+ * @property int $early_buffer
+ * @property int $late_buffer
  */
 class Unit extends Model
 {

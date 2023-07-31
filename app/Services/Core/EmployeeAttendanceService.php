@@ -3,10 +3,13 @@
 namespace App\Services\Core;
 
 use App\Helpers\UnitHelper;
+use App\Http\Requests\EmployeeAttendance\CheckInAttendanceRequest;
+use App\Http\Requests\EmployeeAttendance\CheckOutAttendanceRequest;
 use App\Models\Approval;
 use App\Models\Employee;
 use App\Models\EmployeeAttendance;
 use App\Models\EmployeeAttendanceHistory;
+use App\Models\EmployeeTimesheetSchedule;
 use App\Models\LateCheckin;
 use App\Models\User;
 use App\Models\WorkReporting;
@@ -353,6 +356,184 @@ class EmployeeAttendanceService extends BaseService {
         }
     }
 
+    public function checkInV2(CheckInAttendanceRequest $request, int $id): JsonResponse
+    {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            /**
+             * @var EmployeeTimesheetSchedule $employeeTimesheetSchedule
+             */
+            $employeeTimesheetSchedule = EmployeeTimesheetSchedule::query()
+                ->where('employee_id', '=', $user->employee_id)
+                ->where('id', '=', $id)
+                ->whereNull('check_in_time')
+                ->first();
+            if (!$employeeTimesheetSchedule) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "You don't have any normal schedule need to check-in"
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            $dataLocation = [
+                'latitude' => $request->input('latitude'),
+                'longitude' => $request->input('longitude')
+            ];
+            $employeeTimezone = getTimezoneV2(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
+
+            $currentTime = Carbon::now();
+            $checkInTime = Carbon::parse($employeeTimesheetSchedule->start_time);
+            $minimumCheckInTime = Carbon::parse($employeeTimesheetSchedule->start_time)->addMinutes(-$employeeTimesheetSchedule->early_buffer);
+            $maximumCheckInTime = Carbon::parse($employeeTimesheetSchedule->start_time)->addMinutes($employeeTimesheetSchedule->late_buffer);
+
+            $lateDuration = 0;
+            $attendanceStatus = "On Time";
+            if ($currentTime->lessThan($minimumCheckInTime)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => sprintf("Minimum check in at %s", $minimumCheckInTime->setTimezone($employeeTimezone)->format('H:i:s'))
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }else if ($currentTime->greaterThanOrEqualTo($minimumCheckInTime) && $currentTime->lessThan($checkInTime)) {
+                $attendanceStatus = "Early Check In";
+            } else if ($currentTime->greaterThan($maximumCheckInTime)) {
+                $attendanceStatus = "Late";
+                $lateDuration = $currentTime->diffInMinutes($maximumCheckInTime);
+            }
+
+            $distance = calculateDistance($employeeTimesheetSchedule->latitude, $employeeTimesheetSchedule->longitude, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
+
+            $attendanceType = "onsite";
+            $isNeedApproval = false;
+            if ($distance > intval($employeeTimesheetSchedule->timesheet->unit->radius)){
+                $attendanceType = "offsite";
+                $isNeedApproval = true;
+            }
+
+            DB::beginTransaction();
+
+            $checkIn = new EmployeeAttendance();
+            $checkIn->employee_id = auth()->user()->employee_id;
+            $checkIn->real_check_in = $currentTime->format('Y-m-d H:i:s');
+            $checkIn->checkin_type = $attendanceType;
+            $checkIn->checkin_lat = $dataLocation['latitude'];
+            $checkIn->checkin_long = $dataLocation['longitude'];
+            $checkIn->is_need_approval = $isNeedApproval;
+            $checkIn->attendance_types = EmployeeAttendance::AttendanceTypeNormal;
+            $checkIn->checkin_real_radius = $distance;
+            $checkIn->approved = !$isNeedApproval;
+            $checkIn->check_in_tz = $employeeTimezone;
+            $checkIn->is_late = $lateDuration > 0;
+            $checkIn->late_duration = $lateDuration;
+            $checkIn->save();
+
+            $attendanceHistory = new EmployeeAttendanceHistory();
+            $attendanceHistory->employee_id = $user->employee_id;
+            $attendanceHistory->employee_attendances_id = $checkIn->id;
+            $attendanceHistory->status = !$isNeedApproval ? 'approved' : 'pending';
+            $attendanceHistory->save();
+
+            $employeeTimesheetSchedule->check_in_time = $currentTime;
+            $employeeTimesheetSchedule->check_in_latitude = $dataLocation['latitude'];
+            $employeeTimesheetSchedule->check_in_longitude = $dataLocation['longitude'];
+            $employeeTimesheetSchedule->check_in_timezone = $employeeTimezone;
+            $employeeTimesheetSchedule->employee_attendance_id = $checkIn->id;
+            $employeeTimesheetSchedule->save();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success check in!',
+            ]);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
+
+    public function checkOutV2(CheckOutAttendanceRequest $request, int $id) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            /**
+             * @var EmployeeTimesheetSchedule $employeeTimesheetSchedule
+             */
+            $employeeTimesheetSchedule = EmployeeTimesheetSchedule::query()
+                ->where('employee_id', '=', $user->employee_id)
+                ->where('id', '=', $id)
+                ->whereNotNull('check_in_time')
+                ->whereNull('check_out_time')
+                ->first();
+            if (!$employeeTimesheetSchedule) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "You don't have any normal schedule need to check-out"
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            $dataLocation = [
+                'latitude' => $request->input('latitude'),
+                'longitude' => $request->input('longitude')
+            ];
+
+            $employeeAttendance = $employeeTimesheetSchedule->employeeAttendance;
+            if ($employeeAttendance == null) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Employee attendance is not found"
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            $employeeTimezone = getTimezoneV2(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
+            $currentTime = Carbon::now();
+            $distance = calculateDistance($employeeTimesheetSchedule->latitude, $employeeTimesheetSchedule->longitude, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
+
+            DB::beginTransaction();
+
+            $employeeAttendance->real_check_out = $currentTime;
+            $employeeAttendance->checkout_lat = $dataLocation['latitude'];
+            $employeeAttendance->checkout_long = $dataLocation['longitude'];
+            $employeeAttendance->checkout_real_radius = $distance;
+            $employeeAttendance->check_out_tz = $employeeTimezone;
+            $employeeAttendance->save();
+
+            $attHistory = new EmployeeAttendanceHistory();
+            $attHistory->employee_id = $user->employee_id;
+            $attHistory->employee_attendances_id = $employeeAttendance->id;
+            $attHistory->status = $employeeAttendance->approved ? 'approved' : 'pending';
+            $attHistory->save();
+
+            $employeeTimesheetSchedule->check_out_time = $currentTime;
+            $employeeTimesheetSchedule->check_out_latitude = $dataLocation['latitude'];
+            $employeeTimesheetSchedule->check_in_longitude = $dataLocation['longitude'];
+            $employeeTimesheetSchedule->check_out_timezone = $employeeTimezone;
+            $employeeTimesheetSchedule->save();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success check out!',
+            ]);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 400);
+        }
+    }
+
     /**
      * @throws GuzzleException
      */
@@ -595,6 +776,7 @@ class EmployeeAttendanceService extends BaseService {
             $metaData['timezone'] = $timezone;
 
             $activeSchedule = [
+                'current_attendance' => null,
                 'attendance' => [
                     'normal' => null,
                     'event' => null,
@@ -603,6 +785,8 @@ class EmployeeAttendanceService extends BaseService {
                 ],
                 'meta_data' => $metaData
             ];
+
+            $parsedCurrentTimeWithTimezone = Carbon::parse($metaData['current_time_with_timezone']);
 
             if ($event = $employee->getActiveEvent()) {
                 $activeSchedule['attendance']['event'] = [
@@ -619,8 +803,11 @@ class EmployeeAttendanceService extends BaseService {
                     'end_time' => Carbon::parse($overtime->overtimeDate->end_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'check_in_time' => $overtime->check_in_time ? Carbon::parse($overtime->check_in_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
                     'check_out_time' => $overtime->check_out_time ? Carbon::parse($overtime->check_out_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
+                    'reference_type' => 'overtime',
                     'reference_id' => $overtime->id
                 ];
+
+                $activeSchedule['current_attendance'] = $activeSchedule['attendance']['overtime'];
             }
 
             if ($backup = $employee->getActiveBackup($timezone)) {
@@ -629,8 +816,52 @@ class EmployeeAttendanceService extends BaseService {
                     'end_time' => Carbon::parse($backup->backupTime->end_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'check_in_time' => $backup->check_in_time ? Carbon::parse($backup->check_in_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
                     'check_out_time' => $backup->check_out_time ? Carbon::parse($backup->check_out_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
+                    'reference_type' => 'backup',
                     'reference_id' => $backup->id
                 ];
+
+                if (is_null($activeSchedule['current_attendance'])) {
+                    $activeSchedule['current_attendance'] = $activeSchedule['attendance']['backup'];
+                } else {
+                    if (Carbon::parse($metaData['current_time_with_timezone'])->between(Carbon::parse($activeSchedule['attendance']['backup']['start_time']), Carbon::parse($activeSchedule['attendance']['backup']['end_time']))) {
+                        $activeSchedule['current_attendance'] = $activeSchedule['attendance']['backup'];
+                    }
+                    if (
+                        Carbon::parse($activeSchedule['attendance']['backup']['start_time'])->greaterThan($activeSchedule['current_attendance']['end_time']) &&
+                        $parsedCurrentTimeWithTimezone->greaterThanOrEqualTo(Carbon::parse($activeSchedule['attendance']['backup']['start_time']))
+                    ) {
+                        $activeSchedule['current_attendance'] = $activeSchedule['attendance']['backup'];
+                    }
+                }
+            }
+
+            if ($normal = $employee->getActiveNormalSchedule()) {
+                $activeSchedule['attendance']['normal'] = [
+                    'minimum_start_time' => Carbon::parse($normal->start_time)->addMinutes(-$normal->early_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
+                    'start_time' => Carbon::parse($normal->start_time)->addMinutes($normal->late_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
+                    'maximum_start_time' => Carbon::parse($normal->start_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
+                    'end_time' => Carbon::parse($normal->end_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
+                    'check_in_time' => $normal->check_in_time ? Carbon::parse($normal->check_in_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
+                    'check_out_time' => $normal->check_out_time ? Carbon::parse($normal->check_out_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
+                    'early_buffer' => $normal->early_buffer,
+                    'late_buffer' => $normal->late_buffer,
+                    'reference_type' => 'normal',
+                    'reference_id' => $normal->id
+                ];
+
+                if (is_null($activeSchedule['current_attendance'])) {
+                    $activeSchedule['current_attendance'] = $activeSchedule['attendance']['normal'];
+                } else {
+                    if (Carbon::parse($metaData['current_time_with_timezone'])->between(Carbon::parse($activeSchedule['attendance']['normal']['start_time']), Carbon::parse($activeSchedule['attendance']['normal']['end_time']))) {
+                        $activeSchedule['current_attendance'] = $activeSchedule['attendance']['normal'];
+                    }
+                    if (
+                        Carbon::parse($activeSchedule['attendance']['normal']['start_time'])->greaterThan($activeSchedule['current_attendance']['end_time']) &&
+                        $parsedCurrentTimeWithTimezone->greaterThanOrEqualTo(Carbon::parse($activeSchedule['attendance']['normal']['start_time']))
+                    ) {
+                        $activeSchedule['current_attendance'] = $activeSchedule['attendance']['normal'];
+                    }
+                }
             }
 
             return response()->json([

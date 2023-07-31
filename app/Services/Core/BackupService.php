@@ -6,7 +6,10 @@ use App\Http\Requests\Backup\BackupApprovalRequest;
 use App\Http\Requests\Backup\BackupCheckInRequest;
 use App\Http\Requests\Backup\BackupCheckOutRequest;
 use App\Http\Requests\Backup\CreateBackupRequest;
+use App\Models\ApprovalModule;
+use App\Models\ApprovalUser;
 use App\Models\Backup;
+use App\Models\BackupApproval;
 use App\Models\BackupEmployee;
 use App\Models\BackupEmployeeTime;
 use App\Models\BackupHistory;
@@ -19,6 +22,7 @@ use App\Models\Job;
 use App\Models\EmployeeNotification;
 use App\Models\OvertimeEmployee;
 use App\Models\OvertimeHistory;
+use App\Models\Partner;
 use App\Models\Role;
 use App\Models\Unit;
 use App\Models\User;
@@ -48,9 +52,6 @@ class BackupService extends BaseService
         if ($user->isHighestRole(Role::RoleStaff)) {
             $backups->where('backups.requestor_employee_id', '=', $user->employee_id);
         } else if ($user->isHighestRole(Role::RoleAdmin)) {
-            $backups->join('backup_times', 'backup_times.backup_id', '=', 'backups.id');
-            $backups->join('backup_employee_times', 'backup_times.id', '=', 'backup_employee_times.backup_time_id');
-            $backups->join('employees', 'employees.id', '=', 'backup_employee_times.employee_id');
             $backups->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'backups.requestor_employee_id');
 
             $backups->where(function(Builder $builder) use ($user) {
@@ -59,19 +60,9 @@ class BackupService extends BaseService
                     $lastUnitID = $requestUnitID;
                 }
 
-                $builder->orWhere(function(Builder $builder) use ($lastUnitID) {
-                    $builder->orWhere('employees.outlet_id', '=', $lastUnitID)
-                        ->orWhere('employees.cabang_id', '=', $lastUnitID)
-                        ->orWhere('employees.area_id', '=', $lastUnitID)
-                        ->orWhere('employees.kanwil_id', '=', $lastUnitID)
-                        ->orWhere('employees.corporate_id', '=', $lastUnitID);
-                })->orWhere(function(Builder $builder) use ($lastUnitID) {
-                    $builder->orWhere('reqEmployee.outlet_id', '=', $lastUnitID)
-                        ->orWhere('reqEmployee.cabang_id', '=', $lastUnitID)
-                        ->orWhere('reqEmployee.area_id', '=', $lastUnitID)
-                        ->orWhere('reqEmployee.kanwil_id', '=', $lastUnitID)
-                        ->orWhere('reqEmployee.corporate_id', '=', $lastUnitID);
-                })->orWhere('backups.requestor_employee_id', '=', $user->employee_id);
+                $builder->orWhere('backups.unit_id', '=', $lastUnitID)
+                    ->orWhere('backups.source_unit_relation_id', '=', $lastUnitID)
+                    ->orWhere('backups.requestor_employee_id', '=', $user->employee_id);
             });
         }
 
@@ -82,7 +73,7 @@ class BackupService extends BaseService
             $builder->where('backups.requestor_employee_id', '=', $request->input('requestor_employee_id'));
         });
 
-        $backups->with(['unit:units.relation_id,name', 'job:jobs.odoo_job_id,name', 'requestorEmployee:employees.id,name']);
+        $backups->with(['unit:units.relation_id,name', 'job:jobs.odoo_job_id,name', 'requestorEmployee:employees.id,name', 'sourceUnit:units.relation_id,name']);
         $backups->select(['backups.*']);
         $backups->groupBy('backups.id');
         $backups->orderBy('backups.id', 'desc');
@@ -112,6 +103,8 @@ class BackupService extends BaseService
             ], 404);
         }
 
+        $backup->append('is_can_approve');
+
         return response()->json([
             'status' => 'success',
             'message' => 'Succcess fetch data',
@@ -127,6 +120,8 @@ class BackupService extends BaseService
 
         $query = BackupEmployeeTime::query()->with(['backupTime.backup', 'employee:employees.id,name'])
             ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
+            ->join('backups', 'backups.id', '=', 'backup_times.backup_id')
+            ->where('backups.status', '=', BackupApproval::StatusApproved)
             ->where('backup_times.start_time', '>=', Carbon::now()->addDays(-1)->format('Y-m-d H:i:s'))
             ->orderBy('backup_times.start_time', 'ASC')
             ->select(['backup_employee_times.*']);
@@ -149,6 +144,27 @@ class BackupService extends BaseService
                         ->orWhere('employees.corporate_id', '=', $lastUnitID);
                 });
             });
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Succcess fetch data',
+            'data' => $this->list($query, $request),
+        ]);
+    }
+
+    public function listApproval(Request $request) {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
+        $query = BackupApproval::query()->with(['backup', 'backup.unit:units.relation_id,name', 'backup.job:jobs.odoo_job_id,name', 'backup.requestorEmployee:employees.id,name', 'backup.sourceUnit:units.relation_id,name'])
+            ->where('user_id', '=', $user->id)
+            ->orderBy('id', 'DESC');
+
+        if($status = $request->query('status')) {
+            $query->where('status', '=', $status);
         }
 
         return response()->json([
@@ -224,9 +240,48 @@ class BackupService extends BaseService
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
+            /**
+             * @var Unit $sourceUnit
+             */
+            $sourceUnit = Unit::query()->where('id', '=', $request->input('requestor_unit_id'))->first();
+            if (!$sourceUnit) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Source unit not found!",
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            $approvalUserIDs = [];
+            $requestType = $request->input('request_type');
+
+            if ($requestType == Backup::RequestTypeAssignment) {
+                if ($user->isHighestRole(Role::RoleStaff)) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'You don\'t have access to do assignment',
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
+            } else {
+                /**
+                 * @var ApprovalUser[] $approvalUsers
+                 */
+                $approvalUsers = ApprovalUser::query()
+                    ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
+                    ->join('approval_modules', 'approvals.approval_module_id', '=', 'approval_modules.id')
+                    ->where('approval_modules.name', '=', ApprovalModule::ApprovalBackup)
+                    ->where('approvals.unit_id', '=', $sourceUnit->id)
+                    ->where('approvals.is_active', '=', true)
+                    ->orderBy('approval_users.id', 'ASC')
+                    ->get(['approval_users.*']);
+
+                foreach ($approvalUsers as $approvalUser) {
+                    $approvalUserIDs[] = $approvalUser->user_id;
+                }
+            }
+
             $lat = floatval(str_replace(',', '.', $unit->lat));
             $long = floatval(str_replace(',', '.', $unit->long));
-            $unitTimeZone = getTimezone($lat, $long);
+            $unitTimeZone = getTimezoneV2($lat, $long);
 
             $employeeIDs = $request->input('employee_ids', []);
             $backupDates = $this->generateBackupDateData($request->input('dates'), $employeeIDs, $unitTimeZone);
@@ -246,11 +301,11 @@ class BackupService extends BaseService
                         ->where('overtimes.last_status', '!=', OvertimeHistory::TypeRejected)
                         ->where(function(Builder $builder) use ($backupDateData) {
                             $builder->orWhere(function(Builder $builder) use ($backupDateData) {
-                                $builder->where( 'overtime_dates.start_time', '<', $backupDateData['start_time'])
-                                    ->where('overtime_dates.end_time', '>', $backupDateData['start_time']);
+                                $builder->where( 'overtime_dates.start_time', '<=', $backupDateData['start_time'])
+                                    ->where('overtime_dates.end_time', '>=', $backupDateData['start_time']);
                             })->orWhere(function(Builder $builder) use ($backupDateData) {
-                                $builder->where('overtime_dates.start_time', '<', $backupDateData['end_time'])
-                                    ->where('overtime_dates.end_time', '>', $backupDateData['end_time']);
+                                $builder->where('overtime_dates.start_time', '<=', $backupDateData['end_time'])
+                                    ->where('overtime_dates.end_time', '>=', $backupDateData['end_time']);
                             });
                         })
                         ->exists();
@@ -273,11 +328,11 @@ class BackupService extends BaseService
                         ->where('backup_employee_times.employee_id', '=', $employeeID)
                         ->where(function(Builder $builder) use ($backupDateData) {
                             $builder->orWhere(function(Builder $builder) use ($backupDateData) {
-                                $builder->where( 'backup_times.start_time', '<', $backupDateData['start_time'])
-                                    ->where('backup_times.end_time', '>', $backupDateData['start_time']);
+                                $builder->where( 'backup_times.start_time', '<=', $backupDateData['start_time'])
+                                    ->where('backup_times.end_time', '>=', $backupDateData['start_time']);
                             })->orWhere(function(Builder $builder) use ($backupDateData) {
-                                $builder->where('backup_times.start_time', '<', $backupDateData['end_time'])
-                                    ->where('backup_times.end_time', '>', $backupDateData['end_time']);
+                                $builder->where('backup_times.start_time', '<=', $backupDateData['end_time'])
+                                    ->where('backup_times.end_time', '>=', $backupDateData['end_time']);
                             });
                         })
                         ->exists();
@@ -310,12 +365,25 @@ class BackupService extends BaseService
             $backup->location_long = $long;
             $backup->timezone = $unitTimeZone;
             $backup->file_url = $request->input('file_url');
+            $backup->request_type = $requestType;
+            $backup->source_unit_relation_id = $sourceUnit->relation_id;
 
-            if ($user->inRoleLevel([Role::RoleStaff, Role::RoleSuperAdministrator])) {
+            if ($backup->request_type == Backup::RequestTypeAssignment) {
                 $backup->status = Backup::StatusApproved;
             }
 
             $backup->save();
+
+            if ($backup->status == Backup::StatusAssigned && count($approvalUserIDs) > 0) {
+                foreach ($approvalUserIDs as $idx => $approvalUserID) {
+                    $backupApproval = new BackupApproval();
+                    $backupApproval->priority = $idx;
+                    $backupApproval->user_id = $approvalUserID;
+                    $backupApproval->backup_id = $backup->id;
+                    $backupApproval->status = BackupApproval::StatusPending;
+                    $backupApproval->save();
+                }
+            }
 
             foreach ($backupDates as $backupDate) {
                 $backupTime = new BackupTime();
@@ -410,7 +478,7 @@ class BackupService extends BaseService
              */
             $user = $request->user();
 
-            if (!$user->inRoleLevel([Role::RoleSuperAdministrator, Role::RoleStaff])) {
+            if (!$user->inRoleLevel([Role::RoleSuperAdministrator, Role::RoleAdmin])) {
                 return response()->json([
                     'status' => false,
                     'message' => 'You don\'t have access!',
@@ -430,17 +498,66 @@ class BackupService extends BaseService
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
+            /**
+             * @var BackupApproval $userApproval
+             */
+            $userApproval = $backup->backupApprovals()->where('user_id', '=', $user->id)
+                ->where('status', '=', BackupApproval::StatusPending)
+                ->first();
+            if (!$userApproval) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'You don\'t have access to approve this request',
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            if ($userApproval->priority > 0) {
+                $beforeApproval = $backup->backupApprovals()->where('priority', '=', $userApproval->priority - 1)
+                    ->where('status', '=', BackupApproval::StatusPending)
+                    ->exists();
+                if ($beforeApproval) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Last approver not doing approval yet!',
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
+            }
+
             DB::beginTransaction();
 
-            $backup->status = $request->input('status');
-            $backup->save();
+            $userApproval->status = $request->input('status');
+            $userApproval->notes = $request->input('notes');
+            $userApproval->save();
 
             $backupHistory = new BackupHistory();
             $backupHistory->backup_id = $backup->id;
             $backupHistory->employee_id = $user->employee_id;
-            $backupHistory->status = $backup->status;
-            $backupHistory->notes = $request->input('notes');
+            $backupHistory->status = $userApproval->status;
+            $backupHistory->notes = $userApproval->notes;
             $backupHistory->save();
+
+            if ($userApproval->status == BackupApproval::StatusRejected) {
+                $backup->status = $userApproval->status;
+
+                /**
+                 * @var BackupApproval[] $currentBackupApprovals
+                 */
+                $currentBackupApprovals = $backup->backupApprovals()->where('priority', '>', $userApproval->priority)->get();
+                foreach ($currentBackupApprovals as $currentBackupApproval) {
+                    $currentBackupApproval->status = BackupApproval::StatusRejected;
+                    $currentBackupApproval->save();
+                }
+            } else {
+                /**
+                 * @var BackupApproval $lastApproval
+                 */
+                $lastApproval = $backup->backupApprovals()->orderBy('priority', 'DESC')->first();
+                if ($lastApproval->status == BackupApproval::StatusApproved) {
+                    $backup->status = BackupApproval::StatusApproved;
+                }
+            }
+
+            $backup->save();
 
             DB::commit();
             return response()->json([
@@ -484,7 +601,7 @@ class BackupService extends BaseService
             }
 
             $backup = $employeeBackup->backupTime->backup;
-            $employeeTimezone = getTimezone(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
+            $employeeTimezone = getTimezoneV2(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
             $distance = calculateDistance($backup->location_lat, $backup->location_long, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
 
             $checkInType = EmployeeAttendance::TypeOnSite;
@@ -571,7 +688,7 @@ class BackupService extends BaseService
             }
 
             $backup = $employeeBackup->backupTime->backup;
-            $employeeTimezone = getTimezone(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
+            $employeeTimezone = getTimezoneV2(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
             $distance = calculateDistance($backup->location_lat, $backup->location_long,floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
 
             $checkOutType = EmployeeAttendance::TypeOnSite;

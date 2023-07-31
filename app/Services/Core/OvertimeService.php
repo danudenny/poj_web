@@ -6,6 +6,8 @@ use App\Http\Requests\Overtime\OvertimeCheckInRequest;
 use App\Http\Requests\Overtime\CreateOvertimeRequest;
 use App\Http\Requests\Overtime\OvertimeApprovalRequest;
 use App\Http\Requests\Overtime\OvertimeCheckOutRequest;
+use App\Models\ApprovalModule;
+use App\Models\ApprovalUser;
 use App\Models\Backup;
 use App\Models\BackupEmployeeTime;
 use App\Models\Employee;
@@ -13,6 +15,7 @@ use App\Models\EmployeeAttendance;
 use App\Models\Job;
 use App\Models\EmployeeNotification;
 use App\Models\Overtime;
+use App\Models\OvertimeApproval;
 use App\Models\OvertimeDate;
 use App\Models\OvertimeEmployee;
 use App\Models\OvertimeHistory;
@@ -106,22 +109,17 @@ class OvertimeService extends BaseService
          * @var User $user
          */
         $user = $request->user();
-        $query = Overtime::query()
+
+        /**
+         * @var Overtime $overtime
+         */
+        $overtime = Overtime::query()
             ->with([
                 'requestorEmployee', 'unit',
                 'overtimeHistories', 'overtimeHistories.employee:employees.id,name',
                 'overtimeDates', 'overtimeDates.overtimeEmployees', 'overtimeDates.overtimeEmployees.employee:employees.id,name'
-            ])->where('overtimes.id', '=', $id);
-
-        if ($user->isHighestRole(Role::RoleStaff)) {
-            $query->join('overtime_dates', 'overtime_dates.overtime_id', '=', 'overtimes.id');
-            $query->join('overtime_employees', 'overtime_employees.overtime_date_id', '=', 'overtime_dates.id');
-            $query->where('overtime_employees.employee_id', '=', $user->employee_id);
-        }
-
-        $query->select(['overtimes.*']);
-
-        $overtime = $query->first();
+            ])->where('id', '=', $id)
+            ->first();
         if (!$overtime) {
             return response()->json([
                 'status' => false,
@@ -148,7 +146,7 @@ class OvertimeService extends BaseService
             ->with(['employee:employees.id,name', 'overtimeDate.overtime'])
             ->join('overtime_dates', 'overtime_dates.id', '=', 'overtime_employees.overtime_date_id')
             ->join('overtimes', 'overtimes.id', '=', 'overtime_dates.overtime_id')
-            ->whereNotIn('overtimes.last_status', [OvertimeHistory::TypeRejected]);
+            ->where('overtimes.last_status', OvertimeHistory::TypeApproved);
 
         if ($user->isHighestRole(Role::RoleStaff)) {
             $query->where('overtime_employees.employee_id', '=', $user->employee_id);
@@ -178,6 +176,27 @@ class OvertimeService extends BaseService
             'message' => 'Success',
             'data' => $this->list($query, $request)
         ], Response::HTTP_OK);
+    }
+
+    public function listApprovalOvertime(Request $request) {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
+        $query = OvertimeApproval::query()->with(['overtime', 'overtime.requestorEmployee:employees.id,name', 'overtime.unit:units.relation_id,name'])
+            ->where('user_id', '=', $user->id)
+            ->orderBy('id', 'DESC');
+
+        if ($status = $request->query('status')) {
+            $query->where('status', '=', $status);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Succcess fetch data',
+            'data' => $this->list($query, $request),
+        ]);
     }
 
     public function detailEmployeeOvertime(Request $request, int $id) {
@@ -258,7 +277,7 @@ class OvertimeService extends BaseService
 
             $lat = floatval(str_replace(',', '.', $unit->lat));
             $long = floatval(str_replace(',', '.', $unit->long));
-            $unitTimeZone = getTimezone($lat, $long);
+            $unitTimeZone = getTimezoneV2($lat, $long);
 
             $employeeIDs = $request->input('employee_ids', []);
             $overtimeDates = $this->generateOvertimeDateData($request->input('dates'), $employeeIDs, $unitTimeZone);
@@ -267,6 +286,34 @@ class OvertimeService extends BaseService
                     'status' => false,
                     'message' => 'There is no dates',
                 ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            $approvalUserIDs = [];
+            $requestType = $request->input('request_type');
+
+            if ($requestType == Overtime::RequestTypeAssignment) {
+                if ($user->isHighestRole(Role::RoleStaff)) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'You don\'t have access to do assignment',
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
+            } else {
+                /**
+                 * @var ApprovalUser[] $approvalUsers
+                 */
+                $approvalUsers = ApprovalUser::query()
+                    ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
+                    ->join('approval_modules', 'approvals.approval_module_id', '=', 'approval_modules.id')
+                    ->where('approval_modules.name', '=', ApprovalModule::ApprovalOvertime)
+                    ->where('approvals.unit_id', '=', $unit->id)
+                    ->where('approvals.is_active', '=', true)
+                    ->orderBy('approval_users.id', 'ASC')
+                    ->get(['approval_users.*']);
+
+                foreach ($approvalUsers as $approvalUser) {
+                    $approvalUserIDs[] = $approvalUser->user_id;
+                }
             }
 
             foreach ($overtimeDates as $overtimeDateData) {
@@ -278,11 +325,11 @@ class OvertimeService extends BaseService
                         ->where('overtimes.last_status', '!=', OvertimeHistory::TypeRejected)
                         ->where(function(Builder $builder) use ($overtimeDateData) {
                             $builder->orWhere(function(Builder $builder) use ($overtimeDateData) {
-                                $builder->where( 'overtime_dates.start_time', '<', $overtimeDateData['start_time'])
-                                    ->where('overtime_dates.end_time', '>', $overtimeDateData['start_time']);
+                                $builder->where( 'overtime_dates.start_time', '<=', $overtimeDateData['start_time'])
+                                    ->where('overtime_dates.end_time', '>=', $overtimeDateData['start_time']);
                             })->orWhere(function(Builder $builder) use ($overtimeDateData) {
-                                $builder->where('overtime_dates.start_time', '<', $overtimeDateData['end_time'])
-                                    ->where('overtime_dates.end_time', '>', $overtimeDateData['end_time']);
+                                $builder->where('overtime_dates.start_time', '<=', $overtimeDateData['end_time'])
+                                    ->where('overtime_dates.end_time', '>=', $overtimeDateData['end_time']);
                             });
                         })
                         ->exists();
@@ -305,11 +352,11 @@ class OvertimeService extends BaseService
                         ->where('backup_employee_times.employee_id', '=', $employeeID)
                         ->where(function(Builder $builder) use ($overtimeDateData) {
                             $builder->orWhere(function(Builder $builder) use ($overtimeDateData) {
-                                $builder->where( 'backup_times.start_time', '<', $overtimeDateData['start_time'])
-                                    ->where('backup_times.end_time', '>', $overtimeDateData['start_time']);
+                                $builder->where( 'backup_times.start_time', '<=', $overtimeDateData['start_time'])
+                                    ->where('backup_times.end_time', '>=', $overtimeDateData['start_time']);
                             })->orWhere(function(Builder $builder) use ($overtimeDateData) {
-                                $builder->where('backup_times.start_time', '<', $overtimeDateData['end_time'])
-                                    ->where('backup_times.end_time', '>', $overtimeDateData['end_time']);
+                                $builder->where('backup_times.start_time', '<=', $overtimeDateData['end_time'])
+                                    ->where('backup_times.end_time', '>=', $overtimeDateData['end_time']);
                             });
                         })
                         ->exists();
@@ -342,12 +389,24 @@ class OvertimeService extends BaseService
             $overtime->timezone = $unitTimeZone;
             $overtime->notes = $request->input('notes');
             $overtime->image_url = $request->input('image_url');
+            $overtime->request_type = $requestType;
 
-            if ($user->inRoleLevel([Role::RoleStaff, Role::RoleSuperAdministrator])) {
+            if ($overtime->request_type == Overtime::RequestTypeAssignment) {
                 $overtime->last_status = OvertimeHistory::TypeApproved;
             }
 
             $overtime->save();
+
+            if ($overtime->last_status == OvertimeHistory::TypePending) {
+                foreach ($approvalUserIDs as $idx => $approvalUserID) {
+                    $overtimeApproval = new OvertimeApproval();
+                    $overtimeApproval->priority = $idx;
+                    $overtimeApproval->user_id = $approvalUserID;
+                    $overtimeApproval->overtime_id = $overtime->id;
+                    $overtimeApproval->status = OvertimeApproval::StatusPending;
+                    $overtimeApproval->save();
+                }
+            }
 
             foreach ($overtimeDates as $overtimeDateData) {
                 $overtimeDate = new OvertimeDate();
@@ -453,23 +512,12 @@ class OvertimeService extends BaseService
              */
             $user = $request->user();
 
-            if (!$user->inRoleLevel([Role::RoleSuperAdministrator, Role::RoleAdmin])) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'You don\'t have access'
-                ], ResponseAlias::HTTP_FORBIDDEN);
-            }
-
-            $query = Overtime::query()->where('overtimes.id', '=', $id)
-                ->where('last_status', '=', OvertimeHistory::TypePending);
-            if ($user->inRoleLevel([Role::RoleAdmin])) {
-                $query->whereIn('unit_relation_id', $user->employee->getAllUnitID());
-            }
-
             /**
              * @var Overtime $overtime
              */
-            $overtime = $query->first();
+            $overtime = Overtime::query()->where('overtimes.id', '=', $id)
+                ->where('last_status', '=', OvertimeHistory::TypePending)
+                ->first();
             if (!$overtime) {
                 return response()->json([
                     'status' => false,
@@ -477,28 +525,68 @@ class OvertimeService extends BaseService
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
-            if ($overtime->approval_status != null) {
+            /**
+             * @var OvertimeApproval $userApproval
+             */
+            $userApproval = $overtime->overtimeApprovals()
+                ->where('user_id', '=', $user->id)
+                ->where('status', '=', OvertimeApproval::StatusPending)
+                ->first();
+            if(!$userApproval) {
                 return response()->json([
                     'status' => false,
-                    'message' => "overtime already in approval"
-                ], ResponseAlias::HTTP_BAD_REQUEST);
+                    'message' => 'You don\'t have access'
+                ], ResponseAlias::HTTP_FORBIDDEN);
+            }
+
+            if($userApproval->priority > 0) {
+                $lastApproval = $overtime->overtimeApprovals()
+                    ->where('priority', '=', $userApproval->priority - 1)
+                    ->where('status', '=', OvertimeApproval::StatusPending)
+                    ->exists();
+                if ($lastApproval) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Last approver not doing approval yet!'
+                    ], ResponseAlias::HTTP_FORBIDDEN);
+                }
             }
 
             DB::beginTransaction();
 
-            $overtime->last_status = $request->input('status');
-            $overtime->last_status_at = Carbon::now();
-            $overtime->save();
+            $userApproval->status = $request->input('status');
+            $userApproval->notes = $request->input('notes');
+            $userApproval->save();
 
             $overtimeHistory = new OvertimeHistory();
             $overtimeHistory->overtime_id = $overtime->id;
             $overtimeHistory->employee_id = $user->employee_id;
-            $overtimeHistory->history_type = $overtime->last_status;
-            $overtimeHistory->notes = $request->input('notes');
+            $overtimeHistory->history_type = $userApproval->status;
+            $overtimeHistory->notes = $userApproval->notes;
             $overtimeHistory->save();
 
-            // TODO: Sync with new flow for refresh finished status
-            // $this->refreshFinishedStatus($overtime, $user->employee_id);
+            if ($userApproval->status == OvertimeApproval::StatusRejected) {
+                $overtime->last_status = OvertimeApproval::StatusRejected;
+
+                /**
+                 * @var OvertimeApproval[] $currentOvertimeApprovals
+                 */
+                $currentOvertimeApprovals = $overtime->overtimeApprovals()->where('priority', '>', $userApproval->priority)->get();
+                foreach ($currentOvertimeApprovals as $currentOvertimeApproval) {
+                    $currentOvertimeApproval->status = OvertimeApproval::StatusRejected;
+                    $currentOvertimeApproval->save();
+                }
+            } else {
+                /**
+                 * @var OvertimeApproval $lastApproval
+                 */
+                $lastApproval = $overtime->overtimeApprovals()->orderBy('priority', 'DESC')->first();
+                if ($lastApproval->status == OvertimeApproval::StatusApproved) {
+                    $overtime->last_status = OvertimeApproval::StatusApproved;
+                }
+            }
+
+            $overtime->save();
 
             DB::commit();
 

@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Attributes:
+ * @property-read int $id
+ * @property int $employee_id
+ * @property int $employee_attendances_id
+ * @property string $status
+ */
 class EmployeeAttendanceHistory extends Model
 {
     use HasFactory;
@@ -25,4 +32,5 @@ class EmployeeAttendanceHistory extends Model
     {
         return $this->belongsTo(EmployeeAttendance::class, 'employee_attendances_id', 'id');
     }
+
 }

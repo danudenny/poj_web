@@ -11,11 +11,13 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class EmployeeTimesheetService extends BaseService {
     /**
@@ -186,6 +188,10 @@ class EmployeeTimesheetService extends BaseService {
     public function assignTimesheetSchedule($request): JsonResponse
     {
         $employeeIds = $request->employee_ids;
+
+        /**
+         * @var EmployeeTimesheet $timesheetExists
+         */
         $timesheetExists = EmployeeTimesheet::where('id', $request->timesheet_id)->first();
         if (!$timesheetExists) {
             return response()->json([
@@ -195,6 +201,20 @@ class EmployeeTimesheetService extends BaseService {
             ], 404);
         }
 
+        $unit = $timesheetExists->unit;
+        if ($unit->lat == null || $unit->long == null) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Unit don\'t have latitude and longitude',
+                'data' => ''
+            ], ResponseAlias::HTTP_BAD_REQUEST);
+        }
+
+        $timezone = getTimezoneV2($unit->lat, $unit->long);
+
+        /**
+         * @var Period $periodsExists
+         */
         $periodsExists = Period::where('id', $request->period_id)->first();
         if (!$periodsExists) {
             return response()->json([
@@ -202,6 +222,12 @@ class EmployeeTimesheetService extends BaseService {
                 'message' => 'Period id not found',
                 'data' => ''
             ], 404);
+        }
+
+        $parsedStartTime = Carbon::parse(sprintf("%s-%s-%s %s:00", $periodsExists->year, $periodsExists->month, $request->date, $timesheetExists->start_time), $timezone);
+        $parsedEndTime = Carbon::parse(sprintf("%s-%s-%s %s:00", $periodsExists->year, $periodsExists->month, $request->date, $timesheetExists->end_time), $timezone);
+        if ($parsedEndTime->lessThan($parsedStartTime)) {
+            $parsedEndTime->addDays(1);
         }
 
         DB::beginTransaction();
@@ -221,6 +247,13 @@ class EmployeeTimesheetService extends BaseService {
                 $schedule->timesheet_id = $request->timesheet_id;
                 $schedule->period_id = $request->period_id;
                 $schedule->date = $request->date;
+                $schedule->start_time = $parsedStartTime->setTimezone('UTC');
+                $schedule->end_time = $parsedEndTime->setTimezone('UTC');
+                $schedule->early_buffer = $unit->early_buffer ?? 0;
+                $schedule->late_buffer = $unit->late_buffer ?? 0;
+                $schedule->timezone = $timezone;
+                $schedule->latitude = $unit->lat;
+                $schedule->longitude = $unit->long;
 
                 if (!$schedule->save()) {
                     return response()->json([

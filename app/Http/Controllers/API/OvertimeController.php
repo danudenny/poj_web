@@ -81,4 +81,8 @@ class OvertimeController extends Controller
     public function getDetailEmployeeOvertime(Request $request, OvertimeService $service, int $id) {
         return $service->detailEmployeeOvertime($request, $id);
     }
+
+    public function getListApproval(Request $request, OvertimeService $service) {
+        return $service->listApprovalOvertime($request);
+    }
 }

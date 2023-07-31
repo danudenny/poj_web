@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs main="Backup"/>
+        <Breadcrumbs main="List Approval Backup"/>
 
         <div class="container-fluid">
             <div class="email-wrap bookmark-wrap">
@@ -8,13 +8,11 @@
                     <div class="col-md-12">
                         <div class="card card-absolute">
                             <div class="card-header bg-primary">
-                                <h5>Backup List</h5>
+                                <h5>Backup List Approval</h5>
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-2">
-                                    <button class="btn btn-warning" type="button" @click="$router.push('/attendance/create-backup')">
-                                        <i class="fa fa-recycle" /> &nbsp; Assign Backup
-                                    </button>
+
                                 </div>
                                 <div v-if="loading" class="text-center">
                                     <img src="../../assets/loader.gif" alt="loading" width="100">
@@ -46,7 +44,7 @@ export default {
     methods: {
         async getDepartments() {
             this.loading = true;
-            await this.$axios.get(`/api/v1/admin/backup`)
+            await this.$axios.get(`/api/v1/admin/backup/list-approval`)
                 .then(response => {
                     this.backups = response.data.data;
                 })
@@ -67,61 +65,51 @@ export default {
                     },
                     {
                         title: 'Requestor Name',
-                        field: 'requestor_employee.name',
+                        field: 'backup.requestor_employee.name',
                         headerFilter:"input"
                     },
                     {
                         title: 'Status',
-                        field: 'status',
+                        field: 'real_status',
                         headerFilter:"input"
                     },
                     {
                         title: 'Request Type',
-                        field: 'request_type',
+                        field: 'backup.request_type',
                         headerFilter:"input"
                     },
                     {
                         title: 'Shift Type',
-                        field: 'shift_type',
+                        field: 'backup.shift_type',
                         headerFilter:"input"
                     },
                     {
                         title: 'Source Unit',
-                        field: 'source_unit.name',
+                        field: 'backup.source_unit.name',
                         headerFilter:"input"
                     },
                     {
                         title: 'Destination Unit',
-                        field: 'unit.name',
+                        field: 'backup.unit.name',
                         headerFilter:"input"
                     },
                     {
                         title: 'Start Date',
-                        field: 'start_date',
+                        field: 'backup.start_date',
                         headerFilter:"date"
                     },
                     {
                         title: 'End Date',
-                        field: 'end_date',
+                        field: 'backup.end_date',
                         headerFilter:"date"
                     },
                     {
                         title: 'Duration (in Days)',
-                        field: 'duration',
-                    },
-                    {
-                        title: 'File',
-                        formatter: (cell, formatterParams, onRendered) => {
-                            if (cell.getRow().getData().file_url) {
-                                return `<a target="_blank" class="button-icon button-success p-2" href="${cell.getRow().getData().file_url}"><i class="fa fa-file"></i> </a>`;
-                            } else {
-                                return "-"
-                            }
-                        }
+                        field: 'backup.duration',
                     },
                     {
                         title: 'Created At',
-                        field: 'created_at',
+                        field: 'backup.created_at',
                         headerFilter:"input"
                     },
                     {
@@ -131,7 +119,7 @@ export default {
                         hozAlign: 'center',
                         sortable: false,
                         cellClick: (e, cell) => {
-                            this.viewData(cell.getRow().getData().id);
+                            this.viewData(cell.getRow().getData().backup.id);
                         }
                     },
                 ],
@@ -147,7 +135,7 @@ export default {
             this.loading = false
         },
         viewDetailsFormatter(cell, formatterParams, onRendered) {
-            return `<button class="button-icon button-success" data-id="${cell.getRow().getData().id}"><i class="fa fa-eye"></i> </button>`;
+            return `<button class="button-icon button-success" data-id="${cell.getRow().getData().id}"><i class="fa fa-arrow-right"></i> </button>`;
         },
         viewData(id) {
             this.$router.push({name: 'Detail Backup', params: {id}});

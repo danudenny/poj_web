@@ -176,7 +176,7 @@
             "permission" : "attendance_list"
         },
         {
-            "title": "Backup",
+            "title": "Backup Request",
             "icon": "copy",
             "iconf": "fill-copy",
             "type": "link",
@@ -185,7 +185,16 @@
             "permission" : "backup_list"
         },
         {
-            "title": "Employee Backup",
+            "title": "Approval Backup",
+            "icon": "copy",
+            "iconf": "fill-copy",
+            "type": "link",
+            "active": false,
+            "path": "/attendance/approval-backup",
+            "permission" : "backup_list"
+        },
+        {
+            "title": "Jadwal Backup",
             "icon": "copy",
             "iconf": "fill-copy",
             "type": "link",
@@ -194,7 +203,7 @@
             "permission" : "backup_list"
         },
         {
-            "title": "Overtime",
+            "title": "Overtime Request",
             "icon": "clock",
             "iconf": "clock",
             "type": "link",
@@ -203,7 +212,16 @@
             "permission" : "overtime_list"
         },
         {
-            "title": "Employee Overtime",
+            "title": "Approval Overtime",
+            "icon": "clock",
+            "iconf": "clock",
+            "type": "link",
+            "active": false,
+            "path": "/attendance/approval-overtime",
+            "permission" : "overtime_list"
+        },
+        {
+            "title": "Jadwal Overtime",
             "icon": "clock",
             "iconf": "clock",
             "type": "link",

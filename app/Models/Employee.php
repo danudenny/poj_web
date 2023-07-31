@@ -257,6 +257,26 @@ class Employee extends Model
         return $this->hasMany(BackupEmployee::class, 'employee_id')->with(['employee', 'backup']);
     }
 
+    public function getActiveNormalSchedule(string $timezone = 'UTC'): EmployeeTimesheetSchedule|null {
+        /**
+         * @var EmployeeTimesheetSchedule $employeeSchedule
+         */
+        $employeeSchedule = EmployeeTimesheetSchedule::query()
+            ->where('employee_timesheet_schedules.employee_id', '=', $this->id)
+            ->where(function(Builder $builder) use ($timezone) {
+                $builder->orWhereRaw("(employee_timesheet_schedules.start_time::timestamp without time zone at time zone 'UTC' at time zone '$timezone')::DATE = (CURRENT_TIMESTAMP at time zone '$timezone')::DATE")
+                    ->orWhereRaw("(employee_timesheet_schedules.end_time::timestamp without time zone at time zone 'UTC' at time zone '$timezone')::DATE = (CURRENT_TIMESTAMP at time zone '$timezone')::DATE");
+            })
+            ->where(function(Builder $builder) {
+                $builder->orWhereNull('employee_timesheet_schedules.check_in_time')
+                    ->orWhereNull('employee_timesheet_schedules.check_out_time');
+            })
+            ->orderBy('employee_timesheet_schedules.start_time', 'ASC')
+            ->first();
+
+        return $employeeSchedule;
+    }
+
     public function getActiveEvent(): EmployeeEvent|null {
         /**
          * @var EmployeeEvent|null $employeeEvent
@@ -275,10 +295,6 @@ class Employee extends Model
     }
 
     public function getActiveOvertime($timezone = 'UTC'): OvertimeEmployee|null {
-        $startNow = Carbon::now()->addMinutes(10)->format('Y-m-d H:i:s');
-        $endNow = Carbon::now()->addMinutes(-10)->format('Y-m-d H:i:s');
-        $today = Carbon::now()->format('Y-m-d');
-
         /**
          * @var OvertimeEmployee|null $overtime
          */
@@ -303,10 +319,6 @@ class Employee extends Model
     }
 
     public function getActiveBackup($timezone = 'UTC'): BackupEmployeeTime|null {
-        $startNow = Carbon::now()->addMinutes(10)->format('Y-m-d H:i:s');
-        $endNow = Carbon::now()->addMinutes(-10)->format('Y-m-d H:i:s');
-        $today = Carbon::now()->format('Y-m-d');
-
         /**
          * @var BackupEmployeeTime|null $employeeBackup
          */

@@ -40,6 +40,13 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mt-2">
+                                <label for="status">Jenis Request:</label>
+                                <select id="status" name="request-type" class="form-select" v-model="overtime.request_type" required>
+                                    <option value="assignment" :selected="overtime.request_type === 'assignment' ? 'selected' : ''">Assignment</option>
+                                    <option value="request" :selected="overtime.request_type === 'request' ? 'selected' : ''">Request</option>
+                                </select>
+                            </div>
+                            <div class="mt-2">
                                 <label for="name">Tanggal Mulai</label>
                                 <input type="date" class="form-control" v-model="overtime.start_date" :min="today" @change="onDateChanged" required>
                             </div>
@@ -140,7 +147,8 @@ export default {
                 dates: {},
                 employee_ids: [],
                 notes: null,
-                image_url: null
+                image_url: null,
+                request_type: null
             },
             selectedDateTimesheet: null,
             selectedJob: {

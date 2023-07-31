@@ -84,12 +84,31 @@
                         class="btn btn-primary button-info"
                         data-bs-toggle="modal"
                         data-bs-target="#approvalModal"
-                        v-if="false"
+                        v-if="backup.is_can_approve"
                     >
                         Approval
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="modal fade" id="approvalModal" ref="approvalModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
+            <VerticalModal title="Approval Modal" @save="backupApproval()">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="mt-2">
+                            <label for="status">Status:</label>
+                            <select id="status" name="status" class="form-select" v-model="approval.status" required>
+                                <option value="approved" :selected="approval.status === 'approved' ? 'selected' : ''">Approve</option>
+                                <option value="rejected" :selected="approval.status === 'rejected' ? 'selected' : ''">Reject</option>
+                            </select>
+                        </div>
+                        <div class="mt-2" v-if="approval.status === 'rejected'">
+                            <label for="name">Note:</label>
+                            <input type="text" class="form-control" id="reason" v-model="approval.notes" required>
+                        </div>
+                    </div>
+                </div>
+            </VerticalModal>
         </div>
         <div class="modal fade" id="historyModal" ref="historyModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
             <VerticalModalWithoutSave title="History">
@@ -146,6 +165,7 @@
 import VerticalModal from "@components/modal/verticalModal.vue";
 import VerticalModalWithoutSave from "@components/modal/verticalModalWithoutSave.vue";
 import {TabulatorFull as Tabulator} from "tabulator-tables";
+import {useToast} from "vue-toastification";
 
 export default {
     components: {
@@ -172,7 +192,12 @@ export default {
                     name: null
                 }
             },
-            selectedBackupDate: null
+            approval: {
+                status: null,
+                notes: null
+            },
+            selectedBackupDate: null,
+            is_can_approve: false
         }
     },
     created() {
@@ -229,6 +254,22 @@ export default {
         onChangeBackupType(e) {
         },
         onSubmitForm() {
+        },
+        backupApproval() {
+            this.$axios.post(`/api/v1/admin/backup/approval/${this.$route.params.id}`, this.approval)
+                .then(response => {
+                    useToast().success("Success to update data", { position: 'bottom-right' });
+                    this.getDetailBackup()
+                })
+                .catch(error => {
+                    if(error.response.data.message instanceof Object) {
+                        for (const key in error.response.data.message) {
+                            useToast().error(error.response.data.message[key][0], { position: 'bottom-right' });
+                        }
+                    } else {
+                        useToast().error(error.response.data.message , { position: 'bottom-right' });
+                    }
+                });
         }
     }
 };

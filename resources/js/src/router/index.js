@@ -59,6 +59,7 @@ import Backup from '../pages/backups/index.vue';
 import CreateBackup from '../pages/backups/create.vue';
 import DetailBackup from '../pages/backups/detail.vue';
 import EmployeeBackup from '../pages/backups/employee-backup.vue';
+import ListApprovalBackup from '../pages/backups/list-approval.vue';
 
 // Profile
 import Profile from '../pages/profiles/index.vue';
@@ -98,6 +99,7 @@ import Overtime from "../pages/overtime/index.vue";
 import CreateOvertime from "../pages/overtime/create.vue";
 import DetailOvertime from "../pages/overtime/detail.vue";
 import EmployeeOvertime from "../pages/overtime/employee-overtime.vue";
+import ListApprovalOvertime from "../pages/overtime/list-approval.vue";
 
 // Admin Unit
 import AdminUnit from "../pages/admin-unit/index.vue";
@@ -509,10 +511,20 @@ const routes =[
             },
             {
                 path: 'employee-backup',
-                name: 'Employee Backup',
+                name: 'Jadwal Backup',
                 component: EmployeeBackup,
                 meta: {
-                    title: 'POJ - Employee Backup',
+                    title: 'POJ - Jadwal Backup',
+                    requiresAuth: true,
+                    permission: 'backup_list',
+                },
+            },
+            {
+                path: 'approval-backup',
+                name: 'Approval Backup',
+                component: ListApprovalBackup,
+                meta: {
+                    title: 'POJ - Approval Backup',
                     requiresAuth: true,
                     permission: 'backup_list',
                 },
@@ -549,10 +561,20 @@ const routes =[
             },
             {
                 path: 'employee-overtime',
-                name: 'Employee Overtime',
+                name: 'Jadwal Overtime',
                 component: EmployeeOvertime,
                 meta: {
-                    title: 'POJ - Employee Overtime',
+                    title: 'POJ - Jadwal Overtime',
+                    requiresAuth: true,
+                    permission: 'overtime_list',
+                },
+            },
+            {
+                path: 'approval-overtime',
+                name: 'Approval Overtime',
+                component: ListApprovalOvertime,
+                meta: {
+                    title: 'POJ - Approval Overtime',
                     requiresAuth: true,
                     permission: 'overtime_list',
                 },

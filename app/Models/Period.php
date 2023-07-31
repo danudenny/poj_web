@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Attributes:
+ * @property string $year
+ * @property string $month
+ */
 class Period extends Model
 {
     use HasFactory;

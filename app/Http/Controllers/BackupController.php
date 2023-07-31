@@ -60,4 +60,8 @@ class BackupController extends Controller
     public function getDetailEmployeeBackup(Request $request, int $id) {
         return $this->backupService->detailBackupEmployee($request, $id);
     }
+
+    public function getListApproval(Request $request) {
+        return $this->backupService->listApproval($request);
+    }
 }

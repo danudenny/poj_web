@@ -1,13 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Backup;
+namespace App\Http\Requests\EmployeeAttendance;
 
-use App\Models\Backup;
-use App\Models\BackupApproval;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
-class BackupApprovalRequest extends FormRequest
+class CheckInAttendanceRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -27,8 +24,8 @@ class BackupApprovalRequest extends FormRequest
     public function rules()
     {
         return [
-            'status' => ['required', Rule::in([BackupApproval::StatusApproved, BackupApproval::StatusRejected])],
-            'notes' => ['nullable', Rule::requiredIf($this->input('status') == Backup::StatusRejected)]
+            'latitude' => ['required'],
+            'longitude' => ['required']
         ];
     }
 }

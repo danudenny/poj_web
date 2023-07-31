@@ -43,6 +43,13 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mt-2">
+                                            <label for="status">Jenis Request:</label>
+                                            <select id="status" name="request-type" class="form-select" v-model="backup.request_type" required>
+                                                <option value="assignment" :selected="backup.request_type === 'assignment' ? 'selected' : ''">Assignment</option>
+                                                <option value="request" :selected="backup.request_type === 'request' ? 'selected' : ''">Request</option>
+                                            </select>
+                                        </div>
+                                        <div class="mt-2">
                                             <label for="status">Kategori Backup:</label>
                                             <select id="status" name="status" class="form-select" v-model="backup.shift_type" @change="onChangeBackupType" required>
                                                 <option value="Shift" :selected="backup.shift_type === 'Shift' ? 'selected' : ''">Shift</option>
@@ -168,7 +175,9 @@ export default {
                 duration: null,
                 dates: {},
                 employee_ids: [],
-                file_url: null
+                file_url: null,
+                request_type: 'assigned',
+                requestor_unit_id: 0
             },
             selectedDateTimesheet: null,
             selectedJob: {
@@ -285,6 +294,7 @@ export default {
             this.generateTimeSheetTable()
         },
         onEmployeeUnitSelected(val) {
+            this.backup.requestor_unit_id = this.selectedEmployeeUnit.id
             this.generateEmployeesTable()
         },
         onJobSelected() {

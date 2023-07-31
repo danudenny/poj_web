@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * Attributes:
  * @property-read int $id
+ * @property int $unit_id
  * @property string $start_time
  * @property string $end_time
  *

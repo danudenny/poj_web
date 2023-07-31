@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Overtime;
 
+use App\Models\Overtime;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
@@ -32,7 +33,8 @@ class CreateOvertimeRequest extends FormRequest
             'dates' => ['required', 'array'],
             'employee_ids' => ['required'],
             'notes' => ['required'],
-            'image_url' => ['nullable']
+            'image_url' => ['nullable'],
+            'request_type' => ['required', Rule::in([Overtime::RequestTypeAssignment, Overtime::RequestTypeRequest])]
         ];
     }
 }

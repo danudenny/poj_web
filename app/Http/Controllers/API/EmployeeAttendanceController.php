@@ -4,6 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\EmployeeAttendance\CheckInAttendanceRequest;
+use App\Http\Requests\EmployeeAttendance\CheckOutAttendanceRequest;
 use App\Models\Employee;
 use App\Models\User;
 use App\Services\Core\EmployeeAttendanceService;
@@ -40,6 +42,16 @@ class EmployeeAttendanceController extends BaseController
     public function checkIn(Request $request): JsonResponse
     {
         return $this->employeeAttendanceService->checkIn($request);
+    }
+
+    public function checkInV2(CheckInAttendanceRequest $request, int $id): JsonResponse
+    {
+        return $this->employeeAttendanceService->checkInV2($request, $id);
+    }
+
+    public function checkOutV2(CheckOutAttendanceRequest $request, int $id): JsonResponse
+    {
+        return $this->employeeAttendanceService->checkOutV2($request, $id);
     }
 
     /**

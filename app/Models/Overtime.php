@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Attributes:
@@ -22,16 +23,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $image_url
  * @property float $location_lat
  * @property float $location_long
+ * @property string $request_type
  *
  * Relations:
  * @property-read Employee $requestorEmployee
  * @property-read Unit $unit
  * @property-read OvertimeHistory[] $overtimeHistories
  * @property-read OvertimeDate[] $overtimeDates
+ * @property-read OvertimeApproval[] $overtimeApprovals
  */
 class Overtime extends Model
 {
     use HasFactory;
+
+    const RequestTypeAssignment = "assignment";
+    const RequestTypeRequest = "request";
 
     protected $hidden = [
         'start_datetime',
@@ -51,7 +57,30 @@ class Overtime extends Model
          */
         $user = request()->user();
 
-        return $this->last_status === OvertimeHistory::TypePending && $user->inRoleLevel([Role::RoleAdmin, Role::RoleSuperAdministrator]);
+        if (!$user) {
+            return false;
+        }
+
+        /**
+         * @var OvertimeApproval $overtimeApproval
+         */
+        $overtimeApproval = $this->overtimeApprovals()
+            ->where('status', '=', OvertimeApproval::StatusPending)
+            ->where('user_id', '=', $user->id)
+            ->first();
+        if (!$overtimeApproval) {
+            return false;
+        }
+
+        $lastApproval = $this->overtimeApprovals()
+            ->where('priority', '=', $overtimeApproval->priority - 1)
+            ->where('status', '=', OvertimeApproval::StatusPending)
+            ->exists();
+        if ($lastApproval) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -85,5 +114,13 @@ class Overtime extends Model
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'employee_id');
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function overtimeApprovals(): HasMany
+    {
+        return $this->hasMany(OvertimeApproval::class, 'overtime_id');
     }
 }
