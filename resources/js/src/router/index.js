@@ -105,6 +105,8 @@ import ListApprovalOvertime from "../pages/overtime/list-approval.vue";
 // Leave
 import LeaveRequest from "../pages/leaves/leave-request.vue";
 import LeaveReport from "../pages/leaves/leave-report.vue";
+import LeaveMaster from "../pages/leaves/leave-master.vue";
+import CreateLeaveMaster from "../pages/leaves/create/create-master-leave.vue";
 
 // Admin Unit
 import AdminUnit from "../pages/admin-unit/index.vue";
@@ -789,6 +791,22 @@ const routes =[
                     permission: 'incident_reporting',
                 },
             },
+        ]
+    },
+    {
+        path: '/leave-master',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Leave Master',
+                component: LeaveMaster,
+                meta: {
+                    title: 'POJ - Leave Master',
+                    requiresAuth: true,
+                    permission: 'incident_reporting',
+                },
+            }
         ]
     },
     {
