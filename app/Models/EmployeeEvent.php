@@ -50,7 +50,7 @@ class EmployeeEvent extends Model
     ];
 
     public function getEventDateTimeWithTimezoneAttribute() {
-        return Carbon::parse($this->event_datetime)->setTimezone($this->event->timezone || 'Asia/Jakarta')->format('Y-m-d H:i:s T');
+        return Carbon::parse($this->event_datetime)->setTimezone($this->event->timezone)->format('Y-m-d H:i:s T');
     }
 
     /**
@@ -61,7 +61,7 @@ class EmployeeEvent extends Model
             return null;
         }
 
-        return Carbon::parse($this->check_in_time)->setTimezone($this->check_in_timezone || 'Asia/Jakarta')->format('Y-m-d H:i:s T');
+        return Carbon::parse($this->check_in_time)->setTimezone($this->check_in_timezone)->format('Y-m-d H:i:s T');
     }
 
     /**
@@ -72,7 +72,7 @@ class EmployeeEvent extends Model
             return null;
         }
 
-        return Carbon::parse($this->check_out_time)->setTimezone($this->check_out_timezone || 'Asia/Jakarta')->format('Y-m-d H:i:s T');
+        return Carbon::parse($this->check_out_time)->setTimezone($this->check_out_timezone)->format('Y-m-d H:i:s T');
     }
 
     /**
