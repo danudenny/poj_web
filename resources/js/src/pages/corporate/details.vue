@@ -72,6 +72,10 @@
                                         <input class="form-control" type="text" v-model="item.late_buffer" :disabled="editing">
                                     </div>
                                 </div>
+                                <div class="col-md-12" v-show="item.lat && item.long">
+                                    <div id="mapContainer" style="height: 400px; z-index: 1; width: 100%">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="tab-pane fade" id="pills-iconprofile" role="tabpanel" aria-labelledby="pills-iconprofile-tab">
@@ -244,12 +248,15 @@ import {TabulatorFull as Tabulator} from "tabulator-tables";
 import Timesheet from "./timesheet.vue";
 import Employee from "./employee.vue";
 import AssignWorkReporting from "@/pages/corporate/modal/assignWorkReporting.vue";
+import "leaflet/dist/leaflet.css";
+import L from 'leaflet';
+import { buffer, point } from "@turf/turf";
 
 export default {
     components: {
         Timesheet,
         AssignWorkReporting,
-        Employee
+        Employee,
     },
     data() {
         return {
@@ -281,7 +288,8 @@ export default {
                 reporting_names: [],
                 is_reporting: true,
                 job_ids: []
-            }
+            },
+            map: null,
         }
     },
     async mounted() {
@@ -291,8 +299,32 @@ export default {
         this.initializeJobTable();
         await this.getReportingData();
         this.initializeReportTable();
+        this.initMap()
     },
     methods: {
+        initMap() {
+            document.getElementById('mapContainer').innerHTML = '';
+
+            const centerLatLng = [this.item.lat, this.item.long];
+            this.map = L.map('mapContainer').setView(centerLatLng, 18);
+            this.map.scrollWheelZoom.disable();
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
+            L.marker(centerLatLng).addTo(this.map);
+
+            const centerPoint = point([parseFloat(this.item.long), parseFloat(this.item.lat)]);
+            const buffered = buffer(centerPoint, parseInt(this.item.radius), { units: 'meters' });
+
+            if (buffered.geometry && buffered.geometry.type === 'Polygon') {
+                const bufferPolygon = L.geoJSON(buffered);
+                bufferPolygon.setStyle({ fillColor: 'blue', fillOpacity: 0.3 }).addTo(this.map);
+
+                const bufferBounds = bufferPolygon.getBounds();
+                this.map.fitBounds(bufferBounds);
+            } else {
+                console.warn('Buffer geometry is not valid or empty.');
+            }
+        },
         hideTableJob() {
             this.hideJob = !this.hideJob;
             this.initializeJobTable()
@@ -319,6 +351,7 @@ export default {
                 .then(response => {
                     this.editing = true;
                     this.getUnit();
+                    this.initMap();
                     useToast().success('Data successfully updated');
                 })
                 .catch(error => {
