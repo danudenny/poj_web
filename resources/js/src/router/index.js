@@ -106,7 +106,6 @@ import ListApprovalOvertime from "../pages/overtime/list-approval.vue";
 import LeaveRequest from "../pages/leaves/leave-request.vue";
 import LeaveReport from "../pages/leaves/leave-report.vue";
 import LeaveMaster from "../pages/leaves/leave-master.vue";
-import CreateLeaveMaster from "../pages/leaves/create/create-master-leave.vue";
 
 // Admin Unit
 import AdminUnit from "../pages/admin-unit/index.vue";
