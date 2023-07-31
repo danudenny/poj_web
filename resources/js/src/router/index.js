@@ -33,8 +33,7 @@ import EmployeeDetail from '../pages/employees/details.vue';
 
 // General Settings
 import GeneralSettings from '../pages/settings/index.vue';
-import CompanySetting from '../pages/settings/company_setting/index.vue';
-
+import Syncs from '../pages/syncs/index.vue'
 // Work Area Settings
 import Cabang from '../pages/cabang/index.vue';
 import CabangDetail from '../pages/cabang/details.vue';
@@ -344,17 +343,17 @@ const routes =[
         ]
     },
     {
-        path: '/company-settings',
+        path: '/syncs',
         component: Body,
         children: [
             {
                 path: '',
-                name: 'Company Settings',
-                component: CompanySetting,
+                name: 'Syncronization',
+                component: Syncs,
                 meta: {
-                    title: 'POJ - Company Settings',
+                    title: 'POJ - Syncronization',
                     requiresAuth: true,
-                    permission : 'company_setting',
+                    permission : 'general_setting',
                 },
             },
         ]

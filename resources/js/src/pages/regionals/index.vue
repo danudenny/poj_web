@@ -11,12 +11,12 @@
                                 <h5>Regional List</h5>
                             </div>
                             <div class="card-body">
-                                <div class="d-flex justify-content-end mb-2">
-                                    <button class="btn btn-warning" type="button" data-bs-toggle="modal"
-                                            data-bs-target="#exampleModalCenter">
-                                        <i class="fa fa-recycle" /> &nbsp; Sync From ERP
-                                    </button>
-                                </div>
+<!--                                <div class="d-flex justify-content-end mb-2">-->
+<!--                                    <button class="btn btn-warning" type="button" data-bs-toggle="modal"-->
+<!--                                            data-bs-target="#exampleModalCenter">-->
+<!--                                        <i class="fa fa-recycle" /> &nbsp; Sync From ERP-->
+<!--                                    </button>-->
+<!--                                </div>-->
                                 <div v-if="loading" class="text-center">
                                     <img src="../../assets/loader.gif" alt="loading" width="100">
                                 </div>

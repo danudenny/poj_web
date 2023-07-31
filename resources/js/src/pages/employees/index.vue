@@ -11,16 +11,16 @@
                                 <h5>Employee List</h5>
                             </div>
                             <div class="card-body">
-                                <div class="d-flex justify-content-end mb-2">
-                                    <button class="btn btn-warning"  :disabled="syncLoading" type="button" @click="syncFromERP">
-                                        <span v-if="syncLoading">
-                                            <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
-                                        </span>
-                                        <span v-else>
-                                            <i class="fa fa-recycle"></i> &nbsp; Sync From ERP
-                                        </span>
-                                    </button>
-                                </div>
+<!--                                <div class="d-flex justify-content-end mb-2">-->
+<!--                                    <button class="btn btn-warning"  :disabled="syncLoading" type="button" @click="syncFromERP">-->
+<!--                                        <span v-if="syncLoading">-->
+<!--                                            <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)-->
+<!--                                        </span>-->
+<!--                                        <span v-else>-->
+<!--                                            <i class="fa fa-recycle"></i> &nbsp; Sync From ERP-->
+<!--                                        </span>-->
+<!--                                    </button>-->
+<!--                                </div>-->
                                 <div v-if="loading" class="text-center">
                                     <img src="../../assets/loader.gif" alt="loading" width="100">
                                 </div>
