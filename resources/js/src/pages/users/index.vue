@@ -33,18 +33,18 @@
                                                     >
                                                     </multiselect>
                                                 </div>
-                                                <div class="col-md-4">
-                                                    <div class="d-flex justify-content-end mb-2">
-                                                        <button class="btn btn-warning"  :disabled="syncLoading" type="button" @click="syncFromEmployee">
-                                        <span v-if="syncLoading">
-                                            <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
-                                        </span>
-                                                            <span v-else>
-                                            <i class="fa fa-recycle"></i> &nbsp; Sync From Employee
-                                        </span>
-                                                        </button>
-                                                    </div>
-                                                </div>
+<!--                                                <div class="col-md-4">-->
+<!--                                                    <div class="d-flex justify-content-end mb-2">-->
+<!--                                                        <button class="btn btn-warning"  :disabled="syncLoading" type="button" @click="syncFromEmployee">-->
+<!--                                                            <span v-if="syncLoading">-->
+<!--                                                                <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)-->
+<!--                                                            </span>-->
+<!--                                                            <span v-else>-->
+<!--                                                                <i class="fa fa-recycle"></i> &nbsp; Sync From Employee-->
+<!--                                                            </span>-->
+<!--                                                        </button>-->
+<!--                                                    </div>-->
+<!--                                                </div>-->
                                             </div>
                                         </div>
                                     </div>

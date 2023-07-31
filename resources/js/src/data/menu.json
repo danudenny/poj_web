@@ -296,9 +296,18 @@
             "permission" : "configuration_list"
         },
         {
+            "title": "Syncronization",
+            "icon": "download-cloud",
+            "iconf": "fill-settings",
+            "type": "link",
+            "active": false,
+            "path": "/syncs",
+            "permission" : "general_setting"
+        },
+        {
             "title": "General Settings",
             "icon": "settings",
-            "iconf": "fill-learning",
+            "iconf": "fill-settings",
             "type": "link",
             "active": false,
             "path": "/general-settings",

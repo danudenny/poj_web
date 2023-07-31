@@ -11,16 +11,16 @@
                                 <h5>Kantor Wilayah List</h5>
                             </div>
                             <div className="card-body">
-                                <div className="d-flex justify-content-end mb-2">
-                                    <button className="btn btn-warning" :disable="syncLoading" type="button" @click="syncFromERP">
-                                        <span v-if="syncLoading">
-                                            <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
-                                        </span>
-                                        <span v-else>
-                                            <i class="fa fa-recycle"></i> &nbsp; Sync From ERP
-                                        </span>
-                                    </button>
-                                </div>
+<!--                                <div className="d-flex justify-content-end mb-2">-->
+<!--                                    <button className="btn btn-warning" :disable="syncLoading" type="button" @click="syncFromERP">-->
+<!--                                        <span v-if="syncLoading">-->
+<!--                                            <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)-->
+<!--                                        </span>-->
+<!--                                        <span v-else>-->
+<!--                                            <i class="fa fa-recycle"></i> &nbsp; Sync From ERP-->
+<!--                                        </span>-->
+<!--                                    </button>-->
+<!--                                </div>-->
                                 <div v-if="loading" className="text-center">
                                     <img src="../../assets/loader.gif" alt="loading" width="100">
                                 </div>
