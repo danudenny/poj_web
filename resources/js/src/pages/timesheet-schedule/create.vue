@@ -13,28 +13,12 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label>Periods :</label>
-                                            <select v-model="period_id" class="form-control" >
-                                                <option value="">Select Periods</option>
-                                                <option :value="period.id" v-for="period in periods">{{ period.month }} {{period.year}}</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
+                                        <div class="col-md-12 mb-3">
                                             <label>Date :</label>
                                             <Datepicker
-                                                autoApply
-                                                :model-value="date"
-                                                @update:model-value="handleDate"
-                                                data-language="en"
-                                                placeholder="Select Date"
+                                                v-model="date"
                                                 :enable-time-picker="false"
-                                                hide-offset-dates
-                                                :min-date="new Date()"
-                                                :max-date="getCurrentMonthEndDate()"
-                                                disable-month-year-select
-                                                :highlight-week-days="[0, 6]"
-                                                :no-swipe="true"
+                                                disabled
                                             >
                                             </Datepicker>
                                         </div>
@@ -93,12 +77,12 @@ export default {
             employees: [],
             selectedEmployees: [],
             timesheets: [],
-            day: 0,
+            day: this.$route.query.date,
             totalDays: [],
             periods: [],
             loading: false,
             period_id: 0,
-            date: new Date(),
+            date: this.$route.query.date,
             timesheet_id: 0,
             workingArea: {},
             currentPage: 1,
@@ -279,11 +263,24 @@ export default {
         },
         async saveSchedule() {
             const ls = JSON.parse(localStorage.getItem('selectedEmployees'));
+            const queryPeriod = new Date(this.$route.query.date);
+            const month = queryPeriod.getMonth() + 1;
+            const year = queryPeriod.getFullYear();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+            this.periods.forEach((item, index) => {
+                const monthNumber = monthNames.indexOf(item.month) + 1;
+                if (monthNumber === parseInt(month) && parseInt(item.year) === parseInt(year)) {
+                    this.period_id = item.id;
+                }
+            });
+
+            const period = this.periods.find(item => item.id === this.period_id);
             await this.$axios.post(`/api/v1/admin/employee-timesheet/assign-schedule`, {
                 employee_ids: ls,
                 period_id: this.period_id,
                 timesheet_id: this.timesheet_id,
-                date: this.selectedDate,
+                date: queryPeriod.getDate(),
             }).then(response => {
                 localStorage.removeItem('selectedEmployees');
                 useToast().success(response.data.message , { position: 'bottom-right' });

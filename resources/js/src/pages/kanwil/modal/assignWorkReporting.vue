@@ -12,7 +12,7 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     Close
                 </button>
-                <button type="button" class="btn btn-primary">
+                <button type="button" class="btn btn-primary" @click="saveChanges">
                     Save changes
                 </button>
             </div>
@@ -21,12 +21,17 @@
 </template>
 
 <script>
-    export default {
-        props: {
-            modalTitle: {
-                type: String,
-                default: 'Modal title'
-            }
+export default {
+    props: {
+        modalTitle: {
+            type: String,
+            default: 'Modal title'
+        }
+    },
+    methods: {
+        saveChanges() {
+            this.$emit('save');
         }
     }
+}
 </script>

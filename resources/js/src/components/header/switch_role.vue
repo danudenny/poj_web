@@ -1,6 +1,6 @@
 <template>
     <li class="onhover-dropdown">
-        <div class="notification-box">
+        <div>
             <vue-feather type="copy" @click="notification_open()"></vue-feather>
         </div>
         <div class="onhover-show-div notification-dropdown">

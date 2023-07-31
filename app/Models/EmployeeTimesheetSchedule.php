@@ -56,8 +56,7 @@ class EmployeeTimesheetSchedule extends Model
 
     public function period(): BelongsTo
     {
-        $getMonth = Carbon::now()->month;
-        return $this->belongsTo(Period::class, 'period_id')->where('month', $getMonth);
+        return $this->belongsTo(Period::class, 'period_id');
     }
 
     public function employee(): BelongsTo

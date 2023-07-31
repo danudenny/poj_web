@@ -158,7 +158,6 @@
                                     <th>Reporting</th>
                                     <th>Total Reporting</th>
                                     <th>Type Reporting</th>
-                                    <th>Reporting Title</th>
                                     <th></th>
                                 </tr>
                                 </thead>
@@ -172,10 +171,6 @@
                                     </td>
                                     <td class="text-center">{{job.total_reporting}}</td>
                                     <td class="text-center">{{job.reporting_type.toUpperCase()}}</td>
-                                    <td class="text-center">
-                                        <span v-if="job.reporting_names !== null" class="badge badge-warning" v-for="rNames in JSON.parse(job.reporting_names)">{{rNames}}</span>
-                                        <span v-else class="badge badge-danger">-</span>
-                                    </td>
                                     <td>
                                         <button class="btn btn-primary" type="button" data-bs-toggle="modal"
                                                 data-bs-target=".bd-example-modal-lg">Manage
@@ -213,12 +208,6 @@
                                                     <div class="col-md-12" v-if="multipleWork">
                                                         <label class="col-form-label">Total Work Reporting</label>
                                                         <input type="number" class="form-control" v-model="numberOfWorks" min="1">
-                                                    </div>
-                                                    <div class="col-md-12 my-3" v-if="multipleWork">
-                                                        <div v-for="(index, i) in numberOfWorks" :key="index" class="form-group my-3">
-                                                            <label class="form-label">Work Reporting {{i + 1 }}</label>
-                                                            <input type="text" class="form-control" v-model="updateMandatory.reporting_names[i]">
-                                                        </div>
                                                     </div>
                                                 </div>
                                             </AssignWorkReporting>

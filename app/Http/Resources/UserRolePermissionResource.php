@@ -137,6 +137,7 @@ class UserRolePermissionResource extends JsonResource
             'is_backup_checkout' => $this->is_backup_checkout,
             'is_overtime_checkout' => $this->is_overtime_checkout,
             'is_event_checkout' => $this->is_event_checkout,
+            'current_work' => $this->employee->partner ? $this->employee->partner->name : '-',
             'employee' => $this->employee->unsetRelation('timesheetSchedules')->unsetRelation('overtime')->unsetRelation('backup')->unsetRelation('job'),
             'time_schedules' => $timesheet,
             'job' => $this->employee->job,

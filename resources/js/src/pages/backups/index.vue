@@ -49,6 +49,7 @@ export default {
             await this.$axios.get(`/api/v1/admin/backup`)
                 .then(response => {
                     this.backups = response.data.data;
+                    console.log(this.backups)
                 })
                 .catch(error => {
                     console.error(error);
@@ -56,19 +57,31 @@ export default {
         },
         initializeDepartmentTable() {
             const table = new Tabulator(this.$refs.backupTable, {
+                paginationCounter:"rows",
                 data: this.backups,
-                layout: 'fitColumns',
+                layout: 'fitData',
+                renderHorizontal:"virtual",
+                height: '100%',
                 columns: [
                     {
                         title: 'No',
                         field: '',
                         formatter: 'rownum',
-                        width: 100
+                        width: 70,
+                        frozen: true,
                     },
                     {
                         title: 'Requestor Name',
                         field: 'requestor_employee.name',
-                        headerFilter:"input"
+                        headerFilter:"input",
+                        frozen: true,
+                        width: 200,
+                        formatter: function (cell, formatterParams, onRendered) {
+                            return `<span class="text-danger"><b>${cell.getValue()}</b></span>`;
+                        },
+                        cellClick: (e, cell) => {
+                            this.viewData(cell.getRow().getData().id);
+                        }
                     },
                     {
                         title: 'Status',
@@ -83,31 +96,80 @@ export default {
                     {
                         title: 'Shift Type',
                         field: 'shift_type',
-                        headerFilter:"input"
+                        headerFilter:"input",
+                        hozAlign:"center"
                     },
                     {
-                        title: 'Source Unit',
-                        field: 'source_unit.name',
-                        headerFilter:"input"
+                        title:"Assigned",
+                        headerHozAlign:"center",
+                        columns:[
+                            {
+                                title:"From",
+                                field:"unit.name",
+                                headerHozAlign:"center",
+                                formatter: function (cell, formatterParams, onRendered) {
+                                    return `<span><i class="fa fa-arrow-left text-warning"></i>&nbsp; ${cell.getValue()}</span>`;
+                                },
+                            },
+                            {
+                                title:"To",
+                                field:"source_unit.name",
+                                headerHozAlign:"center",
+                                formatter: function (cell, formatterParams, onRendered) {
+                                    return `<span><i class="fa fa-arrow-right text-success"></i>&nbsp; ${cell.getValue()}</span>`;
+                                },
+                            },
+                        ],
                     },
                     {
-                        title: 'Destination Unit',
-                        field: 'unit.name',
+                        title: 'Job',
+                        field: 'job.name',
+                        headerHozAlign:"center",
+                        hozAlign:"center",
                         headerFilter:"input"
                     },
                     {
                         title: 'Start Date',
                         field: 'start_date',
-                        headerFilter:"date"
+                        headerHozAlign:"center",
+                        hozAlign:"center",
+                        headerFilter:"date",
+                        formatter: function (cell, formatterParams, onRendered) {
+                            const dateValue = new Date(cell.getRow().getData().start_date);
+                            const dateFormatter  = new Intl.DateTimeFormat('id-ID', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                            });
+                            const formattedDate = dateFormatter .format(dateValue);
+                            return `<span>${formattedDate}</span>`;
+                        },
                     },
                     {
                         title: 'End Date',
                         field: 'end_date',
-                        headerFilter:"date"
+                        headerHozAlign:"center",
+                        hozAlign:"center",
+                        headerFilter:"date",
+                        formatter: function (cell, formatterParams, onRendered) {
+                            const dateValue = new Date(cell.getRow().getData().end_date);
+                            const dateFormatter  = new Intl.DateTimeFormat('id-ID', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                            });
+                            const formattedDate = dateFormatter .format(dateValue);
+                            return `<span>${formattedDate}</span>`;
+                        },
                     },
                     {
-                        title: 'Duration (in Days)',
+                        title: 'Duration',
                         field: 'duration',
+                        headerHozAlign:"center",
+                        hozAlign:"center",
+                        formatter: function (cell, formatterParams, onRendered) {
+                            return `<span>${cell.getValue()} days</span>`;
+                        },
                     },
                     {
                         title: 'File',
@@ -120,26 +182,46 @@ export default {
                         }
                     },
                     {
-                        title: 'Created At',
-                        field: 'created_at',
-                        headerFilter:"input"
+                        title: 'Status',
+                        field: 'status',
+                        headerHozAlign:"center",
+                        hozAlign:"center",
+                        formatter: function (cell, formatterParams, onRendered) {
+                            if (cell.getValue() === 'assigned') {
+                                return `<span class="badge badge-warning">${cell.getValue()}</span>`;
+                            } else if (cell.getValue() === 'approved') {
+                                return `<span class="badge badge-success">${cell.getValue()}</span>`;
+                            } else if (cell.getValue() === 'rejected') {
+                                return `<span class="badge badge-danger">${cell.getValue()}</span>`;
+                            }
+                        },
                     },
                     {
-                        title: '',
-                        formatter: this.viewDetailsFormatter,
-                        width: 70,
-                        hozAlign: 'center',
-                        sortable: false,
-                        cellClick: (e, cell) => {
-                            this.viewData(cell.getRow().getData().id);
-                        }
-                    },
+                        title: 'Created At',
+                        field: 'created_at',
+                        headerFilter:"input",
+                        formatter: function (cell, formatterParams, onRendered) {
+                            const dateValue = new Date(cell.getRow().getData().created_at);
+                            const dateFormatter  = new Intl.DateTimeFormat('id-ID', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                            });
+                            const formattedDate = dateFormatter .format(dateValue);
+                            return `<span class="text-success"><b>${formattedDate}</b></span>`;
+                        },
+                    }
                 ],
                 pagination: 'local',
                 paginationSize: 10,
                 paginationSizeSelector: [10, 20, 50, 100],
                 headerFilter: true,
                 paginationInitialPage:1,
+                placeholder: 'No Data Available',
+                headerSortElement:"",
                 rowFormatter: (row) => {
                     //
                 }

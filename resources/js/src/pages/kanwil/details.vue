@@ -150,12 +150,14 @@
                           <Timesheet :id="paramsId"/>
                         </div>
                         <div class="tab-pane fade" id="pills-reporting" role="tabpanel" aria-labelledby="pills-reporting-tab">
-                            <table class="table table-striped">
+                            <table class="table table-striped table-responsive">
                                 <thead>
                                 <tr>
                                     <th>No</th>
                                     <th>Job Name</th>
-                                    <th>Mandatory Reporting</th>
+                                    <th>Reporting</th>
+                                    <th>Total Reporting</th>
+                                    <th>Type Reporting</th>
                                     <th></th>
                                 </tr>
                                 </thead>
@@ -167,12 +169,15 @@
                                         <span class="badge badge-pill badge-success" v-if="job.is_mandatory_reporting">Yes</span>
                                         <span class="badge badge-pill badge-danger" v-else>No</span>
                                     </td>
+                                    <td class="text-center">{{job.total_reporting}}</td>
+                                    <td class="text-center">{{job.reporting_type.toUpperCase()}}</td>
                                     <td>
                                         <button class="btn btn-primary" type="button" data-bs-toggle="modal"
-                                                data-bs-target=".bd-example-modal-lg">Work Reporting</button>
+                                                data-bs-target=".bd-example-modal-lg">Manage
+                                        </button>
                                         <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
                                              aria-hidden="true">
-                                            <AssignWorkReporting :modalTitle="modalTitle">
+                                            <AssignWorkReporting :modalTitle="modalTitle" @save="updateData(job.id)">
                                                 <div class="row">
 
                                                     <div class="col-md-5">
@@ -202,13 +207,7 @@
                                                     <hr v-if="multipleWork">
                                                     <div class="col-md-12" v-if="multipleWork">
                                                         <label class="col-form-label">Total Work Reporting</label>
-                                                        <input type="number" class="form-control" v-model="numberOfWorks" min="0">
-                                                    </div>
-                                                    <div class="col-md-12 my-3" v-if="multipleWork">
-                                                        <div v-for="(index, i) in numberOfWorks" :key="index" class="form-group my-3">
-                                                            <label class="form-label">Work Reporting {{i + 1 }}</label>
-                                                            <input type="text" class="form-control">
-                                                        </div>
+                                                        <input type="number" class="form-control" v-model="numberOfWorks" min="1">
                                                     </div>
                                                 </div>
                                             </AssignWorkReporting>
@@ -266,7 +265,14 @@ export default {
             wrMultiple: false,
             singleWork: true,
             multipleWork: false,
-            numberOfWorks: 0
+            numberOfWorks: 0,
+            updateMandatory: {
+                type: "",
+                total_reporting: 1,
+                reporting_names: [],
+                is_reporting: true,
+                job_ids: []
+            }
         }
     },
     async mounted() {
@@ -535,6 +541,26 @@ export default {
         },
         handleMultipleWorkChange() {
             this.singleWork = !this.multipleWork;
+        },
+        async updateData(id) {
+            if (this.singleWork) {
+                this.updateMandatory.type = 'normal';
+                this.updateMandatory.total_reporting = 1
+            } else {
+                this.updateMandatory.type = 'multiple';
+                this.updateMandatory.total_reporting = this.numberOfWorks
+            }
+
+            this.updateMandatory.job_ids.push(id)
+            await this.$axios.put(`/api/v1/admin/job/update-mandatory/${this.$route.params.id}`, this.updateMandatory)
+                .then(response => {
+                    window.location.reload()
+                    useToast().success(response.data.message);
+                })
+                .catch(error => {
+                    console.error(error);
+                    useToast().error(error.response.data.message);
+                });
         }
     },
     watch: {

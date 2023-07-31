@@ -3,13 +3,13 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">{{ title }}</h5>
-                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close" @click="closeModal"></button>
             </div>
             <div class="modal-body">
                 <slot></slot>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-danger" type="button" data-bs-dismiss="modal">
+                <button class="btn btn-danger" type="button" data-bs-dismiss="modal" @click="closeModal">
                     <i class="fa fa-times"></i> &nbsp; Close
                 </button>
                 <button class="btn btn-primary" type="button" @click="saveChanges">
@@ -31,7 +31,10 @@ export default {
     methods: {
         saveChanges() {
             this.$emit('save');
-        }
+        },
+        closeModal() {
+            this.$emit('close');
+        },
     }
 };
 </script>
