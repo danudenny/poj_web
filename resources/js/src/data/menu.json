@@ -242,6 +242,15 @@
             "permission" : "content_list"
         },
         {
+            "title": "Master Leave",
+            "icon": "box",
+            "iconf": "box",
+            "type": "link",
+            "active": false,
+            "path": "/leave-master",
+            "permission" : "incident_reporting"
+        },
+        {
             "title": "Leave Request",
             "icon": "message-circle",
             "iconf": "message-circle",

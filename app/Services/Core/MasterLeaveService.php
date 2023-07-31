@@ -13,11 +13,11 @@ class MasterLeaveService extends BaseService
     public function index($request): JsonResponse
     {
         $masterLeave = MasterLeave::query();
-        $masterLeave->when($request->name, function ($q) use ($request) {
-            $q->whereRaw("LOWER(name) LIKE '%" . strtolower($request->name) . "%'");
+        $masterLeave->when($request->leave_name, function ($q) use ($request) {
+            $q->whereRaw("LOWER(leave_name) LIKE '%" . strtolower($request->leave_name) . "%'");
         });
-        $masterLeave->when($request->type, function ($q) use ($request) {
-            $q->where('type', $request->type);
+        $masterLeave->when($request->leave_type, function ($q) use ($request) {
+            $q->where('leave_type', $request->leave_type);
         });
 
         $masterLeave->paginate($request->per_page ?? 10);
