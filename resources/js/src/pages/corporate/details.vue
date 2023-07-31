@@ -132,10 +132,10 @@
                                     <thead>
                                     <tr>
                                         <th></th>
-                                        <th>Job Name</th>
-                                        <th>Is Camera</th>
-                                        <th>Is Upload</th>
-                                        <th>Is Reporting</th>
+                                        <th>Job Title</th>
+                                        <th>Need Camera</th>
+                                        <th>Need Upload</th>
+                                        <th>Need Reporting</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -163,7 +163,7 @@
                                 <thead>
                                 <tr>
                                     <th>No</th>
-                                    <th>Job Name</th>
+                                    <th>Job Title</th>
                                     <th>Reporting</th>
                                     <th>Total Reporting</th>
                                     <th>Type Reporting</th>

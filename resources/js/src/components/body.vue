@@ -24,9 +24,7 @@
           <Sidebar @clicked="sidebar_toggle" />
         </div>
         <div class="page-body" @click="hidesecondmenu()">
-          <transition name="fadeIn" enter-active-class="animated fadeIn">
            <router-view class="view"></router-view>
-          </transition>
         </div>
         <Footer/>
       </div>

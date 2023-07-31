@@ -43,7 +43,9 @@ import CabangDetail from '../pages/cabang/details.vue';
 import Timesheet from '../pages/timesheet/index.vue';
 import TimesheetSchedule from '../pages/timesheet-schedule/index.vue';
 import TimesheetScheduleCreate from '../pages/timesheet-schedule/create.vue';
+import TimesheetScheduleEdit from '../pages/timesheet-schedule/edit.vue';
 import TimesheetScheduleDetail from '../pages/timesheet-schedule/details.vue';
+
 import Approval from '../pages/approvals/index.vue';
 import ApprovalModule from '../pages/approval-modules/index.vue';
 import CreateApproval from '../pages/approvals/Create.vue';
@@ -405,6 +407,16 @@ const routes =[
                     title: 'POJ - Create Timesheet Assignment',
                     requiresAuth: true,
                     permission: 'timesheet_assignment_create',
+                },
+            },
+            {
+                path: 'edit',
+                name: 'timesheet-schedule-edit',
+                component: TimesheetScheduleEdit,
+                meta: {
+                    title: 'POJ - Edit Timesheet Assignment',
+                    requiresAuth: true,
+                    permission: 'timesheet_assignment_edit',
                 },
             },
             {

@@ -38,7 +38,7 @@
                     <div class="d-flex column-gap-2 m-2">
                         <button class="btn btn-primary" @click="closeDrawer">
                             <i class="fa fa-times-circle"></i>&nbsp;Close</button>
-                        <button class="btn btn-warning" @click="closeDrawer">
+                        <button class="btn btn-warning" @click="editTimesheet">
                             <i class="fa fa-pencil"></i>&nbsp;Edit</button>
                     </div>
                     <div class="col-md-7">
@@ -47,6 +47,7 @@
                             <tr>
                                 <th>No</th>
                                 <th>Name</th>
+                                <th>Days</th>
                                 <th>Unit</th>
                             </tr>
                             </thead>
@@ -60,12 +61,18 @@
 
                                              <div class="d-flex flex-column">
                                                  <span>{{ item.employee.name }}</span>
-                                                 <small class="text-danger"><b>{{ item.timesheet.start_time}} - {{item.timesheet.end_time}}</b></small>
+                                                 <small class="text-danger">
+                                                     <b>{{ item.timesheet.start_time}} - {{item.timesheet.end_time}}</b>
+                                                     <span class="badge badge-primary">{{item.timesheet.shift_type}}</span>
+                                                 </small>
                                              </div>
-
-
                                          </div>
                                    </div>
+                                </td>
+                                <td>
+                                    <span v-if="item.timesheet.shift_type === 'non_shift'" class="badge badge-danger" v-for="day in item.timesheet.days">
+                                        {{day}}
+                                    </span>
                                 </td>
                                 <td>{{item.employee.last_unit.name}}</td>
                             </tr>
@@ -82,7 +89,7 @@
 import {CalendarView, CalendarViewHeader} from "vue-simple-calendar"
 import {useToast} from "vue-toastification";
 import "../../../../../node_modules/vue-simple-calendar/dist/style.css"
-import "../../../../../node_modules/vue-simple-calendar/dist/css/gcal.css"
+import "../../../../../node_modules/vue-simple-calendar/dist/css/default.css"
 
 export default {
     components: {
@@ -111,8 +118,21 @@ export default {
         this.getScheduleData()
     },
     methods: {
+        editTimesheet() {
+            const date = this.clickedSchedule[0].date
+            const year = this.clickedSchedule[0].period.year
+            const month = this.clickedSchedule[0].period.month
+
+            const dateObj = new Date(year, month - 1, date)
+            const dateStr = dateObj.toLocaleDateString()
+            this.$router.push({
+                name: 'timesheet-schedule-edit',
+                query: {
+                    date: dateStr
+                }
+            })
+        },
         toggleDrawer(item) {
-            console.log(this.schedules)
             this.schedules.filter((schedule) => {
                 if (schedule.date === item.startDate.getDate()) {
                     this.clickedSchedule.push(schedule)
@@ -211,11 +231,11 @@ export default {
 }
 
 .badge {
-    font-size: 12px;
+    font-size: 9px;
     padding: 5px 10px;
-    border-radius: 20px;
-    font-weight: 500;
-    text-transform: uppercase;
+    border-radius: 5px;
+    font-weight: 400;
+    text-transform: capitalize;
     letter-spacing: 1px;
     margin: 0 5px;
 }
