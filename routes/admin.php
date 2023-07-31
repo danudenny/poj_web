@@ -14,6 +14,7 @@ use App\Http\Controllers\API\EmployeeTimesheetController;
 use App\Http\Controllers\API\EventController;
 use App\Http\Controllers\API\IncidentController;
 use App\Http\Controllers\API\JobController;
+use App\Http\Controllers\API\MasterLeaveController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\OvertimeController;
 use App\Http\Controllers\API\PeriodController;
@@ -317,4 +318,14 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::post('create', [AdminUnitController::class, 'create']);
         Route::delete('remove/{id}', [AdminUnitController::class, 'remove']);
     });
+
+    // Begin Master Leave
+    Route::group(['prefix' => 'master_leave', 'middleware' => ['auth:sanctum']], function() {
+        Route::get('', [MasterLeaveController::class, 'index']);
+        Route::get('view/{id}', [MasterLeaveController::class, 'show']);
+        Route::post('create', [MasterLeaveController::class, 'save']);
+        Route::put('update/{id}', [MasterLeaveController::class, 'update']);
+        Route::put('delete/{id}', [MasterLeaveController::class, 'delete']);
+    });
+    // End Master Leave
 });
