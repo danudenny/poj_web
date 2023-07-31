@@ -253,7 +253,20 @@ class EmployeeTimesheetService extends BaseService {
         $groupedData = [];
         $getMonth = Carbon::now()->format('m');
         $schedule = EmployeeTimesheetSchedule::query();
-        $schedule->with(['employee', 'employee.kanwil', 'employee.area', 'employee.cabang','employee.outlet','timesheet', 'period']);
+        $schedule->with(['employee', 'employee.corporate', 'employee.kanwil', 'employee.area', 'employee.cabang','employee.outlet','timesheet', 'period']);
+        $schedule->when($request->query('date'), function ($query) use ($request) {
+            $query->where('date', $request->query('date'));
+        });
+        $schedule->when($request->query('month'), function ($query) use ($request) {
+            $query->whereHas('period', function ($query) use ($request) {
+                $query->where('month', $request->query('month'));
+            });
+        });
+        $schedule->when($request->query('year'), function ($query) use ($request) {
+            $query->whereHas('period', function ($query) use ($request) {
+                $query->where('year', $request->query('year'));
+            });
+        });
         if ($roles->hasRole('superadmin')) {
             $schedule = $schedule
                 ->orderBy('date')

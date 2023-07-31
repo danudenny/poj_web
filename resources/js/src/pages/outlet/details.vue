@@ -98,7 +98,7 @@
                                     <thead>
                                     <tr>
                                         <th></th>
-                                        <th>Job Name</th>
+                                        <th>Job Title</th>
                                         <th>Is Camera</th>
                                         <th>Is Upload</th>
                                         <th>Is Reporting</th>
@@ -129,7 +129,7 @@
                                 <thead>
                                 <tr>
                                     <th>No</th>
-                                    <th>Job Name</th>
+                                    <th>Job Title</th>
                                     <th>Reporting</th>
                                     <th>Total Reporting</th>
                                     <th>Type Reporting</th>
