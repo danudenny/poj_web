@@ -20,12 +20,10 @@ class MasterLeaveService extends BaseService
             $q->where('leave_type', $request->leave_type);
         });
 
-        $masterLeave->paginate($request->per_page ?? 10);
-
         return response()->json([
             'status' => 'success',
             'message' => 'Successfully get master leave data',
-            'data' => $masterLeave->get()
+            'data' => $masterLeave->paginate($request->per_page ?? 10)
         ], 200);
     }
 

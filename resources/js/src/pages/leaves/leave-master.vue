@@ -41,7 +41,7 @@
                     <div class="mt-3">
                         <label for="name">Type :</label>
                         <select id="status" class="form-select" v-model="leave.leave_type" required>
-                            <option value='sick'>Izin</option>
+                            <option value='permit'>Izin</option>
                             <option value='leave'>Cuti</option>
                         </select>
                     </div>
@@ -96,9 +96,10 @@ export default {
                     size: this.pageSize,
                 },
                 ajaxResponse: function (url, params, response) {
+                    console.log(response.last_page)
                     return {
-                        data: response.data,
-                        last_page: response.last_page,
+                        data: response.data.data,
+                        last_page: response.data.last_page,
                     }
                 },
                 ajaxURLGenerator: (url, config, params) => {
@@ -136,7 +137,7 @@ export default {
                         formatter: function (cell) {
                             if (cell.getValue() === 'leave') {
                                 return '<span class="badge badge-warning">Cuti</span>'
-                            } else if (cell.getValue() === 'sick') {
+                            } else if (cell.getValue() === 'permit') {
                                 return '<span class="badge badge-danger">Izin</span>'
                             }
                         }
