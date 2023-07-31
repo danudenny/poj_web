@@ -14,6 +14,7 @@ use App\Http\Controllers\API\EmployeeTimesheetController;
 use App\Http\Controllers\API\EventController;
 use App\Http\Controllers\API\IncidentController;
 use App\Http\Controllers\API\JobController;
+use App\Http\Controllers\API\LeaveRequestController;
 use App\Http\Controllers\API\MasterLeaveController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\OvertimeController;
@@ -328,4 +329,15 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::put('delete/{id}', [MasterLeaveController::class, 'delete']);
     });
     // End Master Leave
+
+    // Begin Leave Request
+    Route::group(['prefix' => 'leave_request', 'middleware' => ['auth:sanctum']], function() {
+        Route::get('', [LeaveRequestController::class, 'index']);
+        Route::get('view/{id}', [LeaveRequestController::class, 'show']);
+        Route::post('create', [LeaveRequestController::class, 'save']);
+        Route::put('approve/{id}', [LeaveRequestController::class, 'approve']);
+        Route::put('reject/{id}', [LeaveRequestController::class, 'reject']);
+        Route::post('upload', [LeaveRequestController::class, 'upload']);
+    });
+    // End Leave Request
 });
