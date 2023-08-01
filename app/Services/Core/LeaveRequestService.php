@@ -51,8 +51,8 @@ class LeaveRequestService extends BaseService {
                 $query->orWhere('cabang_id', $employee->last_unit->id);
                 $query->orWhere('outlet_id', $employee->last_unit->id);
             })->paginate($request->per_page ?? 10);
-        } else if ($roles->role_level === 'employee') {
-            $leaveRequest = $leaveRequest->where('employee_id', $auth->employee->id);
+        } else if ($roles->role_level === 'staff') {
+            $leaveRequest = $leaveRequest->where('employee_id', $auth->employee->id)->paginate($request->per_page ?? 10);;
         }
         return response()->json([
             'status' => 'success',
