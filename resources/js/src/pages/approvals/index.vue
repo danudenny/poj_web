@@ -175,6 +175,12 @@ export default {
             });
             this.loading = false;
         },
+        viewDetailsFormatter() {
+            return `<button class="button-icon button-success"><i class="fa fa-eye"></i></button>`;
+        },
+        viewData(id) {
+            this.$router.push({name: 'approval_details', params: {id: id}})
+        },
         async getWorkingArea() {
             await this.$axios.get('api/v1/admin/unit/related-unit')
                 .then(response => {

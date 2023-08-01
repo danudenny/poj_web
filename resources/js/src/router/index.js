@@ -49,6 +49,7 @@ import Approval from '../pages/approvals/index.vue';
 import ApprovalModule from '../pages/approval-modules/index.vue';
 import CreateApproval from '../pages/approvals/Create.vue';
 import EditApproval from '../pages/approvals/Edit.vue';
+import DetailApproval from '../pages/approvals/Detail.vue';
 import Department from '../pages/departments/index.vue';
 import Regional from '../pages/regionals/index.vue';
 import RegionalDetail from '../pages/regionals/details.vue';
@@ -466,6 +467,16 @@ const routes =[
                 component: EditApproval,
                 meta: {
                     title: 'POJ - Edit Approvals',
+                    requiresAuth: true,
+                    permission: 'approval_edit',
+                },
+            },
+            {
+                path: 'details/:id',
+                name: 'approval_details',
+                component: DetailApproval,
+                meta: {
+                    title: 'POJ - Detail Approvals',
                     requiresAuth: true,
                     permission: 'approval_edit',
                 },
