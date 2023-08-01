@@ -207,8 +207,6 @@ export default {
                         }
                     }
                 ],
-                pagination: true,
-                paginationMode: 'remote',
                 responsiveLayout: true,
                 filterMode:"remote",
                 paginationSize: this.pageSize,
@@ -240,6 +238,7 @@ export default {
                     }
                 },
                 paginationSizeSelector: [10, 20, 50, 100],
+                progressiveLoad: 'scroll',
                 headerFilter: true,
                 selectable: true,
                 rowFormatter: (row) => {
@@ -255,6 +254,7 @@ export default {
                     useToast().error('Minimum 1 employee must be selected');
                     rows[rows.length - 1].select();
                 }
+
                 localStorage.setItem('selectedEmployees', JSON.stringify(this.selectedEmployees));
             })
             this.loading = false;

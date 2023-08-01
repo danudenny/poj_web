@@ -184,8 +184,7 @@ export default {
                         }
                     }
                 ],
-                pagination: true,
-                paginationMode: 'remote',
+                progressiveLoad: 'scroll',
                 responsiveLayout: true,
                 filterMode:"remote",
                 paginationSize: this.pageSize,
