@@ -26,20 +26,19 @@
                                             <label>Unit :</label>
                                             <multiselect
                                                 v-model="selectedOptions"
-                                                placeholder="Select Unit"
+                                                placeholder="Loading ..."
+                                                disabled
                                                 label="name"
                                                 track-by="name"
                                                 :options="units"
-                                                :multiple="false"
-                                                @select="selectedUnit"
-                                            >
+                                                :multiple="false"                                            >
                                             </multiselect>
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label>Timesheet :</label>
-                                            <select v-model="timesheet_id" class="form-control" >
-                                                <option value="">Select Timesheet</option>
-                                                <option :value="item.id" v-for="item in timesheets">{{item.timesheet.name}} ( {{item.timesheet.start_time}} - {{item.timesheet.end_time}} )</option>
+                                            <select v-model="timesheet_id" class="form-control" disabled>
+                                                <option value="0">Select Timesheet</option>
+                                                <option :value="item.id" v-for="item in timesheetOptions">{{item.name}} ( {{item.start_time}} - {{item.end_time}} )</option>
                                             </select>
                                         </div>
                                         <div class="col-md-12 mb-3">
@@ -54,8 +53,12 @@
                             </div>
                         </div>
                         <div class="card-footer text-start">
-                            <button class="btn btn-primary m-r-10" @click="saveSchedule">Save</button>
-                            <button class="btn btn-secondary" @click="$router.push('/timesheet-assignment')">Back</button>
+                            <button class="btn btn-primary m-r-10" @click="saveSchedule">
+                                <i class="fa fa-save"></i>&nbsp;Save
+                            </button>
+                            <button class="btn btn-secondary" @click="$router.push('/timesheet-assignment')">
+                                <i class="fa fa-close"></i>&nbsp;Cancel
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -83,7 +86,7 @@ export default {
             loading: false,
             period_id: 0,
             date: this.$route.query.date,
-            timesheet_id: 0,
+            timesheet_id: parseInt(this.$route.query.timesheet_id),
             workingArea: {},
             currentPage: 1,
             pageSize: 10,
@@ -95,18 +98,17 @@ export default {
             table: null,
             lastDayOfCurrentMonth: null,
             selectedDate: 0,
-            selectedEmployeeIds: []
+            selectedEmployeeIds: [],
+            timesheetOptions: []
         }
     },
     async mounted() {
         await this.getTimesheet()
-        // this.selectedUnit()
-        // await this.getPeriods();
-        // await this.getTotalDays();
-        // await this.getEmployee();
         await this.getUnit();
+        await this.getPeriods();
+        await this.getAllTimesheets();
         this.initializeEmployeeTable()
-        // this.getCurrentMonthEndDate();
+        this.removeDuplicateTimesheets()
     },
     methods: {
         handleDate(e) {
@@ -114,18 +116,21 @@ export default {
             this.date = date;
             this.selectedDate = date.getDate();
         },
-        getCurrentMonthEndDate() {
-            const currentDate = new Date();
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
-            const firstDayOfNextMonth = new Date(year, month + 1, 1);
-            return new Date(firstDayOfNextMonth.getTime() - 1);
+        removeDuplicateTimesheets() {
+            const timesheetIds = [];
+            this.timesheets.filter(item => {
+                if (!timesheetIds.includes(item.timesheet_id)) {
+                    timesheetIds.push(item.timesheet_id);
+                }
+            });
+
+            return timesheetIds;
         },
         async getUnit() {
             await this.$axios.get(`api/v1/admin/unit/related-unit`)
                 .then(response => {
                     this.units = response.data.data;
-                    const unitId = this.timesheets[0].employee.last_unit.id
+                    const unitId = parseInt(this.$route.query.unit_id);
                     this.units.filter(item => {
                         if (item.id === unitId) {
                             this.selectedOptions = item;
@@ -135,28 +140,28 @@ export default {
                     console.error(error);
                 });
         },
-        async getTotalDays() {
-            const date = new Date();
-            const year = date.getFullYear();
-            const month = date.getMonth();
-            this.day = new Date(year, month, 0).getDate();
-            for (let i = 1; i <= this.day; i++) {
-                this.totalDays.push(i);
-            }
-        },
         async getPeriods() {
-          await this.$axios.get(`/api/v1/admin/periods`)
-              .then(response => {
+            await this.$axios.get(`/api/v1/admin/periods`)
+                .then(response => {
                     this.periods = response.data.data;
                     this.periods.forEach((item, index) => {
                         this.periods[index].month = new Date(item.year, item.month - 1, 1).toLocaleString('default', {month: 'long'});
                     });
-              })
-              .catch(error => {
-                  console.error(error);
-              });
+                })
+                .catch(error => {
+                    console.error(error);
+                });
         },
-        async getTimesheet(id) {
+        async getAllTimesheets() {
+            const unitId = parseInt(this.$route.query.unit_id);
+            await this.$axios.get(`api/v1/admin/employee-timesheet/${unitId}`)
+                .then(response => {
+                    this.timesheetOptions = response.data.data.data;
+                }).catch(error => {
+                    console.error(error);
+                });
+        },
+        async getTimesheet() {
             try {
                 const fullDate = new Date(this.$route.query.date);
                 const date = fullDate.getDate();
@@ -244,9 +249,14 @@ export default {
                     size: this.pageSize,
                 },
                 ajaxURLGenerator: (url, config, params) => {
+                    const unitId = parseInt(this.$route.query.unit_id);
+                    this.units.filter(item => {
+                        if (item.id === unitId) {
+                            this.filterUnitId = item.relation_id;
+                        }
+                    });
                     params.filter.map((item) => {
                         if (item.field === 'name') this.filterName = item.value
-                        if (item.field === 'last_unit_relation_id') this.filterUnitId = item.value
                     })
                     return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&last_unit_relation_id=${this.filterUnitId}`
                 },
@@ -261,12 +271,14 @@ export default {
                 selectable: true,
                 rowFormatter: (row) => {
                     let employees = row.getData();
-                    const matchedEmployeeIds = this.timesheets.map(p => p.employee_id);
-                    employees.id = matchedEmployeeIds.includes(employees.id);
-                    if (employees.id) {
-                        row.getElement().classList.add("highlight");
-                        row.remove();
-                    }
+                    const unitId = parseInt(this.$route.query.unit_id);
+                    this.timesheets.filter(item => {
+                        if (item.timesheet.unit_id === unitId) {
+                            if (item.employee.id === employees.id) {
+                                row.select();
+                            }
+                        }
+                    });
                 },
            });
             this.table.on("rowSelectionChanged", function(data, rows, selected, deselected)  {
@@ -290,9 +302,10 @@ export default {
             });
 
             const period = this.periods.find(item => item.id === this.period_id);
-            await this.$axios.post(`/api/v1/admin/employee-timesheet/assign-schedule`, {
+
+            await this.$axios.post(`/api/v1/admin/employee-timesheet/reassign-schedule`, {
                 employee_ids: ls,
-                period_id: this.period_id,
+                period_id: period.id,
                 timesheet_id: this.timesheet_id,
                 date: queryPeriod.getDate(),
             }).then(response => {

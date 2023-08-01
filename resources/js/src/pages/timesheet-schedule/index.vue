@@ -63,8 +63,10 @@
                                                  <span>{{ item.employee.name }}</span>
                                                  <small class="text-danger">
                                                      <b>{{ item.timesheet.start_time}} - {{item.timesheet.end_time}}</b>
-                                                     <span class="badge badge-primary">{{item.timesheet.shift_type}}</span>
                                                  </small>
+                                                 <div>
+                                                     <span class="badge badge-primary">{{item.timesheet.shift_type}}</span>
+                                                 </div>
                                              </div>
                                          </div>
                                    </div>
@@ -83,6 +85,31 @@
             </div>
         </div>
     </div>
+    <div>
+        <SmallModal :visible="isModalVisible" :title="modalTitle" @update:visible="isModalVisible = $event">
+            <div class="row">
+                <div class="col-md-12">
+                    <table class="table table-hover table-responsive">
+                        <thead>
+                        <tr class="text-center" style="font-weight: 700;">
+                            <td>Unit Name</td>
+                            <td>Edit</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr v-for="(item, index) in multipleUnits">
+                            <td>{{item.name}}</td>
+                            <td>
+                                <button class="btn btn-primary" @click="goToUpdate(item.id)">
+                                    <i class="fa fa-pencil"></i>&nbsp;Edit</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </SmallModal>
+    </div>
 </template>
 
 <script>
@@ -90,14 +117,18 @@ import {CalendarView, CalendarViewHeader} from "vue-simple-calendar"
 import {useToast} from "vue-toastification";
 import "../../../../../node_modules/vue-simple-calendar/dist/style.css"
 import "../../../../../node_modules/vue-simple-calendar/dist/css/default.css"
+import SmallModal from "../../components/small_modal.vue";
 
 export default {
     components: {
+        SmallModal,
         CalendarView,
         CalendarViewHeader,
     },
     data() {
         return {
+            isModalVisible: false,
+            modalTitle: 'Select Unit',
             loading: false,
             schedules: [],
             date: 0,
@@ -111,26 +142,72 @@ export default {
                 }
             ],
             clickedSchedule: [],
-            scheduleInfo: []
+            scheduleInfo: [],
+            multipleUnits: [],
+            finalMultipleUnits: [],
         }
     },
     mounted() {
         this.getScheduleData()
     },
     methods: {
-        editTimesheet() {
-            const date = this.clickedSchedule[0].date
-            const year = this.clickedSchedule[0].period.year
-            const month = this.clickedSchedule[0].period.month
+        goToUpdate(id) {
+            this.clickedSchedule.filter((item) => {
+                if (item.timesheet.unit_id === id) {
+                    const date = item.date
+                    const year = item.period.year
+                    const month = item.period.month
 
-            const dateObj = new Date(year, month - 1, date)
-            const dateStr = dateObj.toLocaleDateString()
-            this.$router.push({
-                name: 'timesheet-schedule-edit',
-                query: {
-                    date: dateStr
+                    const dateObj = new Date(year, month - 1, date)
+                    const dateStr = dateObj.toLocaleDateString()
+                    this.$router.push({
+                        name: 'timesheet-schedule-edit',
+                        query: {
+                            date: dateStr,
+                            unit_id: id,
+                            timesheet_id: item.timesheet.id,
+                        }
+                    })
                 }
             })
+        },
+        editTimesheet() {
+            const units = [];
+            this.clickedSchedule.forEach((item) => {
+                units.push(item.timesheet.unit_id);
+                this.multipleUnits.push(item.timesheet.unit);
+            });
+
+            const uniqueUnitIdsSet = new Set(units);
+            const uniqueUnitIdsArray = Array.from(uniqueUnitIdsSet);
+
+            const uniqueObjectMap = {};
+            this.multipleUnits = this.multipleUnits.filter((item) => {
+                if (!uniqueObjectMap[item.id]) {
+                    uniqueObjectMap[item.id] = true;
+                    return true;
+                }
+                return false;
+            });
+
+            if (uniqueUnitIdsArray.length > 1) {
+                this.isModalVisible = true;
+            } else {
+                const date = this.clickedSchedule[0].date
+                const year = this.clickedSchedule[0].period.year
+                const month = this.clickedSchedule[0].period.month
+
+                const dateObj = new Date(year, month - 1, date)
+                const dateStr = dateObj.toLocaleDateString()
+                this.$router.push({
+                    name: 'timesheet-schedule-edit',
+                    query: {
+                        date: dateStr,
+                        unit_id: this.clickedSchedule[0].timesheet.unit_id,
+                        timesheet_id: this.clickedSchedule[0].timesheet.id,
+                    }
+                })
+            }
         },
         toggleDrawer(item) {
             this.schedules.filter((schedule) => {
@@ -142,6 +219,7 @@ export default {
         },
         closeDrawer() {
             this.clickedSchedule = []
+            this.multipleUnits = []
             this.isOpen = false;
             document.removeEventListener("click", this.closeOnOutsideClick);
         },
@@ -302,11 +380,12 @@ export default {
     top: 0;
     right: -800px;
     height: 100%;
-    width: 950px;
+    width: 70%;
     background-color: #f0f0f0;
     transition: right 0.5s ease-in-out;
     z-index: 1000;
     overflow-y: auto;
+    overflow-x: auto;
     scrollbar-width: thin;
 }
 

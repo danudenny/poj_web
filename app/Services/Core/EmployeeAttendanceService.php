@@ -843,8 +843,8 @@ class EmployeeAttendanceService extends BaseService {
                     'end_time' => Carbon::parse($normal->end_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'check_in_time' => $normal->check_in_time ? Carbon::parse($normal->check_in_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
                     'check_out_time' => $normal->check_out_time ? Carbon::parse($normal->check_out_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
-                    'early_buffer' => $normal->early_buffer,
-                    'late_buffer' => $normal->late_buffer,
+                    'early_buffer' =>$employee->last_unit->early_buffer,
+                    'late_buffer' => $employee->last_unit->late_buffer,
                     'reference_type' => 'normal',
                     'reference_id' => $normal->id
                 ];

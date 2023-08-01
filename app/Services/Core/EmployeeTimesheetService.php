@@ -242,6 +242,17 @@ class EmployeeTimesheetService extends BaseService {
                     ], 404);
                 }
 
+                $existingSchedule = EmployeeTimesheetSchedule::where('employee_id', $employeeId)
+                    ->where('date', $request->date)
+                    ->first();
+
+                if ($existingSchedule) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Employee is already assigned for the selected date',
+                    ], 409);
+                }
+
                 $schedule = new EmployeeTimesheetSchedule();
                 $schedule->employee_id = $employeeId;
                 $schedule->timesheet_id = $request->timesheet_id;
@@ -280,13 +291,118 @@ class EmployeeTimesheetService extends BaseService {
         }
     }
 
+    public function reassignOrUpdateTimesheetSchedule($request): JsonResponse
+    {
+        $employeeIds = $request->employee_ids;
+
+        $timesheetExists = EmployeeTimesheet::where('id', $request->timesheet_id)->first();
+        if (!$timesheetExists) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Timesheet id not found',
+                'data' => ''
+            ], 404);
+        }
+        $unit = $timesheetExists->unit;
+
+        $timezone = getTimezoneV2($unit->lat, $unit->long);
+
+        $periodsExists = Period::where('id', $request->period_id)->first();
+        if (!$periodsExists) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Period id not found',
+                'data' => ''
+            ], 404);
+        }
+
+        $parsedStartTime = Carbon::parse(sprintf("%s-%s-%s %s:00", $periodsExists->year, $periodsExists->month, $request->date, $timesheetExists->start_time), $timezone);
+        $parsedEndTime = Carbon::parse(sprintf("%s-%s-%s %s:00", $periodsExists->year, $periodsExists->month, $request->date, $timesheetExists->end_time), $timezone);
+        if ($parsedEndTime->lessThan($parsedStartTime)) {
+            $parsedEndTime->addDays(1);
+        }
+
+        $existingSchedules = EmployeeTimesheetSchedule::where('timesheet_id', $request->timesheet_id)
+            ->where('period_id', $request->period_id)
+            ->where('date', $request->date)
+            ->get();
+
+        DB::beginTransaction();
+        try {
+            foreach ($employeeIds as $employeeId) {
+                $existingSchedule = $existingSchedules->where('employee_id', $employeeId)->first();
+
+                if ($existingSchedule) {
+                    $existingSchedule->start_time = $parsedStartTime->setTimezone('UTC');
+                    $existingSchedule->end_time = $parsedEndTime->setTimezone('UTC');
+                    $existingSchedule->early_buffer = $unit->early_buffer ?? 0;
+                    $existingSchedule->late_buffer = $unit->late_buffer ?? 0;
+                    $existingSchedule->timezone = $timezone;
+                    $existingSchedule->latitude = $unit->lat;
+                    $existingSchedule->longitude = $unit->long;
+
+                    if (!$existingSchedule->save()) {
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Failed to update data',
+                            'data' => $existingSchedule
+                        ], 500);
+                    }
+                } else {
+                    $schedule = new EmployeeTimesheetSchedule();
+                    $schedule->employee_id = $employeeId;
+                    $schedule->timesheet_id = $request->timesheet_id;
+                    $schedule->period_id = $request->period_id;
+                    $schedule->date = $request->date;
+                    $schedule->start_time = $parsedStartTime->setTimezone('UTC');
+                    $schedule->end_time = $parsedEndTime->setTimezone('UTC');
+                    $schedule->early_buffer = $unit->early_buffer ?? 0;
+                    $schedule->late_buffer = $unit->late_buffer ?? 0;
+                    $schedule->timezone = $timezone;
+                    $schedule->latitude = $unit->lat;
+                    $schedule->longitude = $unit->long;
+
+                    if (!$schedule->save()) {
+                        return response()->json([
+                            'status' => 'error',
+                            'message' => 'Failed to save data',
+                            'data' => $schedule
+                        ], 500);
+                    }
+                }
+
+            }
+
+            foreach ($existingSchedules as $existingSchedule) {
+                if (!in_array($existingSchedule->employee_id, $employeeIds)) {
+                    $existingSchedule->delete();
+                }
+            }
+
+            DB::commit();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Data updated successfully',
+                'data' => ""
+            ], 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'data' => ''
+            ], 500);
+        }
+    }
+
+
     public function getEmployeeSchedule($request): JsonResponse
     {
         $roles = Auth::user();
         $groupedData = [];
         $getMonth = Carbon::now()->format('m');
         $schedule = EmployeeTimesheetSchedule::query();
-        $schedule->with(['employee', 'employee.corporate', 'employee.kanwil', 'employee.area', 'employee.cabang','employee.outlet','timesheet', 'period']);
+        $schedule->with(['employee', 'employee.corporate', 'employee.kanwil', 'employee.area', 'employee.cabang','employee.outlet','timesheet', 'timesheet.unit', 'period']);
         $schedule->when($request->query('date'), function ($query) use ($request) {
             $query->where('date', $request->query('date'));
         });

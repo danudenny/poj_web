@@ -237,10 +237,14 @@ class EmployeeService extends BaseService
         $user = $request->user();
 
         try {
-            $employees = Employee::query()->with(['kanwil', 'area', 'cabang', 'outlet', 'job']);
+            $employees = Employee::query()->with(['corporate','kanwil', 'area', 'cabang', 'outlet', 'job']);
 
             $lastUnitRelationID = $request->get('last_unit_relation_id');
             $unitRelationID = $request->get('unit_relation_id');
+
+            $employees->when($request->unit_id, function (Builder $builder) use ($request) {
+                $builder->where('unit_id', '=', $request->unit_id);
+            });
 
             if ($user->isHighestRole(Role::RoleAdmin)) {
                 if (!$unitRelationID) {
