@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs main="Leave Report"/>
+        <Breadcrumbs main="Leave Request"/>
 
         <div class="container-fluid">
             <div class="email-wrap bookmark-wrap">
@@ -8,7 +8,7 @@
                     <div class="col-md-12">
                         <div class="card card-absolute">
                             <div class="card-header bg-primary">
-                                <h5>Leave Report</h5>
+                                <h5>Leave Request</h5>
                             </div>
                             <div class="card-body">
                             </div>

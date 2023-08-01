@@ -104,6 +104,7 @@ import ListApprovalOvertime from "../pages/overtime/list-approval.vue";
 
 // Leave
 import LeaveRequest from "../pages/leaves/leave-request.vue";
+import LeaveRequestDetail from "../pages/leaves/details/leave-request-detail.vue";
 import LeaveReport from "../pages/leaves/leave-report.vue";
 import LeaveMaster from "../pages/leaves/leave-master.vue";
 
@@ -766,10 +767,20 @@ const routes =[
         children: [
             {
                 path: '',
-                name: 'Leave Request',
+                name: 'leave-request',
                 component: LeaveRequest,
                 meta: {
                     title: 'POJ - Leave Request',
+                    requiresAuth: true,
+                    permission: 'incident_reporting',
+                },
+            },
+            {
+                path: 'details/:id',
+                name: 'leave-request-details',
+                component: LeaveRequestDetail,
+                meta: {
+                    title: 'POJ - Leave Request Detail',
                     requiresAuth: true,
                     permission: 'incident_reporting',
                 },
