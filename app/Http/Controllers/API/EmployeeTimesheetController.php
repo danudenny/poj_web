@@ -87,6 +87,10 @@ class EmployeeTimesheetController extends BaseController
     {
         return $this->employeeTimesheetService->assignTimesheetSchedule($request);
     }
+    public function reAssignSchedule(Request $request): JsonResponse
+    {
+        return $this->employeeTimesheetService->reassignOrUpdateTimesheetSchedule($request);
+    }
 
     public function getEmployeeSchedule(Request $request): JsonResponse
     {
