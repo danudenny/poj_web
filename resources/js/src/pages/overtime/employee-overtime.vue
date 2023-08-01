@@ -162,6 +162,10 @@ export default {
                         field: 'overtime_date.end_time_with_timezone',
                     },
                     {
+                        title: 'Total Overtime',
+                        field: 'overtime_date.total_overtime_string',
+                    },
+                    {
                         title: 'Check In Time',
                         field: 'check_in_time_with_unit_timezone',
                     },

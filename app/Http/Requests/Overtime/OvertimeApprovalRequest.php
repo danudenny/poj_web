@@ -32,7 +32,8 @@ class OvertimeApprovalRequest extends FormRequest
             ],
             'notes' => [
                 Rule::requiredIf($this->input('status') == OvertimeHistory::TypeRejected)
-            ]
+            ],
+            "dates" => [Rule::requiredIf($this->input('status') == OvertimeHistory::TypeApproved)]
         ];
     }
 }

@@ -88,23 +88,41 @@
             </div>
         </div>
         <div class="modal fade" id="approvalModal" ref="approvalModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
-            <VerticalModal title="Approval Modal" @save="overtimeApproval()">
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="mt-2">
-                            <label for="status">Status:</label>
-                            <select id="status" name="status" class="form-select" v-model="approval.status" required>
-                                <option value="approved" :selected="approval.status === 'approved' ? 'selected' : ''">Approve</option>
-                                <option value="rejected" :selected="approval.status === 'rejected' ? 'selected' : ''">Reject</option>
-                            </select>
-                        </div>
-                        <div class="mt-2" v-if="approval.status === 'rejected'">
-                            <label for="name">Note:</label>
-                            <input type="text" class="form-control" id="reason" v-model="approval.notes" required>
+            <form @submit.prevent="overtimeApproval()">
+                <VerticalModal title="Approval Modal">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="mt-2">
+                                <label for="status">Status:</label>
+                                <select id="status" name="status" class="form-select" v-model="approval.status" required>
+                                    <option value="approved" :selected="approval.status === 'approved' ? 'selected' : ''">Approve</option>
+                                    <option value="rejected" :selected="approval.status === 'rejected' ? 'selected' : ''">Reject</option>
+                                </select>
+                            </div>
+                            <div class="mt-2" v-if="approval.status === 'rejected'">
+                                <label for="name">Note:</label>
+                                <input type="text" class="form-control" id="reason" v-model="approval.notes" required>
+                            </div>
+                            <div class="mt-2" v-if="approval.status === 'approved'">
+                                <div class="row" v-for="(item, index) in approval.dates" :key="index">
+                                    <div class="col-md-6">
+                                        <div class="mt-2">
+                                            <label for="name">Tanggal</label>
+                                            <input type="text" class="form-control" :value="index" disabled required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mt-2">
+                                            <label for="name">Total Jam format (jam:menit:detik)</label>
+                                            <input type="tel" class="form-control" v-model="approval.dates[index]" pattern="[0-9]{1,2}:[0-9]{1,2}:[0-9]{1,2}" required>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </VerticalModal>
+                </VerticalModal>
+            </form>
         </div>
         <div class="modal fade" id="historyModal" ref="historyModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
             <VerticalModalWithoutSave title="History">
@@ -211,7 +229,8 @@ export default {
             },
             approval: {
                 status: null,
-                notes:null
+                notes:null,
+                dates: {}
             },
             selectedOvertimeDate: null
         }
@@ -258,6 +277,12 @@ export default {
             this.$axios.get(`/api/v1/admin/overtime/view/${this.$route.params.id}`)
                 .then(response => {
                     this.overtime = response.data.data
+
+                    this.overtime.overtime_dates.forEach((item) => {
+                        this.approval.dates[item.date] = item.total_overtime
+                    })
+
+                    console.log(this.approval)
                 })
                 .catch(error => {
                     console.error(error);

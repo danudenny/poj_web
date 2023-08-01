@@ -25,12 +25,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Arr;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
-class EmployeeAttendanceService extends BaseService {
+class EmployeeAttendanceService extends BaseService
+{
 
 
     private EmployeeTimesheetService $employeeTimesheetService;
 
-    public function __construct(EmployeeTimesheetService $employeeTimesheetService) {
+    public function __construct(EmployeeTimesheetService $employeeTimesheetService)
+    {
         $this->employeeTimesheetService = $employeeTimesheetService;
     }
     public function index(Request $request): JsonResponse
@@ -70,12 +72,11 @@ class EmployeeAttendanceService extends BaseService {
                 $flatUnit = UnitHelper::flattenUnits($empUnit);
                 $relationIds = array_column($flatUnit, 'relation_id');
                 $attendancesData = $attendances->whereHas('employee', function (Builder $query) use ($relationIds) {
-                     $query->whereIn('kanwil_id', $relationIds)
-                         ->orWhereIn('area_id', $relationIds)
-                         ->orWhereIn('cabang_id', $relationIds)
-                         ->orWhereIn('outlet_id', $relationIds);
+                    $query->whereIn('kanwil_id', $relationIds)
+                        ->orWhereIn('area_id', $relationIds)
+                        ->orWhereIn('cabang_id', $relationIds)
+                        ->orWhereIn('outlet_id', $relationIds);
                 })->paginate(10);
-
             } else {
                 $attendancesData = $attendances->where('employee_id', Auth::user()->employee_id)
                     ->paginate($request->get('limit', 10));
@@ -89,12 +90,13 @@ class EmployeeAttendanceService extends BaseService {
         } catch (Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => self::SOMETHING_WRONG.' : '.$e->getMessage()
+                'message' => self::SOMETHING_WRONG . ' : ' . $e->getMessage()
             ], 500);
         }
     }
 
-    public function view(Request $request, int $id) {
+    public function view(Request $request, int $id)
+    {
         $attendance = EmployeeAttendance::query()->with(['employeeAttendanceHistory', 'employee'])->where('id', '=', $id)->first();
 
         if (!$attendance) {
@@ -111,7 +113,8 @@ class EmployeeAttendanceService extends BaseService {
         ]);
     }
 
-    function getLastUnit($data) {
+    function getLastUnit($data)
+    {
         $lastData = null;
         foreach ($data as $item) {
             if ($item === null) {
@@ -128,7 +131,7 @@ class EmployeeAttendanceService extends BaseService {
     public function checkIn($request): JsonResponse
     {
         $empData = auth()->user()->employee;
-        $filteredUnitData = [$empData->kanwil,$empData->area,$empData->cabang,$empData->outlet];
+        $filteredUnitData = [$empData->kanwil, $empData->area, $empData->cabang, $empData->outlet];
 
         $timesheetSchedules = $empData->timesheetSchedules;
         if (!$timesheetSchedules) {
@@ -223,7 +226,7 @@ class EmployeeAttendanceService extends BaseService {
         $isOnTime = $employeeCheckInTime->between($earlyBoundary, $lateBoundary);
 
         $isNeedApproval = false;
-        if ($distance <= intval($workLocation->radius)){
+        if ($distance <= intval($workLocation->radius)) {
             $attType = "onsite";
         } else {
             $attType = "offsite";
@@ -397,7 +400,7 @@ class EmployeeAttendanceService extends BaseService {
                     'status' => false,
                     'message' => sprintf("Minimum check in at %s", $minimumCheckInTime->setTimezone($employeeTimezone)->format('H:i:s'))
                 ], ResponseAlias::HTTP_BAD_REQUEST);
-            }else if ($currentTime->greaterThanOrEqualTo($minimumCheckInTime) && $currentTime->lessThan($checkInTime)) {
+            } else if ($currentTime->greaterThanOrEqualTo($minimumCheckInTime) && $currentTime->lessThan($checkInTime)) {
                 $attendanceStatus = "Early Check In";
             } else if ($currentTime->greaterThan($maximumCheckInTime)) {
                 $attendanceStatus = "Late";
@@ -408,7 +411,7 @@ class EmployeeAttendanceService extends BaseService {
 
             $attendanceType = "onsite";
             $isNeedApproval = false;
-            if ($distance > intval($employeeTimesheetSchedule->timesheet->unit->radius)){
+            if ($distance > intval($employeeTimesheetSchedule->timesheet->unit->radius)) {
                 $attendanceType = "offsite";
                 $isNeedApproval = true;
             }
@@ -458,7 +461,8 @@ class EmployeeAttendanceService extends BaseService {
         }
     }
 
-    public function checkOutV2(CheckOutAttendanceRequest $request, int $id) {
+    public function checkOutV2(CheckOutAttendanceRequest $request, int $id)
+    {
         try {
             /**
              * @var User $user
@@ -541,7 +545,7 @@ class EmployeeAttendanceService extends BaseService {
     {
         $empData = auth()->user()->employee;
 
-        $filteredUnitData = [$empData->corporate, $empData->kanwil,$empData->area,$empData->cabang,$empData->outlet];
+        $filteredUnitData = [$empData->corporate, $empData->kanwil, $empData->area, $empData->cabang, $empData->outlet];
         $timesheetSchedules = $empData->timesheetSchedules;
 
         if (!$timesheetSchedules) {
@@ -618,7 +622,8 @@ class EmployeeAttendanceService extends BaseService {
         }
 
         $distance = calculateDistance(
-            $request->lat, $request->long,
+            $request->lat,
+            $request->long,
             floatval($workLocation['lat']),
             floatval($workLocation['long'])
         );
@@ -747,7 +752,8 @@ class EmployeeAttendanceService extends BaseService {
         }
     }
 
-    public function getActiveAttendance(Request $request) {
+    public function getActiveAttendance(Request $request)
+    {
         try {
             /**
              * @var Employee $employee
@@ -827,8 +833,8 @@ class EmployeeAttendanceService extends BaseService {
                         $activeSchedule['current_attendance'] = $activeSchedule['attendance']['backup'];
                     }
                     if (
-                        Carbon::parse($activeSchedule['attendance']['backup']['start_time'])->greaterThan($activeSchedule['current_attendance']['end_time']) &&
-                        $parsedCurrentTimeWithTimezone->greaterThanOrEqualTo(Carbon::parse($activeSchedule['attendance']['backup']['start_time']))
+                        Carbon::parse($activeSchedule['attendance']['backup']['start_time'])->lessThan($activeSchedule['current_attendance']['start_time']) &&
+                        $activeSchedule['attendance']['backup']['check_in_time'] != null
                     ) {
                         $activeSchedule['current_attendance'] = $activeSchedule['attendance']['backup'];
                     }

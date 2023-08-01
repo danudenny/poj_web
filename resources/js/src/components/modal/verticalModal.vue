@@ -12,7 +12,7 @@
                 <button class="btn btn-danger" type="button" data-bs-dismiss="modal" @click="closeModal">
                     <i class="fa fa-times"></i> &nbsp; Close
                 </button>
-                <button class="btn btn-primary" type="button" @click="saveChanges">
+                <button class="btn btn-primary" type="submit" @click="saveChanges">
                     <i class="fa fa-save"></i> &nbsp; Save
                 </button>
             </div>

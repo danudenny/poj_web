@@ -121,7 +121,7 @@ class BackupService extends BaseService
         $query = BackupEmployeeTime::query()->with(['backupTime.backup', 'employee:employees.id,name'])
             ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
             ->join('backups', 'backups.id', '=', 'backup_times.backup_id')
-            ->where('backups.status', '=', BackupApproval::StatusApproved)
+            ->where('backups.status', '!=', BackupApproval::StatusRejected)
             ->where('backup_times.start_time', '>=', Carbon::now()->addDays(-1)->format('Y-m-d H:i:s'))
             ->orderBy('backup_times.start_time', 'ASC')
             ->select(['backup_employee_times.*']);

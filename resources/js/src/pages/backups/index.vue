@@ -213,7 +213,17 @@ export default {
                             const formattedDate = dateFormatter .format(dateValue);
                             return `<span class="text-success"><b>${formattedDate}</b></span>`;
                         },
-                    }
+                    },
+                    {
+                        title: '',
+                        formatter: this.viewDetailsFormatter,
+                        width: 70,
+                        hozAlign: 'center',
+                        sortable: false,
+                        cellClick: (e, cell) => {
+                            this.viewData(cell.getRow().getData().id);
+                        }
+                    },
                 ],
                 pagination: 'local',
                 paginationSize: 10,

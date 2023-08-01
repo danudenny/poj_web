@@ -146,7 +146,7 @@ class OvertimeService extends BaseService
             ->with(['employee:employees.id,name', 'overtimeDate.overtime'])
             ->join('overtime_dates', 'overtime_dates.id', '=', 'overtime_employees.overtime_date_id')
             ->join('overtimes', 'overtimes.id', '=', 'overtime_dates.overtime_id')
-            ->where('overtimes.last_status', OvertimeHistory::TypeApproved);
+            ->where('overtimes.last_status', '!=', OvertimeHistory::TypeRejected);
 
         if ($user->isHighestRole(Role::RoleStaff)) {
             $query->where('overtime_employees.employee_id', '=', $user->employee_id);
@@ -414,6 +414,7 @@ class OvertimeService extends BaseService
                 $overtimeDate->date = $overtimeDateData['date'];
                 $overtimeDate->start_time = $overtimeDateData['start_time'];
                 $overtimeDate->end_time = $overtimeDateData['end_time'];
+                $overtimeDate->total_overtime = $overtimeDateData['diff_times'];
                 $overtimeDate->save();
 
                 foreach ($overtimeDateData['employee_ids'] as $employeeID) {
@@ -489,10 +490,14 @@ class OvertimeService extends BaseService
                 $endTime->addDays(1);
             }
 
+            $diff = $startTime->diff($endTime);
+            $parsedDiff = sprintf("%02d:%02d:%02d", $diff->h, $diff->i, $diff->s);
+
             $results[] = [
                 'date' => $startTime->format('Y-m-d'),
                 'start_time' => $startTime->format('Y-m-d H:i:s'),
                 'end_time' => $endTime->format('Y-m-d H:i:s'),
+                'diff_times' => $parsedDiff,
                 'employee_ids' => $employeeIDs
             ];
         }
@@ -552,6 +557,8 @@ class OvertimeService extends BaseService
                 }
             }
 
+            $totalOvertimes = $request->input('dates', []);
+
             DB::beginTransaction();
 
             $userApproval->status = $request->input('status');
@@ -583,6 +590,20 @@ class OvertimeService extends BaseService
                 $lastApproval = $overtime->overtimeApprovals()->orderBy('priority', 'DESC')->first();
                 if ($lastApproval->status == OvertimeApproval::StatusApproved) {
                     $overtime->last_status = OvertimeApproval::StatusApproved;
+                }
+            }
+
+            foreach ($totalOvertimes as $key => $totalOvertime) {
+                /**
+                 * @var OvertimeDate $overtimeDate
+                 */
+                $overtimeDate = OvertimeDate::query()
+                    ->where('overtime_id', '=', $overtime->id)
+                    ->where('date', '=', $key)
+                    ->first();
+                if ($overtimeDate) {
+                    $overtimeDate->total_overtime = $totalOvertime;
+                    $overtimeDate->save();
                 }
             }
 
