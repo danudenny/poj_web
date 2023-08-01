@@ -89,18 +89,8 @@ class LeaveRequestService extends BaseService {
 
         $checkLeaveRequest = LeaveRequest::where('employee_id', $employee->id)
             ->where('start_date', $request->start_date)
-            ->where('end_date', $request->end_date)
             ->first();
-        if ($checkLeaveRequest) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'You already have active leave request in the same start date'
-            ], 400);
-        }
 
-        $checkLeaveRequest = LeaveRequest::where('employee_id', $employee->id)
-            ->where('last_status', 'on process')
-            ->first();
         if ($checkLeaveRequest) {
             return response()->json([
                 'status' => 'error',
