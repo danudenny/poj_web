@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Attributes:
@@ -19,10 +20,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $check_out_long
  * @property string|null $check_in_timezone
  * @property string|null $check_out_timezone
+ * @property int $employee_attendance_id
  *
  * Relations:
  * @property-read Employee $employee
  * @property-read OvertimeDate $overtimeDate
+ * @property-read EmployeeAttendance $employeeAttendance
  */
 class OvertimeEmployee extends Model
 {
@@ -91,5 +94,9 @@ class OvertimeEmployee extends Model
      */
     public function overtimeDate() {
         return $this->belongsTo(OvertimeDate::class, 'overtime_date_id');
+    }
+
+    public function employeeAttendance(): BelongsTo {
+        return $this->belongsTo(EmployeeAttendance::class, 'employee_attendance_id');
     }
 }

@@ -691,8 +691,8 @@ class OvertimeService extends BaseService
             $checkIn->late_duration = 0;
             $checkIn->save();
 
-            // TODO: Sync with new flow
-            // $this->refreshFinishedStatus($overtimeRequest, $user->employee_id);
+            $employeeOvertime->employee_attendance_id = $checkIn->id;
+            $employeeOvertime->save();
 
             DB::commit();
 
@@ -744,14 +744,6 @@ class OvertimeService extends BaseService
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-            /**
-             * @var EmployeeAttendance $checkInData
-             */
-            $checkInData = $user->employee->attendances()
-                ->where('attendance_types', '=', EmployeeAttendance::AttendanceTypeOvertime)
-                ->orderBy('id', 'DESC')
-                ->first();
-
             $employeeTimezone = getTimezone(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
             $workLocation = $employeeOvertime->overtimeDate->overtime->unit;
             $overtimeRequest = $employeeOvertime->overtimeDate->overtime;
@@ -762,13 +754,14 @@ class OvertimeService extends BaseService
                 $checkOutType = EmployeeAttendance::TypeOffSite;
             }
 
+            $checkInData = $employeeOvertime->employeeAttendance();
+
             DB::beginTransaction();
 
             $employeeOvertime->check_out_lat = $dataLocation['latitude'];
             $employeeOvertime->check_out_long = $dataLocation['longitude'];
             $employeeOvertime->check_out_time = Carbon::now();
             $employeeOvertime->check_out_timezone = $employeeTimezone;
-            $employeeOvertime->save();
 
             $overtimeHistory = new OvertimeHistory();
             $overtimeHistory->overtime_id = $overtimeRequest->id;
@@ -776,18 +769,20 @@ class OvertimeService extends BaseService
             $overtimeHistory->history_type = OvertimeHistory::TypeCheckOut;
             $overtimeHistory->save();
 
-            if ($checkInData) {
-                $checkInData->real_check_out = $employeeOvertime->check_out_time;
-                $checkInData->checkout_lat = $employeeOvertime->check_out_lat;
-                $checkInData->checkout_long = $employeeOvertime->check_out_long;
-                $checkInData->checkout_real_radius = $distance;
-                $checkInData->checkout_type = $checkOutType;
-                $checkInData->check_out_tz = $employeeOvertime->check_out_timezone;
-                $checkInData->save();
+            if (is_null($checkInData)) {
+                $checkInData = new EmployeeAttendance();
             }
 
-            // TODO: Sync with new flow
-            // $this->refreshFinishedStatus($overtimeRequest, $user->employee_id);
+            $checkInData->real_check_out = $employeeOvertime->check_out_time;
+            $checkInData->checkout_lat = $employeeOvertime->check_out_lat;
+            $checkInData->checkout_long = $employeeOvertime->check_out_long;
+            $checkInData->checkout_real_radius = $distance;
+            $checkInData->checkout_type = $checkOutType;
+            $checkInData->check_out_tz = $employeeOvertime->check_out_timezone;
+            $checkInData->save();
+
+            $employeeOvertime->employee_attendance_id = $checkInData->id;
+            $employeeOvertime->save();
 
             DB::commit();
 

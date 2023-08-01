@@ -689,6 +689,9 @@ class EventService extends BaseService
             $checkIn->late_duration = 0;
             $checkIn->save();
 
+            $employeeEvent->employee_attendance_id = $checkIn->id;
+            $employeeEvent->save();
+
             DB::commit();
 
             $this->getNotificationService()->createNotification(
@@ -746,13 +749,7 @@ class EventService extends BaseService
 
             $checkOutType = EmployeeAttendance::TypeOnSite;
 
-            /**
-             * @var EmployeeAttendance $checkInData
-             */
-            $checkInData = $user->employee->attendances()
-                ->where('attendance_types', '=', EmployeeAttendance::AttendanceTypeEvent)
-                ->orderBy('id', 'DESC')
-                ->first();
+            $checkInData = $employeeEvent->employeeAttendance;
 
             DB::beginTransaction();
 
@@ -760,17 +757,21 @@ class EventService extends BaseService
             $employeeEvent->check_out_long = $dataLocation['longitude'];
             $employeeEvent->check_out_time = Carbon::now();
             $employeeEvent->check_out_timezone = $employeeTimezone;
-            $employeeEvent->save();
 
-            if ($checkInData) {
-                $checkInData->real_check_out = $employeeEvent->check_out_time;
-                $checkInData->checkout_lat = $employeeEvent->check_out_lat;
-                $checkInData->checkout_long = $employeeEvent->check_out_long;
-                $checkInData->checkout_real_radius = $distance;
-                $checkInData->checkout_type = $checkOutType;
-                $checkInData->check_out_tz = $employeeEvent->check_out_timezone;
-                $checkInData->save();
+            if (is_null($checkInData)) {
+                $checkInData = new EmployeeAttendance();
             }
+
+            $checkInData->real_check_out = $employeeEvent->check_out_time;
+            $checkInData->checkout_lat = $employeeEvent->check_out_lat;
+            $checkInData->checkout_long = $employeeEvent->check_out_long;
+            $checkInData->checkout_real_radius = $distance;
+            $checkInData->checkout_type = $checkOutType;
+            $checkInData->check_out_tz = $employeeEvent->check_out_timezone;
+            $checkInData->save();
+
+            $employeeEvent->employee_attendance_id = $checkInData->id;
+            $employeeEvent->save();
 
             DB::commit();
 

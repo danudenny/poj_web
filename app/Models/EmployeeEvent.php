@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Attributes:
@@ -23,10 +24,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $check_out_long
  * @property string|null $check_in_timezone
  * @property string|null $check_out_timezone
+ * @property int $employee_attendance_id
  *
  * Relations:
  * @property-read Event $event
  * @property-read Employee $employee
+ * @property-read EmployeeAttendance $employeeAttendance
  */
 class EmployeeEvent extends Model
 {
@@ -103,5 +106,9 @@ class EmployeeEvent extends Model
 
     public function employee() {
         return $this->belongsTo(Employee::class, 'employee_id');
+    }
+
+    public function employeeAttendance(): BelongsTo {
+        return $this->belongsTo(EmployeeAttendance::class, 'employee_attendance_id');
     }
 }

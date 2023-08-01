@@ -20,10 +20,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $check_out_long
  * @property string|null $check_in_timezone
  * @property string|null $check_out_timezone
+ * @property int $employee_attendance_id
  *
  * Relations:
  * @property-read BackupTime $backupTime
  * @property-read Employee $employee
+ * @property-read EmployeeAttendance $employeeAttendance
  */
 class BackupEmployeeTime extends Model
 {
@@ -86,5 +88,9 @@ class BackupEmployeeTime extends Model
 
     public function employee(): BelongsTo {
         return $this->belongsTo(Employee::class, 'employee_id');
+    }
+
+    public function employeeAttendance(): BelongsTo {
+        return $this->belongsTo(EmployeeAttendance::class, 'employee_attendance_id');
     }
 }

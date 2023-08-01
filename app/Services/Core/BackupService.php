@@ -632,6 +632,9 @@ class BackupService extends BaseService
             $checkIn->late_duration = 0;
             $checkIn->save();
 
+            $employeeBackup->employee_attendance_id = $checkIn->id;
+            $employeeBackup->save();
+
             DB::commit();
 
             $this->getNotificationService()->createNotification(
@@ -696,13 +699,7 @@ class BackupService extends BaseService
                 $checkOutType = EmployeeAttendance::TypeOffSite;
             }
 
-            /**
-             * @var EmployeeAttendance $checkInData
-             */
-            $checkInData = $user->employee->attendances()
-                ->where('attendance_types', '=', EmployeeAttendance::AttendanceTypeBackup)
-                ->orderBy('id', 'DESC')
-                ->first();
+            $checkInData = $employeeBackup->employeeAttendance;
 
             DB::beginTransaction();
 
@@ -710,17 +707,21 @@ class BackupService extends BaseService
             $employeeBackup->check_out_long = $dataLocation['longitude'];
             $employeeBackup->check_out_time = Carbon::now();
             $employeeBackup->check_out_timezone = $employeeTimezone;
-            $employeeBackup->save();
 
-            if ($checkInData) {
-                $checkInData->real_check_out = $employeeBackup->check_out_time;
-                $checkInData->checkout_lat = $employeeBackup->check_out_lat;
-                $checkInData->checkout_long = $employeeBackup->check_out_long;
-                $checkInData->checkout_real_radius = $distance;
-                $checkInData->checkout_type = $checkOutType;
-                $checkInData->check_out_tz = $employeeBackup->check_out_timezone;
-                $checkInData->save();
+            if (is_null($checkInData)) {
+                $checkInData = new EmployeeAttendance();
             }
+
+            $checkInData->real_check_out = $employeeBackup->check_out_time;
+            $checkInData->checkout_lat = $employeeBackup->check_out_lat;
+            $checkInData->checkout_long = $employeeBackup->check_out_long;
+            $checkInData->checkout_real_radius = $distance;
+            $checkInData->checkout_type = $checkOutType;
+            $checkInData->check_out_tz = $employeeBackup->check_out_timezone;
+            $checkInData->save();
+
+            $employeeBackup->employee_attendance_id = $checkInData->id;
+            $employeeBackup->save();
 
             DB::commit();
 
@@ -776,4 +777,6 @@ class BackupService extends BaseService
             'data' => $backupEmployeeTime
         ]);
     }
+
+
  }
