@@ -5,6 +5,7 @@ namespace App\Services\Core;
 use App\Helpers\UnitHelper;
 use App\Models\Approval;
 use App\Models\ApprovalModule;
+use App\Models\Employee;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\BaseService;
@@ -90,6 +91,17 @@ class ApprovalService extends BaseService
                     ], 500);
                 }
             }
+
+            $duplicateUser = Approval::whereHas('approvalUsers', function (Builder $query) use ($request) {
+                $query->whereIn('user_id', $request->user_id);
+            })->where('approval_module_id', '!=', $request->approval_module_id)->first();
+            if ($duplicateUser) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'User already exists in other approval module.',
+                    'data' => null,
+                ], 500);
+            }
         }
 
         DB::beginTransaction();
@@ -97,7 +109,7 @@ class ApprovalService extends BaseService
             $approval = Approval::create([
                 'approval_module_id' => $request->approval_module_id,
                 'name' => $request->name,
-                'is_active' => $request->is_active,
+                'is_active' => true,
                 'unit_level' => $request->unit_level,
                 'unit_id' => $request->unit_id
             ]);
@@ -149,7 +161,7 @@ class ApprovalService extends BaseService
         }
 
         foreach ($request->user_id as $userId) {
-            $userExists = User::where('id', $userId)->first();
+            $userExists = Employee::where('id', $userId)->first();
             if (!$userExists) {
                 return response()->json([
                     'status' => 'error',
@@ -167,6 +179,7 @@ class ApprovalService extends BaseService
                 'name' => $request->name,
                 'is_active' => $request->is_active,
                 'unit_level' => $request->unit_level,
+                'unit_id' => $request->unit_id
             ]);
 
             $approval->users()->sync($request->user_id);

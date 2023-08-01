@@ -1,5 +1,5 @@
 <template>
-    <Breadcrumbs main="Approvals / Create Approval" />
+    <Breadcrumbs main="Approval Create" />
 
     <div class="container-fluid">
         <div class="email-wrap bookmark-wrap">
@@ -7,19 +7,11 @@
                 <div class="col-md-12">
                     <div class="card card-absolute">
                         <div class="card-header bg-primary">
-                            <h5>Create Approval</h5>
+                            <h5>Approval Create</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-12">
-                                    <div class="alert alert-warning" role="alert">
-                                        <h6>
-                                            <i class="fa fa-info-circle"></i> &nbsp; Infomasi
-                                        </h6>
-                                        <p class="text-white">
-                                            Maksimal level yang diijinkan adalah 5 level. Urutan Organisasi dan Approver dimulai dari yang pertama atau paling atas. Approver yang dipilih meruapakan Karyawan pada Organisai yang dipilih.
-                                        </p>
-                                    </div>
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
@@ -41,12 +33,12 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <hr>
-                                    <div class="d-flex justify-content-between mb-3">
-                                        <div class="col-md-4">
+                                    <div class="row">
+                                        <div class="col-md-6">
                                             <div class="mb-3">
-                                                <select class="form-select digits" v-model="selectedUnitLevel" @change="generateLevel">
-                                                    <option value="">-- Select Unit Level --</option>
+                                                <label>Unit Level :</label>
+                                                <select class="form-select digits" v-model="selectedUnitLevel" @change="loadWorkingArea">
+                                                    <option value="0">-- Select Unit Level --</option>
                                                     <option value="1">Head Office</option>
                                                     <option value="2">Regional</option>
                                                     <option value="3">Corporate</option>
@@ -57,61 +49,36 @@
                                                 </select>
                                             </div>
                                         </div>
-                                        <div>
-                                            <div class="d-flex justify-content-end column-gap-2">
-                                                <div v-if="rows.length > 1">
-                                                    <button class="btn btn-outline-danger" @click="removeRow(index)">
-                                                        <i class="fa fa-times-circle"></i> Remove Last Row
-                                                    </button>
-                                                </div>
-                                                <button class="btn btn-outline-success" @click="addRow" v-if="rows.length < 5">
-                                                    <i class="fa fa-plus-circle"></i> Add More Approvals
-                                                </button>
-                                            </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label>Working Area :</label>
+                                            <multiselect
+                                                v-model="selectedOptions"
+                                                placeholder="Select Unit"
+                                                label="name"
+                                                track-by="name"
+                                                :options="visibleOptions"
+                                                :multiple="false"
+                                                @select="loadEmployee"
+                                            >
+                                            </multiselect>
                                         </div>
-                                    </div>
-                                    <div v-for="(row, index) in rows" :key="index">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label" for="name">Organization {{ index + 1 }}</label>
-                                                    <multiselect
-                                                        v-model="row.selectedOrg"
-                                                        placeholder="Select Organization"
-                                                        label="name"
-                                                        track-by="id"
-                                                        :options="filteredUnit"
-                                                        :multiple="false"
-                                                        :close-on-select="true"
-                                                        @select="onOrganizationSelect(index)">
-                                                    </multiselect>
-                                                </div>
+                                        <div class="col-md-12 mb-3">
+                                            <label>Assign To (Employees) :</label>
+                                            <div v-if="loading" class="text-center">
+                                                <img src="../../assets/loader.gif" alt="loading" width="100">
                                             </div>
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label class="form-label">Approver {{ index + 1 }}</label>
-                                                    <multiselect
-                                                        v-model="row.selectedUser"
-                                                        placeholder="Select User"
-                                                        label="name"
-                                                        track-by="id"
-                                                        :options="getFilteredUserOptions(index)"
-                                                        :multiple="false"
-                                                        @search-change="asyncFindUser"
-                                                    ></multiselect>
-                                                </div>
-                                            </div>
+                                            <div ref="employeeTable"></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-footer d-flex justify-content-end column-gap-2">
-                            <button class="btn btn-warning" type="button" @click="this.$router.push('/approval')">
-                                <i class="fa fa-arrow-circle-left"></i> &nbsp; Back
+                        <div class="card-footer text-start">
+                            <button class="btn btn-primary m-r-10" @click="saveData">
+                                <i class="fa fa-save"></i>&nbsp;Save
                             </button>
-                            <button class="btn btn-primary" type="button" @click="saveChanges">
-                                <i class="fa fa-save"></i> &nbsp; Save
+                            <button class="btn btn-secondary" @click="$router.push('/approval')">
+                                <i class="fa fa-close"></i>&nbsp;Cancel
                             </button>
                         </div>
                     </div>
@@ -120,117 +87,52 @@
         </div>
     </div>
 </template>
-
 <script>
-import { useToast } from 'vue-toastification'
+import {TabulatorFull as Tabulator, PersistenceModule as Persistence} from "tabulator-tables";
+import {useToast} from "vue-toastification";
+import Datepicker from '@vuepic/vue-datepicker';
+
 export default {
+    components: {
+        Datepicker
+    },
     data() {
-        return{
-            selectedOrg: [],
-            filteredUnit: [],
+        return {
+            employees: [],
+            selectedEmployees: [],
+            loading: false,
+            workingArea: {},
+            currentPage: 1,
+            pageSize: 10,
+            filterName: "",
+            filterUnitId: "",
+            units: [],
+            selectedOptions: 0,
+            visibleOptions: [],
+            table: null,
+            selectedEmployeeIds: [],
             approval: {
                 name: '',
-                approval_module_id: '',
-                level: '',
-                active: '',
-                user_id: []
+                approval_module_id: null,
+                unit_id: null,
+                employee_ids: []
             },
-            users: [],
             approvalModules: [],
-            appendedApprover: [],
-            appendedOrganization: [],
-            organization: [],
-            organization_id: 0,
-            level: 0,
-            selectedLevel: 0,
-            appendedMultiselects: [],
-            appendedMultiselectModels: [],
-            filteredUsers: [],
-            ls: JSON.parse(localStorage.getItem('USER_STORAGE_KEY')),
-            selectedUnitLevel: "",
-            rows: [
-                {
-                    selectedUnitLevel: '',
-                    selectedOrg: null,
-                    selectedUser: null
-                }
-            ]
+            selectedUnitLevel: null,
         }
     },
-    created() {
-        this.getApprovalModules()
-        this.loadOrg()
-        this.getUsers()
-   },
+    async mounted() {
+        await this.getUnit();
+        await this.getApprovalModules()
+        // this.initializeEmployeeTable();
+    },
     methods: {
-        // asyncFindUser (query) {
-        //     this.isLoading = true
-        //     if (query.length > 2) {
-        //         this.$axios.get(`/api/v1/admin/employee?name=${query}&unit_id=${this.rows[0].selectedOrg.id}`)
-        //         .then(response => {
-        //             this.users = response.data.data.data
-        //             this.isLoading = false
-        //         })
-        //         .catch(error => {
-        //             console.log(error)
-        //         })
-        //     }
-        // },
-        addRow() {
-            if (this.rows.length < 5) {
-                this.rows.push({
-                    selectedUnitLevel: '',
-                    selectedOrg: null,
-                    selectedUser: null
-                });
-                this.filteredUsers.push([]);
-            }
+        loadWorkingArea() {
+            this.visibleOptions = this.units.filter(unit => unit.unit_level ===  parseInt(this.selectedUnitLevel));
         },
-        removeRow(index) {
-            this.rows.splice(index, 1);
-            this.filteredUsers.splice(index, 1);
-        },
-        onOrganizationSelect(index) {
-            const organizationId = this.rows[index].selectedOrg?.id;
-            this.filteredUsers[index] = this.users.filter(user => {
-                return (
-                    (user.corporate != null && user.corporate.id === organizationId) ||
-                    (user.kanwil != null && user.kanwil.id === organizationId) ||
-                    (user.area != null && user.area.id === organizationId) ||
-                    (user.cabang != null && user.cabang.id === organizationId) ||
-                    (user.outlet != null && user.outlet.id === organizationId)
-                );
-            });
-        },
-        generateLevel() {
-            this.filteredUnit = this.organization.filter(organization => {
-                return organization.unit_level === parseInt(this.selectedUnitLevel);
-            });
-        },
-        getFilteredUnitOptions(index) {
-            const selectedLevel = this.rows[index].selectedUnitLevel;
-            return this.organization.filter(organization => organization.unit_level === parseInt(selectedLevel));
-        },
-        getFilteredUserOptions(index) {
-            const organizationId = this.rows[index].selectedOrg?.id;
-            return this.users.filter(user => {
-                return (
-                    (user.corporate != null && user.corporate.id === organizationId) ||
-                    (user.kanwil != null && user.kanwil.id === organizationId) ||
-                    (user.area != null && user.area.id === organizationId) ||
-                    (user.cabang != null && user.cabang.id === organizationId) ||
-                    (user.outlet != null && user.outlet.id === organizationId)
-                );
-            });
-        },
-        async loadOrg() {
-            await this.$axios.get(`/api/v1/admin/unit/related-unit`)
-                .then(response => {
-                    this.organization = response.data.data
-                })
-                .catch(error => {
-                    console.error(error)
-                })
+        loadEmployee(e) {
+            this.approval.unit_id = e.id;
+            this.initializeEmployeeTable();
         },
         async getApprovalModules() {
             await this.$axios.get('/api/v1/admin/approval-module')
@@ -241,35 +143,137 @@ export default {
                     console.error(error)
                 })
         },
-        async getUsers() {
-            await this.$axios.get(`/api/v1/admin/employee?per_page=11000`)
+        async getUnit() {
+            await this.$axios.get(`api/v1/admin/unit/related-unit`)
                 .then(response => {
-                    this.users = response.data.data.data
+                    this.units = response.data.data;
+                }).catch(error => {
+                    console.error(error);
+                });
+        },
+        async getEmployee() {
+            this.loading = true;
+            await this.$axios.get(`/api/v1/admin/employee`)
+                .then(response => {
+                    this.employees = response.data.data.data;
                 })
                 .catch(error => {
-                    console.error(error)
-                })
+                    console.error(error);
+                });
         },
-        async saveChanges(){
-            let userIds = []
-            this.rows.forEach(row => {
-                userIds.push(row.selectedUser.id)
-            })
+        initializeEmployeeTable() {
+            const ls = localStorage.getItem('my_app_token')
+            this.table = new Tabulator(this.$refs.employeeTable, {
+                ajaxURL: '/api/v1/admin/employee/paginated',
+                layout: 'fitColumns',
+                columns: [
+                    {
+                        formatter: "rowSelection",
+                        hozAlign: "center",
+                        width: 100,
+                        headerSort: false,
+                        titleFormatterParams: {
+                            rowRange: "active"
+                        },
+                        cellClick: function (e, cell) {
+                            cell.getRow()
+                        },
+                    },
+                    {
+                        title: 'Employee Name',
+                        field: 'name',
+                        headerFilter:"input"
+                    },
+                    {
+                        title: 'Unit',
+                        field: '',
+                        headerFilter:"input",
+                        formatter: (cell, formatterParams) => {
+                            const wd = cell.getData();
+                            const hierarchy = [
+                                wd.corporate,
+                                wd.kanwil,
+                                wd.area,
+                                wd.cabang,
+                                wd.outlet
+                            ];
 
-            await this.$axios.post('/api/v1/admin/approval/create', {
-                name: this.approval.name,
+                            const sortedHierarchy = hierarchy
+                                .filter(data => data && data.value !== null)
+                                .sort((a, b) => a.unit_level - b.unit_level);
+
+                            this.workingArea = sortedHierarchy[sortedHierarchy.length - 1];
+                            return this.workingArea.name
+                        }
+                    }
+                ],
+                pagination: true,
+                paginationMode: 'remote',
+                responsiveLayout: true,
+                filterMode:"remote",
+                paginationSize: this.pageSize,
+                ajaxConfig: {
+                    headers: {
+                        Authorization: `Bearer ${ls}`,
+                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
+                    },
+                },
+                ajaxParams: {
+                    page: this.currentPage,
+                    size: this.pageSize,
+                },
+                ajaxURLGenerator: (url, config, params) => {
+                    this.units.filter(item => {
+                        if (item.id === this.approval.unit_id) {
+                            this.filterUnitId = item.relation_id;
+                        }
+                    });
+                    params.filter.map((item) => {
+                        if (item.field === 'name') this.filterName = item.value
+                    })
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&last_unit_relation_id=${this.filterUnitId}`
+                },
+                ajaxResponse: function (url, params, response) {
+                    return {
+                        data: response.data.data,
+                        last_page: response.data.last_page,
+                    }
+                },
+                paginationSizeSelector: [10, 20, 50, 100],
+                headerFilter: true,
+                selectable: true,
+                rowFormatter: (row) => {
+                },
+            });
+            this.table.on("rowSelectionChanged", function(data, rows, selected, deselected)  {
+                this.selectedEmployees = rows.map(row => row.getData().id);
+                if (this.selectedEmployees.length > 5) {
+                    rows[rows.length - 1].deselect();
+                    useToast().error('Only 5 employees can be selected');
+                }
+                if (this.selectedEmployees.length === 0) {
+                    useToast().error('Minimum 1 employee must be selected');
+                    rows[rows.length - 1].select();
+                }
+                localStorage.setItem('selectedEmployees', JSON.stringify(this.selectedEmployees));
+            })
+            this.loading = false;
+        },
+        async saveData() {
+            const ls = JSON.parse(localStorage.getItem('selectedEmployees'));
+            await this.$axios.post(`/api/v1/admin/approval/create`, {
                 approval_module_id: this.approval.approval_module_id.id,
+                name: this.approval.name,
                 is_active: true,
-                unit_level: this.selectedUnitLevel,
-                user_id: userIds,
-                unit_id: this.rows[0].selectedOrg.id
+                unit_id: this.approval.unit_id,
+                user_id: ls
             }).then(response => {
-                useToast().success(response.data.message)
-                this.$router.push('/approval')
+                localStorage.removeItem('selectedEmployees');
+                useToast().success(response.data.message);
+                this.$router.push('/approval');
             }).catch(error => {
-                useToast().error(error.response.data.message)
-            })
-
+                useToast().error(error.response.data.message);
+            });
         }
     }
 }

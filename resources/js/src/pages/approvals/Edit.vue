@@ -1,5 +1,5 @@
 <template>
-    <Breadcrumbs main="Approvals / Edit Approval" />
+    <Breadcrumbs main="Approval Edit" />
 
     <div class="container-fluid">
         <div class="email-wrap bookmark-wrap">
@@ -7,71 +7,53 @@
                 <div class="col-md-12">
                     <div class="card card-absolute">
                         <div class="card-header bg-primary">
-                            <h5>Edit Approval</h5>
+                            <h5>Approval Edit</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-12">
-                                    <div class="alert alert-warning" role="alert">
-                                        <h6>
-                                            <i class="fa fa-info-circle"></i> &nbsp; Infomasi
-                                        </h6>
-                                        <p class="text-white">
-                                            Maksimal level yang diijinkan adalah 5 level. Urutan Organisasi dan Approver dimulai dari yang pertama atau paling atas. Approver yang dipilih meruapakan Karyawan pada Organisai yang dipilih.
-                                        </p>
-                                    </div>
                                     <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="mb-3">
-                                                <label class="form-label" for="name">Title</label>
-                                                <input class="form-control" id="title" type="text" v-model="approval.name" placeholder="Approval Title">
-                                            </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label>Unit :</label>
+                                            <multiselect
+                                                v-model="selectedOptions"
+                                                placeholder="Loading ..."
+                                                disabled
+                                                label="name"
+                                                track-by="name"
+                                                :options="units"
+                                                :multiple="false"                                            >
+                                            </multiselect>
                                         </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label" for="name">Approval Type</label>
-                                                <multiselect
-                                                    v-model="approval.approval_module"
-                                                    placeholder="Select Attendance Type"
-                                                    label="name"
-                                                    track-by="id"
-                                                    :options="approvalModules"
-                                                    :multiple="false">
-                                                </multiselect>
-                                            </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label>Approval Type :</label>
+                                            <multiselect
+                                                v-model="selectedApprovalModule"
+                                                placeholder="Loading ..."
+                                                disabled
+                                                label="name"
+                                                track-by="name"
+                                                :options="approvalModules"
+                                                :multiple="false"                                            >
+                                            </multiselect>
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label class="form-label" for="name">Level</label>
-                                                <select class="form-select digits" v-model="selectedLevel" id="level" v-on:change="generateLevel">
-                                                    <option :selected="selectedLevel === 1 ? 'selected' : ''">1</option>
-                                                    <option :selected="selectedLevel === 2 ? 'selected' : ''">2</option>
-                                                    <option :selected="selectedLevel === 3 ? 'selected' : ''">3</option>
-                                                    <option :selected="selectedLevel === 4 ? 'selected' : ''">4</option>
-                                                    <option :selected="selectedLevel === 5 ? 'selected' : ''">5</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-12">
+                                        <div class="col-md-12 mb-3">
+                                            <label>Assign To (Employees) :</label>
                                             <div v-if="loading" class="text-center">
                                                 <img src="../../assets/loader.gif" alt="loading" width="100">
                                             </div>
-                                            <div ref="approverTable"></div>
+                                            <div ref="employeeTable"></div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-footer d-flex justify-content-end column-gap-2">
-                            <button class="btn btn-warning" type="button" @click="backToApproval">
-                                <i class="fa fa-arrow-circle-left"></i> &nbsp; Back
+                        <div class="card-footer text-start">
+                            <button class="btn btn-primary m-r-10" @click="saveData">
+                                <i class="fa fa-save"></i>&nbsp;Save
                             </button>
-                            <button class="btn btn-primary" type="button" @click="saveChanges">
-                                <i class="fa fa-save"></i> &nbsp; Save
+                            <button class="btn btn-secondary" @click="$router.push('/approval')">
+                                <i class="fa fa-close"></i>&nbsp;Cancel
                             </button>
                         </div>
                     </div>
@@ -80,186 +62,217 @@
         </div>
     </div>
 </template>
-
 <script>
-import axios from "axios"
-import {TabulatorFull as Tabulator} from 'tabulator-tables';
+import {TabulatorFull as Tabulator} from "tabulator-tables";
+import {useToast} from "vue-toastification";
+import Datepicker from '@vuepic/vue-datepicker';
 
 export default {
+    components: {
+        Datepicker
+    },
     data() {
-        return{
-            approval: {
-                name: '',
-                approval_module_id: '',
-                level: '',
-                is_active: '',
-                user_id: [],
-                approval_module: {},
-            },
-            approvalId: this.$route.params.id,
-            users: [],
-            approvalModules: [],
-            appendedApprover: [],
-            appendedOrganization: [],
-            organization: [],
-            organization_id: 0,
-            level: 0,
-            selectedLevel: 0,
+        return {
+            employees: [],
+            selectedEmployees: [],
             loading: false,
+            workingArea: {},
+            currentPage: 1,
+            pageSize: 10,
+            filterName: "",
+            filterUnitId: "",
+            units: [],
+            selectedOptions: [],
+            selectedApprovalModule: [],
+            visibleOptions: [],
+            table: null,
+            selectedEmployeeIds: [],
+            approvalModules: []
         }
     },
     async mounted() {
+        await this.getUnit();
+        this.initializeEmployeeTable();
         await this.getApprovals()
-        await this.getApprovalModules()
-        await this.loadCabang()
-        await this.getUsers()
-        this.initializeApproverTable()
+        await this.getApprovalModules();
     },
     methods: {
-        async getApprovals() {
-            this.loading = true
-            await this.$axios.get(`/api/v1/admin/approval/view/${this.approvalId}`)
-                .then(response => {
-                    this.approval = response.data.data
-                    console.log(this.approval.users)
-                    this.selectedLevel = this.approval.users.length
-                    this.appendedApprover = response.data.data.users
-                })
-                .catch(error => {
-                    console.error(error)
-                })
-        },
-        initializeApproverTable() {
-            new Tabulator(this.$refs.approverTable, {
-                data: this.approval.users,
-                layout: 'fitColumns',
-                columns: [
-                    {
-                        title: 'No',
-                        field: '',
-                        formatter: 'rownum',
-                        width: 100
-                    },
-                    {
-                        title: 'Approver Name',
-                        field: 'name',
-                    }
-                ],
-                paginationInitialPage:1,
-            });
-            this.loading = false
-        },
-        async loadCabang() {
-            await this.$axios.get('/api/v1/admin/cabang')
-                .then(response => {
-                    this.organization = response.data.data.data
-                })
-                .catch(error => {
-                    console.error(error)
-                })
-        },
         async getApprovalModules() {
             await this.$axios.get('/api/v1/admin/approval-module')
                 .then(response => {
                     this.approvalModules = response.data.data.data
+                    //get approval module from this.approvals
+                    this.approvalModules.filter(item => {
+                        if (item.id === this.approvals.approval_module_id) {
+                            this.selectedApprovalModule = item;
+                        }
+                    });
+
+
                 })
                 .catch(error => {
                     console.error(error)
                 })
         },
-        async getUsers() {
-            // await this.$axios.get('/api/v1/admin/user')
-            //     .then(response => {
-            //         this.users = response.data.data.data
-            //     })
-            //     .catch(error => {
-            //         console.error(error)
-            //     })
+        async getUnit() {
+            await this.$axios.get(`api/v1/admin/unit/related-unit`)
+                .then(response => {
+                    this.units = response.data.data;
+                    const unitId = parseInt(this.$route.query.unit_id);
+                    this.units.filter(item => {
+                        if (item.id === unitId) {
+                            this.selectedOptions = item;
+                        }
+                    });
+                }).catch(error => {
+                    console.error(error);
+                });
         },
-        generateMultiselect() {
-            return {
-                id: Math.random()
-            };
+        async getEmployee() {
+            this.loading = true;
+            await this.$axios.get(`/api/v1/admin/employee`)
+                .then(response => {
+                    this.employees = response.data.data.data;
+                })
+                .catch(error => {
+                    console.error(error);
+                });
         },
-        backToApproval(){
-            this.$router.push('/approval')
-        },
-        basic_warning_alert:function(){
-            this.$swal({
-                icon: 'warning',
-                title:"Cancel?",
-                text:'You will back to Approval Page, your data will not saved!',
-                showCancelButton: true,
-                confirmButtonText: 'Yes',
-                confirmButtonColor: '#e64942',
-                cancelButtonText: 'Cancel',
-                cancelButtonColor: '#efefef',
-            }).then((result)=>{
-                if(result.value){
-                    this.$router.push('/approval')
-                }else{
-                    setTimeout(()=>{
-                        this.$swal({
-                            text:'Continue Create Data!',
-                            icon: 'info',
-                        });
-                    }, 1000)
-                }
-            });
-        },
-        basic_success_alert:function(message){
-            this.$swal({
-                icon: 'success',
-                title:'Success',
-                text:message,
-                type:'success'
-            });
-        },
-        warning_alert_state: function (message) {
-            this.$swal({
-                icon: "error",
-                title: "Failed!",
-                text: message,
-                type: "error",
-            });
-        },
-        async saveChanges() {
-            let userIds = []
-            this.appendedApprover.forEach((element, index) => {
-                userIds.push(element.id)
-            })
+        initializeEmployeeTable() {
+            const ls = localStorage.getItem('my_app_token')
+            this.table = new Tabulator(this.$refs.employeeTable, {
+                ajaxURL: '/api/v1/admin/employee/paginated',
+                layout: 'fitColumns',
+                columns: [
+                    {
+                        formatter: "rowSelection",
+                        hozAlign: "center",
+                        width: 100,
+                        headerSort: false,
+                        titleFormatterParams: {
+                            rowRange: "active"
+                        },
+                        cellClick: function (e, cell) {
+                            cell.getRow()
+                        },
+                    },
+                    {
+                        title: 'Employee Name',
+                        field: 'name',
+                        headerFilter:"input"
+                    },
+                    {
+                        title: 'Unit',
+                        field: '',
+                        headerFilter:"input",
+                        formatter: (cell, formatterParams) => {
+                            const wd = cell.getData();
+                            const hierarchy = [
+                                wd.corporate,
+                                wd.kanwil,
+                                wd.area,
+                                wd.cabang,
+                                wd.outlet
+                            ];
 
-            await this.$axios.put(`/api/v1/admin/approval/update/${this.approvalId}`, {
-                name: this.approval.name,
-                approval_module_id: this.approval.approval_module.id,
-                is_active: this.approval.is_active,
-                user_id: userIds,
-            }).then(response => {
-                this.basic_success_alert(response.data.message)
-            }).catch(error => {
-                this.warning_alert_state(error.response.data.message)
+                            const sortedHierarchy = hierarchy
+                                .filter(data => data && data.value !== null)
+                                .sort((a, b) => a.unit_level - b.unit_level);
+
+                            this.workingArea = sortedHierarchy[sortedHierarchy.length - 1];
+                            return this.workingArea.name
+                        }
+                    }
+                ],
+                pagination: true,
+                paginationMode: 'remote',
+                responsiveLayout: true,
+                filterMode:"remote",
+                paginationSize: this.pageSize,
+                ajaxConfig: {
+                    headers: {
+                        Authorization: `Bearer ${ls}`,
+                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
+                    },
+                },
+                ajaxParams: {
+                    page: this.currentPage,
+                    size: this.pageSize,
+                },
+                ajaxURLGenerator: (url, config, params) => {
+                    const unitId = parseInt(this.$route.query.unit_id);
+                    this.units.filter(item => {
+                        if (item.id === unitId) {
+                            this.filterUnitId = item.relation_id;
+                        }
+                    });
+                    params.filter.map((item) => {
+                        if (item.field === 'name') this.filterName = item.value
+                    })
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&last_unit_relation_id=${this.filterUnitId}`
+                },
+                ajaxResponse: function (url, params, response) {
+                    return {
+                        data: response.data.data,
+                        last_page: response.data.last_page,
+                    }
+                },
+                paginationSizeSelector: [10, 20, 50, 100],
+                headerFilter: true,
+                selectable: true,
+                rowFormatter: (row) => {
+                    let employees = row.getData();
+                    const unitId = parseInt(this.$route.query.unit_id);
+                    this.approvals.users.filter(item => {
+                        if (item.last_unit.id === unitId) {
+                            if (item.id === employees.id) {
+                                row.select();
+                            }
+                        }
+                    });
+                },
+            });
+            this.table.on("rowSelectionChanged", function(data, rows, selected, deselected)  {
+                this.selectedEmployees = rows.map(row => row.getData().id);
+                if (this.selectedEmployees.length > 5) {
+                    rows[rows.length - 1].deselect();
+                    useToast().error('Only 5 employees can be selected');
+                }
+
+                if (this.selectedEmployees.length === 0) {
+                    useToast().error('Minimum 1 employee must be selected');
+                    rows[0].select();
+                }
+                localStorage.setItem('selectedEmployees', JSON.stringify(this.selectedEmployees));
             })
+            this.loading = false;
+        },
+        async getApprovals() {
+            const id = parseInt(this.$route.params.id);
+            await this.$axios.get(`/api/v1/admin/approval/view/${id}`)
+                .then(response => {
+                    this.approvals = response.data.data;
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        },
+        async saveData() {
+            const ls = JSON.parse(localStorage.getItem('selectedEmployees'));
+            await this.$axios.put(`/api/v1/admin/approval/update/${this.$route.params.id}`, {
+                approval_module_id: this.approvals.approval_module_id,
+                name: this.approvals.name,
+                is_active: true,
+                unit_id: parseInt(this.$route.query.unit_id),
+                user_id: ls
+            }).then(response => {
+                localStorage.removeItem('selectedEmployees');
+                useToast().success(response.data.message);
+                this.$router.push('/approval');
+            }).catch(error => {
+                useToast().error(error.response.data.message);
+            });
         }
     }
 }
 </script>
-
-<style>
-.tabulator .tabulator-header .tabulator-col {
-    background-color: #0A5640 !important;
-    color: #fff
-}
-.button-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 20%;
-    border: none;
-    margin: 2px;
-}
-
-.button-success {
-    background-color: #28a745;
-    color: #fff
-}
-</style>
-

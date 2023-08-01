@@ -123,12 +123,14 @@ export default {
                         field: '',
                         formatter: 'rownum',
                         hozAlign: 'center',
+                        headerSort: false,
                         headerHozAlign: 'center',
-                        width: 70,
+                        width: 50,
                     },
                     {
                         title: 'Name',
                         field: 'name',
+                        headerSort: false,
                         headerHozAlign: 'center',
                     },
                     {
@@ -136,12 +138,14 @@ export default {
                         field: 'approval_module.name',
                         clearable:true,
                         hozAlign: 'center',
+                        headerSort: false,
                         headerHozAlign: 'center',
                     },
                     {
                         title: 'Units',
                         field: 'unit.name',
                         hozAlign: 'center',
+                        headerSort: false,
                         headerHozAlign: 'center',
                     },
                     {
@@ -149,6 +153,8 @@ export default {
                         field: '',
                         headerHozAlign: 'center',
                         hozAlign: 'center',
+                        width: 70,
+                        headerSort: false,
                         formatter: function(cell){
                             let data = cell.getRow().getData().approval_users;
                             return `<span class="badge badge-primary">${data.length}</span> `;;
@@ -157,10 +163,11 @@ export default {
                     {
                         title: '',
                         formatter: this.viewDetailsFormatter,
-                        width: 100,
+                        width: 150,
+                        headerSort: false,
                         hozAlign: 'center',
                         cellClick: (e, cell) => {
-                            this.viewData(cell.getRow().getData().id);
+                            this.handleActionButtonClick(e, cell);
                         }
                     },
                 ],
@@ -175,11 +182,32 @@ export default {
             });
             this.loading = false;
         },
-        viewDetailsFormatter() {
-            return `<button class="button-icon button-success"><i class="fa fa-eye"></i></button>`;
+        viewDetailsFormatter(cell) {
+            const rowData = cell.getRow().getData();
+            return `
+                <button class="button-icon button-success" data-action="view" data-row-id="${rowData.id}"><i data-action="view" class="fa fa-eye"></i> </button>
+                <button class="button-icon button-warning" data-action="edit" data-row-id="${rowData.id}"><i data-action="edit" class="fa fa-pencil"></i> </button>
+                <button class="button-icon button-danger" data-action="delete" data-row-id="${rowData.id}"><i data-action="delete" class="fa fa-trash"></i> </button>
+             `;
         },
-        viewData(id) {
-            this.$router.push({name: 'approval_details', params: {id: id}})
+        handleActionButtonClick(e, cell) {
+            const action = e.target.dataset.action
+            const rowData = cell.getRow().getData();
+
+            if (action === 'edit') {
+                this.$router.push({
+                    name: 'approval_edit',
+                    params: { id: rowData.id },
+                    query: { unit_id: rowData.unit.id }
+                })
+            } else if (action === 'view') {
+                this.$router.push({
+                    name: 'approval_details',
+                    params: { id: rowData.id },
+                })
+            } else if (action === 'delete') {
+                this.basic_warning_alert(rowData.id);
+            }
         },
         async getWorkingArea() {
             await this.$axios.get('api/v1/admin/unit/related-unit')
@@ -213,11 +241,10 @@ export default {
         createData() {
             this.$router.push({ path: '/approval/create' })
         },
-        editData(id) {
-            this.$router.push({ path: `/approval/edit/${id}` })
-        },
-        deleteData(id) {
-            this.basic_warning_alert(id);
+        redrawTable() {
+            this.$nextTick(() => {
+                this.table.redraw(true);
+            });
         },
         basic_warning_alert:function(id){
             this.$swal({
@@ -233,16 +260,16 @@ export default {
                 if(result.value){
                     this.$axios.delete(`api/v1/admin/approval/delete/${id}`)
                         .then(() => {
+                            const pluck = this.table.getData().filter((item) => item.id !== id);
+                            this.loading = true
+                            this.table.setData(pluck);
+                            this.redrawTable();
+                            this.loading = false
                             useToast().success("Data successfully deleted!");
-                            this.getApproval();
                         })
                         .catch(error => {
-                            useToast().success("Error deleting data!");
+                            useToast().error(error.response.message);
                         });
-                }else{
-                    this.$swal({
-                        text:'Your data is safe!'
-                    });
                 }
             });
         },
