@@ -107,7 +107,8 @@
                     <br/>
                     <div ref="employeeTable"></div>
                     <br/>
-                    <button class="btn btn-primary">Simpan</button>
+                    <button class="btn btn-primary">Simpan</button> &nbsp
+                    <button class="btn btn-secondary" @click="$router.go(-1)">Back</button>&nbsp;
                 </div>
             </form>
         </div>
