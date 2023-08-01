@@ -185,7 +185,7 @@ class OvertimeService extends BaseService
         $user = $request->user();
 
         $query = OvertimeApproval::query()->with(['overtime', 'overtime.requestorEmployee:employees.id,name', 'overtime.unit:units.relation_id,name'])
-            ->where('user_id', '=', $user->id)
+            ->where('user_id', '=', $user->employee_id)
             ->orderBy('id', 'DESC');
 
         if ($status = $request->query('status')) {
