@@ -463,7 +463,7 @@ const routes =[
             },
             {
                 path: 'edit/:id',
-                name: 'Edit Approvals',
+                name: 'approval_edit',
                 component: EditApproval,
                 meta: {
                     title: 'POJ - Edit Approvals',
