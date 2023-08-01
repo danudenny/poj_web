@@ -85,4 +85,8 @@ class OvertimeController extends Controller
     public function getListApproval(Request $request, OvertimeService $service) {
         return $service->listApprovalOvertime($request);
     }
+
+    public function monthlyEvaluate(Request $request, OvertimeService $service) {
+        return $service->monthlyEvaluate($request);
+    }
 }

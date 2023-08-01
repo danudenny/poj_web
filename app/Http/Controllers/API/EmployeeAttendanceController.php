@@ -70,4 +70,8 @@ class EmployeeAttendanceController extends BaseController
     public function getActiveeSchedule(Request $request) {
         return $this->employeeAttendanceService->getActiveAttendance($request);
     }
+
+    public function getMonthlyEvaluate(Request $request) {
+        return $this->employeeAttendanceService->monthEvaluate($request);
+    }
 }

@@ -62,4 +62,8 @@ class EventController extends Controller
     public function addAttendance(AddNewAttendanceRequest $request, EventService $service, int $id) {
         return $service->addNewAttendance($request, $id);
     }
+
+    public function monthlyEvaluate(Request $request, EventService $service) {
+        return $service->monthlyEvaluate($request);
+    }
 }

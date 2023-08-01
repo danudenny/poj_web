@@ -122,7 +122,6 @@ class BackupService extends BaseService
             ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
             ->join('backups', 'backups.id', '=', 'backup_times.backup_id')
             ->where('backups.status', '!=', BackupApproval::StatusRejected)
-            ->where('backup_times.start_time', '>=', Carbon::now()->addDays(-1)->format('Y-m-d H:i:s'))
             ->orderBy('backup_times.start_time', 'ASC')
             ->select(['backup_employee_times.*']);
 
@@ -707,21 +706,17 @@ class BackupService extends BaseService
             $employeeBackup->check_out_long = $dataLocation['longitude'];
             $employeeBackup->check_out_time = Carbon::now();
             $employeeBackup->check_out_timezone = $employeeTimezone;
-
-            if (is_null($checkInData)) {
-                $checkInData = new EmployeeAttendance();
-            }
-
-            $checkInData->real_check_out = $employeeBackup->check_out_time;
-            $checkInData->checkout_lat = $employeeBackup->check_out_lat;
-            $checkInData->checkout_long = $employeeBackup->check_out_long;
-            $checkInData->checkout_real_radius = $distance;
-            $checkInData->checkout_type = $checkOutType;
-            $checkInData->check_out_tz = $employeeBackup->check_out_timezone;
-            $checkInData->save();
-
-            $employeeBackup->employee_attendance_id = $checkInData->id;
             $employeeBackup->save();
+
+            if (!is_null($checkInData)) {
+                $checkInData->real_check_out = $employeeBackup->check_out_time;
+                $checkInData->checkout_lat = $employeeBackup->check_out_lat;
+                $checkInData->checkout_long = $employeeBackup->check_out_long;
+                $checkInData->checkout_real_radius = $distance;
+                $checkInData->checkout_type = $checkOutType;
+                $checkInData->check_out_tz = $employeeBackup->check_out_timezone;
+                $checkInData->save();
+            }
 
             DB::commit();
 
@@ -778,5 +773,45 @@ class BackupService extends BaseService
         ]);
     }
 
+    public function monthlyEvaluate(Request $request) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
 
+            $query = BackupEmployeeTime::query()->with(['backupTime.backup', 'employee:employees.id,name', 'employeeAttendance'])
+                ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
+                ->join('backups', 'backups.id', '=', 'backup_times.backup_id')
+                ->where('backups.status', '!=', BackupApproval::StatusRejected)
+                ->orderBy('backup_times.start_time', 'ASC')
+                ->where('employee_id', '=', $user->employee_id)
+                ->select(['backup_employee_times.*']);
+
+            if ($monthly = $request->query('monthly')) {
+                $query->whereRaw("TO_CHAR(backup_times.start_time, 'YYYY-mm') = ?", [$monthly]);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Succcess fetch data',
+                'data' => [
+                    'meta' => [
+                        'full_attendance' => (clone $query)->whereNotNull('backup_employee_times.check_in_time')->whereNotNull('backup_employee_times.check_out_time')->count(),
+                        'late_check_in' => (clone $query)->whereRaw('backup_employee_times.check_in_time > backup_times.start_time')->count(),
+                        'not_check_out' => (clone $query)->whereNull('backup_employee_times.check_out_time')->count(),
+                        'early_check_out' => (clone $query)->whereRaw('backup_employee_times.check_out_time < backup_times.end_time')->count(),
+                        'not_attendance' => (clone $query)->whereNull('backup_employee_times.check_in_time')->whereNull('backup_employee_times.check_out_time')->count(),
+                        'total_schedule' => (clone $query)->count()
+                    ],
+                    'data' => $this->list($query, $request)
+                ],
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
  }

@@ -651,7 +651,7 @@ class OvertimeService extends BaseService
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
-            $employeeTimezone = getTimezone(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
+            $employeeTimezone = getTimezoneV2(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
 
             $workLocation = $user->employee->getLastUnit();
             $overtimeRequest = $employeeOvertime->overtimeDate->overtime;
@@ -744,7 +744,7 @@ class OvertimeService extends BaseService
                 ], Response::HTTP_BAD_REQUEST);
             }
 
-            $employeeTimezone = getTimezone(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
+            $employeeTimezone = getTimezoneV2(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
             $workLocation = $employeeOvertime->overtimeDate->overtime->unit;
             $overtimeRequest = $employeeOvertime->overtimeDate->overtime;
             $distance = calculateDistance($overtimeRequest->location_lat, $overtimeRequest->location_long, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
@@ -754,7 +754,7 @@ class OvertimeService extends BaseService
                 $checkOutType = EmployeeAttendance::TypeOffSite;
             }
 
-            $checkInData = $employeeOvertime->employeeAttendance();
+            $checkInData = $employeeOvertime->employeeAttendance;
 
             DB::beginTransaction();
 
@@ -762,6 +762,7 @@ class OvertimeService extends BaseService
             $employeeOvertime->check_out_long = $dataLocation['longitude'];
             $employeeOvertime->check_out_time = Carbon::now();
             $employeeOvertime->check_out_timezone = $employeeTimezone;
+            $employeeOvertime->save();
 
             $overtimeHistory = new OvertimeHistory();
             $overtimeHistory->overtime_id = $overtimeRequest->id;
@@ -769,20 +770,15 @@ class OvertimeService extends BaseService
             $overtimeHistory->history_type = OvertimeHistory::TypeCheckOut;
             $overtimeHistory->save();
 
-            if (is_null($checkInData)) {
-                $checkInData = new EmployeeAttendance();
+            if (!is_null($checkInData)) {
+                $checkInData->real_check_out = $employeeOvertime->check_out_time;
+                $checkInData->checkout_lat = $employeeOvertime->check_out_lat;
+                $checkInData->checkout_long = $employeeOvertime->check_out_long;
+                $checkInData->checkout_real_radius = $distance;
+                $checkInData->checkout_type = $checkOutType;
+                $checkInData->check_out_tz = $employeeOvertime->check_out_timezone;
+                $checkInData->save();
             }
-
-            $checkInData->real_check_out = $employeeOvertime->check_out_time;
-            $checkInData->checkout_lat = $employeeOvertime->check_out_lat;
-            $checkInData->checkout_long = $employeeOvertime->check_out_long;
-            $checkInData->checkout_real_radius = $distance;
-            $checkInData->checkout_type = $checkOutType;
-            $checkInData->check_out_tz = $employeeOvertime->check_out_timezone;
-            $checkInData->save();
-
-            $employeeOvertime->employee_attendance_id = $checkInData->id;
-            $employeeOvertime->save();
 
             DB::commit();
 
@@ -866,5 +862,48 @@ class OvertimeService extends BaseService
             'message' => "Success",
             'data' => $overtimeEmployee
         ], ResponseAlias::HTTP_OK);
+    }
+
+    public function monthlyEvaluate(Request $request) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            $query = OvertimeEmployee::query()
+                ->with(['employee:employees.id,name', 'overtimeDate.overtime', 'employeeAttendance'])
+                ->join('overtime_dates', 'overtime_dates.id', '=', 'overtime_employees.overtime_date_id')
+                ->join('overtimes', 'overtimes.id', '=', 'overtime_dates.overtime_id')
+                ->where('overtime_employees.employee_id', '=', $user->employee_id)
+                ->select(['overtime_employees.*'])
+                ->orderBy('overtimes.start_date', 'DESC')
+                ->where('overtimes.last_status', '!=', OvertimeHistory::TypeRejected);
+
+            if ($monthly = $request->query('monthly')) {
+                $query->whereRaw("TO_CHAR(overtime_dates.start_time, 'YYYY-mm') = ?", [$monthly]);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Succcess fetch data',
+                'data' => [
+                    'meta' => [
+                        'full_attendance' => (clone $query)->whereNotNull('overtime_employees.check_in_time')->whereNotNull('overtime_employees.check_out_time')->count(),
+                        'late_check_in' => (clone $query)->whereRaw('overtime_employees.check_in_time > overtime_dates.start_time')->count(),
+                        'not_check_out' => (clone $query)->whereNull('overtime_employees.check_out_time')->count(),
+                        'early_check_out' => (clone $query)->whereRaw('overtime_employees.check_out_time < overtime_dates.end_time')->count(),
+                        'not_attendance' => (clone $query)->whereNull('overtime_employees.check_in_time')->whereNull('overtime_employees.check_out_time')->count(),
+                        'total_schedule' => (clone $query)->count()
+                    ],
+                    'data' => $this->list($query, $request)
+                ],
+            ]);
+        } catch (\Throwable $exception) {
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

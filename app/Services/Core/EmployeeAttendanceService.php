@@ -882,4 +882,41 @@ class EmployeeAttendanceService extends BaseService
             ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    public function monthEvaluate(Request $request) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            $query = EmployeeTimesheetSchedule::query()
+                ->where('employee_timesheet_schedules.employee_id', '=', $user->employee_id);
+
+            if ($monthly = $request->query('monthly')) {
+                $query->whereRaw("TO_CHAR(employee_timesheet_schedules.start_time, 'YYYY-mm') = ?", [$monthly]);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Succcess fetch data',
+                'data' => [
+                    'meta' => [
+                        'full_attendance' => (clone $query)->whereNotNull('employee_timesheet_schedules.check_in_time')->whereNotNull('employee_timesheet_schedules.check_out_time')->count(),
+                        'late_check_in' => (clone $query)->whereRaw('employee_timesheet_schedules.check_in_time > employee_timesheet_schedules.start_time')->count(),
+                        'not_check_out' => (clone $query)->whereNull('employee_timesheet_schedules.check_out_time')->count(),
+                        'early_check_out' => (clone $query)->whereRaw('employee_timesheet_schedules.check_out_time < employee_timesheet_schedules.end_time')->count(),
+                        'not_attendance' => (clone $query)->whereNull('employee_timesheet_schedules.check_in_time')->whereNull('employee_timesheet_schedules.check_out_time')->count(),
+                        'total_schedule' => (clone $query)->count()
+                    ],
+                    'data' => $this->list($query, $request)
+                ],
+            ]);
+        } catch (\Throwable $exception) {
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }

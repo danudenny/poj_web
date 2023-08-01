@@ -757,21 +757,17 @@ class EventService extends BaseService
             $employeeEvent->check_out_long = $dataLocation['longitude'];
             $employeeEvent->check_out_time = Carbon::now();
             $employeeEvent->check_out_timezone = $employeeTimezone;
-
-            if (is_null($checkInData)) {
-                $checkInData = new EmployeeAttendance();
-            }
-
-            $checkInData->real_check_out = $employeeEvent->check_out_time;
-            $checkInData->checkout_lat = $employeeEvent->check_out_lat;
-            $checkInData->checkout_long = $employeeEvent->check_out_long;
-            $checkInData->checkout_real_radius = $distance;
-            $checkInData->checkout_type = $checkOutType;
-            $checkInData->check_out_tz = $employeeEvent->check_out_timezone;
-            $checkInData->save();
-
-            $employeeEvent->employee_attendance_id = $checkInData->id;
             $employeeEvent->save();
+
+            if (!is_null($checkInData)) {
+                $checkInData->real_check_out = $employeeEvent->check_out_time;
+                $checkInData->checkout_lat = $employeeEvent->check_out_lat;
+                $checkInData->checkout_long = $employeeEvent->check_out_long;
+                $checkInData->checkout_real_radius = $distance;
+                $checkInData->checkout_type = $checkOutType;
+                $checkInData->check_out_tz = $employeeEvent->check_out_timezone;
+                $checkInData->save();
+            }
 
             DB::commit();
 
@@ -975,5 +971,43 @@ class EventService extends BaseService
         }
 
         return $eventDates;
+    }
+
+    public function monthlyEvaluate(Request  $request) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            $query = EmployeeEvent::query()->with(['employee:employees.id,name', 'event:events.id,title,requestor_employee_id,timezone', 'event.requestorEmployee:employees.id,name', 'employeeAttendance'])
+                ->where('employee_events.employee_id', '=', $user->employee_id)
+                ->orderBy('employee_events.event_datetime', 'ASC');
+
+            if ($monthly = $request->query('monthly')) {
+                $query->whereRaw("TO_CHAR(employee_events.event_datetime, 'YYYY-mm') = ?", [$monthly]);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Succcess fetch data',
+                'data' => [
+                    'meta' => [
+                        'full_attendance' => (clone $query)->whereNotNull('employee_events.check_in_time')->whereNotNull('employee_events.check_out_time')->count(),
+                        'late_check_in' => (clone $query)->whereRaw('employee_events.check_in_time > employee_events.event_datetime')->count(),
+                        'not_check_out' => (clone $query)->whereNull('employee_events.check_out_time')->count(),
+                        'early_check_out' => 0,
+                        'not_attendance' => (clone $query)->whereNull('employee_events.check_in_time')->whereNull('employee_events.check_out_time')->count(),
+                        'total_schedule' => (clone $query)->count()
+                    ],
+                    'data' => $this->list($query, $request)
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

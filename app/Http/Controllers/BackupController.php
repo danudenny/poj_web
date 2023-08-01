@@ -64,4 +64,8 @@ class BackupController extends Controller
     public function getListApproval(Request $request) {
         return $this->backupService->listApproval($request);
     }
+
+    public function monthlyEvaluate(Request $request) {
+        return $this->backupService->monthlyEvaluate($request);
+    }
 }

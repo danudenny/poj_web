@@ -169,6 +169,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::post('check-out', [EmployeeAttendanceController::class, 'checkOut']);
         Route::put('approve/{id}', [EmployeeAttendanceController::class, 'approve']);
         Route::post('my-active-schedule', [EmployeeAttendanceController::class, 'getActiveeSchedule']);
+        Route::get('attendance-evaluate', [EmployeeAttendanceController::class, 'getMonthlyEvaluate']);
     });
     // End employee attendance
 
@@ -239,6 +240,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::post('approval/{id}', [BackupController::class, 'approve']);
         Route::post('check-in/{id}', [BackupController::class, 'checkIn']);
         Route::post('check-out/{id}', [BackupController::class, 'checkOut']);
+        Route::get('attendance-evaluate', [BackupController::class, 'monthlyEvaluate']);
     });
     // End Backups
 
@@ -267,6 +269,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::delete('/remove-attendance/{id}', [EventController::class, 'removeAttendance']);
         Route::post('/add-attendance/{id}', [EventController::class, 'addAttendance']);
         Route::get('get-active-event/{id}', [EventController::class, 'getActiveEmployeeEvent']);
+        Route::get('attendance-evaluate', [EventController::class, 'monthlyEvaluate']);
     });
     // End Event
 
@@ -304,6 +307,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::post('check-in/{id}', [OvertimeController::class, 'checkIn']);
         Route::post('check-out/{id}', [OvertimeController::class, 'checkOut']);
         Route::get('get-active-overtime/{id}', [OvertimeController::class, 'getActiveOvertime']);
+        Route::get('attendance-evaluate', [OvertimeController::class, 'monthlyEvaluate']);
     });
     // End Overtime
 
