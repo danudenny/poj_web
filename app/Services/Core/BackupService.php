@@ -814,4 +814,44 @@ class BackupService extends BaseService
             ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    public function delete($id) {
+        // check if backup exists
+        $backup = Backup::find($id);
+        if (!$backup) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Backup not found',
+            ], ResponseAlias::HTTP_NOT_FOUND);
+        }
+
+        if ($backup->status == BackupApproval::StatusApproved) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Can not delete approved backup',
+            ], ResponseAlias::HTTP_BAD_REQUEST);
+        }
+
+        DB::beginTransaction();
+        try {
+            $backup->delete();
+            BackupTime::where('backup_id', $id)->delete();
+
+            BackupEmployeeTime::whereHas('backupTime', function($query) use ($id) {
+                $query->where('backup_id', $id);
+            })->delete();
+
+            DB::commit();
+            return response()->json([
+                'status' => true,
+                'message' => 'Success delete backup',
+            ]);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
  }
