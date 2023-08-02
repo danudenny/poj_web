@@ -906,4 +906,54 @@ class OvertimeService extends BaseService
             ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    public function deleteOvertime(Request $request, int $id) {
+        try {
+            $user = $request->user();
+
+            /**
+             * @var Overtime $overtime
+             */
+            $overtime = Overtime::query()->where('id', '=', $id)->first();
+            if(!$overtime) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Overtime not found!'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            if ($overtime->last_status == OvertimeApproval::StatusApproved) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Overtime already approved!'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            DB::beginTransaction();
+
+            OvertimeEmployee::query()
+                ->join('overtime_dates', 'overtime_dates.id', '=', 'overtime_employees.overtime_date_id')
+                ->where('overtime_dates.overtime_id', '=', $overtime->id)
+                ->delete();
+
+            OvertimeDate::query()
+                ->where('overtime_dates.overtime_id', '=', $overtime->id)
+                ->delete();
+
+            $overtime->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => "Success"
+            ], ResponseAlias::HTTP_OK);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }

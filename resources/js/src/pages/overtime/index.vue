@@ -31,6 +31,7 @@
 
 <script>
 import {TabulatorFull as Tabulator} from 'tabulator-tables';
+import {useToast} from "vue-toastification";
 
 export default {
     data() {
@@ -96,11 +97,11 @@ export default {
                     {
                         title: '',
                         formatter: this.viewDetailsFormatter,
-                        width: 70,
+                        width: 120,
                         hozAlign: 'center',
                         sortable: false,
                         cellClick: (e, cell) => {
-                            this.viewData(cell.getRow().getData().id);
+                            this.handleActionButtonClick(e, cell);
                         }
                     },
                 ],
@@ -147,11 +148,49 @@ export default {
             });
         },
         viewDetailsFormatter(cell, formatterParams, onRendered) {
-            return `<button class="button-icon button-success" data-id="${cell.getRow().getData().id}"><i class="fa fa-eye"></i> </button>`;
+            const rowData = cell.getRow().getData();
+            return `
+                <button class="button-icon button-success" data-action="view" data-row-id="${rowData.id}"><i data-action="view" class="fa fa-eye"></i> </button>
+                <button class="button-icon button-danger" data-action="delete" data-row-id="${rowData.id}"><i data-action="delete" class="fa fa-trash"></i> </button>
+             `;
         },
-        viewData(id) {
-            this.$router.push({name: 'Detail Overtime', params: {id}});
-        }
+        handleActionButtonClick(e, cell) {
+            const action = e.target.dataset.action
+            console.log(action)
+            const rowData = cell.getRow().getData();
+
+            if (action === 'view') {
+                this.$router.push({
+                    name: 'Detail Overtime',
+                    params: { id: rowData.id },
+                })
+            } else if (action === 'delete') {
+                this.basic_warning_alert(rowData.id);
+            }
+        },
+        basic_warning_alert:function(id){
+            this.$swal({
+                icon: 'warning',
+                title:"Delete Data?",
+                text:'Once deleted, you will not be able to recover the data!',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                confirmButtonColor: '#e64942',
+                cancelButtonText: 'Cancel',
+                cancelButtonColor: '#efefef',
+            }).then((result)=>{
+                if(result.value){
+                    this.$axios.delete(`api/v1/admin/overtime/delete/${id}`)
+                        .then(() => {
+                            this.generateOvertimeTable()
+                            useToast().success("Data successfully deleted!", { position: 'bottom-right' });
+                        })
+                        .catch(error => {
+                            useToast().error(error.response.data.message, { position: 'bottom-right' });
+                        });
+                }
+            });
+        },
     }
 }
 </script>

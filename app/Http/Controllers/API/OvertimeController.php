@@ -89,4 +89,8 @@ class OvertimeController extends Controller
     public function monthlyEvaluate(Request $request, OvertimeService $service) {
         return $service->monthlyEvaluate($request);
     }
+
+    public function deleteOvertime(Request $request, OvertimeService $service, int $id) {
+        return $service->deleteOvertime($request, $id);
+    }
 }

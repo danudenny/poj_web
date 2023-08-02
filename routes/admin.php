@@ -319,6 +319,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::post('check-out/{id}', [OvertimeController::class, 'checkOut']);
         Route::get('get-active-overtime/{id}', [OvertimeController::class, 'getActiveOvertime']);
         Route::get('attendance-evaluate', [OvertimeController::class, 'monthlyEvaluate']);
+        Route::delete('delete/{id}', [OvertimeController::class, 'deleteOvertime']);
     });
     // End Overtime
 
