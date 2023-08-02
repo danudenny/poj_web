@@ -159,7 +159,7 @@ class BackupService extends BaseService
         $user = $request->user();
 
         $query = BackupApproval::query()->with(['backup', 'backup.unit:units.relation_id,name', 'backup.job:jobs.odoo_job_id,name', 'backup.requestorEmployee:employees.id,name', 'backup.sourceUnit:units.relation_id,name'])
-            ->where('user_id', '=', $user->id)
+            ->where('employee_id', '=', $user->id)
             ->orderBy('id', 'DESC');
 
         if($status = $request->query('status')) {
@@ -377,7 +377,7 @@ class BackupService extends BaseService
                 foreach ($approvalUserIDs as $idx => $approvalUserID) {
                     $backupApproval = new BackupApproval();
                     $backupApproval->priority = $idx;
-                    $backupApproval->user_id = $approvalUserID;
+                    $backupApproval->employee_id = $approvalUserID;
                     $backupApproval->backup_id = $backup->id;
                     $backupApproval->status = BackupApproval::StatusPending;
                     $backupApproval->save();
@@ -500,7 +500,7 @@ class BackupService extends BaseService
             /**
              * @var BackupApproval $userApproval
              */
-            $userApproval = $backup->backupApprovals()->where('user_id', '=', $user->id)
+            $userApproval = $backup->backupApprovals()->where('employee_id', '=', $user->employee_id)
                 ->where('status', '=', BackupApproval::StatusPending)
                 ->first();
             if (!$userApproval) {

@@ -64,7 +64,7 @@ class Backup extends Model
         /**
          * @var BackupApproval $backupApproval
          */
-        $backupApproval = $this->backupApprovals()->where('user_id', '=', $user->id)
+        $backupApproval = $this->backupApprovals()->where('employee_id', '=', $user->employee_id)
             ->where('status', '=', BackupApproval::StatusPending)
             ->first();
         if (!$backupApproval) {

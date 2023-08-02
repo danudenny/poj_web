@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $priority;
  * @property string $status;
  * @property int $backup_id
- * @property int $user_id
+ * @property int $employee_id
  * @property string|null $notes
  *
  * Relations:

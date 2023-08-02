@@ -185,7 +185,7 @@ class OvertimeService extends BaseService
         $user = $request->user();
 
         $query = OvertimeApproval::query()->with(['overtime', 'overtime.requestorEmployee:employees.id,name', 'overtime.unit:units.relation_id,name'])
-            ->where('user_id', '=', $user->employee_id)
+            ->where('employee_id', '=', $user->employee_id)
             ->orderBy('id', 'DESC');
 
         if ($status = $request->query('status')) {
@@ -401,7 +401,7 @@ class OvertimeService extends BaseService
                 foreach ($approvalUserIDs as $idx => $approvalUserID) {
                     $overtimeApproval = new OvertimeApproval();
                     $overtimeApproval->priority = $idx;
-                    $overtimeApproval->user_id = $approvalUserID;
+                    $overtimeApproval->employee_id = $approvalUserID;
                     $overtimeApproval->overtime_id = $overtime->id;
                     $overtimeApproval->status = OvertimeApproval::StatusPending;
                     $overtimeApproval->save();
@@ -534,7 +534,7 @@ class OvertimeService extends BaseService
              * @var OvertimeApproval $userApproval
              */
             $userApproval = $overtime->overtimeApprovals()
-                ->where('user_id', '=', $user->id)
+                ->where('employee_id', '=', $user->employee_id)
                 ->where('status', '=', OvertimeApproval::StatusPending)
                 ->first();
             if(!$userApproval) {

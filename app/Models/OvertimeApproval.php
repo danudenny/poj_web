@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read int $id
  * @property int $priority
  * @property int $overtime_id
- * @property int $user_id
+ * @property int $employee_id
  * @property string $status
  * @property string $notes
  *

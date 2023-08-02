@@ -66,7 +66,7 @@ class Overtime extends Model
          */
         $overtimeApproval = $this->overtimeApprovals()
             ->where('status', '=', OvertimeApproval::StatusPending)
-            ->where('user_id', '=', $user->id)
+            ->where('employee_id', '=', $user->employee_id)
             ->first();
         if (!$overtimeApproval) {
             return false;
