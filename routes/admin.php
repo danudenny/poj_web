@@ -55,36 +55,36 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     // End User
 
     // Begin Role
-//    Route::group(['prefix' => 'role'], function () {
-//        Route::get('/', [RoleController::class, 'index']);
-//        Route::get('view', [RoleController::class, 'view']);
-//        Route::get('permissions', [RoleController::class, 'getPermissions']);
-//        Route::post('save', [RoleController::class, 'save']);
-//        Route::post('update', [RoleController::class, 'update']);
-//        Route::post('toggle-status', [RoleController::class, 'toggleRoleStatus']);
-//        Route::delete('delete', [RoleController::class, 'delete']);
-//        Route::post('restore', [RoleController::class, 'restore']);
-//        Route::delete('destroy', [RoleController::class, 'destroy']);
-//    });
     Route::group(['prefix' => 'role'], function () {
-        Route::get('/', [\App\Http\Controllers\API\RolePermission\RoleController::class, 'index']);
-        Route::post('save', [\App\Http\Controllers\API\RolePermission\RoleController::class, 'save']);
-        Route::put('update/{id}', [\App\Http\Controllers\API\RolePermission\RoleController::class, 'update']);
+        Route::get('/', [RoleController::class, 'index']);
+        Route::get('view', [RoleController::class, 'view']);
+        Route::get('permissions', [RoleController::class, 'getPermissions']);
+        Route::post('save', [RoleController::class, 'save']);
+        Route::post('update', [RoleController::class, 'update']);
+        Route::post('toggle-status', [RoleController::class, 'toggleRoleStatus']);
+        Route::delete('delete', [RoleController::class, 'delete']);
+        Route::post('restore', [RoleController::class, 'restore']);
+        Route::delete('destroy', [RoleController::class, 'destroy']);
     });
+//    Route::group(['prefix' => 'role'], function () {
+//        Route::get('/', [\App\Http\Controllers\API\RolePermission\RoleController::class, 'index']);
+//        Route::post('save', [\App\Http\Controllers\API\RolePermission\RoleController::class, 'save']);
+//        Route::put('update/{id}', [\App\Http\Controllers\API\RolePermission\RoleController::class, 'update']);
+//    });
     // End Role
 
     // Begin Permission
-//    Route::group(['prefix' => 'permission'], function () {
-//        Route::get('/', [PermissionController::class, 'index']);
-//        Route::get('view', [PermissionController::class, 'view']);
-//        Route::post('save', [PermissionController::class, 'save']);
-//        Route::post('update', [PermissionController::class, 'update']);
-//        Route::delete('delete', [PermissionController::class, 'destroy']);
-//    });
     Route::group(['prefix' => 'permission'], function () {
-        Route::get('/', [\App\Http\Controllers\API\RolePermission\PermissionController::class, 'index']);
-        Route::post('save', [\App\Http\Controllers\API\RolePermission\PermissionController::class, 'save']);
+        Route::get('/', [PermissionController::class, 'index']);
+        Route::get('view', [PermissionController::class, 'view']);
+        Route::post('save', [PermissionController::class, 'save']);
+        Route::post('update', [PermissionController::class, 'update']);
+        Route::delete('delete', [PermissionController::class, 'destroy']);
     });
+//    Route::group(['prefix' => 'permission'], function () {
+//        Route::get('/', [\App\Http\Controllers\API\RolePermission\PermissionController::class, 'index']);
+//        Route::post('save', [\App\Http\Controllers\API\RolePermission\PermissionController::class, 'save']);
+//    });
     // End Permission
 
     // Begin Employee
