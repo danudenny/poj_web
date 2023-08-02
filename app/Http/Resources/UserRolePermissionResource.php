@@ -140,6 +140,7 @@ class UserRolePermissionResource extends JsonResource
             'current_work' => $this->employee->partner ? $this->employee->partner->name : '-',
             'employee' => $this->employee->unsetRelation('timesheetSchedules')->unsetRelation('overtime')->unsetRelation('backup')->unsetRelation('job'),
             'time_schedules' => $timesheet,
+            'corporate' => $this->employee->corporate,
             'job' => $this->employee->job,
             'misc' => array_filter($job->all()),
             'active_units' => $activeAdminUnit

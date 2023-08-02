@@ -9,8 +9,8 @@
                     <div class="row">
                         <div class="col-md-12 col-sm-12">
                             <div class="mb-3">
-                                <label>Current Work</label>
-                                <input class="form-control" :value="employee.current_work || '-'" readonly type="text">
+                                <label>Corporate</label>
+                                <input class="form-control" :value="employee.corporate.name || '-'" readonly type="text">
                             </div>
                         </div>
                         <div class="col-md-12 col-sm-12">
