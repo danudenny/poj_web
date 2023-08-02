@@ -92,16 +92,6 @@ class ApprovalService extends BaseService
                 }
             }
 
-            $duplicateUser = Approval::whereHas('approvalUsers', function (Builder $query) use ($request) {
-                $query->whereIn('user_id', $request->user_id);
-            })->where('approval_module_id', '!=', $request->approval_module_id)->first();
-            if ($duplicateUser) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'User already exists in other approval module.',
-                    'data' => null,
-                ], 500);
-            }
         }
 
         DB::beginTransaction();
