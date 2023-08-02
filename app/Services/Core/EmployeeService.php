@@ -137,11 +137,12 @@ class EmployeeService extends BaseService
                 }
 
                 $employeesData[] = $employees
-                    ->whereIn('kanwil_id', $relationIds)
+                    ->whereIn('corporate_id', $relationIds)
+                    ->orWhereIn('kanwil_id', $relationIds)
                     ->orWhereIn('area_id', $relationIds)
                     ->orWhereIn('cabang_id', $relationIds)
                     ->orWhereIn('outlet_id', $relationIds)
-                    ->with(['job', 'kanwil', 'area', 'cabang', 'outlet'])
+                    ->with(['job', 'corporate', 'kanwil', 'area', 'cabang', 'outlet'])
                     ->paginate($request->get('per_page', 10));
             }
 
