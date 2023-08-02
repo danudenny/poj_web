@@ -49,7 +49,7 @@ class ApprovalService extends BaseService
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data retrieved successfully.',
-                'data' => $approvals->paginate(request()->get('limit') ?? 10),
+                'data' => $approvals->paginate(request()->get('size') ?? 10),
             ]);
         } catch (Exception $e) {
             return response()->json([
