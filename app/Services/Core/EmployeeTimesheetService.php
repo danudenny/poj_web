@@ -160,7 +160,18 @@ class EmployeeTimesheetService extends BaseService {
     {
         $dataExists = EmployeeTimesheet::where('id', $id)->first();
         if (!$dataExists) {
-            throw new Exception('Data not found');
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Data not found'
+            ], 404);
+        }
+
+        $employeeTimesheetSchedule = EmployeeTimesheetSchedule::where('timesheet_id', $id)->first();
+        if ($employeeTimesheetSchedule) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Timesheet is assigned to employee'
+            ], 400);
         }
 
         DB::beginTransaction();
