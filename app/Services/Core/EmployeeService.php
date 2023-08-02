@@ -123,7 +123,7 @@ class EmployeeService extends BaseService
             if ($highestPriorityRole->role_level === 'superadmin') {
                 $employeesData = $employees->paginate($request->get('per_page', 10));
             } else if ($highestPriorityRole->role_level === 'staff') {
-                $employeesData = $employees->where('id', '=', $auth->employee_id);
+                $employeesData = $employees->where('id', '=', $auth->employee_id)->paginate($request->get('per_page', 10));
             } else if ($highestPriorityRole->role_level === 'admin') {
                 $empUnit = $auth->employee->getRelatedUnit();
 
