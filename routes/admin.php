@@ -247,6 +247,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::get('get-active-backup/{id}', [BackupController::class, 'getActiveEmployeeEvent']);
         Route::get('view-employee/{id}', [BackupController::class, 'getDetailEmployeeBackup']);
         Route::post('create', [BackupController::class, 'create']);
+        Route::delete('delete/{id}', [BackupController::class, 'delete']);
         Route::post('approval/{id}', [BackupController::class, 'approve']);
         Route::post('check-in/{id}', [BackupController::class, 'checkIn']);
         Route::post('check-out/{id}', [BackupController::class, 'checkOut']);

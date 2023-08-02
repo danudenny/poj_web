@@ -68,4 +68,9 @@ class BackupController extends Controller
     public function monthlyEvaluate(Request $request) {
         return $this->backupService->monthlyEvaluate($request);
     }
+
+    public function delete($id): JsonResponse
+    {
+        return $this->backupService->delete($id);
+    }
 }

@@ -31,12 +31,14 @@
 
 <script>
 import {TabulatorFull as Tabulator} from 'tabulator-tables';
+import {useToast} from "vue-toastification";
 
 export default {
     data() {
         return {
             backups: [],
             loading: false,
+            table: null
         }
     },
     async mounted() {
@@ -56,7 +58,7 @@ export default {
                 });
         },
         initializeDepartmentTable() {
-            const table = new Tabulator(this.$refs.backupTable, {
+            this.table = new Tabulator(this.$refs.backupTable, {
                 paginationCounter:"rows",
                 data: this.backups,
                 layout: 'fitData',
@@ -217,11 +219,11 @@ export default {
                     {
                         title: '',
                         formatter: this.viewDetailsFormatter,
-                        width: 70,
+                        width: 150,
                         hozAlign: 'center',
                         sortable: false,
                         cellClick: (e, cell) => {
-                            this.viewData(cell.getRow().getData().id);
+                            this.handleActionButtonClick(e, cell);
                         }
                     },
                 ],
@@ -239,11 +241,60 @@ export default {
             this.loading = false
         },
         viewDetailsFormatter(cell, formatterParams, onRendered) {
-            return `<button class="button-icon button-success" data-id="${cell.getRow().getData().id}"><i class="fa fa-eye"></i> </button>`;
+            const rowData = cell.getRow().getData();
+            return `
+                <button class="button-icon button-success" data-action="view" data-row-id="${rowData.id}"><i data-action="view" class="fa fa-eye"></i> </button>
+                <button class="button-icon button-danger" data-action="delete" data-row-id="${rowData.id}"><i data-action="delete" class="fa fa-trash"></i> </button>
+             `;
+        },
+        handleActionButtonClick(e, cell) {
+            const action = e.target.dataset.action
+            const rowData = cell.getRow().getData();
+
+            if (action === 'view') {
+                this.$router.push({
+                    name: 'Detail Backup',
+                    params: { id: rowData.id },
+                })
+            } else if (action === 'delete') {
+                this.basic_warning_alert(rowData.id);
+            }
         },
         viewData(id) {
             this.$router.push({name: 'Detail Backup', params: {id}});
-        }
+        },
+        redrawTable() {
+            this.$nextTick(() => {
+                this.table.redraw(true);
+            });
+        },
+        basic_warning_alert:function(id){
+            this.$swal({
+                icon: 'warning',
+                title:"Delete Data?",
+                text:'Once deleted, you will not be able to recover the data!',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                confirmButtonColor: '#e64942',
+                cancelButtonText: 'Cancel',
+                cancelButtonColor: '#efefef',
+            }).then((result)=>{
+                if(result.value){
+                    this.$axios.delete(`api/v1/admin/backup/delete/${id}`)
+                        .then(() => {
+                            const pluck = this.table.getData().filter((item) => item.id !== id);
+                            this.loading = true
+                            this.table.setData(pluck);
+                            this.redrawTable();
+                            this.loading = false
+                            useToast().success("Data successfully deleted!");
+                        })
+                        .catch(error => {
+                            useToast().error(error.response.data.message);
+                        });
+                }
+            });
+        },
     }
 }
 </script>
