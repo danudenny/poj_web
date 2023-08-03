@@ -27,11 +27,10 @@ Deploy:
     - ssh $VAR_USER@$VAR_IP "cd $VAR_DIREKTORI && git pull origin main && exit"
     - ssh $VAR_USER@$VAR_IP "if [ -d $VAR_DIREKTORI/.env ]; then rm .env; fi"
     - ssh $VAR_USER@$VAR_IP "cd $VAR_DIREKTORI && echo '$VAR_FILE_ENV' >> .env"
-    - ssh $VAR_USER@$VAR_IP "docker exec webserver composer install"
-    - ssh $VAR_USER@$VAR_IP "docker exec webserver composer update"
-    - ssh $VAR_USER@$VAR_IP "docker exec webserver php artisan migrate"
-    - ssh $VAR_USER@$VAR_IP "docker exec webserver php artisan key:generate"
-    - ssh $VAR_USER@$VAR_IP "docker exec webserver npm run build"
+    - ssh $VAR_USER@$VAR_IP "composer install --ignore-platform-reqs"
+    - ssh $VAR_USER@$VAR_IP "php artisan migrate"
+    - ssh $VAR_USER@$VAR_IP "php artisan key:generate"
+    - ssh $VAR_USER@$VAR_IP "npm run build"
     - echo "A!"
   only:
     - tags
