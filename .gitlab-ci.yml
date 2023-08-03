@@ -38,7 +38,7 @@ Deploy:
     - git pull origin staging
     - rm ~/.git-credentials
     - cd $VAR_DIREKTORI && echo '$VAR_FILE_ENV' >> .env
-    - composer install --ignore-platform-reqs
+    - /usr/local/bin/composer install --ignore-platform-reqs
     - php artisan migrate
     - php artisan key:generate
     - php artisan optimize
