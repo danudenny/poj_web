@@ -5,8 +5,7 @@ Deploy:
   stage: deploy
   variables:
     VAR_DIREKTORI: "/var/www/html"
-    VAR_GIT_URL_TANPA_HTTP: "git@cicd.optimajasa.co.id:danudenny/poj-web.git"
-    VAR_CLONE_KEY: "glpat-TADxzfqM5NP1p6wTr4sf"
+    VAR_GIT_URL_HTTPS: "https://danundenny:Sniper005!@cicd.optimajasa.co.id/danudenny/poj-web.git"
     VAR_USER: "deployer"
     VAR_IP: "192.168.100.73"
     VAR_FILE_ENV: $FILE_ENV
@@ -22,9 +21,14 @@ Deploy:
     - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
 
   script:
-    - ssh -p 23932 $VAR_USER@$VAR_IP "git config --global safe.directory '*'"
-    - ssh -p 23932 $VAR_USER@$VAR_IP "cd $VAR_DIREKTORI && git pull origin staging && exit"
-    - ssh -p 23932 $VAR_USER@$VAR_IP "if [ -d $VAR_DIREKTORI/.env ]; then rm .env; fi"
+    - git config --global credential.helper "store --file ~/.git-credentials"
+    - echo -e "https://username:$VAR_GIT_PASSWORD\n" > ~/.git-credentials
+    - git clone $VAR_GIT_URL_HTTPS
+    - cd poj-web
+    - git config user.name "Your Username"
+    - git config user.email "your.email@example.com"
+    - git pull origin staging
+    - rm ~/.git-credentials
     - ssh -p 23932 $VAR_USER@$VAR_IP "cd $VAR_DIREKTORI && echo '$VAR_FILE_ENV' >> .env"
     - ssh -p 23932 $VAR_USER@$VAR_IP "composer install --ignore-platform-reqs"
     - ssh -p 23932 $VAR_USER@$VAR_IP "php artisan migrate"
