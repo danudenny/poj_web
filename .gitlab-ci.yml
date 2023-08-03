@@ -34,12 +34,12 @@ Deploy:
     - git pull origin staging
     - rm ~/.git-credentials
     - cd $VAR_DIREKTORI && echo '$VAR_FILE_ENV' >> .env
-    - php composer.phar install --ignore-platform-reqs
-    - php artisan migrate
-    - php artisan key:generate
-    - php artisan optimize
-    - npm install
-    - npm run build
+    - ssh -p 23932 $VAR_USER@$VAR_IP "cd $VAR_DIREKTORI && echo '$VAR_FILE_ENV' >> .env"
+    - ssh -p 23932 $VAR_USER@$VAR_IP "composer install --ignore-platform-reqs"
+    - ssh -p 23932 $VAR_USER@$VAR_IP "php artisan migrate"
+    - ssh -p 23932 $VAR_USER@$VAR_IP "php artisan key:generate"
+    - ssh -p 23932 $VAR_USER@$VAR_IP "npm install"
+    - ssh -p 23932 $VAR_USER@$VAR_IP "npm run build"
     - echo "A!"
   only:
     - tags
