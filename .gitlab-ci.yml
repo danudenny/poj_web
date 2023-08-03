@@ -12,10 +12,6 @@ Deploy:
     VAR_FILE_ENV: $FILE_ENV
 
   before_script:
-    - apt-get install zip unzip
-    - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-    - php composer-setup.php
-    - php -r "unlink('composer-setup.php');"
     - "which ssh-agent || ( apt-get install openssh-client )"
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
