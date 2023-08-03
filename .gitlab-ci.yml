@@ -2,6 +2,7 @@ stages:
   - deploy
 
 Deploy:
+  image: tetraweb/php
   stage: deploy
   variables:
     VAR_DIREKTORI: "/var/www/html"
@@ -12,14 +13,10 @@ Deploy:
 
   before_script:
     - apt-get update
-    - apt-get install -y composer
-    - |
-      # Install nvm and use Node.js version 14
-      curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
-      export NVM_DIR="$HOME/.nvm"
-      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # Load nvm
-      nvm install 14  # Install Node.js version 14
-      nvm use 14  # Set Node.js version 14 as the default
+    - apt-get install zip unzip
+    - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+    - php composer-setup.php
+    - php -r "unlink('composer-setup.php');"
     - "which ssh-agent || ( apt-get install openssh-client )"
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
@@ -38,10 +35,11 @@ Deploy:
     - git pull origin staging
     - rm ~/.git-credentials
     - cd $VAR_DIREKTORI && echo '$VAR_FILE_ENV' >> .env
-    - /usr/local/bin/composer install --ignore-platform-reqs
+    - php composer.phar install --ignore-platform-reqs
     - php artisan migrate
     - php artisan key:generate
     - php artisan optimize
+    - npm install
     - npm run build
     - echo "A!"
   only:
