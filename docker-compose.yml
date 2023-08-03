@@ -1,6 +1,22 @@
 version: '3'
 
 services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: app
+    ports:
+      - 8000:8000
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - .:/var/www/html
+    networks:
+      - backend
+      - frontend
+
   webserver:
       image: nginx:stable-alpine
       container_name: nginx
