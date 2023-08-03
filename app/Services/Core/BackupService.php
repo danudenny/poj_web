@@ -159,7 +159,7 @@ class BackupService extends BaseService
         $user = $request->user();
 
         $query = BackupApproval::query()->with(['backup', 'backup.unit:units.relation_id,name', 'backup.job:jobs.odoo_job_id,name', 'backup.requestorEmployee:employees.id,name', 'backup.sourceUnit:units.relation_id,name'])
-            ->where('employee_id', '=', $user->id)
+            ->where('employee_id', '=', $user->employee_id)
             ->orderBy('id', 'DESC');
 
         if($status = $request->query('status')) {
