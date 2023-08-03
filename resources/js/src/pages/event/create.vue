@@ -157,7 +157,10 @@
                                     </div>
                                 </div>
                                 <br/>
-                                <button class="btn btn-primary">Simpan</button>
+                                <button class="btn btn-primary"><i class="fa fa-save"></i> Simpan</button> &nbsp;
+                                <button class="btn btn-secondary" @click="$router.push('/event')">
+                                    <i class="fa fa-close"></i>&nbsp;Cancel
+                                </button>
                             </form>
                         </div>
                         <div class="col-md-6">

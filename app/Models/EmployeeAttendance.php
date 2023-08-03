@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool $approved
  * @property string $check_in_tz
  * @property bool $is_late
+ * @property int $early_duration
  * @property int $late_duration
  * @property string $real_check_out
  * @property float $checkout_lat

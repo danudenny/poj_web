@@ -407,6 +407,11 @@ class EmployeeAttendanceService extends BaseService
                 $lateDuration = $currentTime->diffInMinutes($maximumCheckInTime);
             }
 
+            $earlyDuration = 0;
+            if ($currentTime->lessThan($minimumCheckInTime)) {
+                $earlyDuration = $minimumCheckInTime->diffInMinutes($currentTime);
+            }
+
             $distance = calculateDistance($employeeTimesheetSchedule->latitude, $employeeTimesheetSchedule->longitude, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
 
             $attendanceType = "onsite";
@@ -431,6 +436,7 @@ class EmployeeAttendanceService extends BaseService
             $checkIn->check_in_tz = $employeeTimezone;
             $checkIn->is_late = $lateDuration > 0;
             $checkIn->late_duration = $lateDuration;
+            $checkIn->early_duration = $earlyDuration;
             $checkIn->save();
 
             $attendanceHistory = new EmployeeAttendanceHistory();
@@ -842,6 +848,7 @@ class EmployeeAttendanceService extends BaseService
             }
 
             if ($normal = $employee->getActiveNormalSchedule()) {
+
                 $activeSchedule['attendance']['normal'] = [
                     'minimum_start_time' => Carbon::parse($normal->start_time)->addMinutes(-$normal->early_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'start_time' => Carbon::parse($normal->start_time)->addMinutes($normal->late_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
@@ -849,8 +856,9 @@ class EmployeeAttendanceService extends BaseService
                     'end_time' => Carbon::parse($normal->end_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'check_in_time' => $normal->check_in_time ? Carbon::parse($normal->check_in_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
                     'check_out_time' => $normal->check_out_time ? Carbon::parse($normal->check_out_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
-                    'early_buffer' =>$employee->last_unit->early_buffer,
-                    'late_buffer' => $employee->last_unit->late_buffer,
+                    'early_buffer' => $normal->early_buffer,
+                    'late_buffer' => $normal->late_buffer,
+                    'timesheet_name' => $normal->timesheet->name,
                     'reference_type' => 'normal',
                     'reference_id' => $normal->id
                 ];

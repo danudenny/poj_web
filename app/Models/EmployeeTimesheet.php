@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $unit_id
  * @property string $start_time
  * @property string $end_time
+ * @property string $name
  *
  * Relations:
  * @property-read Unit $unit

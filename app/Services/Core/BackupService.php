@@ -834,15 +834,18 @@ class BackupService extends BaseService
 
         DB::beginTransaction();
         try {
-//            BackupEmployeeTime::query()
-//                ->join('backup_times', 'backup_times.id', '=', 'backup_employee_times.backup_time_id')
-//                ->where('backup_times.backup_id', '=')
-            $backup->delete();
+
             BackupTime::where('backup_id', $id)->delete();
 
             BackupEmployeeTime::whereHas('backupTime', function($query) use ($id) {
                 $query->where('backup_id', $id);
             })->delete();
+
+            BackupApproval::query()
+                ->where('backup_id', '=', $id)
+                ->delete();
+
+            $backup->delete();
 
             DB::commit();
             return response()->json([
