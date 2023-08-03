@@ -5,7 +5,7 @@ Deploy:
   stage: deploy
   variables:
     VAR_DIREKTORI: "/var/www/html"
-    VAR_GIT_URL_HTTPS: "https://danudenny:glpat-WWWzDmyHBHsncdKacxQJ!@cicd.optimajasa.co.id/danudenny/poj-web.git"
+    VAR_GIT_URL_HTTPS: "https://danudenny:glpat-K9-cPQe3oCyzpySEJRjx@cicd.optimajasa.co.id/danudenny/poj-web.git"
     VAR_USER: "deployer"
     VAR_IP: "192.168.100.73"
     VAR_FILE_ENV: $FILE_ENV
@@ -22,7 +22,7 @@ Deploy:
 
   script:
     - git config --global credential.helper "store --file ~/.git-credentials"
-    - echo -e "https://danudenny:glpat-WWWzDmyHBHsncdKacxQJ!\n" > ~/.git-credentials
+    - echo -e "https://danudenny:glpat-K9-cPQe3oCyzpySEJRjx\n" > ~/.git-credentials
     - if [ ! -d /var/www/html ]; then git clone $VAR_GIT_URL_HTTPS /var/www/html; else cd /var/www/html && git pull origin staging; fi
     - git config user.name "Denny Danuwijaya"
     - git config user.email "danudenny@gmail.com"
