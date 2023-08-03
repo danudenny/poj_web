@@ -5,7 +5,7 @@ Deploy:
   stage: deploy
   variables:
     VAR_DIREKTORI: "/var/www/html"
-    VAR_GIT_URL_TANPA_HTTP: "cicd.optimajasa.co.id/danudenny/poj-web.git"
+    VAR_GIT_URL_TANPA_HTTP: "git@cicd.optimajasa.co.id:danudenny/poj-web.git"
     VAR_CLONE_KEY: "glpat-TADxzfqM5NP1p6wTr4sf"
     VAR_USER: "deployer"
     VAR_IP: "192.168.100.73"
