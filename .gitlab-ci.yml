@@ -23,8 +23,7 @@ Deploy:
 
   script:
     - ssh -p 23932 $VAR_USER@$VAR_IP "git config --global safe.directory '*'"
-    - ssh -p 23932 $VAR_USER@$VAR_IP "if [ ! -d $VAR_DIREKTORI/.git ]; then echo 'Project belum ditemukan di direktori $VAR_DIREKTORI' && cd $VAR_DIREKTORI && git clone https://oauth2:$VAR_CLONE_KEY@$VAR_GIT_URL_TANPA_HTTP .; fi"
-    - ssh -p 23932 $VAR_USER@$VAR_IP "cd $VAR_DIREKTORI && git pull origin main && exit"
+    - ssh -p 23932 $VAR_USER@$VAR_IP "cd $VAR_DIREKTORI && git pull origin staging && exit"
     - ssh -p 23932 $VAR_USER@$VAR_IP "if [ -d $VAR_DIREKTORI/.env ]; then rm .env; fi"
     - ssh -p 23932 $VAR_USER@$VAR_IP "cd $VAR_DIREKTORI && echo '$VAR_FILE_ENV' >> .env"
     - ssh -p 23932 $VAR_USER@$VAR_IP "composer install --ignore-platform-reqs"
