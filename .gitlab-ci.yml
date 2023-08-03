@@ -1,67 +1,37 @@
 stages:
-  - build
-  - test
   - deploy
 
-variables:
-  VPN_SERVER_ADDRESS: $VPN_SERVER_ADDRESS
-  VPN_USERNAME: $VPN_USERNAME
-  VPN_PASSWORD: $VPN_PASSWORD
-  SERVER_IP: $SERVER_IP
-  SSH_PORT: $SSH_PORT
-  SSH_USERNAME: $SSH_USERNAME
-  SSH_PASSWORD: $SSH_PASSWORD
-  SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY
-
-build:
-  stage: build
-  image: node:14
-  script:
-    - npm ci
-  only:
-    - staging
-    - tags
-
-test:
-  stage: test
-  image: php:8.1-alpine
-  before_script:
-    - apk add --no-cache curl
-    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-  script:
-    - composer update --ignore-platform-reqs
-    - composer install --no-interaction --prefer-dist --optimize-autoloader --ignore-platform-reqs
-  only:
-    - staging
-    - tags
-
-deploy:
+Deploy:
   stage: deploy
-  image: alpine:latest
-  before_script:
-    - apk update
-    - apk add openssh-client
-    - mkdir -p ~/.ssh
-    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
-    - echo "$SSH_PRIVATE_KEY" > "$SSH_PRIVATE_KEY"
-    - chmod 600 "$SSH_PRIVATE_KEY"
-  script:
-    - ssh-keyscan -p "$SSH_PORT" -t rsa "$SERVER_IP" >> ~/.ssh/known_hosts
-    - ssh -f -N -L $SERVER_IP:$SSH_PORT:"$SERVER_IP":"$SSH_PORT" -i "$SSH_PRIVATE_KEY" "$SSH_USERNAME@$SERVER_IP"
-    - ssh -p $SSH_PORT -i "$SSH_PRIVATE_KEY" "$SSH_USERNAME@$SERVER_IP" "cd /var/www/html/ && git pull origin staging"
-    - ssh -p $SSH_PORT -i "$SSH_PRIVATE_KEY" "$SSH_USERNAME@$SERVER_IP" "cd /var/www/html/ && echo \"$ENV_CREDENTIALS\" > .env"
-    - ssh -p $SSH_PORT -i "$SSH_PRIVATE_KEY" "$SSH_USERNAME@$SERVER_IP" "cd /var/www/html/ && composer install --no-interaction --prefer-dist --optimize-autoloader"
-    - ssh -p $SSH_PORT -i "$SSH_PRIVATE_KEY" "$SSH_USERNAME@$SERVER_IP" "cd /var/www/html/ && php artisan migrate --force"
-    - ssh -p $SSH_PORT -i "$SSH_PRIVATE_KEY" "$SSH_USERNAME@$SERVER_IP" "cd /var/www/html/ && php artisan optimize"
-    - ssh -p $SSH_PORT -i "$SSH_PRIVATE_KEY" "$SSH_USERNAME@$SERVER_IP" "cd /var/www/html/ && npm install"
-    - ssh -p $SSH_PORT -i "$SSH_PRIVATE_KEY" "$SSH_USERNAME@$SERVER_IP" "cd /var/www/html/ && npm run build"
-  only:
-    - staging
-    - tags
+  variables:
+    VAR_DIREKTORI: "/var/www/html"
+    VAR_GIT_URL_TANPA_HTTP: "cicd.optimajasa.co.id/danudenny/poj-web.git"
+    VAR_CLONE_KEY: "glpat-TADxzfqM5NP1p6wTr4sf"
+    VAR_USER: "deployer"
+    VAR_IP: "192.168.100.73"
+    VAR_FILE_ENV: $FILE_ENV
 
-after_script:
-  - |
-    if [ "$CI_COMMIT_REF_NAME" == "staging" ] && [ "$CI_PIPELINE_SOURCE" == "push" ] && [ "$CI_COMMIT_TAG" == "" ]; then
-      ssh -p $SSH_PORT -i "$SSH_PRIVATE_KEY" "$SSH_USERNAME@$SERVER_IP" "cd /var/www/html/ && git checkout HEAD^"
-      ssh -p $SSH_PORT -i "$SSH_PRIVATE_KEY" "$SSH_USERNAME@$SERVER_IP" "cd /var/www/html/ && php artisan migrate:rollback --step=1"
-    fi
+  before_script:
+    - "which ssh-agent || ( apt-get install openssh-client )"
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $VAR_IP >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+
+  script:
+    - ssh $VAR_USER@$VAR_IP "git config --global safe.directory '*'"
+    - ssh $VAR_USER@$VAR_IP "if [ ! -d $VAR_DIREKTORI/.git ]; then echo 'Project belum ditemukan di direktori $VAR_DIREKTORI' && cd $VAR_DIREKTORI && git clone https://oauth2:$VAR_CLONE_KEY@$VAR_GIT_URL_TANPA_HTTP .; fi"
+    - ssh $VAR_USER@$VAR_IP "cd $VAR_DIREKTORI && git pull origin main && exit"
+    - ssh $VAR_USER@$VAR_IP "if [ -d $VAR_DIREKTORI/.env ]; then rm .env; fi"
+    - ssh $VAR_USER@$VAR_IP "cd $VAR_DIREKTORI && echo '$VAR_FILE_ENV' >> .env"
+    - ssh $VAR_USER@$VAR_IP "docker exec webserver composer install"
+    - ssh $VAR_USER@$VAR_IP "docker exec webserver composer update"
+    - ssh $VAR_USER@$VAR_IP "docker exec webserver php artisan migrate"
+    - ssh $VAR_USER@$VAR_IP "docker exec webserver php artisan key:generate"
+    - ssh $VAR_USER@$VAR_IP "docker exec webserver npm run build"
+    - echo "A!"
+  only:
+    - tags
