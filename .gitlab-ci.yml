@@ -5,7 +5,7 @@ Deploy:
   stage: deploy
   variables:
     VAR_DIREKTORI: "/var/www/html"
-    VAR_GIT_URL_HTTPS: "https://danundenny:Sniper005!@cicd.optimajasa.co.id/danudenny/poj-web.git"
+    VAR_GIT_URL_HTTPS: "https://danundenny:glpat-WWWzDmyHBHsncdKacxQJ!@cicd.optimajasa.co.id/danudenny/poj-web.git"
     VAR_USER: "deployer"
     VAR_IP: "192.168.100.73"
     VAR_FILE_ENV: $FILE_ENV
