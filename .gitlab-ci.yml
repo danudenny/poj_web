@@ -12,7 +12,6 @@ Deploy:
     VAR_FILE_ENV: $FILE_ENV
 
   before_script:
-    - apt-get update
     - apt-get install zip unzip
     - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
     - php composer-setup.php
