@@ -1,11 +1,11 @@
 <template>
     <li class="profile-nav onhover-dropdown pe-0 py-0">
-      <div class="media profile-media">
-        <img class="b-r-10 img-40" :src="avatars" alt="" />
+      <div class="media profile-media" style="width: 250px">
+        <img class="b-r-10 img-40" :src="avatars" alt="avatar" />
         <div class="media-body">
-          <span>{{ user.name }}</span>
-          <p class="mb-0 font-roboto">
-            {{ user.email}} <i class="middle fa fa-angle-down"></i>
+          <span style="font-size: 13px"><b>{{ user.name }}</b></span>
+          <p class="mb-0 text-warning" style="font-size: 12px">
+            {{ user.last_units.name}} <i class="middle fa fa-angle-down"></i>
           </p>
         </div>
       </div>
@@ -33,15 +33,18 @@
         return {
             user: {
                 name: '',
-                email: ''
+                email: '',
+                last_units: {
+                    name: '',
+                }
             },
             avatars: '',
             profileImg: '',
         }
     },
-    mounted() {
-      this.getUser;
-      this.getUserAvatar;
+    async mounted() {
+      await this.getUser;
+      await this.getUserAvatar;
       this.avatars = `https://ui-avatars.com/api/?name=${this.user.name}&background=0A5640&color=fff&length=2&rounded=false&size=32`
     },
     methods: {

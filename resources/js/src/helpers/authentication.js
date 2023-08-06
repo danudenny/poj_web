@@ -18,9 +18,11 @@ export default {
     async login(credentials) {
         try {
             const response = await apiClient.post('/login', credentials);
+            localStorage.setItem('AVAILABLE_USER_ROLES', JSON.stringify(response.data.data.user.availableRole));
+            useToast().success("Login successfully");
             return response.data.data;
         } catch (e) {
-            useToast().error(e.response.data.message , { position: 'bottom-right' });
+            useToast().error(e.response.data.message );
             throw new Error(e.response.data.message);
         }
     },
@@ -28,6 +30,8 @@ export default {
     async logout(){
         try {
             const response = await apiClient.post('/logout');
+            localStorage.removeItem('AVAILABLE_USER_ROLES');
+            useToast().success("Logout successfully");
             return response.data.data;
         } catch (e) {
             throw new Error(e.response.data.message)

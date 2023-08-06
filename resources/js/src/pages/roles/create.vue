@@ -9,11 +9,14 @@
                             <div class="mb-3">
                                 <label class="form-label">Role Level</label>
                                 <select class="form-control" v-model="role.level">
+                                    <option>-- Select Type -- </option>
                                     <option value="superadmin">Superadmin</option>
                                     <option value="admin">Admin</option>
                                     <option value="staff">User / Staff</option>
                                 </select>
                             </div>
+                        </div>
+                        <div class="col-sm-6 col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Role Name</label>
                                 <input class="form-control" type="text" placeholder="Name" v-model="role.name">
@@ -21,8 +24,53 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-sm-6">
-                            <div ref="permissionsTable"></div>
+                        <div class="col-sm-12">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                <tr>
+                                    <th>Permission Name</th>
+                                    <th>Read</th>
+                                    <th>Create</th>
+                                    <th>Update</th>
+                                    <th>Delete</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <template v-for="(groupAbilities, groupName) in groupedData" :key="groupName">
+                                    <tr class="text-center">
+                                        <td><b>{{ groupName }}</b></td>
+                                        <td v-if="hasAbility(groupAbilities, 'read')">
+                                            <input type="checkbox" :id="`read-${groupName}`" :value="getAbilityId(groupAbilities, 'read')" v-model="selectedAbilities">
+                                            <label :for="`read-${groupName}`"></label>
+                                        </td>
+                                        <td v-else>
+                                            <input type="checkbox" disabled>
+                                        </td>
+                                        <td v-if="hasAbility(groupAbilities, 'create')">
+                                            <input type="checkbox" :id="`create-${groupName}`" :value="getAbilityId(groupAbilities, 'create')" v-model="selectedAbilities">
+                                            <label :for="`create-${groupName}`"></label>
+                                        </td>
+                                        <td v-else>
+                                            <input type="checkbox" disabled>
+                                        </td>
+                                        <td v-if="hasAbility(groupAbilities, 'update')">
+                                            <input type="checkbox" :id="`update-${groupName}`" :value="getAbilityId(groupAbilities, 'update')" v-model="selectedAbilities">
+                                            <label :for="`update-${groupName}`"></label>
+                                        </td>
+                                        <td v-else>
+                                            <input type="checkbox" disabled>
+                                        </td>
+                                        <td v-if="hasAbility(groupAbilities, 'delete')">
+                                            <input type="checkbox" :id="`delete-${groupName}`" :value="getAbilityId(groupAbilities, 'delete')" v-model="selectedAbilities">
+                                            <label :for="`delete-${groupName}`"></label>
+                                        </td>
+                                        <td v-else>
+                                            <input type="checkbox" disabled>
+                                        </td>
+                                    </tr>
+                                </template>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -53,16 +101,42 @@ export default {
             selectAll: false,
             selectedPermission: [],
             selectedIds: [],
-            table: null,
             currentPage: 1,
             pageSize: 20,
+            selectedAbilities: []
+        }
+    },
+    computed: {
+        groupedData() {
+            const grouped = {};
+            this.permissions.forEach(item => {
+                if (!grouped[item.group]) {
+                    grouped[item.group] = [];
+                }
+                grouped[item.group].push(item);
+            });
+            return grouped;
         }
     },
     async mounted() {
         await this.getPermissions();
-        await this.initializePermissionsTable();
+    },
+    watch: {
+        selectedAbilities: {
+            handler() {
+                localStorage.setItem('selectedPermission', JSON.stringify(this.selectedAbilities));
+            },
+            deep: true
+        }
     },
     methods: {
+        getAbilityId(groupAbilities, abilityName) {
+            const ability = groupAbilities.find(item => item.ability === abilityName);
+            return ability ? ability.id : null;
+        },
+        hasAbility(groupAbilities, ability) {
+            return groupAbilities.some(item => item.ability === ability);
+        },
         toggleSelectAll: function () {
             this.selectAll = !this.selectAll;
             this.role.permissions = [];
@@ -77,65 +151,13 @@ export default {
         },
         async getPermissions() {
             await axios
-                .get(`/api/v1/admin/permission?limit=10`)
+                .get(`/api/v1/admin/permission?limit=200`)
                 .then(response => {
                     this.permissions = response.data.data.data;
                 })
                 .catch(error => {
                     console.error(error);
                 });
-        },
-        async initializePermissionsTable() {
-            const ls = localStorage.getItem('my_app_token');
-            this.table = await new Tabulator(this.$refs.permissionsTable, {
-                ajaxURL: `/api/v1/admin/permission?limit=10`,
-                ajaxConfig: {
-                    headers: {
-                        Authorization: `Bearer ${ls}`,
-                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
-                    },
-                },
-                ajaxParams: {
-                    page: this.currentPage,
-                    size: this.pageSize,
-                },
-                ajaxResponse: function (url, params, response) {
-                    return {
-                        data: response.data.data,
-                        last_page: response.data.last_page,
-                    }
-                },
-                layout: 'fitDataStretch',
-                columns: [
-                    {
-                        formatter: "rowSelection",
-                        titleFormatter: "rowSelection",
-                        hozAlign: "center",
-                        headerSort: false,
-                        cellClick: function (e, cell) {
-                            cell.getRow()
-                        },
-                    },
-                    {
-                        title: 'Permission',
-                        field: 'name',
-                        headerFilter:"input"
-                    }
-                ],
-                progressiveLoad: 'scroll',
-                height: '600px',
-                paginationMode: 'remote',
-                paginationSize: this.pageSize,
-                paginationSizeSelector: [10, 20, 50, 100],
-                headerFilter: true,
-                rowFormatter: (row) => {
-
-                },
-            });
-            this.table.on("rowSelectionChanged", function(data, rows, selected, deselected)  {
-                this.selectedPermission = rows.map(row => row.getData().id);
-                localStorage.setItem('selectedPermission', JSON.stringify(this.selectedPermission));
-            })
         },
         async addRole() {
             let id = this.role.id;
@@ -157,13 +179,10 @@ export default {
                     this.$router.push('/management/roles');
                 })
                 .catch(e => {
-                    useToast().error(e.response.data.message , { position: 'bottom-right' });
-                    console.log(e);
+                    useToast().error(e.response.data.message);
+                    console.error(e);
                 });
-        },
-        async isChecked(permission) {
-            return this.role.permissions.map(val => val.id === permission.id) !== false;
-        },
+        }
     },
 };
 </script>

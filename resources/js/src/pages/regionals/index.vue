@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs main="Regional"/>
+        <Breadcrumbs main="Kantor Perwakilan"/>
 
         <div class="container-fluid">
             <div class="email-wrap bookmark-wrap">
@@ -8,15 +8,9 @@
                     <div class="col-md-12">
                         <div class="card card-absolute">
                             <div class="card-header bg-primary">
-                                <h5>Regional List</h5>
+                                <h5>Kantor Perwakilan</h5>
                             </div>
                             <div class="card-body">
-<!--                                <div class="d-flex justify-content-end mb-2">-->
-<!--                                    <button class="btn btn-warning" type="button" data-bs-toggle="modal"-->
-<!--                                            data-bs-target="#exampleModalCenter">-->
-<!--                                        <i class="fa fa-recycle" /> &nbsp; Sync From ERP-->
-<!--                                    </button>-->
-<!--                                </div>-->
                                 <div v-if="loading" class="text-center">
                                     <img src="../../assets/loader.gif" alt="loading" width="100">
                                 </div>
@@ -38,6 +32,9 @@ export default {
         return {
             regionals: [],
             loading: false,
+            currentPage: 1,
+            pageSize: 10,
+            filterName: '',
         }
     },
     async mounted() {
@@ -47,17 +44,39 @@ export default {
     methods: {
         async getRegionals() {
             this.loading = true;
-            await this.$axios.get(`/api/v1/admin/unit?level_name=Regional`)
+            await this.$axios.get(`/api/v1/admin/kantor_perwakilan`)
                 .then(response => {
                     this.regionals = response.data.data;
+                    console.log(this.regionals);
                 })
                 .catch(error => {
                     console.error(error);
                 });
         },
         initializeRegionalTable() {
+            const ls = localStorage.getItem('my_app_token');
             const table = new Tabulator(this.$refs.regionalTable, {
-                data: this.regionals,
+                ajaxURL: '/api/v1/admin/kantor_perwakilan',
+                ajaxConfig: {
+                    headers: {
+                        Authorization: `Bearer ${ls}`,
+                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
+                    },
+                },
+                ajaxParams: {
+                    page: this.currentPage,
+                    size: this.pageSize,
+                },
+                ajaxResponse: function (url, params, response) {
+                    return {
+                        data: response.data.data,
+                        last_page: response.data.last_page,
+                    }
+                },
+                ajaxURLGenerator: (url, config, params) => {
+                    if (params.field === 'name') this.filterName = params.value
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}`
+                },
                 layout: 'fitColumns',
                 columns: [
                     {
@@ -82,7 +101,8 @@ export default {
                         }
                     },
                 ],
-                pagination: 'local',
+                pagination: true,
+                paginationMode: 'remote',
                 paginationSize: 10,
                 paginationSizeSelector: [10, 20, 50, 100],
                 headerFilter: true,

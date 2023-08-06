@@ -18,8 +18,6 @@ const ACTIVE_UNIT_RELATION_KEY = "active_unit_relation";
 
 export default createStore({
   state:{
-      langIcon: '',
-      langLangauge: '',
       isActive:false,
       token:localStorage.getItem(TOKEN_STORAGE_KEY) || null,
       user: null,
@@ -27,16 +25,18 @@ export default createStore({
       roles: [],
       permissions: [],
       adminUnits: null,
-      activeAdminUnit: null
+      activeAdminUnit: null,
+      availableRole: [],
   },
   getters:{
-    langIcon: (state)=>{ return state.langIcon},
-    langLangauge:(state)=>{return state.langLangauge},
     isAuthenticated(state){
         return state.token != null;
     },
     roles: (state) => {
         return state.roles
+    },
+    availableRole: (state) => {
+        return state.availableRole
     },
     permissions: (state) => {
         return state.permissions
@@ -84,17 +84,9 @@ export default createStore({
     }
   },
   mutations: {
-      changeLang (state, payload) {
-        localStorage.setItem('currentLanguage', payload.id);
-        localStorage.setItem('currentLanguageIcon', payload.icon);
-        state.langIcon = payload.icon || 'flag-icon-us'
-        state.langLangauge = payload.id || 'EN'
-        // window.location.reload();
-      },
       change(state){
         state.isActive = !state.isActive
       },
-
       setToken(state, token){
         state.token = token;
         localStorage.setItem(TOKEN_STORAGE_KEY, token);
@@ -106,6 +98,10 @@ export default createStore({
       setRoles(state, roles) {
           state.roles = roles;
           localStorage.setItem('USER_ROLES', JSON.stringify(roles));
+      },
+      setAvailableRole(state, availableRole) {
+          state.availableRole = availableRole;
+          localStorage.setItem('AVAILABLE_USER_ROLES', JSON.stringify(availableRole));
       },
       setPermissions(state, permissions) {
           state.permissions = permissions;
@@ -154,10 +150,6 @@ export default createStore({
       }
     },
     actions: {
-      setLang ({ commit }, payload) {
-        commit('changeLang', payload);
-
-      },
       async login ({ commit }, credentials) {
           try {
             const { token, user } = await authentication.login(credentials);

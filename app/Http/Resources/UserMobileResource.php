@@ -16,21 +16,21 @@ class UserMobileResource extends JsonResource
      */
     public function toArray($request): array
     {
-        $role = $this->roles->pluck('name');
-        $permission = $this->roles->map(function ($role) {
-            return $role->permissions;
-        })->collapse()->pluck('name')->unique()->values();
-
+        $role = $this->roles;
+        $availableRole = $role->map(function ($role) {
+            return $role->name;
+        });
+        $roleLevel = $this->getHighestRole($role);
+        $permission = $roleLevel->permissions;
+        $permissionName = $permission->map(function ($permission) {
+            return $permission->name;
+        });
         return [
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
             'avatar' => $this->avatar,
             'is_new' => $this->is_new,
-            'kanwil_id' => $this->employee->kanwil_id,
-            'area_id' => $this->employee->area_id,
-            'cabang_id' => $this->employee->cabang_id,
-            'outlet_id' => $this->employee->outlet_id,
             'customer_id' => $this->employee->customer_id,
             'is_normal_checkin' => $this->is_normal_checkin,
             'is_event_checkin' => $this->is_event_checkin,
@@ -42,8 +42,10 @@ class UserMobileResource extends JsonResource
             'is_backup_checkout' => $this->is_backup_checkout,
             'is_overtime_checkout' => $this->is_overtime_checkout,
             'is_longshift_checkout' => $this->is_longshift_checkout,
-            'roles' => $role,
-            'permissions' => $permission,
+            'last_units' => $this->employee->last_unit,
+            'availableRole' => $availableRole,
+            'roles' => $roleLevel->name,
+            'permissions' => $permissionName,
         ];
     }
 }

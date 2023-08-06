@@ -26,7 +26,7 @@ class EmployeeService extends BaseService
     {
         $auth = Auth::user();
         try {
-            $employees = Employee::query()->with(['corporate', 'kanwil', 'area', 'cabang', 'outlet', 'job', 'units']);
+            $employees = Employee::query()->with(['department', 'corporate', 'kanwil', 'area', 'cabang', 'outlet', 'job', 'units', 'partner']);
             $employeesData = [];
 
             $highestPriorityRole = null;
@@ -39,6 +39,10 @@ class EmployeeService extends BaseService
                 }
             }
 
+            $employees->when($request->filled('department_id'), function(Builder $builder) use ($request) {
+                $builder->where('department_id', '=', $request->query('department_id'));
+            });
+
             $employees->when($request->filled('corporate'), function(Builder $builder) use ($request) {
                 $builder->whereHas('corporate', function (Builder $builder) use ($request) {
                     $builder->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower(request()->query('corporate')).'%']);
@@ -48,6 +52,14 @@ class EmployeeService extends BaseService
                 $builder->whereHas('corporate', function (Builder $builder) use ($request) {
                     $builder->where('id', '=', $request->query('corporate_id'));
                 });
+            });
+
+            $employees->when($request->filled('employee_category'), function(Builder $builder) use ($request) {
+                $builder->where('employee_category', '=', $request->query('employee_category'));
+            });
+
+            $employees->when($request->filled('employee_type'), function(Builder $builder) use ($request) {
+                $builder->where('employee_type', '=', $request->query('employee_type'));
             });
 
             $employees->when($request->filled('kanwil'), function(Builder $builder) use ($request) {
@@ -94,10 +106,8 @@ class EmployeeService extends BaseService
                 });
             });
 
-            $employees->when($request->filled('job'), function(Builder $builder) use ($request) {
-                $builder->whereHas('job', function (Builder $builder) use ($request) {
-                    $builder->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower(request()->query('job')).'%']);
-                });
+            $employees->when($request->filled('job_id'), function(Builder $builder) use ($request) {
+                $builder->where('job_id', '=', $request->query('job_id'));
             });
 
             $employees->when($request->filled('unit_id'), function(Builder $builder) use ($request) {

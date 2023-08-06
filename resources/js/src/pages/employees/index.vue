@@ -11,16 +11,74 @@
                                 <h5>Employee List</h5>
                             </div>
                             <div class="card-body">
-<!--                                <div class="d-flex justify-content-end mb-2">-->
-<!--                                    <button class="btn btn-warning"  :disabled="syncLoading" type="button" @click="syncFromERP">-->
-<!--                                        <span v-if="syncLoading">-->
-<!--                                            <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)-->
-<!--                                        </span>-->
-<!--                                        <span v-else>-->
-<!--                                            <i class="fa fa-recycle"></i> &nbsp; Sync From ERP-->
-<!--                                        </span>-->
-<!--                                    </button>-->
-<!--                                </div>-->
+                                <div class="mb-2">
+                                    <button class="btn btn-success" @click="filtering">
+                                        <i class="fa fa-filter"></i> Filter
+                                    </button>
+                                </div>
+                                <div class="row" v-if="showFilter">
+                                    <div class="col-md-4">
+                                        <label>Employee Name</label>
+                                        <input type="text" placeholder="Search Employee Name" class="form-control" v-model="filterName" @keyup="filterEmployeeName">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>Jobs</label>
+                                        <multiselect
+                                            v-model="filterJob"
+                                            :options="jobs"
+                                            label="name"
+                                            track-by="id"
+                                            placeholder="Select Jobs"
+                                            :close-on-select="true"
+                                            @select="filterJobName"
+                                        ></multiselect>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>Departments</label>
+                                        <multiselect
+                                            v-model="filterDepartment"
+                                            :options="departments"
+                                            :multiple="false"
+                                            label="name"
+                                            track-by="id"
+                                            placeholder="Select Department"
+                                            @select="filterDepartmentName"
+                                        ></multiselect>
+                                    </div>
+                                </div>
+                                <div class="row mt-3" v-if="showFilter">
+                                    <div class="col-md-4">
+                                        <label>Employee Category</label>
+                                        <multiselect
+                                            v-model="filterEmployeeCategory"
+                                            :options="employeeCategories"
+                                            :multiple="false"
+                                            label="name"
+                                            track-by="value"
+                                            placeholder="Select Employee Category"
+                                            :clear-on-select="true"
+                                            :close-on-select="true"
+                                            :can-clear="true"
+                                            @select="filterEmployeeCategoryName"
+                                        ></multiselect>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label>Employee Category</label>
+                                        <multiselect
+                                            v-model="filterEmployeeType"
+                                            :options="employeeTypes"
+                                            :multiple="false"
+                                            label="name"
+                                            track-by="value"
+                                            placeholder="Select Employee Type"
+                                            :clear-on-select="true"
+                                            :close-on-select="true"
+                                            :can-clear="true"
+                                            @select="filterEmployeeTypeName"
+                                        ></multiselect>
+                                    </div>
+                                </div>
+                                <hr>
                                 <div v-if="loading" class="text-center">
                                     <img src="../../assets/loader.gif" alt="loading" width="100">
                                 </div>
@@ -45,7 +103,7 @@ export default {
             employees: [],
             loading: false,
             currentPage: 1,
-            pageSize: 10,
+            pageSize: 20,
             syncLoading: false,
             table: null,
             countdown: 0,
@@ -55,21 +113,35 @@ export default {
             outlet: [],
             area: [],
             filterName: '',
-            filterEmail: '',
+            filterDepartment: '',
             filterCorporate: '',
             filterKanwil: '',
             filterArea: '',
             filterCabang: '',
             filterOutlet: '',
             filterJob: '',
+            filterEmployeeCategory: '',
+            filterEmployeeType: '',
+            showFilter: false,
+            jobs: [],
+            departments: [],
+            partners: [],
+            employeeCategories: [
+                {name: 'Karyawan Tetap', value: 'karyawan_tetap'},
+                {name: 'Karyawan Kontrak', value: 'karyawan_kontrak'},
+                {name: 'Karyawan Outsourcing', value: 'karyawan_outsourcing'},
+            ],
+            employeeTypes: [
+                {name: 'Internal', value: 'internal'},
+                {name: 'Outsourcing', value: 'outsourcing'},
+            ]
         }
     },
     async mounted() {
-        await this.getKanwil()
-        await this.getArea()
-        await this.getCabang()
-        await this.getOutlet()
         this.initializeEmployeesTable();
+        await this.getJobs();
+        await this.getDepartments();
+        await this.getPartner();
     },
     computed() {
         this.initializeEmployeesTable()
@@ -81,54 +153,32 @@ export default {
                 this.countdown++;
             }, 1000);
         },
-        async getKanwil() {
-            this.loading = true;
-            await axios
-                .get(`/api/v1/admin/unit?unit_level=4`)
+        async getDepartments() {
+            await this.$axios
+                .get(`/api/v1/admin/department`)
                 .then(response => {
-                    this.kanwil = response.data.data;
+                    this.departments = response.data.data;
                 })
                 .catch(error => {
                     console.error(error);
                 });
         },
-        async getArea() {
-            await axios
-                .get(`/api/v1/admin/unit?unit_level=5`)
+        async getJobs() {
+            await this.$axios
+                .get(`/api/v1/admin/job`)
                 .then(response => {
-                    this.area = response.data.data;
+                    this.jobs = response.data.data;
                 })
                 .catch(error => {
                     console.error(error);
                 });
         },
-        async getCabang() {
-            await axios
-                .get(`/api/v1/admin/unit?unit_level=6`)
+        async getPartner() {
+            await this.$axios
+                .get(`/api/v1/admin/partner`)
                 .then(response => {
-                    this.cabang = response.data.data;
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-        },
-        async getOutlet() {
-            await axios
-                .get(`/api/v1/admin/unit?unit_level=7`)
-                .then(response => {
-                    this.outlet = response.data.data;
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-        },
-        async getEmployees() {
-            this.loading = true;
-            const ls = JSON.parse(localStorage.getItem('USER_STORAGE_KEY'));
-            await axios
-                .get(`/api/v1/admin/unit?unit_level=6`)
-                .then(response => {
-                    this.employees = response.data.data;
+                    this.partners = response.data.data;
+                    console.log(this.partners);
                 })
                 .catch(error => {
                     console.error(error);
@@ -158,15 +208,18 @@ export default {
                 ajaxURLGenerator: (url, config, params) => {
                     params.filter.map((item) => {
                         if (item.field === 'name') this.filterName = item.value
-                        if (item.field === 'work_email') this.filterEmail = item.value
-                        if (item.field === 'job.name') this.filterJob = item.value
+                        if (item.field === 'department_id') this.filterDepartment = item.value.odoo_department_id
+                        if (item.field === 'job_id') this.filterJob = item.value.odoo_job_id
+                        if (item.field === 'employee_category') this.filterEmployeeCategory = item.value.value
+                        if (item.field === 'employee_type') this.filterEmployeeType = item.value.value
                         if (item.field === 'corporate.name') this.filterCorporate = item.value
                         if (item.field === 'kanwil.name') this.filterKanwil = item.value
                         if (item.field === 'area.name') this.filterArea = item.value
                         if (item.field === 'cabang.name') this.filterCabang = item.value
                         if (item.field === 'outlet.name') this.filterOutlet = item.value
                     })
-                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&email=${this.filterEmail}&kanwil=${this.filterKanwil}&area=${this.filterArea}&cabang=${this.filterCabang}&outlet=${this.filterOutlet}&job=${this.filterJob}&corporate=${this.filterCorporate}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&department_id=${this.filterDepartment}&employee_category=${this.filterEmployeeCategory}&employee_type=${this.filterEmployeeType}&kanwil=${this.filterKanwil}&area=${this.filterArea}&cabang=${this.filterCabang}&outlet=${this.filterOutlet}&job_id=${this.filterJob}&corporate=${this.filterCorporate
+                    }`
                 },
                 layout: 'fitData',
                 renderHorizontal:"virtual",
@@ -184,7 +237,6 @@ export default {
                     {
                         title: 'Name',
                         field: 'name',
-                        headerFilter:"input",
                         width: 200,
                         frozen: true,
                         headerHozAlign: 'center',
@@ -198,21 +250,46 @@ export default {
                     {
                         title: 'Jobs',
                         field: 'job.name',
-                        headerFilter: "input",
                         clearable:true,
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                     },
                     {
-                        title: 'Email',
-                        field: 'work_email',
+                        title: 'Department',
+                        field: 'department.name',
+                        headerHozAlign: 'center',
+                        hozAlign: 'center',
+                        formatter: function (cell, formatterParams, onRendered) {
+                            return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
+                        },
+                    },
+                    {
+                        title: 'Current Work',
+                        field: 'partner.name',
                         headerFilter:"input",
                         headerHozAlign: 'center',
+                        hozAlign: 'center',
+                        formatter: function (cell, formatterParams, onRendered) {
+                            return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
+                        },
+                    },
+                    {
+                        title: 'Employee Category',
+                        field: 'employee_category',
+                        headerHozAlign: 'center',
+                        hozAlign: 'center',
+                        formatter: function (cell, formatterParams, onRendered) {
+                            const arr =  cell.getValue().split("_");
+
+                            for (let i = 0; i < arr.length; i++) {
+                                arr[i] = arr[i].charAt(0).toUpperCase() + arr[i].slice(1);
+                            }
+                            return cell.getValue() ? arr.join(" ") : '<i class="fa fa-times text-danger"></i>'
+                        },
                     },
                     {
                         title: 'Employee Type',
-                        field: 'employee_category',
-                        headerFilter:"input",
+                        field: 'employee_type',
                         headerHozAlign: 'center',
                         hozAlign: 'center',
                         formatter: function (cell, formatterParams, onRendered) {
@@ -238,83 +315,47 @@ export default {
                     {
                         title: 'Kantor Wilayah',
                         field: 'kanwil.name',
-                        headerFilter: "list",
+                        headerFilter: "input",
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Kanwil",
                         formatter: function (cell, formatterParams, onRendered) {
                             return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
                         },
-                        headerFilterParams: {
-                            values: this.kanwil.map((item) => {
-                                return item.name
-                            }),
-                            clearable:true,
-                            freetext:true
-                        },
+                        clearable: true,
                     },
                     {
                         title: 'Area',
                         field: 'area.name',
-                        headerFilter: "list",
+                        headerFilter: "input",
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Area",
                         formatter: function (cell, formatterParams, onRendered) {
                             return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
                         },
-                        headerFilterParams: {
-                            values: this.area.map((item) => {
-                                return item.name
-                            }),
-                            clearable:true,
-                            freetext:true
-                        },
                     },
                     {
                         title: 'Cabang',
                         field: 'cabang.name',
-                        headerFilter: "list",
+                        headerFilter: "input",
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Cabang",
                         formatter: function (cell, formatterParams, onRendered) {
                             return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
                         },
-                        headerFilterParams: {
-                            values: this.cabang.map((item) => {
-                                return item.name
-                            }),
-                            clearable:true,
-                            freetext:true
-                        },
                     },
                     {
                         title: 'Outlet',
                         field: 'outlet.name',
-                        headerFilter: "list",
+                        headerFilter: "input",
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Outlet",
                         formatter: function (cell, formatterParams, onRendered) {
                             return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
                         },
-                        headerFilterParams: {
-                            values: this.outlet.map((item) => {
-                                return item.name
-                            }),
-                            clearable:true,
-                            freetext:true
-                        },
-                    },
-                    {
-                        title: '',
-                        formatter: this.viewDetailsFormatter,
-                        width: 100,
-                        hozAlign: 'center',
-                        cellClick: (e, cell) => {
-                            this.viewData(cell.getRow().getData().id);
-                        }
                     },
                 ],
                 pagination: true,
@@ -326,7 +367,46 @@ export default {
                 paginationInitialPage:1,
                 placeholder: 'No Data Available',
             });
+            this.table.setFilter('name', "=", this.filterName);
             this.loading = false;
+        },
+        filterEmployeeName() {
+            if (this.filterName === "") {
+                this.table.clearFilter();
+                return;
+            }
+            this.table.setFilter('name', "=", this.filterName);
+        },
+        filterJobName() {
+            if (this.filterJob === "") {
+                this.table.clearFilter();
+                return;
+            }
+            this.table.setFilter('job_id', "=", this.filterJob);
+        },
+        filterDepartmentName() {
+            if (this.filterDepartment === "") {
+                this.table.clearFilter();
+                return;
+            }
+            this.table.setFilter('department_id', "=", this.filterDepartment);
+        },
+        filterEmployeeCategoryName() {
+            if (this.filterEmployeeCategory === "") {
+                this.table.clearFilter();
+                return;
+            }
+            this.table.setFilter('employee_category', "=", this.filterEmployeeCategory);
+        },
+        filterEmployeeTypeName() {
+            if (this.filterEmployeeType === "") {
+                this.table.clearFilter();
+                return;
+            }
+            this.table.setFilter('employee_type', "=", this.filterEmployeeType);
+        },
+        filtering() {
+            this.showFilter = !this.showFilter;
         },
         viewDetailsFormatter(cell, formatterParams, onRendered) {
             return `<button class="button-icon button-success" data-id="${cell.getRow().getData().id}"><i class="fa fa-eye"></i> </button>`;

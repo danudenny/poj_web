@@ -43,6 +43,17 @@ class JobService extends BaseService
         ]);
     }
 
+    public function allJobs(): JsonResponse
+    {
+        $jobs = Job::all();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data retrieved successfully',
+            'data' => $jobs
+        ]);
+    }
+
     public function getById($request, $id): JsonResponse
     {
         $isMandatoryReporting = $request->is_mandatory_reporting;

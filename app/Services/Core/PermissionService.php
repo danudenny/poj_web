@@ -3,11 +3,13 @@
 namespace App\Services\Core;
 
 use App\Http\Resources\PermissionResource;
+use App\Models\ExtendPermission;
 use App\Models\Permission;
 use App\Services\BaseService;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 class PermissionService extends BaseService
@@ -19,6 +21,7 @@ class PermissionService extends BaseService
             $permission->when(request()->filled('name'), function (Builder $query) {
                 $query->whereRaw('LOWER(name) like ?', [strtolower('%' . request()->query('name') . '%')]);
             });
+            $permission->orderBy('name');
 
             return response()->json([
                 'status' => true,
@@ -55,17 +58,17 @@ class PermissionService extends BaseService
      */
     public function save($request)
     {
-        $permission = Permission::where('name', strtolower(str_replace(' ', '_', $request->name)))->first();
-        if ($permission) {
-            throw new InvalidArgumentException("name and guard name already exist", 403);
-        }
+//        $permission = Permission::where('name', strtolower(str_replace(' ', '_', $request->name)))->first();
+//        if ($permission) {
+//            throw new InvalidArgumentException("name and guard name already exist", 403);
+//        }
 
         DB::beginTransaction();
         try {
-            $permission = new Permission();
-            $permission->name = strtolower(str_replace(' ', '_', $request->name));
-            $permission->guard_name = 'sanctum';
-            $permission->created_at = date('Y-m-d H:i:s');
+            $permission = new ExtendPermission();
+            $permission->name = strtolower(str_replace(' ', '-', $request->name));
+            $permission->guard_name = 'web';
+            $permission->setGroupAttribute($request->name);
 
             if (!$permission->save()) {
                 throw new Exception(self::DB_FAILED, 500);
