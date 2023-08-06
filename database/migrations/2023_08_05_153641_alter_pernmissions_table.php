@@ -14,7 +14,6 @@ return new class extends Migration
     public function up()
     {
         Schema::table('permissions', function(Blueprint $table) {
-            //drop column view, create, edit, delete
             $table->dropColumn('view');
             $table->dropColumn('create');
             $table->dropColumn('edit');
