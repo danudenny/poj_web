@@ -14,4 +14,9 @@ class Department extends Model
     {
         return $this->belongsTo(Unit::class, 'company_id', 'relation_id');
     }
+
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class, 'odoo_department_id', 'department_id');
+    }
 }

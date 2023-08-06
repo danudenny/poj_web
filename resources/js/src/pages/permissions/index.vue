@@ -11,6 +11,11 @@
                                 <h5>Permission List</h5>
                             </div>
                             <div class="card-body">
+                                <div class="d-flex justify-content-end mb-2">
+                                    <button class="btn btn-success btn-sm" @click="createPermission">
+                                        <i class="fa fa-plus-circle"></i> Create
+                                    </button>
+                                </div>
                                 <div v-if="loading" class="text-center">
                                     <img src="../../assets/loader.gif" alt="loading" width="100">
                                 </div>
@@ -87,6 +92,9 @@ export default {
 
                 },
             });
+        },
+        createPermission() {
+            this.$router.push({name: 'permission-create'});
         },
     }
 }

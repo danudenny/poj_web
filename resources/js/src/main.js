@@ -33,6 +33,20 @@ axios.interceptors.request.use(config => {
 }, error => {
     return Promise.reject(error);
 });
+
+axios.interceptors.request.use(
+    (config) => {
+        const selectedRole = JSON.parse(localStorage.getItem('USER_ROLES'));
+        if (selectedRole) {
+            config.headers['X-Selected-Role'] = selectedRole;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
 axios.defaults.baseURL = import.meta.env.VITE_API_URL;
 
 const app = createApp(App)

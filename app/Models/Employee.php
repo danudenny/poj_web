@@ -174,6 +174,11 @@ class Employee extends Model
         return $this->hasMany(EmployeeTimesheetSchedule::class, 'employee_id');
     }
 
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class, 'department_id', 'odoo_department_id');
+    }
+
     public function corporate(): BelongsTo
     {
         return $this->belongsTo(Unit::class, 'corporate_id', 'relation_id')->where('unit_level', 3);

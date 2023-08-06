@@ -14,29 +14,28 @@ use App\Http\Controllers\API\EmployeeTimesheetController;
 use App\Http\Controllers\API\EventController;
 use App\Http\Controllers\API\IncidentController;
 use App\Http\Controllers\API\JobController;
+use App\Http\Controllers\API\KantorPerwakilanController;
+use App\Http\Controllers\API\KanwilController;
 use App\Http\Controllers\API\LeaveRequestController;
 use App\Http\Controllers\API\MasterLeaveController;
 use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\API\OutletController;
 use App\Http\Controllers\API\OvertimeController;
 use App\Http\Controllers\API\PeriodController;
 use App\Http\Controllers\API\PermissionController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\SettingController;
+use App\Http\Controllers\API\UnitController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\WorkLocationController;
 use App\Http\Controllers\API\WorkReportingController;
 use App\Http\Controllers\BackupController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\API\KanwilController;
-use App\Http\Controllers\API\OutletController;
-use App\Http\Controllers\API\UnitController;
 
 
 Route::get('admin/employee/sync-to-users', [EmployeeController::class, 'syncToUser']);
 
-Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () {
-//Route::group(['prefix' => 'admin'], function () {
-
+Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'], function () {
     // Begin User
     Route::group(['prefix' => 'user'], function () {
         Route::get('/', [UserController::class, 'index']);
@@ -151,11 +150,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
 
     // Begin employee detail
     Route::group(['prefix' => 'employee-detail'], function() {
-//        Route::get('/', [EmployeeTimesheetController::class, 'index']);
-//        Route::get('view/{id}', [EmployeeTimesheetController::class, 'view']);
         Route::post('create', [EmployeeDetailController::class, 'create']);
-//        Route::put('update/{id}', [EmployeeTimesheetController::class, 'edit']);
-//        Route::delete('delete/{id}', [EmployeeTimesheetController::class, 'delete']);
     });
     // End employee detail
 
@@ -256,7 +251,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     // End Backups
 
     // Begin Incident
-    Route::group(['prefix' => 'incident', 'middleware' => ['auth:sanctum']], functioN() {
+    Route::group(['prefix' => 'incident'], functioN() {
         Route::get('', [IncidentController::class, 'index']);
         Route::get('view/{incidentID}', [IncidentController::class, 'view']);
         Route::post('create', [IncidentController::class, 'create']);
@@ -267,7 +262,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     // End Incident
 
     // Begin Event
-    Route::group(['prefix' => 'event', 'middleware' => ['auth:sanctum']], function() {
+    Route::group(['prefix' => 'event'], function() {
         Route::get('', [EventController::class, 'index']);
         Route::get('view/{id}', [EventController::class, 'view']);
         Route::get('employee-event', [EventController::class, 'employeeEvent']);
@@ -285,7 +280,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     // End Event
 
     // Begin Work Reporting
-    Route::group(['prefix' => 'work-reporting', 'middleware' => ['auth:sanctum']], function() {
+    Route::group(['prefix' => 'work-reporting'], function() {
         Route::get('', [WorkReportingController::class, 'index']);
         Route::get('view/{id}', [WorkReportingController::class, 'show']);
         Route::post('create', [WorkReportingController::class, 'store']);
@@ -296,8 +291,9 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     // End Work Reporting
 
     // Begin Job
-    Route::group(['prefix' => 'job', 'middleware' => ['auth:sanctum']], function() {
+    Route::group(['prefix' => 'job'], function() {
         Route::get('{id}', [JobController::class, 'index']);
+        Route::get('', [JobController::class, 'allJobs']);
         Route::get('show/{id}', [JobController::class, 'show']);
         Route::post('save/{id}', [JobController::class, 'store']);
         Route::put('update/{id}', [JobController::class, 'update']);
@@ -307,7 +303,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     // End Job
 
     // Begin Overtime
-    Route::group(['prefix' => 'overtime', 'middleware' => ['auth:sanctum']], function () {
+    Route::group(['prefix' => 'overtime'], function () {
         Route::get('/', [OvertimeController::class, 'index']);
         Route::get('/view/{id}', [OvertimeController::class, 'view']);
         Route::get('list-approval', [OvertimeController::class, 'getListApproval']);
@@ -324,12 +320,12 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     // End Overtime
 
     // Begin Notification
-    Route::group(['prefix' => 'notification', 'middleware' => ['auth:sanctum']], function() {
+    Route::group(['prefix' => 'notification'], function() {
         Route::get('', [NotificationController::class, 'index']);
     });
     // End Notificataion
 
-    Route::group(['prefix' => 'admin_unit', 'middleware' => ['auth:sanctum']], function() {
+    Route::group(['prefix' => 'admin_unit'], function() {
         Route::get('', [AdminUnitController::class, 'index']);
         Route::get('my', [AdminUnitController::class, 'myAdminUnits']);
         Route::post('create', [AdminUnitController::class, 'create']);
@@ -337,7 +333,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     });
 
     // Begin Master Leave
-    Route::group(['prefix' => 'master_leave', 'middleware' => ['auth:sanctum']], function() {
+    Route::group(['prefix' => 'master_leave'], function() {
         Route::get('', [MasterLeaveController::class, 'index']);
         Route::get('view/{id}', [MasterLeaveController::class, 'show']);
         Route::post('create', [MasterLeaveController::class, 'save']);
@@ -347,7 +343,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
     // End Master Leave
 
     // Begin Leave Request
-    Route::group(['prefix' => 'leave_request', 'middleware' => ['auth:sanctum']], function() {
+    Route::group(['prefix' => 'leave_request'], function() {
         Route::get('', [LeaveRequestController::class, 'index']);
         Route::get('view/{id}', [LeaveRequestController::class, 'show']);
         Route::post('create', [LeaveRequestController::class, 'save']);
@@ -356,4 +352,8 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum'], function () 
         Route::post('upload', [LeaveRequestController::class, 'upload']);
     });
     // End Leave Request
+
+    Route::group(['prefix' => 'kantor_perwakilan'], function() {
+       Route::get('', [KantorPerwakilanController::class, 'index']);
+    });
 });

@@ -117,4 +117,9 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Approval::class, 'approval_users');
     }
+
+    public function hasPermission($permission)
+    {
+        return $this->roles->flatMap->permissions->contains($permission);
+    }
 }

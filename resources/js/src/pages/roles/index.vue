@@ -69,19 +69,24 @@ export default {
                     {
                         title: 'No',
                         field: '',
+                        hozAlign: 'center',
                         formatter: 'rownum',
                         width: 80,
                     },
                     {
                         title: 'Name',
                         field: 'name',
-                        headerFilter:"input"
+                        headerFilter:"input",
+                        headerSort: false,
+                        headerHozAlign: 'center'
                     },
                     {
                         title: 'Role Level',
                         field: 'role_level',
                         headerFilter:"input",
                         hozAlign: 'center',
+                        headerSort: false,
+                        headerHozAlign: 'center',
                         formatter: function(cell, formatterParams) {
                             return `<span class="badge badge-primary">${cell.getValue().toUpperCase()}</span>`
                         }
@@ -90,6 +95,8 @@ export default {
                         title: 'Permissions',
                         field: 'permissions',
                         hozAlign: 'center',
+                        headerSort: false,
+                        headerHozAlign: 'center',
                         formatter: function(cell, formatterParams) {
                             return `<span class="badge badge-info">${cell.getValue().length}</span>`
 
@@ -100,6 +107,8 @@ export default {
                         field: 'is_active',
                         headerFilter:"list",
                         hozAlign: 'center',
+                        headerSort: false,
+                        headerHozAlign: 'center',
                         headerFilterParams: {
                             valuesLookup:"active",
                             values: ["1", "0"],
@@ -117,6 +126,8 @@ export default {
                         title: '',
                         formatter: this.actionButtonFormatter,
                         hozAlign: 'center',
+                        headerSort: false,
+                        headerHozAlign: 'center',
                         cellClick: (e, cell) => {
                             this.handleActionButtonClick(e, cell);
                         }

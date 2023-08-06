@@ -128,7 +128,7 @@ const routes =[
             meta: {
               title: 'POJ - Dashboard',
               requiresAuth: true,
-              permission : 'dashboard'
+              permission : 'dashboard-read'
             }
           },
 
@@ -178,7 +178,7 @@ const routes =[
             meta: {
                 title: 'POJ - Users Management',
                 requiresAuth: true,
-                permission : 'user_list',
+                permission : 'user-read',
             },
         },
         {
@@ -188,7 +188,7 @@ const routes =[
               meta: {
                   title: 'POJ - User Create',
                   requiresAuth: true,
-                  permission : 'user_list',
+                  permission : 'user-create',
               }
         },
         {
@@ -198,7 +198,7 @@ const routes =[
             meta: {
                 title: 'POJ - User Detail',
                 requiresAuth: true,
-                permission : 'user_list',
+                permission : 'user-read',
             }
         },
         {
@@ -208,7 +208,7 @@ const routes =[
             meta: {
                 title: 'POJ - User Edit',
                 requiresAuth: true,
-                permission : 'user_edit',
+                permission : 'user-update',
             }
         },
         {
@@ -218,7 +218,7 @@ const routes =[
             meta: {
                 title: 'POJ - Roles Management',
                 requiresAuth: true,
-                permission : 'role_list',
+                permission : 'role-read',
             }
         },
         {
@@ -228,7 +228,7 @@ const routes =[
               meta: {
                   title: 'POJ - Role Create',
                   requiresAuth: true,
-                  permission : 'role_list',
+                  permission : 'role-create',
               }
         },
         {
@@ -238,7 +238,7 @@ const routes =[
             meta: {
                 title: 'POJ - Role Detail',
                 requiresAuth: true,
-                permission : 'role_list',
+                permission : 'role-read',
             }
         },
         {
@@ -248,7 +248,7 @@ const routes =[
             meta: {
                 title: 'POJ - Role Edit',
                 requiresAuth: true,
-                permission : 'role_list',
+                permission : 'role-update',
             }
         },
         {
@@ -258,17 +258,17 @@ const routes =[
           meta: {
               title: 'POJ - Permissions Management',
               requiresAuth: true,
-              permission : 'permission_list',
+              permission : 'permission-read',
           }
         },
         {
           path: 'permissions/create',
-          name: 'Permission Create',
+          name: 'permission-create',
           component: PermissionAdd,
           meta: {
               title: 'POJ - Permission Create',
               requiresAuth: true,
-              permission : 'permission_list',
+              permission : 'permission-read',
           }
         },
         {
@@ -278,7 +278,7 @@ const routes =[
           meta: {
               title: 'POJ - Permission Detail',
               requiresAuth: true,
-              permission : 'permission_list',
+              permission : 'permission-read',
           }
         },
         {
@@ -288,7 +288,7 @@ const routes =[
           meta: {
               title: 'POJ - Permission Edit',
               requiresAuth: true,
-              permission : 'permissions_edit'
+              permission : 'permission-update'
           }
         },
         {
@@ -298,7 +298,7 @@ const routes =[
           meta: {
               title: 'POJ - Employee Management',
               requiresAuth: true,
-              permission : 'employee_list',
+              permission : 'employee-read',
           }
         },
         {
@@ -308,7 +308,7 @@ const routes =[
           meta: {
               title: 'POJ - Employee Detail',
               requiresAuth: true,
-              permission : 'employee_list',
+              permission : 'employee-read',
           }
         },
           {
@@ -318,7 +318,7 @@ const routes =[
               meta: {
                   title: 'POJ - Department List',
                   requiresAuth: true,
-                  permission : 'department_list',
+                  permission : 'department-read',
               }
           },
           {
@@ -328,7 +328,7 @@ const routes =[
               meta: {
                   title: 'POJ - Admin Unit',
                   requiresAuth: true,
-                  permission : 'admin_unit',
+                  permission : 'admin-unit-read',
               }
           },
       ]
@@ -344,7 +344,7 @@ const routes =[
                 meta: {
                     title: 'POJ - General Settings',
                     requiresAuth: true,
-                    permission : 'general_setting',
+                    permission : 'setting-read',
                 },
             },
         ]
@@ -360,7 +360,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Syncronization',
                     requiresAuth: true,
-                    permission : 'general_setting',
+                    permission : 'sync-read',
                 },
             },
         ]
@@ -376,7 +376,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Cabang',
                     requiresAuth: true,
-                    permission: 'cabang_list',
+                    permission: 'unit-read',
                 },
             },
             {
@@ -386,7 +386,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Cabang Detail',
                     requiresAuth: true,
-                    permission: 'cabang_list',
+                    permission: 'unit-read',
                 }
             },
         ]
@@ -402,7 +402,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Timesheet Assignment',
                     requiresAuth: true,
-                    permission: 'timesheet_assignment_list',
+                    permission: 'timesheet-read',
                 },
             },
             {
@@ -412,7 +412,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Create Timesheet Assignment',
                     requiresAuth: true,
-                    permission: 'timesheet_assignment_create',
+                    permission: 'timesheet-create',
                 },
             },
             {
@@ -422,7 +422,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Edit Timesheet Assignment',
                     requiresAuth: true,
-                    permission: 'timesheet_assignment_edit',
+                    permission: 'timesheet-update',
                 },
             },
             {
@@ -432,7 +432,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Timesheet Assignment Detail',
                     requiresAuth: true,
-                    permission: 'timesheet_assignment_list',
+                    permission: 'timesheet-read',
                 },
             },
         ]
@@ -448,7 +448,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Approvals',
                     requiresAuth: true,
-                    permission: 'approval_list',
+                    permission: 'approval-read',
                 },
             },
             {
@@ -458,7 +458,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Create Approvals',
                     requiresAuth: true,
-                    permission: 'approval_create',
+                    permission: 'approval-create',
                 },
             },
             {
@@ -468,7 +468,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Edit Approvals',
                     requiresAuth: true,
-                    permission: 'approval_edit',
+                    permission: 'approval-update',
                 },
             },
             {
@@ -478,7 +478,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Detail Approvals',
                     requiresAuth: true,
-                    permission: 'approval_edit',
+                    permission: 'approval-read',
                 },
             },
         ]
@@ -494,7 +494,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Attendances',
                     requiresAuth: true,
-                    permission: 'attendance_list',
+                    permission: 'attendance-read',
                 },
             },
             {
@@ -504,7 +504,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Detail Attendance',
                     requiresAuth: true,
-                    permission: 'attendance_list',
+                    permission: 'attendance-read',
                 },
             },
             {
@@ -514,7 +514,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Backup',
                     requiresAuth: true,
-                    permission: 'backup_list',
+                    permission: 'backup-request-read',
                 },
             },
             {
@@ -524,7 +524,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Create Backup',
                     requiresAuth: true,
-                    permission: 'backup_list',
+                    permission: 'backup-request-create',
                 },
             },
             {
@@ -534,7 +534,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Detail Backup',
                     requiresAuth: true,
-                    permission: 'backup_list',
+                    permission: 'backup-request-read',
                 },
             },
             {
@@ -544,7 +544,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Jadwal Backup',
                     requiresAuth: true,
-                    permission: 'backup_list',
+                    permission: 'backup-schedule-read',
                 },
             },
             {
@@ -554,7 +554,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Approval Backup',
                     requiresAuth: true,
-                    permission: 'backup_list',
+                    permission: 'backup-schedule-read',
                 },
             },
             {
@@ -564,7 +564,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Overtime',
                     requiresAuth: true,
-                    permission: 'overtime_list',
+                    permission: 'overtime-request-read',
                 },
             },
             {
@@ -574,7 +574,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Create Overtime',
                     requiresAuth: true,
-                    permission: 'overtime_list',
+                    permission: 'overtime-request-create',
                 },
             },
             {
@@ -584,7 +584,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Detail Overtime',
                     requiresAuth: true,
-                    permission: 'overtime_list',
+                    permission: 'overtime-request-read',
                 },
             },
             {
@@ -594,7 +594,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Jadwal Overtime',
                     requiresAuth: true,
-                    permission: 'overtime_list',
+                    permission: 'overtime-schedule-read',
                 },
             },
             {
@@ -604,7 +604,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Approval Overtime',
                     requiresAuth: true,
-                    permission: 'overtime_list',
+                    permission: 'overtime-approval-read',
                 },
             }
         ]
@@ -620,7 +620,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Approval Modules',
                     requiresAuth: true,
-                    permission: 'approval_module_list',
+                    permission: 'approval-module-read',
                 },
             },
         ]
@@ -636,24 +636,24 @@ const routes =[
                 meta: {
                     title: 'POJ - Profile',
                     requiresAuth: true,
-                    permission: 'profile',
+                    permission: 'profile-read',
                 }
             }
         ]
     },
 
     {
-        path: '/regionals',
+        path: '/kantor-perwakilan',
         component: Body,
         children: [
             {
                 path: '',
-                name: 'Regional',
+                name: 'kantor-perwakilan',
                 component: Regional,
                 meta: {
-                    title: 'POJ - Regional',
+                    title: 'POJ - Kantor Perwakilan',
                     requiresAuth: true,
-                    permission: 'regional_list',
+                    permission: 'unit-read',
                 },
             },
             {
@@ -663,7 +663,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Regional Detail',
                     requiresAuth: true,
-                    permission: 'regional_list',
+                    permission: 'unit-read',
                 }
             },
         ]
@@ -679,7 +679,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Corporate',
                     requiresAuth: true,
-                    permission: 'corporate_list',
+                    permission: 'unit-read',
                 },
             },
             {
@@ -689,7 +689,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Corporate Detail',
                     requiresAuth: true,
-                    permission: 'corporate_list',
+                    permission: 'unit-read',
                 }
             },
         ]
@@ -705,7 +705,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Kantor Wilayah',
                     requiresAuth: true,
-                    permission: 'kanwil_list',
+                    permission: 'unit-read',
                 },
             },
             {
@@ -715,7 +715,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Kantor Wilayah Detail',
                     requiresAuth: true,
-                    permission: 'kanwil_list',
+                    permission: 'unit-read',
                 }
             },
         ]
@@ -731,7 +731,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Area',
                     requiresAuth: true,
-                    permission: 'area_list',
+                    permission: 'unit-read',
                 },
             },
             {
@@ -741,7 +741,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Area Detail',
                     requiresAuth: true,
-                    permission: 'area_list',
+                    permission: 'unit-read',
                 }
             },
         ]
@@ -757,7 +757,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Outlet',
                     requiresAuth: true,
-                    permission: 'outlet_list',
+                    permission: 'unit-read',
                 },
             },
             {
@@ -767,7 +767,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Outlet Detail',
                     requiresAuth: true,
-                    permission: 'outlet_list',
+                    permission: 'unit-read',
                 }
             },
         ]
@@ -783,7 +783,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Leave Request',
                     requiresAuth: true,
-                    permission: 'incident_reporting',
+                    permission: 'leave-request-read',
                 },
             },
             {
@@ -793,7 +793,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Leave Request Detail',
                     requiresAuth: true,
-                    permission: 'incident_reporting',
+                    permission: 'leave-request-read',
                 },
             },
         ]
@@ -809,7 +809,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Leave Report',
                     requiresAuth: true,
-                    permission: 'incident_reporting',
+                    permission: 'leave-report-read',
                 },
             },
         ]
@@ -825,7 +825,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Leave Master',
                     requiresAuth: true,
-                    permission: 'incident_reporting',
+                    permission: 'master-leave-read',
                 },
             }
         ]
@@ -851,7 +851,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Incident Reporting',
                     requiresAuth: true,
-                    permission : 'incident_reporting',
+                    permission : 'incident-reporting-read',
                 }
             },
         ]
@@ -867,7 +867,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Work Reporting',
                     requiresAuth: true,
-                    permission: 'work_reporting',
+                    permission: 'work-reporting-read',
                 },
             },
             {
@@ -877,7 +877,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Work Reporting Detail',
                     requiresAuth: true,
-                    permission : 'work_reporting',
+                    permission : 'work-reporting-read',
                 }
             },
         ]
@@ -893,7 +893,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Event Request',
                     requiresAuth: true,
-                    permission: 'event_request',
+                    permission: 'event-read',
                 },
             },
             {
@@ -903,7 +903,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Event Request',
                     requiresAuth: true,
-                    permission : 'event_request',
+                    permission : 'event-read',
                 }
             },
             {
@@ -913,7 +913,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Create Event Request',
                     requiresAuth: true,
-                    permission : 'event_request',
+                    permission : 'event-create',
                 }
             },
             {
@@ -923,7 +923,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Employee Event',
                     requiresAuth: true,
-                    permission : 'event_request',
+                    permission : 'event-employee-read',
                 }
             },
         ]
@@ -948,11 +948,17 @@ const permissions = JSON.parse(localStorage.getItem('USER_PERMISSIONS'));
 
 router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
+
+        console.log(!permissions && !permissions.includes(to.meta.permission))
       if (!store.getters.isAuthenticated) {
         next('/auth/login');
-      } else if (!permissions && !permissions.includes(to.meta.permission)) {
-        next('/');
-        useToast().error('You are not authorized to access this page', { position: 'bottom-right' });
+      } else if (!permissions || !permissions.includes(to.meta.permission)) {
+          useToast().error('You are not authorized to access this page', {
+                duration: 5000,
+                position: 'top-center',
+                isClosable: true
+          });
+          next('/');
       } else {
         next();
       }

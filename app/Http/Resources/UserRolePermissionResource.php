@@ -20,18 +20,27 @@ class UserRolePermissionResource extends JsonResource
      */
     public function toArray($request): array
     {
+        $roleHeader = $request->header('X-Selected-Role');
         $timesheet = [];
-        $role = $this->roles->pluck('name');
-        $permission = $this->roles->map(function ($role) {
-            return $role->permissions;
-        })->collapse()->pluck('name')->unique()->values();
+        $role = $this->roles;
+        $availableRole = $role->map(function ($role) {
+            return $role->name;
+        });
+        $role = $role->filter(function ($role) use ($roleHeader) {
+            return $role->name === $roleHeader;
+        })->first();
+
+        $permission = $role->permissions;
+        $permissionName = $permission->map(function ($permission) {
+            return $permission->name;
+        });
         $schedule = $this->employee->timesheetSchedules;
         $overtime = $this->employee->overtime;
         $backup = $this->employee->backup;
 
         if (count($schedule) > 0) {
             $periods = $schedule->map(function ($schedule) {
-                $timezone = getTimezone(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
+                $timezone = getTimezoneV2(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
                 $scheduleDate = Carbon::createFromDate($schedule->period->year, $schedule->period->month, $schedule->date, $timezone);
 
                 return [
@@ -57,7 +66,7 @@ class UserRolePermissionResource extends JsonResource
         })->unique()->values();
 
         $timesheet['overtime'] = $overtimeDate->map(function ($overtimeDate) {
-            $timezone = getTimezone(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
+            $timezone = getTimezoneV2(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
             return [
                 'date' => Carbon::parse($overtimeDate->date, 'UTC')->addDay(1)->setTimezone($timezone)->format('d F Y'),
                 'start_time' => Carbon::parse($overtimeDate->start_time, 'UTC')->setTimezone($timezone)->format('H:i'),
@@ -71,7 +80,7 @@ class UserRolePermissionResource extends JsonResource
 
         $timesheet['backup'] = $backupDate->map(function ($backupDate) {
             return $backupDate->backupTimes->map(function ($backupTime) {
-                $timezone = getTimezone(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
+                $timezone = getTimezoneV2(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
 
                 return [
                     'date' => Carbon::parse($backupTime->backup_date, 'UTC')->addDay(1)->setTimezone($timezone)->format('d F Y'),
@@ -126,8 +135,9 @@ class UserRolePermissionResource extends JsonResource
             'avatar' => $this->avatar,
             'is_new' => $this->is_new,
             'fcm_token' => $this->fcm_token,
-            'roles' => $role,
-            'permissions' => $permission,
+            'availableRole' => $availableRole,
+            'roles' => $role->name,
+            'permissions' => $permissionName,
             'employee_id' => $this->employee_id,
             'is_normal_checkin' => $this->is_normal_checkin,
             'is_backup_checkin' => $this->is_backup_checkin,

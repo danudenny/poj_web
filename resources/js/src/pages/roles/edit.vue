@@ -21,8 +21,73 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-sm-8">
-                            <div ref="permissionsTable"></div>
+                        <div class="col-sm-12">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                <tr>
+                                    <th>Permission Name</th>
+                                    <th>Read</th>
+                                    <th>Create</th>
+                                    <th>Update</th>
+                                    <th>Delete</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <template v-for="(groupAbilities, groupName) in groupedData" :key="groupName" >
+                                    <tr class="text-center">
+                                        <td><b>{{ groupName }}</b></td>
+                                        <td v-if="hasAbility(groupAbilities, 'read')">
+                                            <input
+                                                type="checkbox"
+                                                :id="`read-${groupName}`"
+                                                :value="getAbilityId(groupAbilities, 'read')"
+                                                v-model="selectedAbilities"
+                                            >
+                                            <label :for="`read-${groupName}`"></label>
+                                        </td>
+                                        <td v-else>
+                                            <input type="checkbox" disabled>
+                                        </td>
+                                        <td v-if="hasAbility(groupAbilities, 'create')">
+                                            <input
+                                                type="checkbox"
+                                                :id="`create-${groupName}`"
+                                                :value="getAbilityId(groupAbilities, 'create')"
+                                                v-model="selectedAbilities"
+                                            >
+                                            <label :for="`create-${groupName}`"></label>
+                                        </td>
+                                        <td v-else>
+                                            <input type="checkbox" disabled>
+                                        </td>
+                                        <td v-if="hasAbility(groupAbilities, 'update')">
+                                            <input
+                                                type="checkbox"
+                                                :id="`update-${groupName}`"
+                                                :value="getAbilityId(groupAbilities, 'update')"
+                                                v-model="selectedAbilities"
+                                            >
+                                            <label :for="`update-${groupName}`"></label>
+                                        </td>
+                                        <td v-else>
+                                            <input type="checkbox" disabled>
+                                        </td>
+                                        <td v-if="hasAbility(groupAbilities, 'delete')">
+                                            <input
+                                                type="checkbox"
+                                                :id="`delete-${groupName}`"
+                                                :value="getAbilityId(groupAbilities, 'delete')"
+                                                v-model="selectedAbilities"
+                                            >
+                                            <label :for="`delete-${groupName}`"></label>
+                                        </td>
+                                        <td v-else>
+                                            <input type="checkbox" disabled>
+                                        </td>
+                                    </tr>
+                                </template>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -53,18 +118,48 @@ export default {
             selectedIds: [],
             currentPage: 1,
             pageSize: 20,
-            table: null
+            table: null,
+            selectedPermissionNames: [],
+            selectedAbilities: []
+        }
+    },
+    computed: {
+        groupedData() {
+            const grouped = {};
+            this.permissions.forEach(item => {
+                if (!grouped[item.group]) {
+                    grouped[item.group] = [];
+                }
+                grouped[item.group].push(item);
+            });
+            return grouped;
         }
     },
     async mounted() {
         await this.getRole();
-        // await this.getPermissions();
-        await this.initializePermissionsTable();
+        await this.getPermissions();
+    },
+    watch: {
+        selectedAbilities: {
+            handler(newValue) {
+                const permissionNames = this.getPermissionNamesFromIds(newValue);
+                localStorage.setItem('USER_PERMISSION_TEMP', JSON.stringify(permissionNames));
+                localStorage.setItem('selectedPermission', JSON.stringify(newValue));
+            },
+            deep: true
+        }
     },
     methods: {
+        getAbilityId(groupAbilities, abilityName) {
+            const ability = groupAbilities.find(item => item.ability === abilityName);
+            return ability ? ability.id : null;
+        },
+        hasAbility(groupAbilities, abilityName) {
+            return groupAbilities.some(item => item.ability === abilityName);
+        },
         async getPermissions() {
             await axios
-                .get(`/api/v1/admin/permission`)
+                .get(`/api/v1/admin/permission?limit=200`)
                 .then(response => {
                     this.permissions = response.data.data.data;
                 })
@@ -78,101 +173,49 @@ export default {
                 .get(`/api/v1/admin/role/view?id=`+ route.params.id)
                 .then(response => {
                     this.roles = response.data.data;
+                    if (this.roles.permissions && this.roles.permissions.length > 0) {
+                        this.selectedAbilities = this.roles.permissions.map(permission => permission.id);
+                        const permissionName = this.roles.permissions.map(permission => permission.name);
+                        localStorage.setItem('USER_PERMISSION_TEMP', JSON.stringify(permissionName));
+                    }
                 })
                 .catch(error => {
                     console.error(error);
                 });
         },
-        async initializePermissionsTable() {
-            const ls = localStorage.getItem('my_app_token');
-            this.table = await new Tabulator(this.$refs.permissionsTable, {
-                ajaxURL: '/api/v1/admin/permission',
-                ajaxConfig: {
-                    headers: {
-                        Authorization: `Bearer ${ls}`,
-                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
-                    },
-                },
-                ajaxParams: {
-                    page: this.currentPage,
-                    size: this.pageSize,
-                },
-                ajaxResponse: function (url, params, response) {
-                    return {
-                        data: response.data.data,
-                        last_page: response.data.last_page,
-                    }
-                },
-                layout: 'fitDataStretch',
-                columns: [
-                    {
-                        formatter: "rowSelection",
-                        titleFormatter: "rowSelection",
-                        hozAlign: "center",
-                        headerSort: false,
-                        cellClick: function (e, cell) {
-                            cell.getRow()
-                        },
-                    },
-                    {
-                        title: 'Permission',
-                        field: 'name',
-                        headerFilter:"input"
-                    }
-                ],
-                paginationMode: 'remote',
-                progressiveLoad: 'scroll',
-                height: 500,
-                paginationSize: 20,
-                paginationSizeSelector: [10, 20, 50, 100],
-                headerFilter: true,
-                rowFormatter: (row) => {
-                    const permission = row.getData();
-                    const matchedPermissionIds = this.roles.permissions.map(p => p.id);
-                    permission.allow = matchedPermissionIds.includes(permission.id);
-                    if (permission.allow) {
-                        row.getElement().classList.add("highlight");
-                        row.select();
-                    }
-                },
+        getPermissionNamesFromIds(permissionIds) {
+            const permissionNames = permissionIds.map(permissionId => {
+                const permission = this.permissions.find(item => item.id === permissionId);
+                return permission ? permission.name.toLowerCase() : null;
             });
-            this.table.on("rowSelectionChanged", function(data, rows, selected, deselected)  {
-                this.selectedPermission = rows.map(row => row.getData().id);
-                localStorage.setItem('selectedPermission', JSON.stringify(this.selectedPermission));
-            })
-            this.table.on("pageChanged", (page) => {
-                console.log(page)
-                this.currentPage = page;
-                this.reselectRowsOnPageChange();
-            });
-        },
-        reselectRowsOnPageChange() {
-            this.table.deselectRow();
 
-            const currentPageRows = this.table.getPage();
-            currentPageRows.forEach(row => {
-                const rowId = row.getData().id;
-                const selectedRow = this.selectedRowsData.find(rowData => rowData.id === rowId);
-                if (selectedRow) {
-                    row.select();
-                }
-            });
+            return permissionNames.filter(name => name !== null);
         },
         async updateRole(){
-            const getData = JSON.parse(localStorage.getItem('selectedPermission'))
+            const getPermissionTemp = JSON.parse(localStorage.getItem('USER_PERMISSION_TEMP'))
+            if (this.roles.name === JSON.parse(localStorage.getItem('USER_ROLES'))) {
+                localStorage.setItem('USER_PERMISSIONS', JSON.stringify(getPermissionTemp));
+            }
             await this.$axios.post(`/api/v1/admin/role/update`, {
                 id: this.roles.id,
                 name: this.roles.name,
                 is_active: this.roles.is_active,
                 role_level: this.roles.role_level,
-                permission: getData
+                permission: this.selectedAbilities
             })
-            .then(res => {
-                useToast().success(res.data.message , { position: 'bottom-right' });
-                this.$router.push('/management/roles')
+            .then(async (res) => {
+                useToast().success(res.data.message);
+                this.$router.push('/management/roles');
+                if (this.roles.name === JSON.parse(localStorage.getItem('USER_ROLES'))) {
+                    localStorage.removeItem('USER_PERMISSION_TEMP');
+                    localStorage.removeItem('selectedPermission');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                }
             })
             .catch(e => {
-                console.log(e);
+                console.error(e);
             });
 
         },

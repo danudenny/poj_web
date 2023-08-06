@@ -1,8 +1,10 @@
 <template>
     <div id="sidebar-menu">
 
-      <ul class="sidebar-links custom-scrollbar" id="myDIV"
-      :style="[layoutobject.split(' ').includes('horizontal-wrapper')  ? layout.settings.layout_type==='rtl'? {'  -right': margin+'px'} : {'margin-left': margin+'px'} :  { margin : '0px'}]"
+      <ul
+          class="sidebar-links custom-scrollbar"
+          id="myDIV"
+          :style="[layoutobject.split(' ').includes('horizontal-wrapper')  ? layout.settings.layout_type==='rtl'? {'  -right': margin+'px'} : {'margin-left': margin+'px'} :  { margin : '0px'}]"
       >
         <li class="back-btn">
           <router-link to="/">
@@ -12,13 +14,16 @@
               alt=""
           /></router-link>
           <div class="mobile-back text-end">
-            <span>Back</span
-            ><i class="fa fa-angle-right ps-2" aria-hidden="true"></i>
+            <span>Back</span>
+              <i class="fa fa-angle-right ps-2" aria-hidden="true"></i>
           </div>
         </li>
-
-          <li v-for="(menuItem, index) in menuItems" :key="index" class="sidebar-list"
-              :class="{ ' sidebar-main-title': menuItem.type === 'headtitle', }, menuItem.showPin ? 'pined' : ''" :hidden="!this.permissions.includes(menuItem.permission)">
+        <li
+          v-for="(menuItem, index) in menuItems"
+          :key="index" class="sidebar-list"
+          :class="{ ' sidebar-main-title': menuItem.type === 'headtitle'}"
+          :hidden="!this.permissions.includes(menuItem.permission)"
+        >
 
           <div v-if="menuItem.type === 'headtitle' && this.permissions.includes(menuItem.permission)">
             <h6 class="lan-1">{{ (menuItem.headTitle1) }}</h6>
@@ -31,11 +36,12 @@
           <a class="sidebar-link sidebar-title" href="javascript:void(0)" :class="{ 'active': menuItem.active }"
              v-if="menuItem.type === 'sub' && this.permissions.includes(menuItem.permission)" @click="setNavActive(menuItem, index)">
               <svg class="stroke-icon">
-                  <use :href="`@/assets/svg/icon-sprite.svg#${menuItem.icon}`"></use>
+                  <use :href="`/assets/svg/icon-sprite.svg#${menuItem.icon}`"></use>
               </svg>
               <svg class="fill-icon">
-                  <use :href="`@/assets/svg/icon-sprite.svg#${menuItem.iconf}`"></use>
+                  <use :href="`/assets/svg/icon-sprite.svg#${menuItem.iconf}`"></use>
               </svg>
+              <vue-feather :type="menuItem.icon"></vue-feather>
             <span class="lan-3">
               {{ (menuItem.title) }}
             </span>
@@ -188,16 +194,6 @@ computed: {
     margin: (state) => state.menu.margin,
     menuWidth: (state) => state.menu.menuWidth,
   }),
-  showPinTitle: {
-        get() {
-            let show = false;
-            this.menuItems.every(item => {
-                item.showPin && (show = true)
-                return !show
-            })
-            return show
-        }
-    },
   layoutobject: {
     get: function () {
       return JSON.parse(JSON.stringify(layoutClasses.find((item) => Object.keys(item).pop() === this.layout.settings.layout)))[this.layout.settings.layout];
@@ -271,23 +267,27 @@ mounted() {
 methods: {
     hasPermission(menuItem) {
         const requiredPermission = menuItem?.permission;
+        const ls = JSON.parse(localStorage.getItem('USER_ROLES'));
+
+        if (ls.length > 0) {
+            return true;
+        }
+
+        if (ls.some(role => role === 'superadmin')) {
+            return true;
+        }
+
         if (requiredPermission) {
             return this.$store.state.permissions.includes(requiredPermission);
         }
-        return true;
+
+        return false;
     },
     getPermission() {
         const getPermission = localStorage.getItem('USER_PERMISSIONS');
         this.permissions = JSON.parse(getPermission);
         return this.permissions
     },
-  HandleUnload() {
-      let pinsArray = [];
-      this.menuItems.forEach(item => {
-          item.showPin && pinsArray.push(item.title);
-      })
-      localStorage.setItem('pins', JSON.stringify(pinsArray))
-  },
   handleScroll() {
     if(window.scrollY > 400){
       if(this.layoutobject.split(' ').pop() === 'material-type' || this.layoutobject.split(' ').pop() ==='advance-layout')
@@ -297,15 +297,6 @@ methods: {
         document.querySelector('.sidebar-main').className = 'sidebar-main';
     }
   },
-  togglePinnedName({ item }) {
-      item.showPin = !item.showPin
-      // this.active = !this.active
-      if (this.menuItems.length > 0) {
-          this.menuItems = 'show'
-      } else {
-          this.menuItems = ''
-      }
-  },
   setNavActive(item) {
     this.$store.dispatch('menu/setNavActive', item);
     if(this.layoutobject.split(' ').includes('compact-sidebar') && window.innerWidth > 991) {
@@ -314,13 +305,13 @@ methods: {
   },
   hidesecondmenu() {
     if(window.innerWidth < 991) {
-      this.$store.state.menu.activeoverlay = false,
+      this.$store.state.menu.activeoverlay = false;
       this.$store.state.menu.togglesidebar = false;
       this.menuItems.filter(menuItem => {
         menuItem.active = false;
       });
     } else if(this.layoutobject.split(' ').includes('compact-sidebar')){
-      this.$store.state.menu.activeoverlay = false,
+      this.$store.state.menu.activeoverlay = false;
       this.menuItems.filter(menuItem => {
         menuItem.active = false;
       });

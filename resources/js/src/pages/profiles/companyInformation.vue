@@ -10,7 +10,7 @@
                         <div class="col-md-12 col-sm-12">
                             <div class="mb-3">
                                 <label>Corporate</label>
-                                <input class="form-control" :value="employee.corporate.name || '-'" readonly type="text">
+                                <input class="form-control" :value="employee.corporate?.name || '-'" readonly type="text">
                             </div>
                         </div>
                         <div class="col-md-12 col-sm-12">

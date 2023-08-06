@@ -7,13 +7,13 @@
             "type": "link",
             "active": false,
             "path": "/",
-            "permission" : "dashboard"
+            "permission" : "dashboard-read"
         },
         {
             "headTitle1": "USER MANAGEMENT",
             "headTitle2": "User and roles management",
             "type": "headtitle",
-            "permission" : "user_list"
+            "permission" : "user-read"
         },
         {
             "title": "Users",
@@ -22,7 +22,7 @@
             "type": "link",
             "active": false,
             "path": "/management/users",
-            "permission" : "user_list"
+            "permission" : "user-read"
         },
         {
             "title": "Roles",
@@ -31,7 +31,7 @@
             "type": "link",
             "active": false,
             "path": "/management/roles",
-            "permission" : "role_list"
+            "permission" : "role-read"
         },
         {
             "title": "Permissions",
@@ -40,7 +40,7 @@
             "type": "link",
             "active": false,
             "path": "/management/permissions",
-            "permission" : "permission_list"
+            "permission" : "permission-read"
         },
         {
             "title": "Admin Unit",
@@ -49,13 +49,13 @@
             "type": "link",
             "active": false,
             "path": "/management/admin-unit",
-            "permission" : "admin_unit"
+            "permission" : "admin-unit-read"
         },
         {
             "headTitle1": "MASTER DATA",
             "headTitle2": "Master data management",
             "type": "headtitle",
-            "permission" : "master_data"
+            "permission" : "master-data-read"
         },
         {
             "title": "Employee",
@@ -64,7 +64,7 @@
             "type": "link",
             "active": false,
             "path": "/management/employees",
-            "permission" : "employee_list"
+            "permission" : "employee-read"
         },
         {
             "title": "Department",
@@ -73,7 +73,7 @@
             "type": "link",
             "active": false,
             "path": "/management/department",
-            "permission" : "department_list"
+            "permission" : "department-read"
         },
         {
             "title": "Working Area",
@@ -81,49 +81,49 @@
             "iconf": "fill-learning",
             "type": "sub",
             "active": false,
-            "permission" : "working_area",
+            "permission" : "unit-read",
             "children": [
                 {
-                    "path": "/regionals",
-                    "title": "Operating Units",
+                    "path": "/kantor-perwakilan",
+                    "title": "Kantor Perwakilan",
                     "type": "link",
                     "active": false,
-                    "permission" : "regional_list"
+                    "permission" : "unit-read"
                 },
                 {
                     "path": "/corporates",
                     "title": "Corporate",
                     "type": "link",
                     "active": false,
-                    "permission" : "corporate_list"
+                    "permission" : "unit-read"
                 },
                 {
                     "path": "/kanwils",
                     "title": "Kantor Wilayah",
                     "type": "link",
                     "active": false,
-                    "permission" : "kanwil_list"
+                    "permission" : "unit-read"
                 },
                 {
                     "path": "/areas",
                     "title": "Area",
                     "type": "link",
                     "active": false,
-                    "permission" : "area_list"
+                    "permission" : "unit-read"
                 },
                 {
                     "path": "/cabang",
                     "title": "Cabang",
                     "type": "link",
                     "active": false,
-                    "permission" : "cabang_list"
+                    "permission" : "unit-read"
                 },
                 {
                     "path": "/outlets",
                     "title": "Outlet",
                     "type": "link",
                     "active": false,
-                    "permission" : "outlet_list"
+                    "permission" : "unit-read"
                 }
             ]
         },
@@ -134,7 +134,7 @@
             "type": "link",
             "active": false,
             "path": "/timesheet-assignment",
-            "permission" : "timesheet_list"
+            "permission" : "timesheet-read"
         },
         {
             "title": "Approvals",
@@ -142,21 +142,21 @@
             "iconf": "fill-learning",
             "type": "sub",
             "active": false,
-            "permission" : "approval_list",
+            "permission" : "approval-read",
             "children": [
                 {
                     "path": "approval",
                     "title": "Approval",
                     "type": "link",
                     "active": false,
-                    "permission" : "approval_list"
+                    "permission" : "approval-read"
                 },
                 {
                     "path": "approval-module",
                     "title": "Approval Module",
                     "type": "link",
                     "active": false,
-                    "permission" : "approval_module_list"
+                    "permission" : "approval-module-read"
                 }
             ]
         },
@@ -164,7 +164,7 @@
             "headTitle1": "ATTENDANCE",
             "headTitle2": "Attendance management",
             "type": "headtitle",
-            "permission" : "attendance_list"
+            "permission" : "attendance-read"
         },
         {
             "title": "Attendance",
@@ -173,73 +173,93 @@
             "type": "link",
             "active": false,
             "path": "/attendance",
-            "permission" : "attendance_list"
+            "permission" : "attendance-read"
         },
         {
-            "title": "Backup Request",
+            "title": "Backup Management",
             "icon": "copy",
             "iconf": "fill-copy",
-            "type": "link",
+            "type": "sub",
             "active": false,
-            "path": "/attendance/backup",
-            "permission" : "backup_list"
+            "permission" : "backup-read",
+            "children": [
+                {
+                    "title": "Backup Request",
+                    "icon": "copy",
+                    "iconf": "fill-copy",
+                    "type": "link",
+                    "active": false,
+                    "path": "/attendance/backup",
+                    "permission" : "backup-request-read"
+                },
+                {
+                    "title": "Approval Backup",
+                    "icon": "copy",
+                    "iconf": "fill-copy",
+                    "type": "link",
+                    "active": false,
+                    "path": "/attendance/approval-backup",
+                    "permission" : "backup-approval-read"
+                },
+                {
+                    "title": "Jadwal Backup",
+                    "icon": "copy",
+                    "iconf": "fill-copy",
+                    "type": "link",
+                    "active": false,
+                    "path": "/attendance/employee-backup",
+                    "permission" : "backup-schedule-read"
+                }
+            ]
         },
         {
-            "title": "Approval Backup",
+            "title": "Overtime Management",
             "icon": "copy",
             "iconf": "fill-copy",
-            "type": "link",
+            "type": "sub",
             "active": false,
-            "path": "/attendance/approval-backup",
-            "permission" : "backup_list"
-        },
-        {
-            "title": "Jadwal Backup",
-            "icon": "copy",
-            "iconf": "fill-copy",
-            "type": "link",
-            "active": false,
-            "path": "/attendance/employee-backup",
-            "permission" : "backup_list"
-        },
-        {
-            "title": "Overtime Request",
-            "icon": "clock",
-            "iconf": "clock",
-            "type": "link",
-            "active": false,
-            "path": "/attendance/overtime",
-            "permission" : "overtime_list"
-        },
-        {
-            "title": "Approval Overtime",
-            "icon": "clock",
-            "iconf": "clock",
-            "type": "link",
-            "active": false,
-            "path": "/attendance/approval-overtime",
-            "permission" : "overtime_list"
-        },
-        {
-            "title": "Jadwal Overtime",
-            "icon": "clock",
-            "iconf": "clock",
-            "type": "link",
-            "active": false,
-            "path": "/attendance/employee-overtime",
-            "permission" : "overtime_list"
+            "permission" : "overtime-read",
+            "children": [
+                {
+                    "title": "Overtime Request",
+                    "icon": "clock",
+                    "iconf": "clock",
+                    "type": "link",
+                    "active": false,
+                    "path": "/attendance/overtime",
+                    "permission" : "overtime-request-read"
+                },
+                {
+                    "title": "Approval Overtime",
+                    "icon": "clock",
+                    "iconf": "clock",
+                    "type": "link",
+                    "active": false,
+                    "path": "/attendance/approval-overtime",
+                    "permission" : "overtime-approval-read"
+                },
+                {
+                    "title": "Jadwal Overtime",
+                    "icon": "clock",
+                    "iconf": "clock",
+                    "type": "link",
+                    "active": false,
+                    "path": "/attendance/employee-overtime",
+                    "permission" : "overtime-schedule-read"
+                }
+            ]
         },
         {
             "headTitle1": "ASSESMENT",
             "headTitle2": "Assesment management",
             "type": "headtitle",
-            "permission" : "assesment_list"
+            "permission" : "assesment-read"
         },
         {
             "headTitle1": "Leave Management",
             "headTitle2": "Leave management",
             "type": "headtitle",
-            "permission" : "content_list"
+            "permission" : "leave-read"
         },
         {
             "title": "Master Leave",
@@ -248,7 +268,7 @@
             "type": "link",
             "active": false,
             "path": "/leave-master",
-            "permission" : "incident_reporting"
+            "permission" : "master-leave-read"
         },
         {
             "title": "Leave Request",
@@ -257,7 +277,7 @@
             "type": "link",
             "active": false,
             "path": "/leave-request",
-            "permission" : "incident_reporting"
+            "permission" : "leave-request-read"
         },
         {
             "title": "Leave Report",
@@ -266,13 +286,13 @@
             "type": "link",
             "active": false,
             "path": "/leave-report",
-            "permission" : "incident_reporting"
+            "permission" : "leave-report-read"
         },
         {
             "headTitle1": "REPORT",
-            "headTitle2": "Master data management",
+            "headTitle2": "Report management",
             "type": "headtitle",
-            "permission" : "report_list"
+            "permission" : "report-read"
         },
         {
             "title": "Incident Reporting",
@@ -281,7 +301,7 @@
             "type": "link",
             "active": false,
             "path": "/incident-reporting",
-            "permission" : "incident_reporting"
+            "permission" : "incident-reporting-read"
         },
         {
             "title": "Work Reporting",
@@ -290,13 +310,13 @@
             "type": "link",
             "active": false,
             "path": "/work-reporting",
-            "permission" : "work_reporting"
+            "permission" : "work-reporting-read"
         },
         {
             "headTitle1": "EVENT",
             "headTitle2": "Master data management",
             "type": "headtitle",
-            "permission" : "event_request"
+            "permission" : "event-read"
         },
         {
             "title": "Event Request",
@@ -305,7 +325,7 @@
             "type": "link",
             "active": false,
             "path": "/event",
-            "permission" : "event_request"
+            "permission" : "event-read"
         },
         {
             "title": "Employee Event",
@@ -314,13 +334,13 @@
             "type": "link",
             "active": false,
             "path": "/event/employee-event",
-            "permission" : "event_request"
+            "permission" : "event-employee-read"
         },
         {
             "headTitle1": "CONFIGURATION",
             "headTitle2": "Configuration management",
             "type": "headtitle",
-            "permission" : "configuration_list"
+            "permission" : "setting-read"
         },
         {
             "title": "Syncronization",
@@ -329,7 +349,7 @@
             "type": "link",
             "active": false,
             "path": "/syncs",
-            "permission" : "general_setting"
+            "permission" : "sync-read"
         },
         {
             "title": "General Settings",
@@ -338,7 +358,7 @@
             "type": "link",
             "active": false,
             "path": "/general-settings",
-            "permission" : "general_setting"
+            "permission" : "setting-read"
         }
     ]
 }
