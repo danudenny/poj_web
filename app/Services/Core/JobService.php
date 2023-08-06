@@ -43,14 +43,35 @@ class JobService extends BaseService
         ]);
     }
 
-    public function allJobs(): JsonResponse
+    public function allJobs($request): JsonResponse
     {
-        $jobs = Job::all();
+        $jobs = Job::query();
+        $jobs->with(['roles', 'units']);
+        $jobs->when($request->input('name'), function ($query, $name) {
+            $query->whereRaw("LOWER(name) LIKE '%" . strtolower($name) . "%'");
+        });
 
         return response()->json([
             'status' => 'success',
             'message' => 'Data retrieved successfully',
-            'data' => $jobs
+            'data' => $jobs->paginate($request->input('per_page', 10))
+        ]);
+    }
+
+    public function view($id): JsonResponse
+    {
+        $job = Job::with(['roles', 'units'])->find($id);
+        if (!$job) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Job not found'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data retrieved successfully',
+            'data' => $job
         ]);
     }
 
@@ -150,6 +171,43 @@ class JobService extends BaseService
         }
     }
 
+    public function assignRoles($request, $id) {
+        $job = Job::find($id);
+        if (!$job) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Job not found',
+            ], 404);
+        }
+
+        DB::beginTransaction();
+        try {
+            $job->id = $id;
+            $job->save();
+            if (!empty($request->roles)) {
+                if (!$job->roles()->sync($request->roles)) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Failed to sync'
+                    ], 400);
+                }
+            }
+
+            DB::commit();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Successfully synced to roles',
+                'data' => $request->roles
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
 
     public function update($request, $id): JsonResponse
     {

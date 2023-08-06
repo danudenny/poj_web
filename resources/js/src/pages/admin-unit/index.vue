@@ -190,7 +190,6 @@ export default {
                         lastStatus: '',
                         requestorName: ''
                     }
-                    console.log("URLGenerateParam", params)
                     params.filter.map((item) => {
                         if (item.field === 'unit.name') localFilter.unitName = item.value
                         if (item.field === 'last_status') localFilter.lastStatus = item.value

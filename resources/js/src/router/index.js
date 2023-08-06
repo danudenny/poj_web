@@ -112,6 +112,10 @@ import LeaveMaster from "../pages/leaves/leave-master.vue";
 // Admin Unit
 import AdminUnit from "../pages/admin-unit/index.vue";
 
+// Job
+import Job from "../pages/jobs/index.vue";
+import JobEdit from "../pages/jobs/edit.vue";
+
 //Error page
 import Error from  '../components/error.vue';
 
@@ -319,6 +323,26 @@ const routes =[
                   title: 'POJ - Department List',
                   requiresAuth: true,
                   permission : 'department-read',
+              }
+          },
+          {
+              path: '/management/job',
+              name: 'job-list',
+              component: Job,
+              meta: {
+                  title: 'POJ - Job List',
+                  requiresAuth: true,
+                  permission : 'job-read',
+              }
+          },
+          {
+              path: '/management/job/edit/:id',
+              name: 'job-edit',
+              component: JobEdit,
+              meta: {
+                  title: 'POJ - Job Edit',
+                  requiresAuth: true,
+                  permission : 'job-update',
               }
           },
           {
