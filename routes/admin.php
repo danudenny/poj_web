@@ -295,8 +295,10 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::get('{id}', [JobController::class, 'index']);
         Route::get('', [JobController::class, 'allJobs']);
         Route::get('show/{id}', [JobController::class, 'show']);
+        Route::get('view/{id}', [JobController::class, 'view']);
         Route::post('save/{id}', [JobController::class, 'store']);
         Route::put('update/{id}', [JobController::class, 'update']);
+        Route::put('assign-roles/{id}', [JobController::class, 'assignRoles']);
         Route::put('update-mandatory/{id}', [JobController::class, 'updateMandatoryReporting']);
         Route::delete('delete/{unit_id}/{job_id}', [JobController::class, 'delete']);
     });

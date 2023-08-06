@@ -76,6 +76,15 @@
             "permission" : "department-read"
         },
         {
+            "title": "Job",
+            "icon": "briefcase",
+            "iconf": "fill-briefcase",
+            "type": "link",
+            "active": false,
+            "path": "/management/job",
+            "permission" : "job-read"
+        },
+        {
             "title": "Working Area",
             "icon": "user",
             "iconf": "fill-learning",

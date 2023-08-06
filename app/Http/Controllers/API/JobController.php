@@ -23,9 +23,19 @@ class JobController extends Controller
         return $this->jobService->index($id);
     }
 
-    public function allJobs(): JsonResponse
+    public function allJobs(Request $request): JsonResponse
     {
-        return $this->jobService->allJobs();
+        return $this->jobService->allJobs($request);
+    }
+
+    public function view($id): JsonResponse
+    {
+        return $this->jobService->view($id);
+    }
+
+    public function assignRoles(Request $request, $id): JsonResponse
+    {
+        return $this->jobService->assignRoles($request,$id);
     }
 
     public function show(Request $request, $id): JsonResponse
