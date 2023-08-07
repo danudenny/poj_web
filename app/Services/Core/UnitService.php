@@ -169,6 +169,7 @@ class UnitService extends BaseService
             $user = $request->user();
 
             $query = Unit::query();
+            $query->select(['units.*']);
 
             if ($user->isHighestRole(Role::RoleAdmin)) {
                 $defaultUnitID = $user->employee->getLastUnitID();
@@ -192,6 +193,10 @@ class UnitService extends BaseService
             $query->when($request->filled('name'), function(Builder $builder) use ($request) {
                 $builder->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower(request()->query('name')).'%']);
             });
+
+            if ($unitLevel = $request->input('unit_level')) {
+                $query->where('unit_level', '=', $unitLevel);
+            }
 
             $query->orderBy('unit_level', 'ASC');
 

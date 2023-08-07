@@ -23,8 +23,24 @@ class AdminUnitService extends BaseService
     public function index(Request $request) {
         try {
             $query = AdminUnit::query()->with(['unit', 'employee:employees.id,name,work_email']);
-            $query->where('is_active', '=', true);
-            $query->orderBy('id', 'DESC');
+            $query->where('admin_units.is_active', '=', true);
+            $query->orderBy('admin_units.id', 'DESC');
+            $query->select(['admin_units.*']);
+
+            if ($employeeName = $request->input('employee_name')) {
+                $query->join('employees', 'employees.id', '=', 'admin_units.employee_id');
+                $query->whereRaw('employees.name ILIKE ?', ["%" . $employeeName . "%"]);
+            }
+
+            if ($employeeEmail = $request->input('employee_email')) {
+                $query->join('employees', 'employees.id', '=', 'admin_units.employee_id');
+                $query->whereRaw('employees.work_email ILIKE ?', ["%" . $employeeEmail . "%"]);
+            }
+
+            if ($unitName = $request->input('unit_name')) {
+                $query->join('units', 'units.relation_id', '=', 'admin_units.unit_relation_id');
+                $query->whereRaw('units.name ILIKE ?', ["%" . $unitName . "%"]);
+            }
 
             return response()->json([
                 'status' => 'success',

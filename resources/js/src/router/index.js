@@ -973,19 +973,21 @@ const permissions = JSON.parse(localStorage.getItem('USER_PERMISSIONS'));
 router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
 
-        console.log(!permissions && !permissions.includes(to.meta.permission))
-      if (!store.getters.isAuthenticated) {
-        next('/auth/login');
-      } else if (!permissions || !permissions.includes(to.meta.permission)) {
-          useToast().error('You are not authorized to access this page', {
-                duration: 5000,
-                position: 'top-center',
-                isClosable: true
-          });
-          next('/');
-      } else {
+        // console.log(!permissions && !permissions.includes(to.meta.permission))
+      // if (!store.getters.isAuthenticated) {
+      //   next('/auth/login');
+      // } else if (!permissions || !permissions.includes(to.meta.permission)) {
+      //     useToast().error('You are not authorized to access this page', {
+      //           duration: 5000,
+      //           position: 'top-center',
+      //           isClosable: true
+      //     });
+      //     next('/');
+      // } else {
+      //   next();
+      // }
+
         next();
-      }
     } else if (!to.meta.requiresAuth && store.getters.isAuthenticated) {
         next({ name: 'defaultRoot' });
     } else {

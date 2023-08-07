@@ -9,6 +9,9 @@ class Permission extends SpatiePermission
 {
     use HasFactory;
 
+    const AssignOperatingUnit = "operating-unit.assign";
+    const DeleteOperatingUnit = "operating-unit.delete";
+
     protected $hidden = ['pivot'];
 
     public function getNameAttribute($value): string

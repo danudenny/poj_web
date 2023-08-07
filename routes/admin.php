@@ -19,6 +19,7 @@ use App\Http\Controllers\API\KanwilController;
 use App\Http\Controllers\API\LeaveRequestController;
 use App\Http\Controllers\API\MasterLeaveController;
 use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\API\OperatingUnitController;
 use App\Http\Controllers\API\OutletController;
 use App\Http\Controllers\API\OvertimeController;
 use App\Http\Controllers\API\PeriodController;
@@ -357,5 +358,17 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
 
     Route::group(['prefix' => 'kantor_perwakilan'], function() {
        Route::get('', [KantorPerwakilanController::class, 'index']);
+       Route::get('view/{id}', [KantorPerwakilanController::class, 'view']);
+    });
+
+    Route::group(['prefix' => 'operating-unit'], function () {
+        Route::get('', [OperatingUnitController::class, 'index']);
+        Route::get('kanwils', [OperatingUnitController::class, 'kanwil']);
+        Route::get('corporates', [OperatingUnitController::class, 'corporate']);
+        Route::get('available-kanwil', [OperatingUnitController::class, 'availableKanwil']);
+        Route::post('assign', [OperatingUnitController::class, 'assign']);
+        Route::post('assign-user', [OperatingUnitController::class, 'assignUser']);
+        Route::delete('remove/{id}', [OperatingUnitController::class, 'remove']);
+        Route::post('remove-user', [OperatingUnitController::class, 'removeUser']);
     });
 });

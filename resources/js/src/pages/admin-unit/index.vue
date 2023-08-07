@@ -149,14 +149,17 @@ export default {
                     {
                         title: 'Employee Name',
                         field: 'employee.name',
+                        headerFilter:"input",
                     },
                     {
                         title: 'Employee Work Email',
                         field: 'employee.work_email',
+                        headerFilter:"input",
                     },
                     {
                         title: 'Unit',
                         field: 'unit.name',
+                        headerFilter:"input",
                     },
                     {
                         title: '',
@@ -187,15 +190,15 @@ export default {
                 ajaxURLGenerator: (url, config, params) => {
                     let localFilter = {
                         unitName: '',
-                        lastStatus: '',
-                        requestorName: ''
+                        employeeName: '',
+                        workEmail: ''
                     }
                     params.filter.map((item) => {
+                        if (item.field === 'employee.name') localFilter.employeeName = item.value
+                        if (item.field === 'employee.work_email') localFilter.workEmail = item.value
                         if (item.field === 'unit.name') localFilter.unitName = item.value
-                        if (item.field === 'last_status') localFilter.lastStatus = item.value
-                        if (item.field === 'requestor_employee.name') localFilter.requestorName = item.value
                     })
-                    return `${url}?page=${params.page}&per_page=${params.size}&size=${params.size}&unit_name=${localFilter.unitName}&last_status=${localFilter.lastStatus}&requestor_name=${localFilter.requestorName}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&size=${params.size}&unit_name=${localFilter.unitName}&employee_name=${localFilter.employeeName}&employee_email=${localFilter.workEmail}`
                 },
                 ajaxResponse: function (url, params, response) {
                     return {

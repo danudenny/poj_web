@@ -20,6 +20,9 @@ use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
  * @property float $radius
  * @property int $early_buffer
  * @property int $late_buffer
+ *
+ * Relations:
+ * @property-read OperatingUnitKanwil $operatingUnitKanwil
  */
 class Unit extends Model
 {
@@ -73,5 +76,10 @@ class Unit extends Model
     {
         return $this->belongsToMany(Job::class, 'unit_jobs')
             ->withPivot('is_camera', 'is_upload', 'is_reporting', 'is_mandatory_reporting', 'type', 'total_reporting', 'reporting_names');
+    }
+
+    public function operatingUnitKanwil()
+    {
+        return $this->hasOne(OperatingUnitKanwil::class, 'kanwil_relation_id', 'relation_id');
     }
 }

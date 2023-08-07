@@ -20,4 +20,9 @@ class KantorPerwakilanController extends Controller
     {
         return $this->kantorPerwakilanService->index($request);
     }
+
+    public function view(Request $request, int $id): JsonResponse
+    {
+        return $this->kantorPerwakilanService->view($request, $id);
+    }
 }

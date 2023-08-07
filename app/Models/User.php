@@ -62,6 +62,14 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    public function getIsInRepresentativeUnitAttribute() {
+        $employee = $this->employee;
+
+        return KantorPerwakilan::query()
+            ->where('id', '=', $employee->getLastUnitID())
+            ->exists();
+    }
+
     /**
      * @param array $roleLevels
      * @return bool
@@ -121,5 +129,15 @@ class User extends Authenticatable
     public function hasPermission($permission)
     {
         return $this->roles->flatMap->permissions->contains($permission);
+    }
+
+    public function hasPermissionName(string $permissionName): bool {
+        foreach ($this->roles->flatMap->permissions as $permission) {
+            if ($permission->name == $permissionName) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
