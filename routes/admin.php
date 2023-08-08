@@ -26,6 +26,7 @@ use App\Http\Controllers\API\PeriodController;
 use App\Http\Controllers\API\PermissionController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\SettingController;
+use App\Http\Controllers\API\TeamController;
 use App\Http\Controllers\API\UnitController;
 use App\Http\Controllers\API\UnitJobController;
 use App\Http\Controllers\API\UserController;
@@ -232,6 +233,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::get('', [DepartmentController::class, 'index']);
         Route::put('create/{id}', [DepartmentController::class, 'assign']);
         Route::get('view/{id}', [DepartmentController::class, 'show']);
+        Route::post('assign-team/{id}', [DepartmentController::class, 'assignTeam']);
     });
     // End Department
 
@@ -299,6 +301,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::get('show/{id}', [JobController::class, 'show']);
         Route::get('view/{id}', [JobController::class, 'view']);
         Route::post('save/{id}', [JobController::class, 'store']);
+        Route::post('insert-pivot', [JobController::class, 'pivotInsert']);
         Route::put('update/{id}', [JobController::class, 'update']);
         Route::put('assign-roles/{id}', [JobController::class, 'assignRoles']);
         Route::put('update-mandatory/{id}', [JobController::class, 'updateMandatoryReporting']);
@@ -372,6 +375,13 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::delete('remove/{id}', [OperatingUnitController::class, 'remove']);
         Route::post('remove-user', [OperatingUnitController::class, 'removeUser']);
     });
+
+    Route::group(['prefix' => 'team'], function () {
+        Route::get('', [TeamController::class, 'index']);
+        Route::get('view/{id}', [TeamController::class, 'show']);
+        Route::post('create', [TeamController::class, 'save']);
+        Route::put('update/{id}', [TeamController::class, 'update']);
+        Route::delete('delete/{id}', [TeamController::class, 'delete']);
 
     Route::group(['prefix' => 'unit-job'], function() {
         Route::get('', [UnitJobController::class, 'index']);

@@ -30,13 +30,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read EmployeeAttendance[] $attendances
  * @property-read EmployeeTimesheetSchedule[] $timesheetSchedules
  * @method static find($id)
+ * @method static leftJoin(string $string, string $string1, string $string2, string $string3)
  */
 class Employee extends Model
 {
     use HasFactory;
 
     protected $appends = ['status', 'last_unit'];
-
 
     public function getStatusAttribute(): string
     {

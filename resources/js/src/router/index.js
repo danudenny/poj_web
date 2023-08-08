@@ -39,7 +39,6 @@ import Cabang from '../pages/cabang/index.vue';
 import CabangDetail from '../pages/cabang/details.vue';
 
 // Master Data
-import Timesheet from '../pages/timesheet/index.vue';
 import TimesheetSchedule from '../pages/timesheet-schedule/index.vue';
 import TimesheetScheduleCreate from '../pages/timesheet-schedule/create.vue';
 import TimesheetScheduleEdit from '../pages/timesheet-schedule/edit.vue';
@@ -51,6 +50,7 @@ import CreateApproval from '../pages/approvals/Create.vue';
 import EditApproval from '../pages/approvals/Edit.vue';
 import DetailApproval from '../pages/approvals/Detail.vue';
 import Department from '../pages/departments/index.vue';
+import DepartmentEdit from '../pages/departments/update.vue';
 import Regional from '../pages/regionals/index.vue';
 import RegionalDetail from '../pages/regionals/details.vue';
 
@@ -116,6 +116,11 @@ import AdminUnit from "../pages/admin-unit/index.vue";
 import Job from "../pages/jobs/index.vue";
 import JobEdit from "../pages/jobs/edit.vue";
 import JobUnit from '../pages/jobs/unit-job.vue'
+
+// Team
+import Team from "../pages/teams/index.vue";
+import TeamEdit from "../pages/teams/update.vue";
+import TeamDetail from "../pages/teams/details.vue";
 
 //Error page
 import Error from  '../components/error.vue';
@@ -325,6 +330,26 @@ const routes =[
                   title: 'POJ - Department List',
                   requiresAuth: true,
                   permission : 'department-read',
+              }
+          },
+          {
+              path: '/management/department/:id',
+              name: 'department-edit',
+              component: DepartmentEdit,
+              meta: {
+                  title: 'POJ - Department Edit',
+                  requiresAuth: true,
+                  permission : 'department-update',
+              }
+          },
+          {
+              path: '/management/teams',
+              name: 'team-list',
+              component: Team,
+              meta: {
+                  title: 'POJ - Team List',
+                  requiresAuth: true,
+                  permission : 'team-read',
               }
           },
           {

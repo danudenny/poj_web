@@ -11,16 +11,6 @@
                                 <h5>Department List</h5>
                             </div>
                             <div class="card-body">
-<!--                                <div class="d-flex justify-content-end mb-2">-->
-<!--                                    <button class="btn btn-warning"  :disabled="syncLoading" type="button" @click="syncFromERP">-->
-<!--                                        <span v-if="syncLoading">-->
-<!--                                            <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)-->
-<!--                                        </span>-->
-<!--                                        <span v-else>-->
-<!--                                            <i class="fa fa-recycle"></i> &nbsp; Sync From ERP-->
-<!--                                        </span>-->
-<!--                                    </button>-->
-<!--                                </div>-->
                                 <div v-if="loading" class="text-center">
                                     <img src="../../assets/loader.gif" alt="loading" width="100">
                                 </div>
@@ -80,7 +70,10 @@ export default {
                         title: 'No',
                         field: '',
                         formatter: 'rownum',
-                        width: 100
+                        width: 70,
+                        headerSort: false,
+                        hozAlign: 'center',
+                        headerHozAlign: 'center'
                     },
                     {
                         title: 'Name',
@@ -95,6 +88,49 @@ export default {
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                     },
+                    {
+                        title: 'Total Employee',
+                        field: 'employee_count',
+                        hozAlign: 'center',
+                        headerHozAlign: 'center',
+                        headerSort: false,
+                        width: 130,
+                        formatter: function (cell) {
+                            const rowData = cell.getRow().getData();
+                            if (rowData.employee_count > 0) {
+                                return `<span class="badge badge-primary">${rowData.employee_count}</span>`
+                            } else {
+                                return `<span class="badge badge-danger">0</span>`
+                            }
+                        }
+                    },
+                    {
+                        title: 'Total Teams',
+                        field: '',
+                        headerFilter:"input",
+                        hozAlign: 'center',
+                        headerHozAlign: 'center',
+                        headerSort: false,
+                        width: 100,
+                        formatter: (cell) => {
+                            const rowData = cell.getRow().getData();
+                           if (rowData.teams.length > 0) {
+                               return `<span class="badge badge-primary">${rowData.teams.length}</span>`
+                           } else {
+                               return `<span class="badge badge-danger">0</span>`
+                           }
+                        }
+                    },
+                    {
+                        title: '',
+                        formatter: this.viewDetailsFormatter,
+                        width: 100,
+                        headerSort: false,
+                        hozAlign: 'center',
+                        cellClick: (e, cell) => {
+                            this.handleActionButtonClick(e, cell);
+                        }
+                    },
                 ],
                 pagination: 'local',
                 paginationSize: 10,
@@ -108,40 +144,24 @@ export default {
             });
             this.loading = false
         },
-        async syncFromERP() {
-            this.syncLoading = true;
-            this.loading = true
-            this.startCountdown();
-            this.table.destroy()
+        viewDetailsFormatter(cell) {
+            const rowData = cell.getRow().getData();
+            return `
+                <button class="button-icon button-warning" data-action="edit" data-row-id="${rowData.id}"><i data-action="edit" class="fa fa-pencil"></i> </button>
+             `;
+        },
+        handleActionButtonClick(e, cell) {
+            const action = e.target.dataset.action
 
-            await axios.create({
-                baseURL: import.meta.env.VITE_SYNC_ODOO_URL,
-            }).get('/sync-department')
-                .then(async (response) => {
-                    if (await response.data.status === 201) {
-                        this.syncLoading = false;
-                        this.loading = false;
-                        await this.getDepartments()
-                        this.initializeDepartmentTable();
-                        useToast().success(response.data.message);
-                    } else {
-                        this.syncLoading = false;
-                        this.loading = false;
-                        await this.getDepartments()
-                        this.initializeDepartmentTable();
-                        useToast().error(response.data.message);
+            if (action === 'edit') {
+                this.$router.push({
+                    name: 'department-edit',
+                    params: {
+                        id: cell.getRow().getData().id
                     }
-                }).catch(async () => {
-                    this.syncLoading = false;
-                    this.loading = false;
-                    await this.getDepartments()
-                    this.initializeDepartmentTable();
-                    useToast().error("Failed to Sync Data! Check connection.");
-                }).finally(() => {
-                    this.syncLoading = false;
-                    clearInterval(this.timerId);
-                });
-        }
+                })
+            }
+        },
     }
 }
 </script>

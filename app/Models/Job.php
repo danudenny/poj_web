@@ -20,6 +20,7 @@ class Job extends Authenticatable
 {
     use HasFactory, HasRoles;
     protected $guard_name = 'web';
+
     public function employees(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'job_id', 'odoo_job_id');
