@@ -85,6 +85,15 @@
             "permission" : "job-read"
         },
         {
+            "title": "Parent Job",
+            "icon": "tool",
+            "iconf": "fill-tool",
+            "type": "link",
+            "active": false,
+            "path": "/management/unit-job",
+            "permission" : "job-assign-parent"
+        },
+        {
             "title": "Working Area",
             "icon": "user",
             "iconf": "fill-learning",

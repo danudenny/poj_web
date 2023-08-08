@@ -11,6 +11,7 @@ class Permission extends SpatiePermission
 
     const AssignOperatingUnit = "operating-unit.assign";
     const DeleteOperatingUnit = "operating-unit.delete";
+    const AssignParentJob = "job-assign-parent";
 
     protected $hidden = ['pivot'];
 

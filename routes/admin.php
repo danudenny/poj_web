@@ -27,6 +27,7 @@ use App\Http\Controllers\API\PermissionController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\SettingController;
 use App\Http\Controllers\API\UnitController;
+use App\Http\Controllers\API\UnitJobController;
 use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\WorkLocationController;
 use App\Http\Controllers\API\WorkReportingController;
@@ -370,5 +371,11 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::post('assign-user', [OperatingUnitController::class, 'assignUser']);
         Route::delete('remove/{id}', [OperatingUnitController::class, 'remove']);
         Route::post('remove-user', [OperatingUnitController::class, 'removeUser']);
+    });
+
+    Route::group(['prefix' => 'unit-job'], function() {
+        Route::get('', [UnitJobController::class, 'index']);
+        Route::post('assign', [UnitJobController::class, 'assign']);
+        Route::post('create', [UnitJobController::class, 'create']);
     });
 });
