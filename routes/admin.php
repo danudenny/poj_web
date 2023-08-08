@@ -382,6 +382,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::post('create', [TeamController::class, 'save']);
         Route::put('update/{id}', [TeamController::class, 'update']);
         Route::delete('delete/{id}', [TeamController::class, 'delete']);
+    });
 
     Route::group(['prefix' => 'unit-job'], function() {
         Route::get('', [UnitJobController::class, 'index']);
