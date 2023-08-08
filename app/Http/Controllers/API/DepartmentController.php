@@ -32,4 +32,9 @@ class DepartmentController extends Controller
     {
         return $this->departmentService->assignCompany($id);
     }
+
+    public function assignTeam(Request $request, $id): JsonResponse
+    {
+        return $this->departmentService->assignTeam($request, $id);
+    }
 }

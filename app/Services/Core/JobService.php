@@ -4,12 +4,11 @@ namespace App\Services\Core;
 
 use App\Models\Employee;
 use App\Models\Job;
+use App\Models\JobHasUnit;
 use App\Models\Unit;
 use App\Services\BaseService;
 use Exception;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class JobService extends BaseService
@@ -322,5 +321,45 @@ class JobService extends BaseService
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function pivotInsert(): JsonResponse
+    {
+        DB::beginTransaction();
+        try {
+            $emp = Employee::leftJoin('units AS u', 'u.relation_id', '=', 'employees.unit_id')
+                ->leftJoin('jobs AS j', 'employees.job_id', '=', 'j.odoo_job_id')
+                ->select('j.id as job_id', 'u.relation_id as unit_id')
+                ->whereNotNull('j.id')
+                ->whereNotNull('u.relation_id')
+                ->distinct()
+                ->orderBy('job_id')
+                ->chunk(1000, function ($data) {
+                    foreach ($data as $item) {
+                        JobHasUnit::updateOrInsert(
+                            [
+                                'job_id' => $item->job_id,
+                                'unit_id' => $item->unit_id,
+                            ],
+                            []
+                        );
+                    }
+                });
+
+            DB::commit();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Jobs attached to units successfully',
+                'data' => $emp
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to attach jobs to units',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+
     }
 }

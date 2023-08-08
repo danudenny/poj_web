@@ -404,16 +404,28 @@ export default {
                 baseURL: import.meta.env.VITE_SYNC_ODOO_URL,
             }).get('/sync-job')
                 .then(async (response) => {
+                    console.log(response)
                     if (await response.data.status === 201) {
-                        this.syncJobLoading = false;
-                        this.loading = false;
-                        useToast().success(response.data.message);
+                        await this.$axios.post('/api/v1/admin/job/insert-pivot')
+                            .then(async (response) => {
+                                console.log(response)
+                                this.syncJobLoading = false;
+                                this.loading = false;
+                                useToast().success(response.data.message);
+                            }).catch(async (err) => {
+                                this.syncJobLoading = false;
+                                this.loading = false;
+                                useToast().error("Failed to Insert Job Has Unit");
+                            }).finally(() => {
+                                this.syncJobLoading = false;
+                                clearInterval(this.timerId);
+                            });
                     } else {
                         this.syncJobLoading = false;
                         this.loading = false;
                         useToast().error(response.data.message);
                     }
-                }).catch(async () => {
+                }).catch(async (e) => {
                     this.syncJobLoading = false;
                     this.loading = false;
                     useToast().error("Failed to Sync Data! Check connection.");

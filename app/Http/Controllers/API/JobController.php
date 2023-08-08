@@ -63,4 +63,9 @@ class JobController extends Controller
         return $this->jobService->destroy($unitId, $jobId);
     }
 
+    public function pivotInsert(): JsonResponse
+    {
+        return $this->jobService->pivotInsert();
+    }
+
 }

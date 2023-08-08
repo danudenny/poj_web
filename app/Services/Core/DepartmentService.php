@@ -3,6 +3,7 @@
 namespace App\Services\Core;
 
 use App\Models\Department;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
@@ -11,7 +12,7 @@ class DepartmentService
     public function index($request): JsonResponse
     {
         $department = Department::query();
-        $department->with('unit');
+        $department->with(['unit', 'teams']);
         $department->when('name', function ($query) use ($request) {
             $query->where('name', 'like', '%' . $request->name . '%');
         });
@@ -60,11 +61,40 @@ class DepartmentService
                 'message' => 'Success fetch data',
                 'data' => $department
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to assign company'
+            ], 500);
+        }
+    }
+
+    public function assignTeam($request, $id): JsonResponse
+    {
+        $department = Department::find($id);
+        if (!$department) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Data not found'
+            ], 404);
+        }
+
+        DB::beginTransaction();
+        try {
+            $department->teams()->sync($request->teams);
+
+            DB::commit();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Success fetch data',
+                'data' => $department
+            ]);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
             ], 500);
         }
     }
