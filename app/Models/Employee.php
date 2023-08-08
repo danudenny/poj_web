@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read Unit $corporate
  * @property-read EmployeeAttendance[] $attendances
  * @property-read EmployeeTimesheetSchedule[] $timesheetSchedules
+ * @method static find($id)
  */
 class Employee extends Model
 {
@@ -37,7 +38,7 @@ class Employee extends Model
     protected $appends = ['status', 'last_unit'];
 
 
-    public function getStatusAttribute()
+    public function getStatusAttribute(): string
     {
         if ($this->is_active) {
             return "Active";
@@ -49,7 +50,8 @@ class Employee extends Model
     /**
      * @return Unit|null
      */
-    public function getLastUnitAttribute() {
+    public function getLastUnitAttribute(): ?Unit
+    {
         return $this->getLastUnit();
     }
 
