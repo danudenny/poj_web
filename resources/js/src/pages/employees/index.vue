@@ -186,13 +186,15 @@ export default {
         },
         initializeEmployeesTable() {
             const ls = localStorage.getItem('my_app_token')
+            const selectedROle = localStorage.getItem('USER_ROLES')
             this.table = new Tabulator(this.$refs.employeesTable, {
                 paginationCounter:"rows",
                 ajaxURL: '/api/v1/admin/employee',
                 ajaxConfig: {
                     headers: {
                         Authorization: `Bearer ${ls}`,
-                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
+                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? '',
+                        "X-Selected-Role": JSON.parse(selectedROle)
                     },
                 },
                 ajaxParams: {

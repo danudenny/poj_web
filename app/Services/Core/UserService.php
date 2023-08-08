@@ -2,6 +2,7 @@
 
 namespace App\Services\Core;
 
+use App\Helpers\UnitHelper;
 use App\Http\Resources\RoleResource;
 use App\Http\Resources\UserProfileCollection;
 use App\Http\Resources\UserResource;
@@ -36,12 +37,11 @@ class UserService extends BaseService
      */
     public function index($data): mixed
     {
-        $lastUnit = auth()->user()->employee->last_unit;
-
-
-        $roles = auth()->user()->roles->sortBy('priority')->first();
+        $auth = auth()->user();
+        $roleLevel = $data->header('X-Selected-Role');
         try {
             $users = User::query();
+            $userData = [];
             $users->with(['roles:name', 'employee']);
             $users->when(request()->filled('name'), function ($query) {
                 $query->whereRaw('LOWER("name") LIKE ? ', '%'.strtolower(request()->query('name')).'%');
@@ -63,40 +63,55 @@ class UserService extends BaseService
 
                 $lastUnitRelationID = request()->input('last_unit_id');
 
-                $query->where(function($builder) use ($lastUnitRelationID) {
-                        $builder->orWhere(function($builder) use ($lastUnitRelationID) {
-                            $builder->where('employees.outlet_id', '=', $lastUnitRelationID);
-                        })
-                        ->orWhere(function($builder) use ($lastUnitRelationID) {
-                            $builder->where('employees.outlet_id', '=', 0)
-                                ->where('employees.cabang_id', '=', $lastUnitRelationID);
-                        })
-                        ->orWhere(function($builder) use ($lastUnitRelationID) {
-                            $builder->where('employees.outlet_id', '=', 0)
-                                ->where('employees.cabang_id', '=', 0)
-                                ->where('employees.area_id', '=', $lastUnitRelationID);
-                        })
-                        ->orWhere(function($builder) use ($lastUnitRelationID) {
-                            $builder->where('employees.outlet_id', '=', 0)
-                                ->where('employees.cabang_id', '=', 0)
-                                ->where('employees.area_id', '=', 0)
-                                ->where('employees.kanwil_id', '=', $lastUnitRelationID);
-                        })
-                        ->orWhere(function($builder) use ($lastUnitRelationID) {
-                            $builder->where('employees.outlet_id', '=', 0)
-                                ->where('employees.cabang_id', '=', 0)
-                                ->where('employees.area_id', '=', 0)
-                                ->where('employees.kanwil_id', '=', 0)
-                                ->where('employees.corporate_id', '=', $lastUnitRelationID);
+                $conditionBuilder = function($builder, $relationIds) {
+                    foreach ($relationIds as $index => $relationId) {
+                        $builder->orWhere(function($builder) use ($relationIds, $index, $relationId) {
+                            for ($i = 0; $i <= $index; $i++) {
+                                $fieldName = ['outlet_id', 'cabang_id', 'area_id', 'kanwil_id', 'corporate_id'][$i];
+                                $builder->where("employees.$fieldName", '=', $i === $index ? $relationId : 0);
+                            }
                         });
+                    }
+                };
+
+                $query->where(function($builder) use ($lastUnitRelationID, $conditionBuilder) {
+                    $relationIds = [0, 0, 0, 0, $lastUnitRelationID];
+                    $conditionBuilder($builder, $relationIds);
                 });
             });
             $users->orderBy('name', 'asc');
 
+
+            if ($roleLevel == 'superadmin') {
+                $userData = $users->paginate($data->per_page ?? 10);
+            } else if ($roleLevel === 'staff') {
+                $userData = $users->where('id', '=', $auth->id)->first();
+            } else if ($roleLevel === 'admin_branch') {
+                $empUnit = $auth->employee->getRelatedUnit();
+
+                $relationIds = [];
+
+                if ($requestRelationID = $this->getRequestedUnitID()) {
+                    $relationIds[] = $requestRelationID;
+                } else {
+                    $flatUnit = UnitHelper::flattenUnits($empUnit);
+                    $relationIds = array_column($flatUnit, 'relation_id');
+                }
+
+                $userData = $users->whereHas('employee', function ($query) use ($relationIds) {
+                    $query->whereIn('corporate_id', $relationIds)
+                        ->orWhereIn('kanwil_id', $relationIds)
+                        ->orWhereIn('area_id', $relationIds)
+                        ->orWhereIn('cabang_id', $relationIds)
+                        ->orWhereIn('outlet_id', $relationIds)
+                        ->with(['job', 'corporate', 'kanwil', 'area', 'cabang', 'outlet']);
+                })->paginate($data->get('per_page', 10));
+            }
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data retrieved successfully',
-                'data' => $users->paginate($data->per_page ?? 10)
+                'data' => $userData
             ], 200);
 
         } catch (\InvalidArgumentException $e) {
