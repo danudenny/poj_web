@@ -14,6 +14,7 @@ use Spatie\Permission\Traits\HasRoles;
  * Attributes:
  * @property-read int $id
  * @property int $odoo_job_id
+ * @property string $name
  */
 class Job extends Authenticatable
 {

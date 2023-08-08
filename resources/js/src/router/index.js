@@ -115,6 +115,7 @@ import AdminUnit from "../pages/admin-unit/index.vue";
 // Job
 import Job from "../pages/jobs/index.vue";
 import JobEdit from "../pages/jobs/edit.vue";
+import JobUnit from '../pages/jobs/unit-job.vue'
 
 // Team
 import Team from "../pages/teams/index.vue";
@@ -123,6 +124,7 @@ import TeamDetail from "../pages/teams/details.vue";
 
 //Error page
 import Error from  '../components/error.vue';
+import UnitJob from "../pages/jobs/unit-job.vue";
 
 const routes =[
     {
@@ -378,6 +380,16 @@ const routes =[
                   title: 'POJ - Admin Unit',
                   requiresAuth: true,
                   permission : 'admin-unit-read',
+              }
+          },
+          {
+              path: '/management/unit-job',
+              name: 'unit-job',
+              component: UnitJob,
+              meta: {
+                  title: 'POJ - Unit Job',
+                  requiresAuth: true,
+                  permission : 'job-assign-parent',
               }
           },
       ]
