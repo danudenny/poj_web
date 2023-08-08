@@ -186,6 +186,21 @@ export default {
                         headerHozAlign: 'center',
                     },
                     {
+                        title: 'Total Departments',
+                        field: 'departments_count',
+                        hozAlign: 'center',
+                        headerSort: false,
+                        headerHozAlign: 'center',
+                        formatter: (cell) => {
+                            const rowData = cell.getRow().getData();
+                            if (rowData.departments_count > 0) {
+                                return `<span class="badge badge-success">${rowData.departments_count}</span>`
+                            } else {
+                                return `<span class="badge badge-danger">${rowData.departments_count}</span>`
+                            }
+                        }
+                    },
+                    {
                         title: '',
                         formatter: this.viewDetailsFormatter,
                         width: 100,

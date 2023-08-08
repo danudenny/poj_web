@@ -50,6 +50,7 @@ import CreateApproval from '../pages/approvals/Create.vue';
 import EditApproval from '../pages/approvals/Edit.vue';
 import DetailApproval from '../pages/approvals/Detail.vue';
 import Department from '../pages/departments/index.vue';
+import DepartmentEdit from '../pages/departments/update.vue';
 import Regional from '../pages/regionals/index.vue';
 import RegionalDetail from '../pages/regionals/details.vue';
 
@@ -327,6 +328,16 @@ const routes =[
                   title: 'POJ - Department List',
                   requiresAuth: true,
                   permission : 'department-read',
+              }
+          },
+          {
+              path: '/management/department/:id',
+              name: 'department-edit',
+              component: DepartmentEdit,
+              meta: {
+                  title: 'POJ - Department Edit',
+                  requiresAuth: true,
+                  permission : 'department-update',
               }
           },
           {

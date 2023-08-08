@@ -13,6 +13,7 @@ class DepartmentService
     {
         $department = Department::query();
         $department->with(['unit', 'teams']);
+        $department->withCount('employee');
         $department->when('name', function ($query) use ($request) {
             $query->where('name', 'like', '%' . $request->name . '%');
         });
@@ -26,7 +27,9 @@ class DepartmentService
 
     public function show($id): JsonResponse
     {
-        $department = Department::with('unit')->find($id);
+        $department = Department::with(['unit', 'teams'])
+            ->withCount('employee')
+            ->find($id);
         if (!$department) {
             return response()->json([
                 'status' => 'error',

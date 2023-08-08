@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @method find($id)
  * @method where(string $string, string $string1, $id)
  * @method whereRaw(string $string)
+ * @method withCount(string $string)
  */
 class Team extends Model
 {

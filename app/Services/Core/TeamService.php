@@ -19,6 +19,7 @@ class TeamService extends BaseService
     public function index($request): JsonResponse
     {
         $teams = $this->team
+            ->withCount('departments')
             ->when($request->name, function ($query) use ($request) {
                 $query->whereRaw("LOWER(name) LIKE '%" . strtolower($request->name) . "%'");
             })
