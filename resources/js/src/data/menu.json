@@ -76,6 +76,15 @@
             "permission" : "department-read"
         },
         {
+            "title": "Teams",
+            "icon": "users",
+            "iconf": "fill-users",
+            "type": "link",
+            "active": false,
+            "path": "/management/teams",
+            "permission" : "team-read"
+        },
+        {
             "title": "Job",
             "icon": "briefcase",
             "iconf": "fill-briefcase",
@@ -154,14 +163,14 @@
             "permission" : "approval-read",
             "children": [
                 {
-                    "path": "approval",
+                    "path": "/approval",
                     "title": "Approval",
                     "type": "link",
                     "active": false,
                     "permission" : "approval-read"
                 },
                 {
-                    "path": "approval-module",
+                    "path": "/approval-module",
                     "title": "Approval Module",
                     "type": "link",
                     "active": false,

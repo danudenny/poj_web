@@ -36,9 +36,9 @@ class TeamService extends BaseService
         $team = $this->team->whereRaw("LOWER(name) = '" . strtolower($request->name) . "'")->first();
         if($team) {
             return response()->json([
-                'status' => 400,
+                'status' => 'error',
                 'message' => 'Team already exists',
-            ]);
+            ], 400);
         }
 
         DB::beginTransaction();
