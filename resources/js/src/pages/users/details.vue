@@ -29,10 +29,6 @@
                                         <input class="form-control" type="text" placeholder="Name" v-model="item.name" disabled>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label">Username</label>
-                                        <input class="form-control" type="text" placeholder="Username" v-model="item.username" disabled>
-                                    </div>
-                                    <div class="mb-3">
                                         <label class="form-label">Email address</label>
                                         <input class="form-control" type="email" placeholder="Email" v-model="item.email" disabled>
                                     </div>
@@ -97,7 +93,8 @@ export default {
                 employee: {
                     last_unit: {
                         relation_id: 0
-                    }
+                    },
+                    department: {}
                 }
             },
             fallbackImageUrl: '',

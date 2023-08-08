@@ -42,13 +42,13 @@ class UserService extends BaseService
         try {
             $users = User::query();
             $userData = [];
-            $users->with(['roles:name', 'employee']);
+            $users->with(['roles:name', 'employee', 'employee.department']);
             $users->when(request()->filled('name'), function ($query) {
                 $query->whereRaw('LOWER("name") LIKE ? ', '%'.strtolower(request()->query('name')).'%');
             });
-            $users->when(request()->filled('unit_id'), function ($query) {
+            $users->when(request()->filled('last_unit_id'), function ($query) {
                 $query->whereHas('employee', function ($query) {
-                    $query->where('unit_id', '=', request()->query('unit_id'));
+                    $query->where('unit_id', '=', request()->query('last_unit_id'));
                 });
             });
             $users->when(request()->filled('email'), function ($query) {
@@ -57,28 +57,13 @@ class UserService extends BaseService
             $users->when(request()->filled('is_active'), function ($query) {
                 $query->where('is_active', '=', request()->query('is_active'));
             });
-            $users->when(request()->filled('last_unit_id'), function (Builder $query) {
-                $query->leftJoin('employees', 'employees.id', '=', 'users.employee_id');
-                $query->select(['users.*']);
 
-                $lastUnitRelationID = request()->input('last_unit_id');
-
-                $conditionBuilder = function($builder, $relationIds) {
-                    foreach ($relationIds as $index => $relationId) {
-                        $builder->orWhere(function($builder) use ($relationIds, $index, $relationId) {
-                            for ($i = 0; $i <= $index; $i++) {
-                                $fieldName = ['outlet_id', 'cabang_id', 'area_id', 'kanwil_id', 'corporate_id'][$i];
-                                $builder->where("employees.$fieldName", '=', $i === $index ? $relationId : 0);
-                            }
-                        });
-                    }
-                };
-
-                $query->where(function($builder) use ($lastUnitRelationID, $conditionBuilder) {
-                    $relationIds = [0, 0, 0, 0, $lastUnitRelationID];
-                    $conditionBuilder($builder, $relationIds);
+            $users->when(request()->filled('department'), function ($query) {
+                $query->whereHas('employee', function ($query) {
+                    $query->wherRaw('LOWER("department") LIKE ? ', '%'.strtolower(request()->query('department')).'%');
                 });
             });
+
             $users->orderBy('name', 'asc');
 
 
@@ -88,7 +73,8 @@ class UserService extends BaseService
                 $userData = $users->where('id', '=', $auth->id)->first();
             } else if ($roleLevel === 'admin_branch') {
                 $empUnit = $auth->employee->getRelatedUnit();
-
+                $lastUnit = $auth->employee->getLastUnit();
+                $empUnit[] = $lastUnit;
                 $relationIds = [];
 
                 if ($requestRelationID = $this->getRequestedUnitID()) {
@@ -103,9 +89,9 @@ class UserService extends BaseService
                         ->orWhereIn('kanwil_id', $relationIds)
                         ->orWhereIn('area_id', $relationIds)
                         ->orWhereIn('cabang_id', $relationIds)
-                        ->orWhereIn('outlet_id', $relationIds)
-                        ->with(['job', 'corporate', 'kanwil', 'area', 'cabang', 'outlet']);
-                })->paginate($data->get('per_page', 10));
+                        ->orWhereIn('outlet_id', $relationIds);
+                })
+                ->paginate($data->get('per_page', 10));
             }
 
             return response()->json([

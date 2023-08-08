@@ -71,6 +71,7 @@ export default {
             perPage: 10,
             filterName: '',
             filterEmail: '',
+            filterDepartment: '',
             filter: {
                 unit_relation_id: ''
             },
@@ -141,8 +142,9 @@ export default {
                     params.filter.map((item) => {
                         if (item.field === 'name') this.filterName = item.value
                         if (item.field === 'email') this.filterEmail = item.value
+                        if (item.field === 'employee.department.name') this.filterDepartment = item.value
                     })
-                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&email=${this.filterEmail}&last_unit_id=${this.filter.unit_relation_id}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&email=${this.filterEmail}&last_unit_id=${this.filter.unit_relation_id}&department=${this.filterDepartment}`
                 },
                 ajaxResponse: function (url, params, response) {
                     return {
@@ -178,6 +180,18 @@ export default {
                         headerFilter:"input"
                     },
                     {
+                        title: 'Department',
+                        field: 'employee.department.name',
+                        headerFilter:"input",
+                        formatter: function(row) {
+                            if (row.getData().employee.department.name === null) {
+                                return `<span class='badge badge-danger '>No Department</span>`;
+                            } else {
+                                return row.getData().employee.department.name;
+                            }
+                        }
+                    },
+                    {
                         title: 'Role',
                         field: '',
                         hozAlign: 'center',
@@ -186,7 +200,7 @@ export default {
                         width: 300,
                         formatter: function(row) {
                            return row.getData().roles.map(function(role) {
-                                return `<span class='badge badge-danger '>${role.name.toUpperCase()}</span>`;
+                                return `<span class='badge badge-success '>${role.name.toUpperCase()}</span>`;
                             }).join(" ");
                         }
                     },
