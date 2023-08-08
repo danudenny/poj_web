@@ -30,38 +30,45 @@ class SyncEmployeesJob implements ShouldQueue
     public function handle(): void
     {
 
-        DB::transaction(function () {
-            $employees = Employee::with('user')->get();
+        $employees = Employee::all();
+        $users = User::whereIn('employee_id', $employees->pluck('id'))->get();
 
-            foreach ($employees as $employee) {
-                $userData = [
-                    'name' => $employee->name,
-                    'email' => $employee->work_email,
-                    'email_verified_at' => now(),
-                    'password' => '$2y$10$m54GoOajOHJ4AYs2VnfP7e3hPBf3pJw.Omimsct0m6gDcHCt8hTHi',
-                    'is_active' => true,
-                    'is_new' => true,
-                ];
+        $employees->chunk(1000, function ($employeesChunk) use ($users) {
+            $usersChunk = $users->whereIn('employee_id', $employeesChunk->pluck('id'));
 
-                if ($employee->user) {
-                    $employee->user->update($userData);
-                } else {
-                    $userData['created_at'] = now();
-                    $userData['updated_at'] = now();
+            User::withoutBroadcasting(function () use ($usersChunk, $employeesChunk) {
+                foreach ($usersChunk as $user) {
+                    $employee = $employeesChunk->firstWhere('id', $user->employee_id);
 
-                    $user = $employee->user()->create($userData);
+                    $userData = [
+                        'name' => $employee->name,
+                        'email' => $employee->work_email,
+                        'email_verified_at' => now(),
+                        'password' => '$2y$10$m54GoOajOHJ4AYs2VnfP7e3hPBf3pJw.Omimsct0m6gDcHCt8hTHi',
+                        'is_active' => true,
+                        'is_new' => true,
+                    ];
+
+                    if ($user->exists) {
+                        $user->update($userData);
+                    } else {
+                        $userData['created_at'] = now();
+                        $userData['updated_at'] = now();
+
+                        $user = User::create($userData);
+                    }
 
                     $user->assignRole('staff');
                 }
-            }
-
-            $usersToDelete = User::whereNotIn('employee_id', $employees->pluck('id'))
-                ->where('name', '!=', 'Superadmin')
-                ->get();
-
-            User::destroy($usersToDelete->pluck('id')->toArray());
-            DB::commit();
+            });
         });
+
+        $usersToDelete = $users->filter(function ($user) use ($employees) {
+            return !$employees->contains('id', $user->employee_id) && $user->name !== 'Superadmin';
+        });
+
+        User::destroy($usersToDelete->pluck('id')->toArray());
+
     }
 
 }

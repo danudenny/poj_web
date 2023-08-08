@@ -33,18 +33,6 @@
                                                     >
                                                     </multiselect>
                                                 </div>
-<!--                                                <div class="col-md-4">-->
-<!--                                                    <div class="d-flex justify-content-end mb-2">-->
-<!--                                                        <button class="btn btn-warning"  :disabled="syncLoading" type="button" @click="syncFromEmployee">-->
-<!--                                                            <span v-if="syncLoading">-->
-<!--                                                                <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)-->
-<!--                                                            </span>-->
-<!--                                                            <span v-else>-->
-<!--                                                                <i class="fa fa-recycle"></i> &nbsp; Sync From Employee-->
-<!--                                                            </span>-->
-<!--                                                        </button>-->
-<!--                                                    </div>-->
-<!--                                                </div>-->
                                             </div>
                                         </div>
                                     </div>
@@ -135,12 +123,14 @@ export default {
         groupBy: 'employee.last_unit.name',
         initializeUsersTable() {
             const ls = localStorage.getItem('my_app_token')
+            const selectedROle = localStorage.getItem('USER_ROLES')
             this.table = new Tabulator(this.$refs.usersTable, {
                 ajaxURL:"/api/v1/admin/user",
                 ajaxConfig: {
                     headers: {
                         Authorization: `Bearer ${ls}`,
-                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
+                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? '',
+                        "X-Selected-Role": JSON.parse(selectedROle)
                     },
                 },
                 ajaxParams: {
