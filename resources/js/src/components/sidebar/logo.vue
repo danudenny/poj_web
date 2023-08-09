@@ -3,7 +3,7 @@
     <img
       style="height: 49px;"
       class="img-fluid for-light"
-      src="http://alakad.optimajasa.co.id:9000/att-poj-bucket/logo/Logo_Aplikasi_Absen-2-1-removebg-preview (1).png"
+      src="../../assets/images/logo_main.png"
       alt=""
       width="160"
     /><img

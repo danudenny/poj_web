@@ -54,6 +54,21 @@
                                                     </td>
                                                 </tr>
                                                 <tr class="text-center">
+                                                    <td>Operating Unit</td>
+                                                    <td>ERP</td>
+                                                    <td>Alakad Unit</td>
+                                                    <td>
+                                                        <button class="btn btn-warning"  :disabled="syncOperatingUnitLoading" type="button" @click="syncOperatingUnitAction">
+                                                            <span v-if="syncOperatingUnitLoading">
+                                                                <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
+                                                            </span>
+                                                            <span v-else>
+                                                                <i class="fa fa-recycle"></i> &nbsp; Sync Data
+                                                            </span>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                                <tr class="text-center">
                                                     <td>Corporate</td>
                                                     <td>ERP</td>
                                                     <td>Alakad Unit</td>
@@ -202,6 +217,7 @@ export default {
             syncJobLoading: false,
             syncDepartmentLoading: false,
             syncPartnerLoading: false,
+            syncOperatingUnitLoading: false,
             countdown: 0,
             interval: null,
         }
@@ -485,6 +501,33 @@ export default {
                     useToast().error("Failed to Sync Data! Check connection.");
                 }).finally(() => {
                     this.syncPartnerLoading = false;
+                    clearInterval(this.timerId);
+                });
+        },
+        async syncOperatingUnitAction() {
+            this.syncOperatingUnitLoading = true;
+            this.loading = true
+            this.startCountdown();
+
+            await axios.create({
+                baseURL: import.meta.env.VITE_SYNC_ODOO_URL,
+            }).get('/sync-kantor-perwakilan')
+                .then(async (response) => {
+                    if (await response.data.status === 201) {
+                        this.syncOperatingUnitLoading = false;
+                        this.loading = false;
+                        useToast().success(response.data.message);
+                    } else {
+                        this.syncOperatingUnitLoading = false;
+                        this.loading = false;
+                        useToast().error(response.data.message);
+                    }
+                }).catch(async () => {
+                    this.syncOperatingUnitLoading = false;
+                    this.loading = false;
+                    useToast().error("Failed to Sync Data! Check connection.");
+                }).finally(() => {
+                    this.syncOperatingUnitLoading = false;
                     clearInterval(this.timerId);
                 });
         },
