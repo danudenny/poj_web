@@ -65,8 +65,9 @@ class User extends Authenticatable
     public function getIsInRepresentativeUnitAttribute() {
         $employee = $this->employee;
 
-        return KantorPerwakilan::query()
-            ->where('id', '=', $employee->getLastUnitID())
+        return Unit::query()
+            ->where('relation_id', '=', $employee->default_operating_unit_id)
+            ->where('unit_level', '=', Unit::UnitLevelOperatingUnit)
             ->exists();
     }
 

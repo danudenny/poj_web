@@ -22,12 +22,17 @@ use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
  * @property int $late_buffer
  *
  * Relations:
+ * @property-read OperatingUnitCorporate[] $operatingUnitCorporates
  * @property-read OperatingUnitKanwil $operatingUnitKanwil
  */
 class Unit extends Model
 {
     use HasFactory;
     use QueriesExpressions;
+
+    const UnitLevelOperatingUnit = 2;
+    const UnitLevelCorporate = 3;
+    const UnitLevelKanwil = 4;
 
     protected $fillable = [
         'name',
@@ -81,5 +86,10 @@ class Unit extends Model
     public function operatingUnitKanwil()
     {
         return $this->hasOne(OperatingUnitKanwil::class, 'kanwil_relation_id', 'relation_id');
+    }
+
+    public function operatingUnitCorporates()
+    {
+        return $this->hasMany(OperatingUnitCorporate::class, 'operating_unit_relation_id', 'relation_id');
     }
 }

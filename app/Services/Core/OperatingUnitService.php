@@ -80,7 +80,7 @@ class OperatingUnitService extends BaseService
             $query = OperatingUnitCorporate::query();
 
             if ($representativeUnitID = $request->input('representative_unit_id')) {
-                $query->where('kantor_perwakilan_id', '=', $representativeUnitID);
+                $query->where('operating_unit_relation_id', '=', $representativeUnitID);
             }
 
             return response()->json([
@@ -128,23 +128,24 @@ class OperatingUnitService extends BaseService
              */
             $user = $request->user();
 
-            if (!$user->hasPermissionName(Permission::AssignOperatingUnit)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => "You don't have access!",
-                ], ResponseAlias::HTTP_FORBIDDEN);
-            }
+//            if (!$user->hasPermissionName(Permission::AssignOperatingUnit)) {
+//                return response()->json([
+//                    'status' => false,
+//                    'message' => "You don't have access!",
+//                ], ResponseAlias::HTTP_FORBIDDEN);
+//            }
 
             /**
-             * @var KantorPerwakilan $representOffice
+             * @var Unit $operatingUnit
              */
-            $representOffice = KantorPerwakilan::query()
+            $operatingUnit = Unit::query()
                 ->where('id', '=', $request->input('representative_office_id'))
+                ->where('unit_level', '=', Unit::UnitLevelOperatingUnit)
                 ->first();
-            if (!$representOffice) {
+            if (!$operatingUnit) {
                 return response()->json([
                     'status' => false,
-                    'message' => "Kantor perwakilan not found!",
+                    'message' => "Operating Unit not found!",
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
@@ -153,13 +154,13 @@ class OperatingUnitService extends BaseService
             $corporates = $request->input('corporates');
 
             foreach ($corporates as $corporate) {
-                $operatingUnitCorporate = $representOffice
+                $operatingUnitCorporate = $operatingUnit
                     ->operatingUnitCorporates()
                     ->where('corporate_relation_id', '=', $corporate['unit_relation_id'])
                     ->first();
                 if (!$operatingUnitCorporate) {
                     $operatingUnitCorporate = new OperatingUnitCorporate();
-                    $operatingUnitCorporate->kantor_perwakilan_id = $representOffice->id;
+                    $operatingUnitCorporate->operating_unit_relation_id = $operatingUnit->relation_id;
                     $operatingUnitCorporate->corporate_relation_id = $corporate['unit_relation_id'];
                     $operatingUnitCorporate->save();
                 }
@@ -200,12 +201,12 @@ class OperatingUnitService extends BaseService
              */
             $user = $request->user();
 
-            if (!$user->hasPermissionName(Permission::DeleteOperatingUnit)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => "You don't have access!",
-                ], ResponseAlias::HTTP_FORBIDDEN);
-            }
+//            if (!$user->hasPermissionName(Permission::DeleteOperatingUnit)) {
+//                return response()->json([
+//                    'status' => false,
+//                    'message' => "You don't have access!",
+//                ], ResponseAlias::HTTP_FORBIDDEN);
+//            }
 
             /**
              * @var OperatingUnitKanwil $operatingUnitKanwil
@@ -262,12 +263,12 @@ class OperatingUnitService extends BaseService
              */
             $user = $request->user();
 
-            if (!$user->hasPermissionName(Permission::AssignOperatingUnit)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => "You don't have access!",
-                ], ResponseAlias::HTTP_FORBIDDEN);
-            }
+//            if (!$user->hasPermissionName(Permission::AssignOperatingUnit)) {
+//                return response()->json([
+//                    'status' => false,
+//                    'message' => "You don't have access!",
+//                ], ResponseAlias::HTTP_FORBIDDEN);
+//            }
 
             DB::beginTransaction();
 
@@ -305,12 +306,12 @@ class OperatingUnitService extends BaseService
              */
             $user = $request->user();
 
-            if (!$user->hasPermissionName(Permission::DeleteOperatingUnit)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => "You don't have access!",
-                ], ResponseAlias::HTTP_FORBIDDEN);
-            }
+//            if (!$user->hasPermissionName(Permission::DeleteOperatingUnit)) {
+//                return response()->json([
+//                    'status' => false,
+//                    'message' => "You don't have access!",
+//                ], ResponseAlias::HTTP_FORBIDDEN);
+//            }
 
             $operatingUnitUser = OperatingUnitUser::query()
                 ->where('user_id', '=', $request->input('user_id'))

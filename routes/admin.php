@@ -203,6 +203,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::get('all', [UnitController::class, 'allUnitNoFilter']);
         Route::get('paginated', [UnitController::class, 'paginatedListUnits']);
         Route::put('update/{id}', [UnitController::class, 'update']);
+        Route::get('detail/{id}', [UnitController::class, 'detailUnit']);
 
     });
     // End Unit

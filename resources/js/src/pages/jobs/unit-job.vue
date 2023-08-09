@@ -94,13 +94,13 @@ export default {
             },
             unitPagination: {
                 currentPage: 1,
-                pageSize: 10,
+                pageSize: 20,
                 onSearch: true,
                 name: ''
             },
             parentJobPagination: {
                 currentPage: 1,
-                pageSize: 10,
+                pageSize: 20,
                 onSearch: true,
                 name: ''
             },

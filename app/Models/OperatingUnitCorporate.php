@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Attributes:
  * @property-read int $id
- * @property int $kantor_perwakilan_id
+ * @property int $operating_unit_relation_id
  * @property int $corporate_relation_id
  *
  * Relations:
- * @property-read KantorPerwakilan $kantorPerwakilan
+ * @property-read Unit $operatingUnit
  * @property-read Unit $corporate
  * @property-read OperatingUnitKanwil[] $operatingUnitKanwils
  */
@@ -46,12 +46,14 @@ class OperatingUnitCorporate extends Model
         return $this->operatingUnitKanwils;
     }
 
-    public function kantorPerwakilan() {
-        return $this->belongsTo(KantorPerwakilan::class, 'kantor_perwakilan_id');
+    public function operatingUnit() {
+        return $this->belongsTo(Unit::class, 'operating_unit_relation_id', 'relation_id')
+            ->where('units.unit_level', '=', Unit::UnitLevelOperatingUnit);
     }
 
     public function corporate() {
-        return $this->belongsTo(Unit::class, 'corporate_relation_id', 'relation_id');
+        return $this->belongsTo(Unit::class, 'corporate_relation_id', 'relation_id')
+            ->where('units.unit_level', '=', Unit::UnitLevelCorporate);
     }
 
     public function operatingUnitKanwils() {

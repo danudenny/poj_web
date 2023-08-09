@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * Attributes:
  * @property-read int $id
+ * @property int $operating_unit_odoo_id
  *
  * Relations:
  * @property-read OperatingUnitCorporate[] $operatingUnitCorporates

@@ -30,7 +30,6 @@ import {TabulatorFull as Tabulator} from 'tabulator-tables';
 export default {
     data() {
         return {
-            regionals: [],
             loading: false,
             currentPage: 1,
             pageSize: 10,
@@ -38,31 +37,20 @@ export default {
         }
     },
     async mounted() {
-        await this.getRegionals();
         this.initializeRegionalTable();
     },
     methods: {
-        async getRegionals() {
-            this.loading = true;
-            await this.$axios.get(`/api/v1/admin/kantor_perwakilan`)
-                .then(response => {
-                    this.regionals = response.data.data;
-                    console.log(this.regionals);
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-        },
         initializeRegionalTable() {
             const ls = localStorage.getItem('my_app_token');
             const table = new Tabulator(this.$refs.regionalTable, {
-                ajaxURL: '/api/v1/admin/kantor_perwakilan',
+                ajaxURL: '/api/v1/admin/unit/paginated',
                 ajaxConfig: {
                     headers: {
                         Authorization: `Bearer ${ls}`,
                         "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
                     },
                 },
+                filterMode:"remote",
                 ajaxParams: {
                     page: this.currentPage,
                     size: this.pageSize,
@@ -74,8 +62,15 @@ export default {
                     }
                 },
                 ajaxURLGenerator: (url, config, params) => {
-                    if (params.field === 'name') this.filterName = params.value
-                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}`
+                    let localFilter = {
+                        name: ''
+                    }
+
+                    params.filter.map((item) => {
+                        if (item.field === 'name') localFilter.name = item.value
+                    })
+
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${localFilter.name}&unit_level=2`
                 },
                 layout: 'fitColumns',
                 columns: [

@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int $area_id
  * @property int $kanwil_id
  * @property int $corporate_id
+ * @property int $default_operating_unit_id
  *
  * Relations:
  * @property-read User $user
@@ -29,6 +30,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read Unit $corporate
  * @property-read EmployeeAttendance[] $attendances
  * @property-read EmployeeTimesheetSchedule[] $timesheetSchedules
+ * @property-read Unit $operatingUnit
+ * @property-read Job $job
  * @method static find($id)
  * @method static leftJoin(string $string, string $string1, string $string2, string $string3)
  */
@@ -59,7 +62,9 @@ class Employee extends Model
      * @return int|null
      */
     public function getLastUnitID(): int|null {
-        if ($this->outlet_id) {
+        if ($this->default_operating_unit_id) {
+            return $this->default_operating_unit_id;
+        } else if ($this->outlet_id) {
             return $this->outlet_id;
         } else if ($this->cabang_id) {
             return $this->cabang_id;
@@ -78,7 +83,9 @@ class Employee extends Model
      * @return Unit|null
      */
     public function getLastUnit(): Unit|null {
-        if ($this->outlet) {
+        if ($this->operatingUnit) {
+            return $this->operatingUnit;
+        } else if ($this->outlet) {
             return $this->outlet;
         } else if ($this->cabang) {
             return $this->cabang;
@@ -99,7 +106,9 @@ class Employee extends Model
     public function getAllUnitID(): array {
         $unitIDs = [];
 
-        if ($this->outlet_id) {
+        if ($this->default_operating_unit_id) {
+            $unitIDs[] = $this->default_operating_unit_id;
+        } else if ($this->outlet_id) {
             $unitIDs[] = $this->outlet_id;
         } else if ($this->cabang_id) {
             $unitIDs[] = $this->cabang_id;
@@ -120,7 +129,9 @@ class Employee extends Model
     public function getAllUnits(): array {
         $units = [];
 
-        if ($this->outlet) {
+        if ($this->operatingUnit) {
+            $units[] = $this->operatingUnit;
+        } else if ($this->outlet) {
             $units[] = $this->outlet;
         } else if ($this->cabang) {
             $units[] = $this->cabang;
@@ -137,7 +148,7 @@ class Employee extends Model
 
     public function hasUnitID(int $unitID): bool {
         return (
-            $this->outlet_id == $unitID || $this->cabang_id == $unitID || $this->area_id == $unitID || $this->kanwil_id == $unitID || $this->corporate_id == $unitID
+            $this->default_operating_unit_id == $unitID || $this->outlet_id == $unitID || $this->cabang_id == $unitID || $this->area_id == $unitID || $this->kanwil_id == $unitID || $this->corporate_id == $unitID
         );
     }
 
@@ -267,6 +278,13 @@ class Employee extends Model
     public function backup(): HasMany
     {
         return $this->hasMany(BackupEmployee::class, 'employee_id')->with(['employee', 'backup']);
+    }
+
+    /**
+     * @return BelongsTo
+     */
+    public function operatingUnit() {
+        return $this->belongsTo(Unit::class, 'default_operating_unit_id', 'relation_id');
     }
 
     public function getActiveNormalSchedule(string $timezone = 'UTC'): EmployeeTimesheetSchedule|null {

@@ -32,6 +32,7 @@ class OperatingUnitKanwil extends Model
     }
 
     public function kanwil() {
-        return $this->belongsTo(Unit::class, 'kanwil_relation_id', 'relation_id');
+        return $this->belongsTo(Unit::class, 'kanwil_relation_id', 'relation_id')
+            ->where('units.unit_level', '=', Unit::UnitLevelKanwil);
     }
 }

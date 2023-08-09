@@ -69,12 +69,12 @@ class UnitHasJobService extends BaseService
              */
             $user = $request->user();
 
-            if (!$user->hasPermissionName(Permission::AssignParentJob)) {
-                return response()->json([
-                    'status' => false,
-                    'message' => "You don't have access",
-                ], ResponseAlias::HTTP_FORBIDDEN);
-            }
+//            if (!$user->hasPermissionName(Permission::AssignParentJob)) {
+//                return response()->json([
+//                    'status' => false,
+//                    'message' => "You don't have access",
+//                ], ResponseAlias::HTTP_FORBIDDEN);
+//            }
 
             /**
              * @var UnitHasJob $unitJob

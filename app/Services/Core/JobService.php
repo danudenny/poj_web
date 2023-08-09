@@ -6,6 +6,7 @@ use App\Models\Employee;
 use App\Models\Job;
 use App\Models\JobHasUnit;
 use App\Models\Unit;
+use App\Models\UnitHasJob;
 use App\Services\BaseService;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -329,17 +330,17 @@ class JobService extends BaseService
         try {
             $emp = Employee::leftJoin('units AS u', 'u.relation_id', '=', 'employees.unit_id')
                 ->leftJoin('jobs AS j', 'employees.job_id', '=', 'j.odoo_job_id')
-                ->select('j.id as job_id', 'u.relation_id as unit_id')
+                ->select('j.odoo_job_id as job_id', 'u.relation_id as unit_id')
                 ->whereNotNull('j.id')
                 ->whereNotNull('u.relation_id')
                 ->distinct()
                 ->orderBy('job_id')
                 ->chunk(1000, function ($data) {
                     foreach ($data as $item) {
-                        JobHasUnit::updateOrInsert(
+                        UnitHasJob::updateOrInsert(
                             [
-                                'job_id' => $item->job_id,
-                                'unit_id' => $item->unit_id,
+                                'odoo_job_id' => $item->job_id,
+                                'unit_relation_id' => $item->unit_id,
                             ],
                             []
                         );

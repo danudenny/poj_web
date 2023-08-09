@@ -13,8 +13,10 @@ use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class UnitService extends BaseService
 {
@@ -349,5 +351,30 @@ class UnitService extends BaseService
             'message' => 'Success Fetch Data',
             'data' => $datas
         ]);
+    }
+
+    public function detailUnit(Request $request, int $id) {
+        try {
+            $unit = Unit::query()
+                ->where('id', '=', $id)
+                ->first();
+            if (!$unit) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unit not found'
+                ], ResponseAlias::HTTP_NOT_FOUND);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Success Fetch Data',
+                'data' => $unit
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

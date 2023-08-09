@@ -77,7 +77,7 @@ export default {
     methods: {
         async getKantorPerwakilan() {
             this.loading = true;
-            await this.$axios.get(`/api/v1/admin/kantor_perwakilan/view/${this.$route.params.id}`)
+            await this.$axios.get(`/api/v1/admin/unit/detail/${this.$route.params.id}`)
                 .then(response => {
                     this.item = response.data.data;
                     console.log(this.item)

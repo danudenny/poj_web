@@ -21,6 +21,16 @@ class Job extends Authenticatable
     use HasFactory, HasRoles;
     protected $guard_name = 'web';
 
+    public function hasPermissionName(string $permissionName): bool {
+        foreach ($this->roles->flatMap->permissions as $permission) {
+            if ($permission->name == $permissionName) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function employees(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'job_id', 'odoo_job_id');
