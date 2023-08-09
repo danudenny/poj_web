@@ -391,8 +391,8 @@ export default {
             marker: null,
             incidentImages: [
                 {
-                    src: 'http://alakad.optimajasa.co.id:9000/att-poj-bucket/uploads/incident/64aab2e041114_pagar_rusak.jpeg',
-                    description: 'Sunken dreams II. by Arbebuk',
+                    src: '../../assets/images/no_image.jpg',
+                    description: 'No Image',
                 }
             ]
         }

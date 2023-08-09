@@ -10,7 +10,7 @@
                                 <a class="logo">
                                     <img
                                         class="img-fluid for-light"
-                                        src="http://alakad.optimajasa.co.id:9000/att-poj-bucket/logo/Logo_Aplikasi_Absen-2-2-removebg-preview (1).png"
+                                        src="../assets/images/logo_square.png"
                                         alt="loginpage"
                                         width="150"
                                     />
