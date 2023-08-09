@@ -100,7 +100,7 @@
             "type": "link",
             "active": false,
             "path": "/management/unit-job",
-            "permission" : "job-assign-parent"
+            "permission" : "job-assign-parent-create"
         },
         {
             "title": "Working Area",

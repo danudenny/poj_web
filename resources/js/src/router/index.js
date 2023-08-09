@@ -389,7 +389,7 @@ const routes =[
               meta: {
                   title: 'POJ - Unit Job',
                   requiresAuth: true,
-                  permission : 'job-assign-parent',
+                  permission : 'job-assign-parent-create',
               }
           },
       ]
