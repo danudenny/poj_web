@@ -115,7 +115,7 @@ import AdminUnit from "../pages/admin-unit/index.vue";
 // Job
 import Job from "../pages/jobs/index.vue";
 import JobEdit from "../pages/jobs/edit.vue";
-import JobUnit from '../pages/jobs/unit-job.vue'
+import JobCanvas from "../pages/jobs/canvas.vue";
 
 // Team
 import Team from "../pages/teams/index.vue";
@@ -383,11 +383,21 @@ const routes =[
               }
           },
           {
-              path: '/management/unit-job',
+              path: '/management/struktur-jabatan',
               name: 'unit-job',
               component: UnitJob,
               meta: {
-                  title: 'POJ - Unit Job',
+                  title: 'POJ - Struktur Jabatan',
+                  requiresAuth: true,
+                  permission : 'job-assign-parent-create',
+              }
+          },
+          {
+              path: '/management/struktur-jabatan/canvas/:id',
+              name: 'unit-job-canvas',
+              component: JobCanvas,
+              meta: {
+                  title: 'POJ - Struktur Jabatan Canvas',
                   requiresAuth: true,
                   permission : 'job-assign-parent-create',
               }
@@ -704,15 +714,15 @@ const routes =[
     },
 
     {
-        path: '/kantor-perwakilan',
+        path: '/operating-unit',
         component: Body,
         children: [
             {
                 path: '',
-                name: 'kantor-perwakilan',
+                name: 'operating-unit',
                 component: Regional,
                 meta: {
-                    title: 'POJ - Kantor Perwakilan',
+                    title: 'POJ - Operating Unit',
                     requiresAuth: true,
                     permission: 'unit-read',
                 },

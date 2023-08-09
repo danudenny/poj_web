@@ -18,7 +18,6 @@ import axios from 'axios';
 import 'tabulator-tables/dist/css/tabulator.min.css';
 import '@vuepic/vue-datepicker/dist/main.css';
 
-
 const token = localStorage.getItem(store.TOKEN_STORAGE_KEY);
 if (token) {
     store.commit('setToken', token);

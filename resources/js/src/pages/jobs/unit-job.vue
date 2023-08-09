@@ -8,7 +8,7 @@
                     <div class="col-md-12">
                         <div class="card card-absolute">
                             <div class="card-header bg-primary">
-                                <h5>Job List</h5>
+                                <h5>Unit Job List</h5>
                             </div>
                             <div class="card-body">
                                 <div v-if="loading" class="text-center">
@@ -236,13 +236,13 @@ export default {
                     },
                     {
                         title: '',
-                        formatter: (cell) => {
-                            return `<button class="button-icon button-success" data-bs-toggle="modal" data-bs-target="#jobParentAssignment"><i data-action="assign" class="fa fa-plus-square"></i> </button>`
-                        },
+                        formatter: this.viewDetailsFormatter,
                         width: 100,
                         headerSort: false,
                         hozAlign: 'center',
-                        cellClick: this.handleActionButtonClick
+                        cellClick: (e, cell) => {
+                            this.handleActionButtonClick(e, cell);
+                        }
                     },
                 ],
                 pagination: true,
@@ -258,8 +258,25 @@ export default {
             });
             this.loading = false
         },
+        viewDetailsFormatter(cell) {
+            const rowData = cell.getRow().getData();
+            return `
+                <button class="button-icon button-success" data-action="view" data-row-id="${rowData.id}"><i data-action="view" class="fa fa-eye"></i> </button>
+                <button class="button-icon button-success" data-action="assign" data-bs-toggle="modal" data-bs-target="#jobParentAssignment"><i data-action="assign" class="fa fa-plus-square"></i> </button>
+             `;
+        },
         handleActionButtonClick(e, cell) {
-            this.selectedAssignedJob = cell.getRow().getData()
+            const action = e.target.dataset.action
+            const rowData = cell.getRow().getData();
+
+            if (action === 'view') {
+                this.$router.push({
+                    name: 'unit-job-canvas',
+                    params: { id: rowData.unit_relation_id },
+                })
+            } else if (action === 'assign') {
+                this.selectedAssignedJob = rowData
+            }
         },
         onJobParentAssigned() {
             if (this.selectedAssignedJob === null || this.selectedParentJobAssignment === null) {

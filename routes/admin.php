@@ -387,6 +387,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
 
     Route::group(['prefix' => 'unit-job'], function() {
         Route::get('', [UnitJobController::class, 'index']);
+        Route::get('chart-view', [UnitJobController::class, 'chartView']);
         Route::post('assign', [UnitJobController::class, 'assign']);
         Route::post('create', [UnitJobController::class, 'create']);
     });

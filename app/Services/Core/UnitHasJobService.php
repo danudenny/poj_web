@@ -8,6 +8,7 @@ use App\Models\Permission;
 use App\Models\UnitHasJob;
 use App\Models\User;
 use App\Services\BaseService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
@@ -162,5 +163,15 @@ class UnitHasJobService extends BaseService
                 'message' => $exception->getMessage(),
             ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public function chartView(): JsonResponse
+    {
+        $relationId = request()->query('relation_id');
+        return response()->json([
+            'status' => true,
+            'message' => 'Success',
+            'data' => UnitHasJob::getHierarchicalData(intval($relationId))
+        ]);
     }
 }

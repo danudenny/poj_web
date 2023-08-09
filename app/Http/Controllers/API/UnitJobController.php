@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateUnitJobRequest;
 use App\Http\Requests\Job\AssignParentJobRequest;
 use App\Services\Core\UnitHasJobService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class UnitJobController extends Controller
@@ -20,5 +21,10 @@ class UnitJobController extends Controller
 
     public function create(CreateUnitJobRequest $request, UnitHasJobService $service) {
         return $service->createUnitJob($request);
+    }
+
+    public function chartView(UnitHasJobService $service): JsonResponse
+    {
+        return $service->chartView();
     }
 }
