@@ -10,11 +10,12 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read int $id
  * @property int $operating_unit_relation_id
  * @property int $corporate_relation_id
+ * @property int $unit_level
  *
  * Relations:
  * @property-read Unit $operatingUnit
  * @property-read Unit $corporate
- * @property-read OperatingUnitKanwil[] $operatingUnitKanwils
+ * @property-read OperatingUnitDetail[] $operatingUnitDetails
  */
 class OperatingUnitCorporate extends Model
 {
@@ -22,7 +23,6 @@ class OperatingUnitCorporate extends Model
 
     protected $with = [
         'corporate',
-        'operatingUnitKanwils'
     ];
 
     protected $appends = [
@@ -42,10 +42,6 @@ class OperatingUnitCorporate extends Model
         return $this->corporate;
     }
 
-    public function getOperatingUnitKanwilsAttribute() {
-        return $this->operatingUnitKanwils;
-    }
-
     public function operatingUnit() {
         return $this->belongsTo(Unit::class, 'operating_unit_relation_id', 'relation_id')
             ->where('units.unit_level', '=', Unit::UnitLevelOperatingUnit);
@@ -56,7 +52,7 @@ class OperatingUnitCorporate extends Model
             ->where('units.unit_level', '=', Unit::UnitLevelCorporate);
     }
 
-    public function operatingUnitKanwils() {
-        return $this->hasMany(OperatingUnitKanwil::class, 'operating_unit_corporate_id');
+    public function operatingUnitDetails() {
+        return $this->hasMany(OperatingUnitDetail::class, 'operating_unit_corporate_id');
     }
 }

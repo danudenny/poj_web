@@ -14,6 +14,7 @@ use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
  * Attributes:
  * @property-read int $id
  * @property string $name
+ * @property int $parent_unit_id
  * @property int $relation_id
  * @property float $lat
  * @property float $long
@@ -23,16 +24,20 @@ use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
  *
  * Relations:
  * @property-read OperatingUnitCorporate[] $operatingUnitCorporates
- * @property-read OperatingUnitKanwil $operatingUnitKanwil
+ * @property-read OperatingUnitDetail $operatingUnitDetail
  */
 class Unit extends Model
 {
     use HasFactory;
     use QueriesExpressions;
 
+    const UnitLevelPOJ = 1;
     const UnitLevelOperatingUnit = 2;
     const UnitLevelCorporate = 3;
     const UnitLevelKanwil = 4;
+    const UnitLevelArea = 5;
+    const UnitLevelCabang = 6;
+    const UnitLevelOutlet = 7;
 
     protected $fillable = [
         'name',
@@ -83,9 +88,9 @@ class Unit extends Model
             ->withPivot('is_camera', 'is_upload', 'is_reporting', 'is_mandatory_reporting', 'type', 'total_reporting', 'reporting_names');
     }
 
-    public function operatingUnitKanwil()
+    public function operatingUnitDetail()
     {
-        return $this->hasOne(OperatingUnitKanwil::class, 'kanwil_relation_id', 'relation_id');
+        return $this->hasOne(OperatingUnitDetail::class, 'unit_relation_id', 'relation_id');
     }
 
     public function operatingUnitCorporates()

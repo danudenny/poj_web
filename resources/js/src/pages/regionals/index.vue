@@ -70,7 +70,7 @@ export default {
                         if (item.field === 'name') localFilter.name = item.value
                     })
 
-                    return `${url}?page=${params.page}&per_page=${params.size}&name=${localFilter.name}&unit_level=2`
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${localFilter.name}&unit_level=2,1`
                 },
                 layout: 'fitColumns',
                 columns: [

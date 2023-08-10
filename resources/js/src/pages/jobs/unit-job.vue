@@ -109,6 +109,7 @@ export default {
                     name: null
                 },
                 unit: {
+                    relation_id: null,
                     name: null
                 }
             },
@@ -122,11 +123,14 @@ export default {
     },
     async mounted() {
         this.initializeUnitJob();
-        this.getUnitsData()
     },
     methods: {
         getUnitsData() {
-            this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.unitPagination.pageSize}&page=${this.unitPagination.currentPage}&name=${this.unitPagination.name}`)
+            if (this.selectedAssignedJob.unit.relation_id === null) {
+                return
+            }
+
+            this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.unitPagination.pageSize}&page=${this.unitPagination.currentPage}&name=${this.unitPagination.name}&unit_relation_id_structured=${this.selectedAssignedJob.unit.relation_id}`)
                 .then(response => {
                     this.units = response.data.data.data
                     this.unitPagination.onSearch = false
@@ -276,6 +280,7 @@ export default {
                 })
             } else if (action === 'assign') {
                 this.selectedAssignedJob = rowData
+                this.getUnitsData()
             }
         },
         onJobParentAssigned() {
@@ -288,13 +293,13 @@ export default {
                 parent_unit_has_job_id: this.selectedParentJobAssignment.id
             }).then(response => {
                 useToast().success("Success to create data", { position: 'bottom-right' });
-                this.initializeUnitJob()
                 this.parentJobs = []
                 this.selectedAssignedJob = {
                     job: {
                         name: null
                     },
                     unit: {
+                        relation_id: null,
                         name: null
                     }
                 }

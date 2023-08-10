@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Role;
 use App\Models\User;
 use App\Services\Core\NotificationService;
 use Illuminate\Support\Arr;
@@ -136,5 +137,45 @@ abstract class BaseService
         }
 
         return $requestID;
+    }
+
+    protected function requesedRoleLevel(): string|null {
+        /**
+         * @var User $user
+         */
+        $user = request()->user();
+
+        if ($requestedRole = (string) request()->header('X-Selected-Role')) {
+            /**
+             * @var Role $role
+             */
+            $role = Role::query()->where('name', '=', $requestedRole)->first();
+            return $role->role_level;
+        }
+
+
+        return $user->getHighestRole()->role_level;
+    }
+
+    protected function getRequestedRole(): Role|\Spatie\Permission\Models\Role {
+        /**
+         * @var User $user
+         */
+        $user = request()->user();
+
+        if ($requestedRole = (string) request()->header('X-Selected-Role')) {
+            /**
+             * @var Role $role
+             */
+            $role = Role::query()->where('name', '=', $requestedRole)->first();
+            return $role;
+        }
+
+
+        return $user->getHighestRole();
+    }
+
+    protected function isRequestedRoleLevel(string $name): bool {
+        return str_replace(" ", "_", strtolower($this->getRequestedRole()->name)) == $name;
     }
 }

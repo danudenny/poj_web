@@ -49,7 +49,8 @@ export default {
     return {
       isModalVisible: false,
       selectedCorporate: {
-        relation_id: ''
+        relation_id: '',
+        unit_level: ''
       },
       corporates: [],
       pagination: {
@@ -202,19 +203,50 @@ export default {
         paginationSizeSelector: [10, 20, 50, 100],
         headerFilter: true,
         rowFormatter: (row) => {
-          if (this.selectedKanwil.includes(row.getData().relation_id)) {
-            row.select()
-          }
+            let isExist = false
+
+            this.selectedKanwil = this.selectedKanwil.map((val) => {
+                if (val.relation_id === row.getData().relation_id && val.unit_level === row.getData().unit_level) {
+                    isExist = true
+                }
+            })
+
+            if(isExist) {
+                row.select()
+            }
         },
       });
       table.on("rowSelectionChanged", (data, rows, selected, deselected) => {
         if(selected.length > 0) {
-          this.selectedKanwil.push(selected[0].getData().relation_id)
+            console.log("DATASELECTED", selected[0].getData())
+            let selectedUnit = {
+                relation_id: selected[0].getData().relation_id,
+                unit_level: selected[0].getData().unit_level
+            }
+            let isExist = false
+
+            this.selectedKanwil.map((val) => {
+                if (val.relation_id === selectedUnit.relation_id && val.unit_level === selectedUnit.unit_level) {
+                    isExist = true
+                }
+            })
+
+            if(!isExist) {
+                this.selectedKanwil.push({
+                    relation_id: selected[0].getData().relation_id,
+                    unit_level: selected[0].getData().unit_level
+                })
+            }
         }
+
         if (deselected.length > 0) {
-          let deselectedID = deselected[0].getData().relation_id
+          let deselectedID = {
+              relation_id: deselected[0].getData().relation_id,
+              unit_level: deselected[0].getData().unit_level
+          }
+
           this.selectedKanwil = this.selectedKanwil.filter((val) => {
-            return deselectedID !== val
+            return !((val.relation_id === deselectedID.relation_id && val.unit_level === deselectedID.unit_level))
           })
         }
       })
@@ -255,6 +287,7 @@ export default {
             representative_office_id: this.id,
             corporates: [{
               unit_relation_id: this.selectedCorporate.relation_id,
+              unit_level: this.selectedCorporate.unit_level,
               kanwils: this.selectedKanwil
             }]
           })
@@ -262,7 +295,8 @@ export default {
             useToast().success("Data successfully added!", { position: 'bottom-right' });
             this.generateOperatingUnitTable()
             this.selectedCorporate = {
-              relation_id: ''
+              relation_id: '',
+              unit_level: ''
             };
             this.selectedKanwil = []
             this.generateKanwilTable()

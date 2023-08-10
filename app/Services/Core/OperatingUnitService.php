@@ -2,13 +2,15 @@
 
 namespace App\Services\Core;
 
+use App\Http\Requests\OperatingUnit\AssignCentralOperatingUnitRequest;
 use App\Http\Requests\OperatingUnit\AssignOperatingUnitRequest;
 use App\Http\Requests\OperatingUnit\AssignUserRequest;
 use App\Http\Requests\OperatingUnit\RemoveOperatingUnitRequest;
 use App\Http\Requests\OperatingUnit\RemoveUserRequest;
+use App\Models\CentralOperatingUnitUser;
 use App\Models\KantorPerwakilan;
 use App\Models\OperatingUnitCorporate;
-use App\Models\OperatingUnitKanwil;
+use App\Models\OperatingUnitDetail;
 use App\Models\OperatingUnitUser;
 use App\Models\Permission;
 use App\Models\Unit;
@@ -43,21 +45,21 @@ class OperatingUnitService extends BaseService
 
     public function kanwils(Request $request) {
         try {
-            $query = OperatingUnitKanwil::query()->with(['operatingUnitCorporate']);
-            $query->select(['operating_unit_kanwils.*']);
+            $query = OperatingUnitDetail::query()->with(['operatingUnitCorporate']);
+            $query->select(['operating_unit_details.*']);
 
             if ($representOfficeID = $request->input('representative_office_id')) {
-                $query->join('operating_unit_corporates', 'operating_unit_corporates.id', '=', 'operating_unit_kanwils.operating_unit_corporate_id');
+                $query->join('operating_unit_corporates', 'operating_unit_corporates.id', '=', 'operating_unit_details.operating_unit_corporate_id');
                 $query->where('operating_unit_corporates.kantor_perwakilan_id', '=', $representOfficeID);
             }
 
             if ($name = $request->input('name')) {
-                $query->join('units', 'units.relation_id', '=', 'operating_unit_kanwils.kanwil_relation_id');
+                $query->join('units', 'units.relation_id', '=', 'operating_unit_details.unit_relation_id');
                 $query->whereRaw('units.name ILIKE ?', ["%" . $name . "%"]);
             }
 
             if ($userID = $request->input('user_id')) {
-                $query->join('operating_unit_corporates', 'operating_unit_corporates.id', '=', 'operating_unit_kanwils.operating_unit_corporate_id');
+                $query->join('operating_unit_corporates', 'operating_unit_corporates.id', '=', 'operating_unit_details.operating_unit_corporate_id');
                 $query->join('operating_unit_users', 'operating_unit_users.operating_unit_corporate_id', '=', 'operating_unit_corporates.id');
                 $query->where('operating_unit_users.user_id', '=', $userID);
             }
@@ -98,11 +100,12 @@ class OperatingUnitService extends BaseService
 
     public function availableKanwil(Request $request) {
         try {
-            $query = Unit::query()->with(['operatingUnitKanwil'])
-                ->where('units.unit_level', '=', 4);
+            $query = Unit::query()->with(['operatingUnitDetail'])
+                ->where('units.unit_level', '=', 4)
+                ->select(['units.*']);
 
-            $query->leftJoin('operating_unit_kanwils', 'operating_unit_kanwils.kanwil_relation_id', '=', 'units.relation_id');
-            $query->whereNull('operating_unit_kanwils.id');
+            $query->leftJoin('operating_unit_details', 'operating_unit_details.unit_relation_id', '=', 'units.relation_id');
+            $query->whereNull('operating_unit_details.id');
 
             if ($parentRelationID = $request->input('parent_relation_id')) {
                 $query->where('units.parent_unit_id', '=', $parentRelationID);
@@ -157,24 +160,49 @@ class OperatingUnitService extends BaseService
                 $operatingUnitCorporate = $operatingUnit
                     ->operatingUnitCorporates()
                     ->where('corporate_relation_id', '=', $corporate['unit_relation_id'])
+                    ->where('unit_level', '=', $corporate['unit_level'])
                     ->first();
                 if (!$operatingUnitCorporate) {
                     $operatingUnitCorporate = new OperatingUnitCorporate();
                     $operatingUnitCorporate->operating_unit_relation_id = $operatingUnit->relation_id;
                     $operatingUnitCorporate->corporate_relation_id = $corporate['unit_relation_id'];
+                    $operatingUnitCorporate->unit_level = $corporate['unit_level'];
                     $operatingUnitCorporate->save();
                 }
 
-                foreach ($corporate['kanwils'] as $item) {
-                    $operatingUnitKanwil = OperatingUnitKanwil::query()
+                if (Unit::query()->where('parent_unit_id', '=', $corporate['unit_relation_id'])->count() > 0 && count($corporate['kanwils']) == 0) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => "You need to add kanwil for this corporate!",
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
+
+                if (count($corporate['kanwils']) == 0) {
+                    $operatingUnitDetail = OperatingUnitDetail::query()
                         ->where('operating_unit_corporate_id', '=', $operatingUnitCorporate->id)
-                        ->where('kanwil_relation_id', '=', $item)
+                        ->where('unit_relation_id', '=', $corporate['unit_relation_id'])
                         ->first();
-                    if (!$operatingUnitKanwil) {
-                        $operatingUnitKanwil = new OperatingUnitKanwil();
-                        $operatingUnitKanwil->operating_unit_corporate_id = $operatingUnitCorporate->id;
-                        $operatingUnitKanwil->kanwil_relation_id = $item;
-                        $operatingUnitKanwil->save();
+                    if (!$operatingUnitDetail) {
+                        $operatingUnitDetail = new OperatingUnitDetail();
+                        $operatingUnitDetail->operating_unit_corporate_id = $operatingUnitCorporate->id;
+                        $operatingUnitDetail->unit_relation_id = $corporate['unit_relation_id'];
+                        $operatingUnitDetail->unit_level = $corporate['unit_level'];
+                        $operatingUnitDetail->save();
+                    }
+                } else {
+                    foreach ($corporate['kanwils'] as $item) {
+                        $operatingUnitDetail = OperatingUnitDetail::query()
+                            ->where('operating_unit_corporate_id', '=', $operatingUnitCorporate->id)
+                            ->where('unit_relation_id', '=', $item['relation_id'])
+                            ->where('unit_level', '=', $item['unit_level'])
+                            ->first();
+                        if (!$operatingUnitDetail) {
+                            $operatingUnitDetail = new OperatingUnitDetail();
+                            $operatingUnitDetail->operating_unit_corporate_id = $operatingUnitCorporate->id;
+                            $operatingUnitDetail->unit_relation_id = $item['relation_id'];
+                            $operatingUnitDetail->unit_level = $item['unit_level'];
+                            $operatingUnitDetail->save();
+                        }
                     }
                 }
             }
@@ -209,13 +237,13 @@ class OperatingUnitService extends BaseService
 //            }
 
             /**
-             * @var OperatingUnitKanwil $operatingUnitKanwil
+             * @var OperatingUnitDetail $operatingUnitDetail
              */
-            $operatingUnitKanwil = OperatingUnitKanwil::query()
+            $operatingUnitDetail = OperatingUnitDetail::query()
                 ->where('id', '=', $id)
                 ->first();
 
-            if (!$operatingUnitKanwil) {
+            if (!$operatingUnitDetail) {
                 return response()->json([
                     'status' => false,
                     'message' => "Operating Unit Not Found!",
@@ -225,8 +253,8 @@ class OperatingUnitService extends BaseService
             DB::beginTransaction();
             $operatingUnitCorporateIDs = [];
 
-            $operatingUnitCorporateIDs[] = $operatingUnitKanwil->operating_unit_corporate_id;
-            $operatingUnitKanwil->delete();
+            $operatingUnitCorporateIDs[] = $operatingUnitDetail->operating_unit_corporate_id;
+            $operatingUnitDetail->delete();
 
             foreach ($operatingUnitCorporateIDs as $operatingUnitCorporateID) {
                 /**
@@ -236,7 +264,7 @@ class OperatingUnitService extends BaseService
                     ->where('id', '=', $operatingUnitCorporateID)
                     ->first();
 
-                if ($operatingUnitCorporate->operatingUnitKanwils()->count() <= 0) {
+                if ($operatingUnitCorporate->operatingUnitDetails()->count() <= 0) {
                     $operatingUnitCorporate->delete();
                 }
             }
@@ -337,6 +365,110 @@ class OperatingUnitService extends BaseService
             ]);
         } catch (\Throwable $exception) {
             DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage(),
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function assignCentralOperatingUnitUser(AssignCentralOperatingUnitRequest $request) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = User::query()->where('id', '=', $request->input('user_id'))->first();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "User not found!",
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            /**
+             * @var Unit $unit
+             */
+            $unit = Unit::query()->where('relation_id', '=', $request->input('unit_relation_id'))->first();
+            if (!$unit) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Unit not found!",
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            DB::beginTransaction();
+
+            $centralOperatingUnitUser = CentralOperatingUnitUser::query()
+                ->where('user_id', '=', $user->id)
+                ->where('unit_relation_id', '=', $unit->relation_id)
+                ->first();
+            if (!$centralOperatingUnitUser) {
+                $centralOperatingUnitUser = new CentralOperatingUnitUser();
+                $centralOperatingUnitUser->user_id = $user->id;
+                $centralOperatingUnitUser->unit_relation_id = $unit->relation_id;
+                $centralOperatingUnitUser->save();
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => "Success!",
+            ]);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage(),
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function removeCentralOperatingUnitUser(Request $request, int $id) {
+        try {
+            /**
+             * @var CentralOperatingUnitUser $centralOperatingUnit
+             */
+            $centralOperatingUnit = CentralOperatingUnitUser::query()->where('id', '=', $id)->first();
+            if (!$centralOperatingUnit) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Central Operating Unit Not Found!",
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            DB::beginTransaction();
+            $centralOperatingUnit->delete();
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => "Success!",
+            ]);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage(),
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function listCentralOperatingUnitUser(Request $request) {
+        try {
+            $query = CentralOperatingUnitUser::query()
+                ->select(['central_operating_unit_users.*']);
+
+            if ($userID = $request->input('user_id')) {
+                $query->where('central_operating_unit_users.user_id', '=', $userID);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => "Success!",
+                'data' => $this->list($query, $request)
+            ]);
+        } catch (\Throwable $exception) {
             return response()->json([
                 'status' => false,
                 'message' => $exception->getMessage(),

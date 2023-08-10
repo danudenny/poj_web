@@ -375,6 +375,9 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::post('assign-user', [OperatingUnitController::class, 'assignUser']);
         Route::delete('remove/{id}', [OperatingUnitController::class, 'remove']);
         Route::post('remove-user', [OperatingUnitController::class, 'removeUser']);
+        Route::post('assign-central', [OperatingUnitController::class, 'assignOperatingUnitCentralUser']);
+        Route::delete('remove-central/{id}', [OperatingUnitController::class, 'removeOperatingUnitCentralUser']);
+        Route::get('central-users', [OperatingUnitController::class, 'listOperatingUnitCentralUser']);
     });
 
     Route::group(['prefix' => 'team'], function () {

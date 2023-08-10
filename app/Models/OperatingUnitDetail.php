@@ -9,13 +9,14 @@ use Illuminate\Database\Eloquent\Model;
  * Attributes:
  * @property-read int $id
  * @property int $operating_unit_corporate_id
- * @property int $kanwil_relation_id
+ * @property int $unit_relation_id
+ * @property int $unit_level
  *
  * Relations:
  * @property-read OperatingUnitCorporate $operatingUnitCorporate
  * @property-read Unit $kanwil
  */
-class OperatingUnitKanwil extends Model
+class OperatingUnitDetail extends Model
 {
     use HasFactory;
 
@@ -32,7 +33,7 @@ class OperatingUnitKanwil extends Model
     }
 
     public function kanwil() {
-        return $this->belongsTo(Unit::class, 'kanwil_relation_id', 'relation_id')
-            ->where('units.unit_level', '=', Unit::UnitLevelKanwil);
+        return $this->belongsTo(Unit::class, 'unit_relation_id', 'relation_id')
+            ->where('units.unit_level', '=', $this->unit_level);
     }
 }

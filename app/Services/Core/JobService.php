@@ -48,7 +48,7 @@ class JobService extends BaseService
         $jobs = Job::query();
         $jobs->with(['roles', 'units']);
         $jobs->when($request->input('name'), function ($query, $name) {
-            $query->whereRaw("LOWER(name) LIKE '%" . strtolower($name) . "%'");
+            $query->whereRaw("LOWER(name) ILIKE '%" . strtolower($name) . "%'");
         });
 
         return response()->json([

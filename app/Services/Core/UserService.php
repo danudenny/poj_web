@@ -122,7 +122,7 @@ class UserService extends BaseService
                 throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
 
-            $user->append('is_in_representative_unit');
+            $user->append(['is_in_representative_unit', 'is_in_central_unit']);
 
             return $user;
 

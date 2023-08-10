@@ -9,6 +9,7 @@
                             <ul class="nav nav-pills nav-primary" id="pills-icontab" role="tablist">
                                 <li class="nav-item"><a class="nav-link active" id="pills-iconhome-tab" data-bs-toggle="pill" href="#pills-iconhome" role="tab" aria-controls="pills-iconhome" aria-selected="true"><i class="icofont icofont-info"></i>User Information</a></li>
                                 <li class="nav-item"><a class="nav-link" id="pills-operating-unit-tab" data-bs-toggle="pill" href="#pills-operating-unit" role="tab" aria-controls="pills-operating-unit" aria-selected="false" v-if="this.item.is_in_representative_unit"><i class="icofont icofont-tools"></i>Operating Unit</a></li>
+                                <li class="nav-item"><a class="nav-link" id="pills-central-unit-tab" data-bs-toggle="pill" href="#pills-central-unit" role="tab" aria-controls="pills-central-unit" aria-selected="false" v-if="this.item.is_in_central_unit"><i class="icofont icofont-tools"></i>Central Operating Unit</a></li>
                             </ul>
                         </div>
                     </div>
@@ -68,6 +69,9 @@
                         <div class="tab-pane fade show" id="pills-operating-unit" role="tabpanel" aria-labelledby="pills-operating-unit">
                             <OperatingUnit :id="this.$route.params.id" :unit_id="this.item.employee.last_unit.relation_id"/>
                         </div>
+                        <div class="tab-pane fade show" id="pills-central-unit" role="tabpanel" aria-labelledby="pills-operating-unit">
+                            <CentralUnit :id="this.$route.params.id" :unit_id="this.item.employee.last_unit.relation_id"/>
+                        </div>
                     </div>
                 </div>
                 <div class="card-footer text-end">
@@ -83,13 +87,15 @@
 import axios from 'axios';
 import { useRoute } from 'vue-router';
 import OperatingUnit from "./operating-unit.vue";
+import CentralUnit from "./central-unit.vue";
 
 export default {
-    components: {OperatingUnit},
+    components: {OperatingUnit, CentralUnit},
     data() {
         return {
             item: {
                 is_in_representative_unit: false,
+                is_in_central_unit: false,
                 employee: {
                     last_unit: {
                         relation_id: 0

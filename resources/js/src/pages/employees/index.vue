@@ -29,10 +29,12 @@
                                             label="name"
                                             track-by="id"
                                             placeholder="Select Jobs"
-                                            :close-on-select="true"
                                             @select="filterJobName"
+                                            @search-change="onJobSearchName"
                                         ></multiselect>
                                     </div>
+                                </div>
+                                <div class="row mt-3" v-if="showFilter">
                                     <div class="col-md-4">
                                         <label>Departments</label>
                                         <multiselect
@@ -45,20 +47,16 @@
                                             @select="filterDepartmentName"
                                         ></multiselect>
                                     </div>
-                                </div>
-                                <div class="row mt-3" v-if="showFilter">
                                     <div class="col-md-4">
                                         <label>Employee Category</label>
                                         <multiselect
                                             v-model="filterEmployeeCategory"
-                                            :options="employeeCategories"
-                                            :multiple="false"
+                                            placeholder="Select Employee Category"
                                             label="name"
                                             track-by="value"
-                                            placeholder="Select Employee Category"
-                                            :clear-on-select="true"
-                                            :close-on-select="true"
-                                            :can-clear="true"
+                                            :options="employeeCategories"
+                                            :multiple="false"
+                                            :required="true"
                                             @select="filterEmployeeCategoryName"
                                         ></multiselect>
                                     </div>
@@ -71,9 +69,6 @@
                                             label="name"
                                             track-by="value"
                                             placeholder="Select Employee Type"
-                                            :clear-on-select="true"
-                                            :close-on-select="true"
-                                            :can-clear="true"
                                             @select="filterEmployeeTypeName"
                                         ></multiselect>
                                     </div>
@@ -102,6 +97,7 @@ export default {
         return {
             employees: [],
             loading: false,
+            isOnSearch: true,
             currentPage: 1,
             pageSize: 20,
             syncLoading: false,
@@ -113,19 +109,23 @@ export default {
             outlet: [],
             area: [],
             filterName: '',
-            filterDepartment: '',
+            filterDepartment: null,
             filterCorporate: '',
             filterKanwil: '',
             filterArea: '',
             filterCabang: '',
             filterOutlet: '',
-            filterJob: '',
-            filterEmployeeCategory: '',
-            filterEmployeeType: '',
+            filterJob: null,
+            filterEmployeeCategory: null,
+            filterEmployeeType: null,
             showFilter: false,
             jobs: [],
             departments: [],
             partners: [],
+            jobPagination: {
+                name: '',
+                onSearch: false
+            },
             employeeCategories: [
                 {name: 'Karyawan Tetap', value: 'karyawan_tetap'},
                 {name: 'Karyawan Kontrak', value: 'karyawan_kontrak'},
@@ -165,9 +165,10 @@ export default {
         },
         async getJobs() {
             await this.$axios
-                .get(`/api/v1/admin/job`)
+                .get(`/api/v1/admin/job?name=${this.jobPagination.name}`)
                 .then(response => {
-                    this.jobs = response.data.data;
+                    this.jobs = response.data.data.data;
+                    this.jobPagination.onSearch = false
                 })
                 .catch(error => {
                     console.error(error);
@@ -189,7 +190,7 @@ export default {
             const selectedROle = localStorage.getItem('USER_ROLES')
             this.table = new Tabulator(this.$refs.employeesTable, {
                 paginationCounter:"rows",
-                ajaxURL: '/api/v1/admin/employee',
+                ajaxURL: '/api/v1/admin/employee/paginated',
                 ajaxConfig: {
                     headers: {
                         Authorization: `Bearer ${ls}`,
@@ -201,26 +202,38 @@ export default {
                     page: this.currentPage,
                     size: this.pageSize,
                 },
-                ajaxResponse: function (url, params, response) {
+                ajaxResponse: (url, params, response) => {
+                    this.isOnSearch = false
+
                     return {
                         data: response.data.data,
                         last_page: response.data.last_page,
                     }
                 },
                 ajaxURLGenerator: (url, config, params) => {
+                    let localFilter = {
+                        employee_category: this.filterEmployeeCategory?.value ?? '',
+                        employee_type: this.filterEmployeeType?.value ?? '',
+                        department_id: this.filterDepartment?.odoo_department_id ?? '',
+                        job_id: this.filterJob?.odoo_job_id ?? '',
+                        employeeName: this.filterName,
+                        kanwilName: '',
+                        areaName: '',
+                        cabangName: '',
+                        outletName: '',
+                        customerName: ''
+                    }
+
+                    console.log("filter", params)
                     params.filter.map((item) => {
-                        if (item.field === 'name') this.filterName = item.value
-                        if (item.field === 'department_id') this.filterDepartment = item.value.odoo_department_id
-                        if (item.field === 'job_id') this.filterJob = item.value.odoo_job_id
-                        if (item.field === 'employee_category') this.filterEmployeeCategory = item.value.value
-                        if (item.field === 'employee_type') this.filterEmployeeType = item.value.value
                         if (item.field === 'corporate.name') this.filterCorporate = item.value
-                        if (item.field === 'kanwil.name') this.filterKanwil = item.value
-                        if (item.field === 'area.name') this.filterArea = item.value
-                        if (item.field === 'cabang.name') this.filterCabang = item.value
-                        if (item.field === 'outlet.name') this.filterOutlet = item.value
+                        if (item.field === 'kanwil.name') localFilter.kanwilName = item.value
+                        if (item.field === 'area.name') localFilter.areaName = item.value
+                        if (item.field === 'cabang.name') localFilter.cabangName = item.value
+                        if (item.field === 'outlet.name') localFilter.outletName = item.value
+                        if (item.field === 'partner.name') localFilter.customerName = item.value
                     })
-                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&department_id=${this.filterDepartment}&employee_category=${this.filterEmployeeCategory}&employee_type=${this.filterEmployeeType}&kanwil=${this.filterKanwil}&area=${this.filterArea}&cabang=${this.filterCabang}&outlet=${this.filterOutlet}&job_id=${this.filterJob}&corporate=${this.filterCorporate
+                    return `${url}?page=${params.page}&per_page=${params.size}&customer_name=${localFilter.customerName}&name=${localFilter.employeeName}&department_id=${localFilter.department_id}&employee_category=${localFilter.employee_category}&employee_type=${localFilter.employee_type}&kanwil_name=${localFilter.kanwilName}&area_name=${localFilter.areaName}&cabang_name=${localFilter.cabangName}&outlet_name=${localFilter.outletName}&odoo_job_id=${localFilter.job_id}&corporate=${this.filterCorporate
                     }`
                 },
                 layout: 'fitData',
@@ -373,11 +386,12 @@ export default {
             this.loading = false;
         },
         filterEmployeeName() {
-            if (this.filterName === "") {
-                this.table.clearFilter();
-                return;
+            if (!this.isOnSearch) {
+                this.isOnSearch = true
+                setTimeout(() => {
+                    this.table.setFilter('name', "=", this.filterName);
+                }, 1000)
             }
-            this.table.setFilter('name', "=", this.filterName);
         },
         filterJobName() {
             if (this.filterJob === "") {
@@ -394,18 +408,18 @@ export default {
             this.table.setFilter('department_id', "=", this.filterDepartment);
         },
         filterEmployeeCategoryName() {
-            if (this.filterEmployeeCategory === "") {
+            if (this.filterEmployeeCategory === null) {
                 this.table.clearFilter();
                 return;
             }
-            this.table.setFilter('employee_category', "=", this.filterEmployeeCategory);
+            this.table.setFilter('employee_category', "=", this.filterEmployeeCategory.value);
         },
         filterEmployeeTypeName() {
             if (this.filterEmployeeType === "") {
                 this.table.clearFilter();
                 return;
             }
-            this.table.setFilter('employee_type', "=", this.filterEmployeeType);
+            this.table.setFilter('employee_type', "=", this.filterEmployeeType.value);
         },
         filtering() {
             this.showFilter = !this.showFilter;
@@ -415,6 +429,16 @@ export default {
         },
         viewData(id) {
             this.$router.push({name: 'employee_detail', params: {id}});
+        },
+        onJobSearchName(val) {
+            this.jobPagination.name = val
+
+            if (!this.jobPagination.onSearch) {
+                this.jobPagination.onSearch = true
+                setTimeout(() => {
+                    this.getJobs()
+                }, 1000)
+            }
         },
         async syncFromERP() {
             this.syncLoading = true;

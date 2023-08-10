@@ -13,6 +13,7 @@ use Exception;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -122,6 +123,8 @@ class EmployeeService extends BaseService
                     ->orWhereIn('outlet_id', $relationIds)
                     ->with(['job', 'corporate', 'kanwil', 'area', 'cabang', 'outlet'])
                     ->paginate($request->get('per_page', 10));
+            } else if ($this->isRequestedRoleLevel(Role::RoleAdminOperatingUnit)) {
+
             } else {
                 $employeesData = $employees->paginate($request->get('per_page', 10));
             }
@@ -218,7 +221,7 @@ class EmployeeService extends BaseService
         $user = $request->user();
 
         try {
-            $employees = Employee::query()->with(['corporate','kanwil', 'area', 'cabang', 'outlet', 'job']);
+            $employees = Employee::query()->with(['department', 'corporate', 'kanwil', 'area', 'cabang', 'outlet', 'job', 'units', 'partner']);
 
             $lastUnitRelationID = $request->get('last_unit_relation_id');
             $unitRelationID = $request->get('unit_relation_id');
@@ -227,7 +230,7 @@ class EmployeeService extends BaseService
                 $builder->where('unit_id', '=', $request->unit_id);
             });
 
-            if ($user->isHighestRole(Role::RoleAdmin)) {
+            if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
                 if (!$unitRelationID) {
                     $defaultUnitRelationID = $user->employee->getLastUnitID();
 
@@ -237,15 +240,23 @@ class EmployeeService extends BaseService
 
                     $unitRelationID = $defaultUnitRelationID;
                 }
-            } else if ($user->isHighestRole(Role::RoleStaff)) {
+            } else if ($this->isRequestedRoleLevel(Role::RoleStaff)) {
                 if (!$lastUnitRelationID) {
-                    $lastUnitRelationID = $user->employee->getLastUnitID();
+                    $employees->where('id', '=', $user->employee_id);
+                }
+            } else if ($this->isRequestedRoleLevel(Role::RoleAdminOperatingUnit)) {
+                if (!$lastUnitRelationID) {
+                    $lastUnitRelationID = implode(",", $user->listOperatingUnitIDs());
                 }
             }
 
             $employees->when($request->input('job_id'), function (Builder $builder) use ($request) {
                 $builder->leftJoin('jobs', 'jobs.odoo_job_id', '=', 'employees.job_id')
                     ->where('jobs.id', '=', $request->input('job_id'));
+            });
+
+            $employees->when($request->filled('odoo_job_id'), function(Builder $builder) use ($request) {
+                $builder->where('employees.job_id', '=', $request->query('odoo_job_id'));
             });
 
             $employees->when($request->input('name'), function (Builder $builder) use ($request) {
@@ -255,29 +266,29 @@ class EmployeeService extends BaseService
             $employees->when($lastUnitRelationID, function (Builder $builder) use ($lastUnitRelationID) {
                 $builder->where(function(Builder $builder) use ($lastUnitRelationID) {
                     $builder->orWhere(function(Builder $builder) use ($lastUnitRelationID) {
-                        $builder->where('outlet_id', '=', $lastUnitRelationID);
+                        $builder->whereIn('outlet_id', explode(',', $lastUnitRelationID));
                     })
                         ->orWhere(function(Builder $builder) use ($lastUnitRelationID) {
                             $builder->where('outlet_id', '=', 0)
-                                ->where('cabang_id', '=', $lastUnitRelationID);
+                                ->whereIn('cabang_id', explode(',', $lastUnitRelationID));
                         })
                         ->orWhere(function(Builder $builder) use ($lastUnitRelationID) {
                             $builder->where('outlet_id', '=', 0)
                                 ->where('cabang_id', '=', 0)
-                                ->where('area_id', '=', $lastUnitRelationID);
+                                ->whereIn('area_id', explode(',', $lastUnitRelationID));
                         })
                         ->orWhere(function(Builder $builder) use ($lastUnitRelationID) {
                             $builder->where('outlet_id', '=', 0)
                                 ->where('cabang_id', '=', 0)
                                 ->where('area_id', '=', 0)
-                                ->where('kanwil_id', '=', $lastUnitRelationID);
+                                ->whereIn('kanwil_id', explode(',', $lastUnitRelationID));
                         })
                         ->orWhere(function(Builder $builder) use ($lastUnitRelationID) {
                             $builder->where('outlet_id', '=', 0)
                                 ->where('cabang_id', '=', 0)
                                 ->where('area_id', '=', 0)
                                 ->where('kanwil_id', '=', 0)
-                                ->where('corporate_id', '=', $lastUnitRelationID);
+                                ->whereIn('corporate_id', explode(',', $lastUnitRelationID));
                         });
                 });
             });
@@ -290,6 +301,47 @@ class EmployeeService extends BaseService
                         ->orWhere('kanwil_id', '=', $unitRelationID)
                         ->orWhere('corporate_id', '=', $unitRelationID);
                 });
+            });
+
+            $employees->when($request->filled('department_id'), function(Builder $builder) use ($request) {
+                $builder->where('employees.department_id', '=', $request->query('department_id'));
+            });
+
+            $employees->when($request->filled('employee_category'), function(Builder $builder) use ($request) {
+                $builder->where('employees.employee_category', '=', $request->query('employee_category'));
+            });
+
+            $employees->when($request->filled('employee_type'), function(Builder $builder) use ($request) {
+                $builder->where('employees.employee_type', '=', $request->query('employee_type'));
+            });
+
+            $employees->when($request->filled('kanwil_name'), function(Builder $builder) use ($request) {
+                $builder->join('units AS kanwil_units', 'kanwil_units.relation_id', '=', 'employees.kanwil_id');
+                $builder->where('kanwil_units.unit_level', '=', Unit::UnitLevelKanwil);
+                $builder->whereRaw('kanwil_units.name ILIKE ?', ["%" . strtolower($request->query('kanwil_name')) . "%"]);
+            });
+
+            $employees->when($request->filled('area_name'), function(Builder $builder) use ($request) {
+                $builder->join('units AS area_units', 'area_units.relation_id', '=', 'employees.area_id');
+                $builder->where('area_units.unit_level', '=', Unit::UnitLevelArea);
+                $builder->whereRaw('area_units.name ILIKE ?', ["%" . strtolower($request->query('area_name')) . "%"]);
+            });
+
+            $employees->when($request->filled('cabang_name'), function(Builder $builder) use ($request) {
+                $builder->join('units AS cabang_units', 'cabang_units.relation_id', '=', 'employees.cabang_id');
+                $builder->where('cabang_units.unit_level', '=', Unit::UnitLevelCabang);
+                $builder->whereRaw('cabang_units.name ILIKE ?', ["%" . strtolower($request->query('cabang_name')) . "%"]);
+            });
+
+            $employees->when($request->filled('outlet_name'), function(Builder $builder) use ($request) {
+                $builder->join('units AS outlet_units', 'outlet_units.relation_id', '=', 'employees.outlet_id');
+                $builder->where('outlet_units.unit_level', '=', Unit::UnitLevelOutlet);
+                $builder->whereRaw('outlet_units.name ILIKE ?', ["%" . strtolower($request->query('outlet_name')) . "%"]);
+            });
+
+            $employees->when($request->filled('customer_name'), function(Builder $builder) use ($request) {
+                $builder->join('partners AS partner_name', 'partner_name.id', '=', 'employees.customer_id');
+                $builder->whereRaw('partner_name.name ILIKE ?', ["%" . strtolower($request->query('customer_name')) . "%"]);
             });
 
             $employees->select(['employees.*']);

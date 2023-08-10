@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\BaseService;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -173,7 +174,7 @@ class UnitService extends BaseService
             $query = Unit::query();
             $query->select(['units.*']);
 
-            if ($user->isHighestRole(Role::RoleAdmin)) {
+            if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
                 $defaultUnitID = $user->employee->getLastUnitID();
 
                 if ($requestRelationID = $this->getRequestedUnitID()) {
@@ -186,10 +187,30 @@ class UnitService extends BaseService
                 $query = Unit::query()->from('unit_data')
                     ->withRecursiveExpression('unit_data', Unit::query()->where('relation_id', '=', $defaultUnitID)->unionAll(
                             Unit::query()->select(['units.*'])
-                                ->join('unit_data', 'units.parent_unit_id', '=', 'unit_data.relation_id')
+                                ->join('unit_data', function (JoinClause $query) {
+                                    $query->on('units.parent_unit_id', '=', 'unit_data.relation_id')
+                                        ->whereRaw('units.unit_level = unit_data.unit_level + 1');
+                                })
                     ));
-            } else if ($user->isHighestRole(Role::RoleStaff)) {
+            } else if ($this->isRequestedRoleLevel(Role::RoleStaff)) {
                 $query->where('relation_id', '=', $user->employee->getLastUnitID());
+            }
+
+            if ($allUnitStructured = $request->query('unit_relation_id_structured')) {
+                $query = Unit::query()->fromRaw("(SELECT * FROM parent_data UNION SELECT * FROM child_data) d")
+                    ->withRecursiveExpression('child_data', Unit::query()->where('relation_id', '=', $allUnitStructured)->unionAll(
+                        Unit::query()->select(['units.*'])
+                            ->join('child_data', function (JoinClause $query) {
+                                $query->on('units.parent_unit_id', '=', 'child_data.relation_id')
+                                    ->whereRaw('units.unit_level = child_data.unit_level + 1');
+                            })
+                    ))->withRecursiveExpression('parent_data', Unit::query()->where('relation_id', '=', $allUnitStructured)->unionAll(
+                        Unit::query()->select(['units.*'])
+                            ->join('parent_data', function (JoinClause $query) {
+                                $query->on('units.relation_id', '=', 'parent_data.parent_unit_id')
+                                    ->whereRaw('units.unit_level = parent_data.unit_level - 1');
+                            })
+                    ));
             }
 
             $query->when($request->filled('name'), function(Builder $builder) use ($request) {
@@ -197,7 +218,7 @@ class UnitService extends BaseService
             });
 
             if ($unitLevel = $request->input('unit_level')) {
-                $query->where('unit_level', '=', $unitLevel);
+                $query->whereIn('unit_level', explode(',', $unitLevel));
             }
 
             $query->orderBy('unit_level', 'ASC');

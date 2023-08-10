@@ -67,7 +67,16 @@ class User extends Authenticatable
 
         return Unit::query()
             ->where('relation_id', '=', $employee->default_operating_unit_id)
-            ->where('unit_level', '=', Unit::UnitLevelOperatingUnit)
+            ->whereIn('unit_level', [Unit::UnitLevelOperatingUnit])
+            ->exists();
+    }
+
+    public function getIsInCentralUnitAttribute() {
+        $employee = $this->employee;
+
+        return Unit::query()
+            ->where('relation_id', '=', $employee->default_operating_unit_id)
+            ->whereIn('unit_level', [Unit::UnitLevelPOJ])
             ->exists();
     }
 
@@ -90,6 +99,10 @@ class User extends Authenticatable
         return false;
     }
 
+    /**
+     * @deprecated:
+     * Move to isRequestedRoleLevel func in service layer
+     */
     public function isHighestRole(string $roleLevel): bool {
         return $this->getHighestRole()->role_level == $roleLevel;
     }
@@ -140,5 +153,26 @@ class User extends Authenticatable
         }
 
         return false;
+    }
+
+    public function listOperatingUnitIDs(): array {
+        $operatingUnitIDs = [];
+
+        /**
+         * @var OperatingUnitUser[] $operatingUnitUsers
+         */
+        $operatingUnitUsers = OperatingUnitUser::query()
+            ->where('user_id', '=', $this->id)
+            ->get();
+
+        foreach ($operatingUnitUsers as $operatingUnitUser) {
+            $corporate = $operatingUnitUser->operatingUnitCorporate;
+
+            foreach ($corporate->operatingUnitDetails as $operatingUnitDetail) {
+                $operatingUnitIDs[] = $operatingUnitDetail->unit_relation_id;
+            }
+        }
+
+        return $operatingUnitIDs;
     }
 }

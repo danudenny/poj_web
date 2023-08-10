@@ -4,7 +4,7 @@ namespace App\Http\Requests\OperatingUnit;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class AssignOperatingUnitRequest extends FormRequest
+class AssignCentralOperatingUnitRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,10 +24,8 @@ class AssignOperatingUnitRequest extends FormRequest
     public function rules()
     {
         return [
-            'representative_office_id' => ['required'],
-            'corporates' => ['required', 'array'],
-            'corporates.*.unit_relation_id' => ['required', 'numeric'],
-            'corporates.*.unit_level' => ['required', 'numeric']
+            'user_id' => ['required'],
+            'unit_relation_id' => ['required']
         ];
     }
 }

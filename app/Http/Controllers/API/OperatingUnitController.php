@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\OperatingUnit\AssignCentralOperatingUnitRequest;
 use App\Http\Requests\OperatingUnit\AssignOperatingUnitRequest;
 use App\Http\Requests\OperatingUnit\AssignUserRequest;
 use App\Http\Requests\OperatingUnit\RemoveOperatingUnitRequest;
@@ -42,5 +43,17 @@ class OperatingUnitController extends Controller
 
     public function removeUser(RemoveUserRequest $request, OperatingUnitService $service) {
         return $service->removeUser($request);
+    }
+
+    public function assignOperatingUnitCentralUser(AssignCentralOperatingUnitRequest $request, OperatingUnitService $service) {
+        return $service->assignCentralOperatingUnitUser($request);
+    }
+
+    public function removeOperatingUnitCentralUser(Request $request, OperatingUnitService $service, int $id) {
+        return $service->removeCentralOperatingUnitUser($request, $id);
+    }
+
+    public function listOperatingUnitCentralUser(Request $request, OperatingUnitService $service) {
+        return $service->listCentralOperatingUnitUser($request);
     }
 }
