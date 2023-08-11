@@ -268,9 +268,9 @@ class BackupService extends BaseService
                     ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
                     ->join('approval_modules', 'approvals.approval_module_id', '=', 'approval_modules.id')
                     ->where('approval_modules.name', '=', ApprovalModule::ApprovalBackup)
-                    ->where('approvals.unit_id', '=', $sourceUnit->id)
+                    ->where('approvals.unit_relation_id', '=', $unit->relation_id)
+                    ->where('approvals.unit_level', '=', $unit->unit_level)
                     ->where('approvals.is_active', '=', true)
-                    ->orderBy('approval_users.id', 'ASC')
                     ->get(['approval_users.*']);
 
                 foreach ($approvalUsers as $approvalUser) {

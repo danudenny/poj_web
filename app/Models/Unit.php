@@ -16,6 +16,7 @@ use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
  * @property string $name
  * @property int $parent_unit_id
  * @property int $relation_id
+ * @property int $unit_level
  * @property float $lat
  * @property float $long
  * @property float $radius

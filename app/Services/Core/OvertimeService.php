@@ -306,9 +306,9 @@ class OvertimeService extends BaseService
                     ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
                     ->join('approval_modules', 'approvals.approval_module_id', '=', 'approval_modules.id')
                     ->where('approval_modules.name', '=', ApprovalModule::ApprovalOvertime)
-                    ->where('approvals.unit_id', '=', $unit->id)
+                    ->where('approvals.unit_relation_id', '=', $unit->relation_id)
+                    ->where('approvals.unit_level', '=', $unit->unit_level)
                     ->where('approvals.is_active', '=', true)
-                    ->orderBy('approval_users.id', 'ASC')
                     ->get(['approval_users.*']);
 
                 foreach ($approvalUsers as $approvalUser) {
@@ -318,7 +318,7 @@ class OvertimeService extends BaseService
                 if (count($approvalUserIDs) <= 0) {
                     return response()->json([
                         'status' => false,
-                        'message' => 'Need to set approval for backup on your unit',
+                        'message' => 'Need to set approval for overtime on your unit',
                     ], ResponseAlias::HTTP_BAD_REQUEST);
                 }
             }
