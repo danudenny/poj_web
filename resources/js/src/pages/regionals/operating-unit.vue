@@ -97,7 +97,7 @@ export default {
           params.filter.map((item) => {
             if (item.field === 'kanwil.name') localFilter.name = item.value
           })
-          return `${url}?page=${params.page}&per_page=${params.size}&name=${localFilter.name}&representative_office_id${this.id}`
+          return `${url}?page=${params.page}&per_page=${params.size}&name=${localFilter.name}&representative_office_id=${this.id}`
         },
         layout: 'fitColumns',
         renderHorizontal:"virtual",

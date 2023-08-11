@@ -16,6 +16,7 @@ use App\Models\Permission;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\BaseService;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
@@ -50,7 +51,11 @@ class OperatingUnitService extends BaseService
 
             if ($representOfficeID = $request->input('representative_office_id')) {
                 $query->join('operating_unit_corporates', 'operating_unit_corporates.id', '=', 'operating_unit_details.operating_unit_corporate_id');
-                $query->where('operating_unit_corporates.kantor_perwakilan_id', '=', $representOfficeID);
+                $query->join('units', function(JoinClause $clause) {
+                    $clause->on('units.relation_id', '=', 'operating_unit_corporates.operating_unit_relation_id')
+                        ->where('units.unit_level', '=', Unit::UnitLevelOperatingUnit);
+                });
+                $query->where('units.id', '=', $representOfficeID);
             }
 
             if ($name = $request->input('name')) {
