@@ -484,13 +484,6 @@ class BackupService extends BaseService
              */
             $user = $request->user();
 
-            if (!$user->inRoleLevel([Role::RoleSuperAdministrator, Role::RoleAdmin])) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'You don\'t have access!',
-                ], ResponseAlias::HTTP_UNAUTHORIZED);
-            }
-
             /**
              * @var Backup $backup
              */
