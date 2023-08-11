@@ -3,8 +3,11 @@
 namespace App\Services\Core;
 
 use App\Helpers\UnitHelper;
+use App\Http\Requests\Approval\CreateApprovalRequest;
+use App\Http\Requests\Approval\UpdateApprovalRequest;
 use App\Models\Approval;
 use App\Models\ApprovalModule;
+use App\Models\ApprovalUser;
 use App\Models\Employee;
 use App\Models\Unit;
 use App\Models\User;
@@ -12,7 +15,9 @@ use App\Services\BaseService;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class ApprovalService extends BaseService
 {
@@ -25,7 +30,7 @@ class ApprovalService extends BaseService
 
         try {
             $approvals = Approval::query();
-            $approvals->with(['approvalModule', 'approvalUsers', 'unit']);
+            $approvals->with(['approvalModule', 'approvalUsers']);
             $approvals->when($request->name, function($q) use ($request) {
                 $q->where('name', 'LIKE', '%' . $request->name . '%');
             });
@@ -60,140 +65,206 @@ class ApprovalService extends BaseService
         }
     }
 
-    public function save($request): JsonResponse
+    public function save(CreateApprovalRequest $request): JsonResponse
     {
-        $dataExists = Approval::where('name', $request->name)->first();
-        if ($dataExists) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Data already exists.',
-                'data' => null,
-            ], 500);
-        }
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
 
-        $approvalModuleExists = ApprovalModule::where('id', $request->approval_module_id)->first();
-        if (!$approvalModuleExists) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Approval module not found.',
-                'data' => null,
-            ], 500);
-        }
+            $arg = [
+                'unit_relation_id' => $request->input('unit_relation_id'),
+                'unit_level' => $request->input('unit_level'),
+                'name' => $request->input('name'),
+                'approval_module_id' => $request->input('approval_module_id'),
+                'approvers' => $request->input('approvers', [])
+            ];
 
-        if (count($request->user_id) > 0) {
-            foreach ($request->user_id as $userId) {
-                $userExists = User::where('employee_id', $userId)->first();
-                if (!$userExists) {
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'User not found.',
-                        'data' => null,
-                    ], 500);
-                }
+            $isApprovalExist = Approval::query()
+                ->where('unit_relation_id', '=', $arg['unit_relation_id'])
+                ->where('unit_level', '=', $arg['unit_level'])
+                ->where('approval_module_id', '=', $arg['approval_module_id'])
+                ->exists();
+            if ($isApprovalExist) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Data already exists.',
+                ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
-        }
+            $approvalModuleExists = ApprovalModule::query()
+                ->where('id', '=', $arg['approval_module_id'])
+                ->exists();
+            if (!$approvalModuleExists) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Approval module not found.',
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
 
-        DB::beginTransaction();
-        try {
-            $approval = Approval::create([
-                'approval_module_id' => $request->approval_module_id,
-                'name' => $request->name,
-                'is_active' => true,
-                'unit_level' => $request->unit_level,
-                'unit_id' => $request->unit_id
-            ]);
-            $approval->users()->attach($request->user_id);
+            $isUnitExist = Unit::query()
+                ->where('relation_id', '=', $arg['unit_relation_id'])
+                ->where('unit_level', '=', $arg['unit_level'])
+                ->exists();
+            if (!$isUnitExist) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Unit not found.',
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            /**
+             * @var ApprovalUser[] $approvalUsers
+             */
+            $approvalUsers = [];
+
+            foreach ($arg['approvers'] as $approver) {
+                $unitExis = Unit::query()
+                    ->where('relation_id', '=', $approver['unit_relation_id'])
+                    ->where('unit_level', '=', $approver['unit_level'])
+                    ->exists();
+                if (!$unitExis) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'One of unit is not exist.',
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
+
+                $employeeExist = Employee::query()
+                    ->where('id', '=', $approver['employee_id'])
+                    ->exists();
+                if (!$employeeExist) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'One of employee is not exist.',
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
+
+                $approvalUser = new ApprovalUser();
+                $approvalUser->employee_id = $approver['employee_id'];
+                $approvalUser->unit_relation_id = $approver['unit_relation_id'];
+                $approvalUser->unit_level = $approver['unit_level'];
+
+                $approvalUsers[] = $approvalUser;
+            }
+
+            DB::beginTransaction();
+
+            $approval = new Approval();
+            $approval->unit_relation_id = $arg['unit_relation_id'];
+            $approval->unit_level = $arg['unit_level'];
+            $approval->name = $arg['name'];
+            $approval->approval_module_id = $arg['approval_module_id'];
+            $approval->save();
+
+            foreach ($approvalUsers as $approvalUser) {
+                $approvalUser->approval_id = $approval->id;
+                $approvalUser->save();
+            }
+
             DB::commit();
 
             return response()->json([
-                'status' => 'success',
-                'message' => 'Data saved successfully.',
-                'data' => $approval,
+                'status' => true,
+                'message' => 'Data saved successfully.'
             ]);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
+
             return response()->json([
-                'status' => 'error',
-                'message' => 'Data failed to save.',
-                'data' => $e->getMessage(),
-            ], 500);
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-    public function update($request, $id): JsonResponse
+    public function update(UpdateApprovalRequest $request, int $id): JsonResponse
     {
-        $dataExists = Approval::where('id', $id)->first();
-        if (!$dataExists) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Data not found.',
-                'data' => null,
-            ], 500);
-        }
-
-        $approvalModuleExists = ApprovalModule::where('id', $request->approval_module_id)->first();
-        if (!$approvalModuleExists) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Approval module not found.',
-                'data' => null,
-            ], 500);
-        }
-
-        $duplicateName = Approval::where('name', $request->name)->where('id', '!=', $id)->first();
-        if ($duplicateName) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Data already exists.',
-                'data' => null,
-            ], 500);
-        }
-
-        foreach ($request->user_id as $userId) {
-            $userExists = Employee::where('id', $userId)->first();
-            if (!$userExists) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'User not found.',
-                    'data' => null,
-                ], 500);
-            }
-        }
-
-        DB::beginTransaction();
         try {
-            $approval = Approval::find($id);
-            $approval->update([
-                'approval_module_id' => $request->approval_module_id,
-                'name' => $request->name,
-                'is_active' => $request->is_active,
-                'unit_level' => $request->unit_level,
-                'unit_id' => $request->unit_id
-            ]);
+            $user = $request->user();
 
-            $approval->users()->sync($request->user_id);
+            /**
+             * @var Approval $approval
+             */
+            $approval = Approval::query()
+                ->where('id', '=', $id)
+                ->first();
+            if (!$approval) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Approval not found.',
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            /**
+             * @var ApprovalUser[] $approvalUsers
+             */
+            $approvalUsers = [];
+
+            foreach ($request->input('approvers', []) as $approver) {
+                $unitExis = Unit::query()
+                    ->where('relation_id', '=', $approver['unit_relation_id'])
+                    ->where('unit_level', '=', $approver['unit_level'])
+                    ->exists();
+                if (!$unitExis) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'One of unit is not exist.',
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
+
+                $employeeExist = Employee::query()
+                    ->where('id', '=', $approver['employee_id'])
+                    ->exists();
+                if (!$employeeExist) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'One of employee is not exist.',
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
+
+                $approvalUser = new ApprovalUser();
+                $approvalUser->employee_id = $approver['employee_id'];
+                $approvalUser->unit_relation_id = $approver['unit_relation_id'];
+                $approvalUser->unit_level = $approver['unit_level'];
+
+                $approvalUsers[] = $approvalUser;
+            }
+
+            DB::beginTransaction();
+
+            $approval->name = $request->input('name');
+            $approval->save();
+
+            ApprovalUser::query()
+                ->where('approval_id', '=', $approval->id)
+                ->delete();
+
+            foreach ($approvalUsers as $approvalUser) {
+                $approvalUser->approval_id = $approval->id;
+                $approvalUser->save();
+            }
+
             DB::commit();
 
             return response()->json([
-                'status' => 'success',
+                'status' => true,
                 'message' => 'Data updated successfully.',
-                'data' => $approval,
             ]);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json([
-                'status' => 'error',
-                'message' => 'Data failed to update.',
-                'data' => $e->getMessage(),
-            ], 500);
+                'status' => false,
+                'message' => $e->getMessage(),
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
     public function show($id): JsonResponse
     {
         try {
-            $approval = Approval::with(['approvalModule', 'users'])
+            $approval = Approval::with(['approvalModule', 'approvalUsers'])
                 ->orderBy('id', 'desc')
                 ->find($id);
 
@@ -221,6 +292,9 @@ class ApprovalService extends BaseService
 
     public function delete($id): JsonResponse
     {
+        /**
+         * @var Approval $dataExists
+         */
         $dataExists = Approval::where('id', $id)->first();
         if (!$dataExists) {
             return response()->json([
@@ -230,17 +304,20 @@ class ApprovalService extends BaseService
             ], 500);
         }
 
-        DB::beginTransaction();
         try {
-            $approval = Approval::find($id);
-            $approval->delete();
-            $approval->users()->detach();
+            DB::beginTransaction();
+
+            ApprovalUser::query()
+                ->where('approval_id', '=', $id)
+                ->delete();
+
+            $dataExists->delete();
+
             DB::commit();
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data deleted successfully.',
-                'data' => $approval,
             ]);
         } catch (Exception $e) {
             DB::rollBack();

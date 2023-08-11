@@ -16,7 +16,7 @@
                                 </button>
                             </div>
                             <hr>
-                            <div class="d-flex justify-content-start row mb-3">
+                            <div class="d-flex justify-content-start row mb-3" v-if="false">
                                 <div class="col-md-4">
                                     <multiselect
                                         v-model="selectedWorkingArea"
@@ -156,8 +156,8 @@ export default {
                         width: 70,
                         headerSort: false,
                         formatter: function(cell){
-                            let data = cell.getRow().getData().approval_users;
-                            return `<span class="badge badge-primary">${data.length}</span> `;;
+                            let data = cell.getRow().getData().total_approval_user;
+                            return `<span class="badge badge-primary">${data}</span> `;;
                         }
                     },
                     {

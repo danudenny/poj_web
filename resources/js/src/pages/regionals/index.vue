@@ -70,7 +70,7 @@ export default {
                         if (item.field === 'name') localFilter.name = item.value
                     })
 
-                    return `${url}?page=${params.page}&per_page=${params.size}&name=${localFilter.name}&unit_level=2,1`
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${localFilter.name}&unit_level=2&append=total_managed_operating_unit`
                 },
                 layout: 'fitColumns',
                 columns: [
@@ -84,6 +84,19 @@ export default {
                         title: 'Name',
                         field: 'name',
                         headerFilter:"input"
+                    },
+                    {
+                        title: 'Total Unit',
+                        field: 'total_managed_operating_unit',
+                        width: 120,
+                        formatter: (cell) => {
+                            let data = cell.getRow().getData().total_managed_operating_unit;
+                            if (data === 0) {
+                                return `<span class="badge badge-danger">${data}</span> `;;
+                            } else {
+                                return `<span class="badge badge-primary">${data}</span> `;;
+                            }
+                        }
                     },
                     {
                         title: '',

@@ -58,11 +58,19 @@ abstract class BaseService
             $model->orderBy($order_column, $order_type);
         }
 
+        $result = null;
+
         if ($request->per_page) {
-            return $model->paginate($request->per_page)->withQueryString();
+            $result = $model->paginate($request->per_page)->withQueryString();
         } else {
-            return $model->get();
+            $result = $model->get();
         }
+
+        if ($appends = $request->query('append')) {
+            $result->append(explode(",", $appends));
+        }
+
+        return $result;
     }
 
     /**

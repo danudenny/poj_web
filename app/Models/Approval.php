@@ -8,6 +8,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Attributes:
+ * @property-read int $id
+ * @property int $approval_module_id
+ * @property string $name
+ * @property int $unit_relation_id
+ * @property int $unit_level
+ *
+ * Relations:
+ * @property-read ApprovalUser[] $approvalUsers
+ */
 class Approval extends Model
 {
     use HasFactory;
@@ -22,11 +33,31 @@ class Approval extends Model
         'unit_id'
     ];
 
+    protected $appends = [
+        'unit',
+        'total_approval_user'
+    ];
+
+    protected $with = [
+        'approvalModule'
+    ];
+
     protected $hidden = [
         'created_at',
         'updated_at',
         'pivot'
     ];
+
+    public function getUnitAttribute() {
+        return Unit::query()
+            ->where('relation_id', '=', $this->unit_relation_id)
+            ->where('unit_level', '=', $this->unit_level)
+            ->first();
+    }
+
+    public function getTotalApprovalUserAttribute() {
+        return $this->approvalUsers()->count();
+    }
 
     public function approvalModule(): BelongsTo
     {
@@ -45,6 +76,6 @@ class Approval extends Model
 
     public function unit(): BelongsTo
     {
-        return $this->belongsTo(Unit::class);
+        return $this->belongsTo(Unit::class, 'unit_relation_id', 'relation_id');
     }
 }

@@ -52,6 +52,15 @@ class Unit extends Model
         'write_date'  => 'date:Y-m-d',
     ];
 
+    public function getTotalManagedOperatingUnitAttribute() {
+        $total = OperatingUnitDetail::query()
+            ->join('operating_unit_corporates', 'operating_unit_corporates.id', '=', 'operating_unit_details.operating_unit_corporate_id')
+            ->where('operating_unit_corporates.operating_unit_relation_id', '=', $this->relation_id)
+            ->count();
+
+        return $total;
+    }
+
     public function level(): BelongsTo
     {
         return $this->belongsTo(UnitLevel::class, 'unit_level', 'value');

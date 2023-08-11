@@ -23,7 +23,6 @@
                                     <th>No</th>
                                     <th>Name</th>
                                     <th>Approval Form</th>
-                                    <th>Action</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -32,15 +31,6 @@
                                     <td class="text-center">{{item.name}}</td>
                                     <td class="text-center">
                                         <span class="badge badge-success">{{item.approvals.length}}</span>
-                                    </td>
-                                    <td>
-                                        <button class="button-icon button-info" data-bs-toggle="modal"
-                                                data-bs-target="#updateModal" @click="getSingleData(item.id)">
-                                            <i class="fa fa-pencil text-center"></i>
-                                        </button>
-                                        <button class="button-icon button-danger">
-                                            <i class="fa fa-trash text-center" @click="deleteData(item.id)"></i>
-                                        </button>
                                     </td>
                                 </tr>
                                 </tbody>

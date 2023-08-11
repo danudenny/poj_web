@@ -7,10 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Attributes:
- * @property int $user_id
+ * @property int $approval_id
+ * @property int $employee_id
+ * @property int $unit_relation_id
+ * @property int $unit_level
  *
  * Relations:
- * @property-read User $user
+ * @property-read Approval $approval
+ * @property-read Employee $employee
+ * @property-read Unit $unit
  */
 class ApprovalUser extends Model
 {
@@ -18,19 +23,47 @@ class ApprovalUser extends Model
 
     protected  $table = 'approval_users';
 
+    public $timestamps = false;
+    protected $primaryKey = "approval_id";
+
+    protected $appends = [
+        'unit'
+    ];
+
+    protected $with = [
+        'employee'
+    ];
+
     protected $fillable = [
         'approval_id',
         'user_id',
         'level'
     ];
 
-    public function approval()
-    {
-        return $this->hasMany(Approval::class);
+    public function getUnitAttribute(): Unit|null {
+        /**
+         * @var Unit $unit
+         */
+        $unit = Unit::query()
+            ->where('relation_id', '=', $this->unit_relation_id)
+            ->where('unit_level', '=', $this->unit_level)
+            ->first();
+
+        return $unit;
     }
 
-    public function user()
+    public function approval()
     {
-        return $this->hasMany(User::class);
+        return $this->belongsTo(Approval::class, 'approval_id');
+    }
+
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class, 'employee_id');
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class, 'unit_relation_id', 'relation_id');
     }
 }

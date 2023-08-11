@@ -292,7 +292,7 @@ class OvertimeService extends BaseService
             $requestType = $request->input('request_type');
 
             if ($requestType == Overtime::RequestTypeAssignment) {
-                if ($user->isHighestRole(Role::RoleStaff)) {
+                if ($this->isRequestedRoleLevel(Role::RoleStaff)) {
                     return response()->json([
                         'status' => false,
                         'message' => 'You don\'t have access to do assignment',
@@ -312,7 +312,14 @@ class OvertimeService extends BaseService
                     ->get(['approval_users.*']);
 
                 foreach ($approvalUsers as $approvalUser) {
-                    $approvalUserIDs[] = $approvalUser->user_id;
+                    $approvalUserIDs[] = $approvalUser->employee_id;
+                }
+
+                if (count($approvalUserIDs) <= 0) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Need to set approval for backup on your unit',
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
                 }
             }
 
