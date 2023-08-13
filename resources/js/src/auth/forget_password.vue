@@ -10,7 +10,7 @@
                                 <a class="logo">
                                     <img
                                         class="img-fluid for-light"
-                                        src="../assets/images/logo_square.png"
+                                        :src="logo"
                                         alt="loginpage"
                                         width="150"
                                     />
@@ -56,10 +56,25 @@ export default {
     data() {
         return {
             active: true,
-            email: ''
+            email: '',
+            logo: ''
         }
     },
+    async mounted() {
+        await this.getLogo()
+    },
     methods: {
+        async getLogo() {
+            await this.$axios.get('/api/v1/admin/setting')
+                .then((response) => {
+                    response.data.data.map((item) => {
+                        if (item.key === 'app_logo') {
+                            this.logo = item.value;
+                            console.log(this.logo)
+                        }
+                    })
+                })
+        },
         async sendResetLink() {
             await axios.post('/api/v1/auth/forget_password', { email: this.email })
                 .then(response => {

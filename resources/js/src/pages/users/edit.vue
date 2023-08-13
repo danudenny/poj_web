@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs :main="$route.name"/>
+        <Breadcrumbs main="Edit User"/>
         <div class="col-sm-12">
             <form class="card" @submit.prevent="updateUser">
 
@@ -9,17 +9,20 @@
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label class="form-label">Name</label>
-                                <input class="form-control" type="text" placeholder="Name" v-model="user.name">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Username</label>
-                                <input class="form-control" type="text" placeholder="Username" v-model="user.username">
+                                <input disabled class="form-control" type="text" placeholder="Name" v-model="user.name">
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Email address</label>
-                                <input class="form-control" type="email" placeholder="Email" v-model="user.email">
+                                <input disabled class="form-control" type="email" placeholder="Email" v-model="user.email">
+                            </div>
+                            <div class="mb-3" v-if="user.employee.last_unit">
+                                <label class="form-label">Working Unit</label>
+                                <input disabled class="form-control" type="text" placeholder="-" v-model="user.employee.last_unit.name">
                             </div>
                             <div class="mb-3">
+                                <div role="alert" class="text-danger">
+                                    <strong><i class="fa fa-warning"></i> Kosongkan Password Jika Tidak Ingin Mengganti! </strong>
+                                </div>
                                 <label class="form-label">Password</label>
                                 <input class="form-control" type="password" placeholder="Password" v-model="user.password">
                             </div>
@@ -36,6 +39,25 @@
                                         :taggable="false">
                                     </multiselect>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3" v-if="user.employee.department">
+                                <label class="form-label">Department</label>
+                                <input disabled class="form-control" type="text" placeholder="-" v-model="user.employee.department.name">
+                            </div>
+                            <div class="mb-3">
+                                <label class="col-form-label">Team of Department</label>
+                                <multiselect
+                                    v-model="user.employee.team"
+                                    placeholder="Select Team"
+                                    label="name"
+                                    track-by="id"
+                                    :options="department.teams"
+                                    :multiple="false"
+                                    @select="onSelectTeam"
+                                >
+                                </multiselect>
                             </div>
                         </div>
                     </div>
@@ -64,21 +86,49 @@ export default {
                 username: null,
                 password: null,
                 employee_id: null,
+                employee: {
+                    last_unit: {
+                        name: ''
+                    },
+                    department: {
+                        name: '',
+                    },
+                    team: {}
+                },
                 roles: []
             },
             roles: [],
+            users: {},
+            department: {
+                teams: []
+            },
+            selectedTeam: null
         }
     },
-    mounted() {
-        this.getUser();
-        this.getRoles();
+    async mounted() {
+        await this.getUser();
+        await this.getRoles();
+        await this.getTeams();
     },
     methods: {
+        onSelectTeam(e) {
+            this.selectedTeam = this.department.teams.find(team => team.id === e.id);
+        },
+        async getTeams() {
+            await this.$axios.get(`/api/v1/admin/department/view/${this.$route.query.dept_id}/${this.$route.query.unit_id}`)
+                .then(res => {
+                    this.department = res.data.data;
+                })
+                .catch(e => {
+                    console.log(e);
+                });
+        },
         async getUser() {
             const route = useRoute();
             await axios
                 .get(`/api/v1/admin/user/view?id=`+ route.params.id)
                 .then(response => {
+                   this.user = response.data.data;
                     this.user.id = response.data.data.id;
                     this.user.name = response.data.data.name;
                     this.user.username = response.data.data.username;
@@ -106,6 +156,7 @@ export default {
             let email = this.user.email;
             let password = this.user.password;
             let roles = this.user.roles.map(value => value.id);
+            let team = this.selectedTeam;
             let employee_id = this.user.employee_id;
 
             await this.$axios.post(`/api/v1/admin/user/update`, {
@@ -115,14 +166,15 @@ export default {
                 email: email,
                 password: password,
                 roles: roles,
+                team_id: team.id,
                 employee_id: employee_id
             })
                 .then(res => {
-                    useToast().success(res.data.message , { position: 'bottom-right' });
+                    useToast().success(res.data.message );
                     this.$router.push('/management/users');
                 })
                 .catch(e => {
-                    useToast().error(e.response.data.message , { position: 'bottom-right' });
+                    useToast().error(e.response.data.message);
                     console.log(e);
                 });
         },

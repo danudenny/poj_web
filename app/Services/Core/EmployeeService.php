@@ -30,11 +30,15 @@ class EmployeeService extends BaseService
         $roleLevel = $request->header('X-Selected-Role');
 
         try {
-            $employees = Employee::query()->with(['department', 'department.teams', 'corporate', 'kanwil', 'area', 'cabang', 'outlet', 'job', 'units', 'partner']);
+            $employees = Employee::query()->with(['department', 'team', 'corporate', 'kanwil', 'area', 'cabang', 'outlet', 'job', 'units', 'partner']);
             $employeesData = [];
 
             $employees->when($request->filled('department_id'), function(Builder $builder) use ($request) {
                 $builder->where('department_id', '=', $request->query('department_id'));
+            });
+
+            $employees->when($request->filled('team_id'), function(Builder $builder) use ($request) {
+                $builder->where('team_id', '=', intval($request->input('team_id')));
             });
 
             $employees->when($request->filled('corporate_id'), function(Builder $builder) use ($request) {
@@ -148,7 +152,7 @@ class EmployeeService extends BaseService
     public function view($id): Model|Builder
     {
         try {
-            $employee = Employee::with( ['kanwil', 'area', 'cabang', 'outlet', 'job', 'timesheetSchedules'])->find($id);
+            $employee = Employee::with( ['partner', 'department', 'team', 'corporate', 'kanwil', 'area', 'cabang', 'outlet', 'job', 'timesheetSchedules'])->find($id);
 
             if (!$employee) {
                 throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
@@ -214,14 +218,15 @@ class EmployeeService extends BaseService
         }
     }
 
-    public function listPaginatedEmployees(Request $request) {
+    public function listPaginatedEmployees(Request $request): JsonResponse
+    {
         /**
          * @var User $user
          */
         $user = $request->user();
 
         try {
-            $employees = Employee::query()->with(['department', 'corporate', 'kanwil', 'area', 'cabang', 'outlet', 'job', 'units', 'partner']);
+            $employees = Employee::query()->with(['department', 'corporate', 'kanwil', 'area', 'cabang', 'outlet', 'job', 'units', 'partner', 'team']);
 
             $lastUnitRelationID = $request->get('last_unit_relation_id');
             $unitRelationID = $request->get('unit_relation_id');
@@ -305,6 +310,10 @@ class EmployeeService extends BaseService
 
             $employees->when($request->filled('department_id'), function(Builder $builder) use ($request) {
                 $builder->where('employees.department_id', '=', $request->query('department_id'));
+            });
+
+            $employees->when($request->filled('team_id'), function(Builder $builder) use ($request) {
+                $builder->where('team_id', '=', intval($request->input('team_id')));
             });
 
             $employees->when($request->filled('employee_category'), function(Builder $builder) use ($request) {

@@ -17,7 +17,7 @@
                                     </h5>
                                     <div class="row">
                                         <div class="col-md-12">
-                                            <div class="row d-flex justify-content-between">
+                                            <div class="row d-flex justify-content-start">
                                                 <div class="col-md-4">
                                                     <multiselect
                                                         v-model="selectedUnit"
@@ -32,6 +32,22 @@
                                                         @search-change="onUnitSearchName"
                                                     >
                                                     </multiselect>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <multiselect
+                                                        v-model="selectedDepartment"
+                                                        placeholder="Select Department"
+                                                        label="name"
+                                                        track-by="id"
+                                                        :options="departments"
+                                                        :multiple="false"
+                                                        :required="true"
+                                                        @select="onDepartmentSelected"
+                                                    >
+                                                    </multiselect>
+                                                </div>
+                                                <div class="col-md-4">
+                                                   <button class="btn btn-warning" @click="onClearFilter">Clear Filter</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -84,15 +100,38 @@ export default {
             selectedUnit: {
                 relation_id: ''
             },
-            units: []
+            units: [],
+            departments: [],
+            selectedDepartment: null,
         }
     },
     async mounted() {
-        await this.getUsers();
         this.getUnitsData();
+        await this.getDepartments()
         this.initializeUsersTable();
     },
     methods: {
+        onClearFilter() {
+            this.selectedUnit = null
+            this.selectedDepartment = null
+            this.filterDepartment = ''
+            this.filterEmail = ''
+            this.filter.unit_relation_id = ''
+            this.table.clearFilter()
+            this.table.clearHeaderFilter().then(() => {
+                this.table.refreshData()
+            })
+        },
+        onDepartmentSelected() {
+            this.filterDepartment = this.selectedDepartment.odoo_department_id
+            this.table.setFilter('employee.department.name', '=', this.filterDepartment)
+        },
+        async getDepartments() {
+            await this.$axios.get('/api/v1/admin/department/all')
+                .then(response => {
+                    this.departments = response.data.data
+                })
+        },
         getUnitsData() {
             this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.unitPagination.pageSize}&page=${this.unitPagination.currentPage}&name=${this.unitPagination.name}`)
                 .then(response => {
@@ -109,19 +148,6 @@ export default {
                 this.countdown++;
             }, 1000);
         },
-        async getUsers() {
-            this.loading = true;
-            const unitId = JSON.parse(localStorage.getItem('USER_STORAGE_KEY'));
-            await axios
-                .get(`/api/v1/admin/user`)
-                .then(response => {
-                    this.users = response.data.data;
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-        },
-        groupBy: 'employee.last_unit.name',
         initializeUsersTable() {
             const ls = localStorage.getItem('my_app_token')
             const selectedROle = localStorage.getItem('USER_ROLES')
@@ -144,7 +170,7 @@ export default {
                         if (item.field === 'email') this.filterEmail = item.value
                         if (item.field === 'employee.department.name') this.filterDepartment = item.value
                     })
-                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&email=${this.filterEmail}&last_unit_id=${this.filter.unit_relation_id}&department=${this.filterDepartment}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&email=${this.filterEmail}&last_unit_id=${this.filter.unit_relation_id}&department_id=${this.filterDepartment}`
                 },
                 ajaxResponse: function (url, params, response) {
                     return {
@@ -152,9 +178,8 @@ export default {
                         last_page: response.data.last_page,
                     }
                 },
-                layout: 'fitColumns',
-                fitColumns: true,
-                responsiveLayout: true,
+                layout: 'fitData',
+                renderHorizontal:"virtual",
                 height: '100%',
                 filterMode:"remote",
                 columns: [
@@ -162,12 +187,18 @@ export default {
                         title: 'No',
                         field: '',
                         formatter: 'rownum',
-                        width: 100
+                        hozAlign: 'center',
+                        headerHozAlign: 'center',
+                        headerSort: false,
+                        width: 70
                     },
                     {
                         title: 'Name',
                         field: 'name',
-                        headerFilter:"input"
+                        headerFilter:"input",
+                        formatter: function(row) {
+                           return row.getData().name;
+                        }
                     },
                     {
                         title: 'Email',
@@ -177,12 +208,20 @@ export default {
                     {
                         title: 'Unit',
                         field: 'employee.last_unit.name',
-                        headerFilter:"input"
+                        hozAlign: 'center',
+                        headerHozAlign: 'center',
+                        headerSort: 'false',
+                        formatter: function(row) {
+                            if (row.getData().employee.last_unit.name === null) {
+                                return `<span class='badge badge-danger '>No Unit</span>`;
+                            } else {
+                                return row.getData().employee.last_unit.name;
+                            }
+                        }
                     },
                     {
                         title: 'Department',
                         field: 'employee.department.name',
-                        headerFilter:"input",
                         formatter: function(row) {
                             if (row.getData().employee.department.name === null) {
                                 return `<span class='badge badge-danger '>No Department</span>`;
@@ -227,7 +266,7 @@ export default {
             });
             this.loading = false
         },
-        viewDetailsFormatter(cell, formatterParams, onRendered) {
+        viewDetailsFormatter(cell) {
             return `
                 <div>
                     <button class="button-icon button-success" data-action="view" data-id="${cell.getRow().getData().id}">
@@ -246,12 +285,22 @@ export default {
             if (action === 'edit') {
                 this.$router.push({
                     name: 'user-edit',
-                    params: {id: rowData.id}
+                    params: {
+                        id: rowData.id
+                    },
+                    query: {
+                        dept_id: rowData.employee.department.id,
+                        unit_id: rowData.employee.unit_id
+                    }
                 })
             } else if (action === 'view') {
                 this.$router.push({
                     name: 'user-detail',
-                    params: {id: rowData.id}
+                    params: {id: rowData.id},
+                    query: {
+                        dept_id: rowData.employee.department.id,
+                        unit_id: rowData.employee.unit_id
+                    }
                 })
             }
         },
@@ -265,8 +314,7 @@ export default {
                 .then(async (response) => {
                     this.syncLoading = false;
                     this.loading = false;
-                    await this.getUsers()
-                    this.initializeUsersTable();
+                    this.table.setData();
                     useToast().success(response.data.message);
 
                 }).catch(() => {

@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use InvalidArgumentException;
 
 class UserService extends BaseService
 {
@@ -58,9 +59,9 @@ class UserService extends BaseService
                 $query->where('is_active', '=', request()->query('is_active'));
             });
 
-            $users->when(request()->filled('department'), function ($query) {
+            $users->when(request()->query('department_id'), function ($query) {
                 $query->whereHas('employee', function ($query) {
-                    $query->wherRaw('LOWER("department") LIKE ? ', '%'.strtolower(request()->query('department')).'%');
+                    $query->where('department_id', '=', intval(request()->input('department_id')));
                 });
             });
 
@@ -100,8 +101,8 @@ class UserService extends BaseService
                 'data' => $userData
             ], 200);
 
-        } catch (\InvalidArgumentException $e) {
-            throw new \InvalidArgumentException($e->getMessage());
+        } catch (InvalidArgumentException $e) {
+            throw new InvalidArgumentException($e->getMessage());
         } catch (Exception $e) {
             throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
@@ -119,15 +120,15 @@ class UserService extends BaseService
             $user = User::with(['roles:id,name'])->firstWhere('id', $data['id']);
 
             if (!$user) {
-                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+                throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
 
             $user->append(['is_in_representative_unit', 'is_in_central_unit']);
 
             return $user;
 
-        } catch (\InvalidArgumentException $e) {
-            throw new \InvalidArgumentException($e->getMessage());
+        } catch (InvalidArgumentException $e) {
+            throw new InvalidArgumentException($e->getMessage());
         } catch (Exception $e) {
             throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
@@ -143,12 +144,12 @@ class UserService extends BaseService
             $roles = Role::where('is_active', '=', 1)->get();
 
             if (empty($roles)) {
-                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+                throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
             return RoleResource::collection($roles);
 
-        } catch (\InvalidArgumentException $e) {
-            throw new \InvalidArgumentException($e->getMessage());
+        } catch (InvalidArgumentException $e) {
+            throw new InvalidArgumentException($e->getMessage());
         } catch (Exception $e) {
             throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
         }
@@ -178,15 +179,15 @@ class UserService extends BaseService
             }
 
             if(!$user->roles()->sync($request->roles)){
-                throw new \InvalidArgumentException("Failed to sync roles!", 500);
+                throw new InvalidArgumentException("Failed to sync roles!", 500);
             }
 
             DB::commit();
             return $user;
 
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             DB::rollBack();
-            throw new \InvalidArgumentException($e->getMessage());
+            throw new InvalidArgumentException($e->getMessage());
         } catch (Exception $e) {
             DB::rollBack();
             throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
@@ -202,10 +203,10 @@ class UserService extends BaseService
     {
         DB::beginTransaction();
         try {
-            $user = User::firstWhere('id', $request->id);
+            $user = User::with('employee')->firstWhere('id', $request->id);
 
             if (!$user) {
-                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+                throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
 
             if (!empty($request->password)) {
@@ -219,22 +220,26 @@ class UserService extends BaseService
             $user->employee_id = $request->employee_id;
             $user->updated_at = date('Y-m-d H:i:s');
 
+            $user->employee()->update([
+                'team_id' => $request->team_id
+            ]);
+
             if (!$user->save()) {
                 throw new Exception(self::DB_FAILED, 500);
             }
 
             if (!empty($request->roles)) {
                 if (!$user->roles()->sync($request->roles)) {
-                    throw new \InvalidArgumentException("Failed to sync roles!", 500);
+                    throw new InvalidArgumentException("Failed to sync roles!", 500);
                 }
             }
 
             DB::commit();
             return $user;
 
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             DB::rollBack();
-            throw new \InvalidArgumentException($e->getMessage());
+            throw new InvalidArgumentException($e->getMessage());
         } catch (Exception $e) {
             DB::rollBack();
             throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
@@ -253,7 +258,7 @@ class UserService extends BaseService
 
             $user = User::find($request->id);
             if (!$user) {
-                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+                throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
 
             if(!$this->toggleDataStatus($user)) {
@@ -263,9 +268,9 @@ class UserService extends BaseService
             DB::commit();
             return $user;
 
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             DB::rollBack();
-            throw new \InvalidArgumentException($e->getMessage());
+            throw new InvalidArgumentException($e->getMessage());
         } catch (Exception $e) {
             DB::rollBack();
             throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
@@ -283,16 +288,16 @@ class UserService extends BaseService
         try {
             $user = User::find($request->id);
             if (!$user) {
-                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+                throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
             $user->delete();
 
             DB::commit();
             return $user;
 
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             DB::rollBack();
-            throw new \InvalidArgumentException($e->getMessage());
+            throw new InvalidArgumentException($e->getMessage());
         } catch (Exception $e) {
             DB::rollBack();
             throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
@@ -317,9 +322,9 @@ class UserService extends BaseService
             DB::commit();
             return $user;
 
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             DB::rollBack();
-            throw new \InvalidArgumentException($e->getMessage());
+            throw new InvalidArgumentException($e->getMessage());
         } catch (Exception $e) {
             DB::rollBack();
             throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
@@ -338,16 +343,16 @@ class UserService extends BaseService
             $user = User::onlyTrashed()->find($request->id);
 
             if(!$user) {
-                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+                throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
             $user->forceDelete();
 
             DB::commit();
             return $user;
 
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             DB::rollBack();
-            throw new \InvalidArgumentException($e->getMessage());
+            throw new InvalidArgumentException($e->getMessage());
         } catch (Exception $e) {
             DB::rollBack();
             throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());
@@ -367,7 +372,7 @@ class UserService extends BaseService
             $user = User::firstWhere('id', $id);
 
             if (!$user) {
-                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);
+                throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);
             }
 
             $path = 'uploads/avatar';
@@ -383,9 +388,9 @@ class UserService extends BaseService
             DB::commit();
             return $user;
 
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             DB::rollBack();
-            throw new \InvalidArgumentException($e->getMessage());
+            throw new InvalidArgumentException($e->getMessage());
         } catch (Exception $e) {
             DB::rollBack();
             throw new Exception(self::SOMETHING_WRONG.' : '.$e->getMessage());

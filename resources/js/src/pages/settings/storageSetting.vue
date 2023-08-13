@@ -81,8 +81,7 @@
 </template>
 
 <script>
-
-import axios from "axios";
+import {useToast} from 'vue-toastification';
 
 export default {
     data() {
@@ -120,7 +119,7 @@ export default {
     },
     methods: {
         fetchExistingData() {
-            this.$axios.get('api/v1/admin/setting?limit=100')
+            this.$axios.get('api/v1/admin/setting')
                 .then(response => {
                     const result = response.data.data;
 
@@ -171,9 +170,9 @@ export default {
             ];
 
            this.$axios.put('api/v1/admin/setting/bulk-update', data)
-                .then((response) => {
-                    this.basic_success_alert();
-                    console.log(response);
+                .then(() => {
+                    useToast().success('Data successfully saved!');
+                    window.location.reload();
                 })
                 .catch((error) => {
                     this.warning_alert_state();

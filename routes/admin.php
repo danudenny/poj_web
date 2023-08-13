@@ -37,6 +37,9 @@ use Illuminate\Support\Facades\Route;
 
 
 Route::get('admin/employee/sync-to-users', [EmployeeController::class, 'syncToUser']);
+Route::group(['prefix' => 'admin/setting'], function () {
+    Route::get('/', [SettingController::class, 'index']);
+});
 
 Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'], function () {
     // Begin User
@@ -120,7 +123,6 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
 
     // Begin Setting
     Route::group(['prefix' => 'setting'], function () {
-        Route::get('/', [SettingController::class, 'index']);
         Route::post('save', [SettingController::class, 'save']);
         Route::put('update/{id}', [SettingController::class, 'update']);
         Route::put('bulk-update', [SettingController::class, 'bulkUpdate']);

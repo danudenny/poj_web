@@ -8,10 +8,8 @@
                             <div class="email-app-sidebar left-bookmark task-sidebar">
                                 <div class="media">
                                     <div class="media-size-email">
-                                        <img
-                                            class="me-3 rounded-circle"
-                                            src="@/assets/images/user/user.png"
-                                            alt="" />
+                                        <img :src="`https://ui-avatars.com/api/?name=${employeeData.name}&background=0A5640&color=fff&length=2&rounded=false&size=48`" alt="avatar" class="avatar-img rounded">
+
                                     </div>
                                     <div class="media-body">
                                         <h6 class="f-w-600">{{employeeData.name}}</h6>

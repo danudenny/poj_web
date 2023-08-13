@@ -41,8 +41,14 @@
                         </div>
                         <div class="col-md-6 col-sm-12">
                             <div class="mb-3">
+                                <label>Employee Category</label>
+                                <input class="form-control" :value="employee.employee_category.split('_').join(' ').toUpperCase()" readonly type="text">
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-sm-12">
+                            <div class="mb-3">
                                 <label>Employee Type</label>
-                                <input class="form-control" :value="employee.employee_category" readonly type="text">
+                                <input class="form-control" :value="employee.employee_type.split('_').join(' ').toUpperCase()" readonly type="text">
                             </div>
                         </div>
                         <div class="col-md-6 col-sm-12">
@@ -66,13 +72,19 @@
                         <div class="col-md-6 col-sm-12">
                             <div class="mb-3">
                                 <label>Gender</label>
-                                <input class="form-control" :value="employee.gender" readonly type="text">
+                                <input class="form-control" :value="employee.gender.toUpperCase()" readonly type="text">
                             </div>
                         </div>
                         <div class="col-md-6 col-sm-12">
                             <div class="mb-3">
                                 <label>Marital Status</label>
-                                <input class="form-control" :value="employee.marital" readonly type="text">
+                                <input class="form-control" :value="employee.marital.toUpperCase()" readonly type="text">
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-sm-12">
+                            <div class="mb-3">
+                                <label>Religion</label>
+                                <input class="form-control" :value="employee.agama_id.toUpperCase()" readonly type="text">
                             </div>
                         </div>
                     </div>

@@ -9,14 +9,53 @@
                     <div class="row">
                         <div class="col-md-12 col-sm-12">
                             <div class="mb-3">
-                                <label>Office</label>
+                                <label>Current Work</label>
+                                <input class="form-control" :value="employee.partner?.name" readonly type="text">
+                            </div>
+                        </div>
+                        <div class="col-md-12 col-sm-12">
+                            <div class="mb-3">
+                                <label>Default Operating Unit</label>
+                                <div v-if="employee.operating_unit">
+                                    <input class="form-control" :value="employee.operating_unit?.name" readonly type="text">
+                                </div>
+                                <div v-else>
+                                    <span class="badge badge-danger">No Operating Unit</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 col-sm-12">
+                            <div class="mb-3">
+                                <label>Working Area</label>
                                 <input class="form-control" :value="workingArea.name" readonly type="text">
                             </div>
                         </div>
                         <div class="col-md-12 col-sm-12">
                             <div class="mb-3">
-                                <label>Job</label>
+                                <label>Job Title</label>
                                 <input class="form-control" :value="employee.job.name" readonly type="text">
+                            </div>
+                        </div>
+                        <div class="col-md-12 col-sm-12">
+                            <div class="mb-3">
+                                <label>Department</label>
+                                <div v-if="employee.department">
+                                    <input class="form-control" :value="employee.department?.name" readonly type="text">
+                                </div>
+                                <div v-else>
+                                    <span class="badge badge-danger">No Department</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12 col-sm-12">
+                            <div class="mb-3">
+                                <label>Team</label>
+                                <div v-if="employee.team">
+                                    <input class="form-control" :value="employee.team?.name" readonly type="text">
+                                </div>
+                                <div v-else>
+                                    <span class="badge badge-danger">No Team</span>
+                                </div>
                             </div>
                         </div>
                     </div>

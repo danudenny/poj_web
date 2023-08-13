@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read EmployeeTimesheetSchedule[] $timesheetSchedules
  * @property-read Unit $operatingUnit
  * @property-read Job $job
+ * @property mixed $department
  * @method static find($id)
  * @method static leftJoin(string $string, string $string1, string $string2, string $string3)
  */
@@ -40,6 +41,8 @@ class Employee extends Model
     use HasFactory;
 
     protected $appends = ['status', 'last_unit'];
+
+    const UPDATED_AT = 'write_date';
 
     public function getStatusAttribute(): string
     {
@@ -370,5 +373,10 @@ class Employee extends Model
             ->first();
 
         return $employeeBackup;
+    }
+
+    public function team(): BelongsTo
+    {
+        return $this->belongsTo(Team::class, 'team_id');
     }
 }
