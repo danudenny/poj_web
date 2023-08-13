@@ -155,7 +155,7 @@ export default {
         },
         async getDepartments() {
             await this.$axios
-                .get(`/api/v1/admin/department`)
+                .get(`/api/v1/admin/department/all`)
                 .then(response => {
                     this.departments = response.data.data;
                 })
@@ -179,7 +179,6 @@ export default {
                 .get(`/api/v1/admin/partner`)
                 .then(response => {
                     this.partners = response.data.data;
-                    console.log(this.partners);
                 })
                 .catch(error => {
                     console.error(error);
@@ -224,7 +223,6 @@ export default {
                         customerName: ''
                     }
 
-                    console.log("filter", params)
                     params.filter.map((item) => {
                         if (item.field === 'corporate.name') this.filterCorporate = item.value
                         if (item.field === 'kanwil.name') localFilter.kanwilName = item.value
@@ -232,7 +230,11 @@ export default {
                         if (item.field === 'cabang.name') localFilter.cabangName = item.value
                         if (item.field === 'outlet.name') localFilter.outletName = item.value
                         if (item.field === 'partner.name') localFilter.customerName = item.value
+                        if (item.field === 'department_id') localFilter.department_id = item.value
                     })
+
+                    console.log(params)
+
                     return `${url}?page=${params.page}&per_page=${params.size}&customer_name=${localFilter.customerName}&name=${localFilter.employeeName}&department_id=${localFilter.department_id}&employee_category=${localFilter.employee_category}&employee_type=${localFilter.employee_type}&kanwil_name=${localFilter.kanwilName}&area_name=${localFilter.areaName}&cabang_name=${localFilter.cabangName}&outlet_name=${localFilter.outletName}&odoo_job_id=${localFilter.job_id}&corporate=${this.filterCorporate
                     }`
                 },
@@ -255,7 +257,7 @@ export default {
                         width: 200,
                         frozen: true,
                         headerHozAlign: 'center',
-                        formatter: function (cell, formatterParams, onRendered) {
+                        formatter: function (cell) {
                             return `<span class="text-danger-emphasis"><b>${cell.getValue()}</b></span>`;
                         },
                         cellClick: (e, cell) => {
@@ -274,7 +276,22 @@ export default {
                         field: 'department.name',
                         headerHozAlign: 'center',
                         hozAlign: 'center',
-                        formatter: function (cell, formatterParams, onRendered) {
+                        formatter: function (cell) {
+                            return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
+                        },
+                    },
+                    {
+                        title: 'Team',
+                        field: 'department.teams.name',
+                        headerHozAlign: 'center',
+                        hozAlign: 'center',
+                    },
+                    {
+                        title: 'Department',
+                        field: 'department.name',
+                        headerHozAlign: 'center',
+                        hozAlign: 'center',
+                        formatter: function (cell) {
                             return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
                         },
                     },
@@ -284,7 +301,7 @@ export default {
                         headerFilter:"input",
                         headerHozAlign: 'center',
                         hozAlign: 'center',
-                        formatter: function (cell, formatterParams, onRendered) {
+                        formatter: function (cell) {
                             return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
                         },
                     },
@@ -293,7 +310,7 @@ export default {
                         field: 'employee_category',
                         headerHozAlign: 'center',
                         hozAlign: 'center',
-                        formatter: function (cell, formatterParams, onRendered) {
+                        formatter: function (cell) {
                             const arr =  cell.getValue().split("_");
 
                             for (let i = 0; i < arr.length; i++) {
@@ -307,7 +324,7 @@ export default {
                         field: 'employee_type',
                         headerHozAlign: 'center',
                         hozAlign: 'center',
-                        formatter: function (cell, formatterParams, onRendered) {
+                        formatter: function (cell) {
                             const arr =  cell.getValue().split("_");
 
                             for (let i = 0; i < arr.length; i++) {
@@ -323,7 +340,7 @@ export default {
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Corporate",
-                        formatter: function (cell, formatterParams, onRendered) {
+                        formatter: function (cell) {
                             return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
                         },
                     },
@@ -334,7 +351,7 @@ export default {
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Kanwil",
-                        formatter: function (cell, formatterParams, onRendered) {
+                        formatter: function (cell) {
                             return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
                         },
                         clearable: true,
@@ -346,7 +363,7 @@ export default {
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Area",
-                        formatter: function (cell, formatterParams, onRendered) {
+                        formatter: function (cell) {
                             return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
                         },
                     },
@@ -357,7 +374,7 @@ export default {
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Cabang",
-                        formatter: function (cell, formatterParams, onRendered) {
+                        formatter: function (cell) {
                             return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
                         },
                     },
@@ -368,7 +385,7 @@ export default {
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Outlet",
-                        formatter: function (cell, formatterParams, onRendered) {
+                        formatter: function (cell) {
                             return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
                         },
                     },
@@ -405,7 +422,7 @@ export default {
                 this.table.clearFilter();
                 return;
             }
-            this.table.setFilter('department_id', "=", this.filterDepartment);
+            this.table.setFilter('department_id', "=", this.filterDepartment.odoo_department_id);
         },
         filterEmployeeCategoryName() {
             if (this.filterEmployeeCategory === null) {
@@ -424,7 +441,7 @@ export default {
         filtering() {
             this.showFilter = !this.showFilter;
         },
-        viewDetailsFormatter(cell, formatterParams, onRendered) {
+        viewDetailsFormatter(cell) {
             return `<button class="button-icon button-success" data-id="${cell.getRow().getData().id}"><i class="fa fa-eye"></i> </button>`;
         },
         viewData(id) {

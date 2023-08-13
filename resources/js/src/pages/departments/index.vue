@@ -77,32 +77,16 @@ export default {
                     },
                     {
                         title: 'Name',
-                        field: 'name',
+                        field: 'department_name',
                         headerFilter:"input",
                         headerHozAlign: 'center',
                     },
                     {
-                        title: 'Company Name',
-                        field: 'unit.name',
+                        title: 'Working Area',
+                        field: 'unit_name',
                         headerFilter:"input",
                         hozAlign: 'center',
                         headerHozAlign: 'center',
-                    },
-                    {
-                        title: 'Total Employee',
-                        field: 'employee_count',
-                        hozAlign: 'center',
-                        headerHozAlign: 'center',
-                        headerSort: false,
-                        width: 130,
-                        formatter: function (cell) {
-                            const rowData = cell.getRow().getData();
-                            if (rowData.employee_count > 0) {
-                                return `<span class="badge badge-primary">${rowData.employee_count}</span>`
-                            } else {
-                                return `<span class="badge badge-danger">0</span>`
-                            }
-                        }
                     },
                     {
                         title: 'Total Teams',
@@ -157,7 +141,8 @@ export default {
                 this.$router.push({
                     name: 'department-edit',
                     params: {
-                        id: cell.getRow().getData().id
+                        id: cell.getData().id,
+                        unit_id: cell.getData().unit_id
                     }
                 })
             }

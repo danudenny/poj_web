@@ -18,14 +18,19 @@ class DepartmentController extends Controller
         $this->departmentService = $departmentService;
     }
 
+    public function all(Request $request): JsonResponse
+    {
+        return $this->departmentService->getAll($request);
+    }
+
     public function index(Request $request): JsonResponse
     {
         return $this->departmentService->index($request);
     }
 
-    public function show($id): JsonResponse
+    public function show($id, $unit_id): JsonResponse
     {
-        return $this->departmentService->show($id);
+        return $this->departmentService->show($id, $unit_id);
     }
 
     public function assign($id): JsonResponse
@@ -33,8 +38,8 @@ class DepartmentController extends Controller
         return $this->departmentService->assignCompany($id);
     }
 
-    public function assignTeam(Request $request, $id): JsonResponse
+    public function assignTeam(Request $request, $id, $unit_id): JsonResponse
     {
-        return $this->departmentService->assignTeam($request, $id);
+        return $this->departmentService->assignTeam($request, $id, $unit_id);
     }
 }
