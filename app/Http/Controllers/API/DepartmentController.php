@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use App\Models\Department;
 use App\Services\Core\DepartmentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

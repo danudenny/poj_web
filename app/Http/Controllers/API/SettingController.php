@@ -3,14 +3,10 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\BaseController;
-use App\Http\Requests\Setting\SettingBulkUpdateRequest;
-use App\Http\Requests\Setting\SettingSaveRequest;
-use App\Http\Requests\Setting\SettingUpdateRequest;
-use App\Models\Setting;
 use App\Services\Core\SettingService;
 use Exception;
 use Illuminate\Http\JsonResponse;
-use InvalidArgumentException;
+use Illuminate\Http\Request;
 
 class SettingController extends BaseController
 {
@@ -20,58 +16,43 @@ class SettingController extends BaseController
         $this->settingSvc = $settingSvc;
     }
 
-    public function index(Setting $setting): JsonResponse
+    /**
+     * @throws Exception
+     */
+    public function index(): JsonResponse
     {
-        try {
-            $result = $this->settingSvc->index($setting);
-            return $this->sendSuccess($result, self::SUCCESS_FETCH);
-
-        } catch (Exception | InvalidArgumentException $error) {
-            return $this->sendError($error->getMessage());
-        }
+        return $this->settingSvc->index();
     }
 
-    public function save(SettingSaveRequest $request): JsonResponse
+    /**
+     * @throws Exception
+     */
+    public function save(Request $request): JsonResponse
     {
-        try {
-            $result = $this->settingSvc->save($request);
-            return $this->sendSuccess($result, self::SUCCESS_CREATED, 201);
-
-        } catch (\Exception | \InvalidArgumentException $error) {
-            return $this->sendError($error->getMessage());
-        }
+       return $this->settingSvc->save($request);
     }
 
-    public function update(SettingUpdateRequest $request, $id): JsonResponse
+    /**
+     * @throws Exception
+     */
+    public function update(Request $request, $id): JsonResponse
     {
-        try {
-            $result = $this->settingSvc->update($request, $id);
-            return $this->sendSuccess($result, self::SUCCESS_UPDATED);
-
-        } catch (\Exception | \InvalidArgumentException $error) {
-            return $this->sendError($error->getMessage());
-        }
+       return $this->settingSvc->update($request, $id);
     }
 
-    public function bulkUpdate(SettingBulkUpdateRequest $request): JsonResponse
+    /**
+     * @throws Exception
+     */
+    public function bulkUpdate(Request $request): JsonResponse
     {
-        try {
-            $result = $this->settingSvc->bulkUpdate($request);
-            return $this->sendSuccess($result, self::SUCCESS_UPDATED);
-
-        } catch (\Exception | \InvalidArgumentException $error) {
-            return $this->sendError($error->getMessage());
-        }
+        return $this->settingSvc->bulkUpdate($request);
     }
 
+    /**
+     * @throws Exception
+     */
     public function delete($id): JsonResponse
     {
-        try {
-            $result = $this->settingSvc->delete($id);
-            return $this->sendSuccess($result, self::SUCCESS_DELETED);
-
-        } catch (\Exception | \InvalidArgumentException $error) {
-            return $this->sendError($error->getMessage());
-        }
+        return $this->settingSvc->delete($id);
     }
 }
