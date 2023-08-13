@@ -21,6 +21,7 @@ use Watson\Rememberable\Rememberable;
  *
  * Relations:
  * @property-read Employee $employee
+ * @method static firstWhere(string $string, $id)
  */
 class User extends Authenticatable
 {
@@ -132,7 +133,11 @@ class User extends Authenticatable
 
     public function employee(): BelongsTo
     {
-        return $this->BelongsTo(Employee::class, 'employee_id');
+        return $this->BelongsTo(Employee::class, 'employee_id')->with(['department', 'team']);
+    }
+
+    public function department() {
+        return $this->employee->department;
     }
 
     public function approvals(): BelongsToMany

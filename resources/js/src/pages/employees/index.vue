@@ -11,9 +11,17 @@
                                 <h5>Employee List</h5>
                             </div>
                             <div class="card-body">
-                                <div class="mb-2">
-                                    <button class="btn btn-success" @click="filtering">
-                                        <i class="fa fa-filter"></i> Filter
+                                <div class="mb-2 d-flex justify-content-start column-gap-2">
+                                    <button class="btn btn-primary" @click="filtering">
+                                        <i class="fa fa-filter"></i> &nbsp;
+                                        <span v-if="showFilter">Hide Filter</span>
+                                        <span v-else>Show Filter</span>
+                                    </button>
+                                    <button class="btn btn-outline-danger" v-if="showFilter" @click="onResetFilter">
+                                        <i class="fa fa-rotate-left" ></i>&nbsp; Reset Filter
+                                    </button>
+                                    <button class="btn btn-outline-success" @click="exportExcel">
+                                        <i class="fa fa-file-excel-o"></i>&nbsp; Export to Excel
                                     </button>
                                 </div>
                                 <div class="row" v-if="showFilter">
@@ -33,18 +41,30 @@
                                             @search-change="onJobSearchName"
                                         ></multiselect>
                                     </div>
-                                </div>
-                                <div class="row mt-3" v-if="showFilter">
                                     <div class="col-md-4">
-                                        <label>Departments</label>
+                                        <label>Department</label>
                                         <multiselect
                                             v-model="filterDepartment"
                                             :options="departments"
                                             :multiple="false"
                                             label="name"
                                             track-by="id"
-                                            placeholder="Select Department"
+                                            placeholder="Select Team"
                                             @select="filterDepartmentName"
+                                        ></multiselect>
+                                    </div>
+                                </div>
+                                <div class="row mt-3" v-if="showFilter">
+                                    <div class="col-md-4">
+                                        <label>Teams</label>
+                                        <multiselect
+                                            v-model="filterTeam"
+                                            :options="teams"
+                                            :multiple="false"
+                                            label="name"
+                                            track-by="id"
+                                            placeholder="Select Team"
+                                            @select="filterTeamName"
                                         ></multiselect>
                                     </div>
                                     <div class="col-md-4">
@@ -88,9 +108,7 @@
 </template>
 
 <script>
-import axios from "axios";
 import {TabulatorFull as Tabulator} from 'tabulator-tables';
-import {useToast} from "vue-toastification";
 
 export default {
     data() {
@@ -115,9 +133,9 @@ export default {
             filterArea: '',
             filterCabang: '',
             filterOutlet: '',
-            filterJob: null,
-            filterEmployeeCategory: null,
-            filterEmployeeType: null,
+            filterJob: '',
+            filterEmployeeCategory: '',
+            filterEmployeeType: '',
             showFilter: false,
             jobs: [],
             departments: [],
@@ -134,7 +152,9 @@ export default {
             employeeTypes: [
                 {name: 'Internal', value: 'internal'},
                 {name: 'Outsourcing', value: 'outsourcing'},
-            ]
+            ],
+            teams: [],
+            filterTeam: '',
         }
     },
     async mounted() {
@@ -142,16 +162,49 @@ export default {
         await this.getJobs();
         await this.getDepartments();
         await this.getPartner();
+        await this.getTeam();
     },
     computed() {
         this.initializeEmployeesTable()
     },
     methods: {
-        startCountdown() {
-            this.countdown = 1;
-            this.timerId = setInterval(() => {
-                this.countdown++;
-            }, 1000);
+        exportExcel() {
+            this.table.download("xlsx", "employees.xlsx", {
+                sheetName: "Employees",
+                columnGroups: false,
+                columnCalcs: false,
+            });
+        },
+        onResetFilter() {
+            this.filterName = '';
+            this.filterDepartment = '';
+            this.filterCorporate = '';
+            this.filterKanwil = '';
+            this.filterArea = '';
+            this.filterCabang = '';
+            this.filterOutlet = '';
+            this.filterJob = '';
+            this.filterEmployeeCategory = '';
+            this.filterEmployeeType = '';
+            this.filterTeam = '';
+            this.table.clearFilter();
+        },
+        filterTeamName() {
+            if (this.filterTeam === "") {
+                this.table.clearFilter();
+                return;
+            }
+            this.table.setFilter('team.name', '=', this.filterTeam?.id);
+        },
+        async getTeam() {
+            await this.$axios
+                .get(`/api/v1/admin/team?per_page=50`)
+                .then(response => {
+                    this.teams = response.data.data.data;
+                })
+                .catch(error => {
+                    console.error(error);
+                });
         },
         async getDepartments() {
             await this.$axios
@@ -216,12 +269,14 @@ export default {
                         department_id: this.filterDepartment?.odoo_department_id ?? '',
                         job_id: this.filterJob?.odoo_job_id ?? '',
                         employeeName: this.filterName,
+                        team_id: this.filterTeam?.id ?? '',
                         kanwilName: '',
                         areaName: '',
                         cabangName: '',
                         outletName: '',
                         customerName: ''
                     }
+
 
                     params.filter.map((item) => {
                         if (item.field === 'corporate.name') this.filterCorporate = item.value
@@ -231,11 +286,10 @@ export default {
                         if (item.field === 'outlet.name') localFilter.outletName = item.value
                         if (item.field === 'partner.name') localFilter.customerName = item.value
                         if (item.field === 'department_id') localFilter.department_id = item.value
+                        if (item.field === 'team.name') localFilter.team_id = item.value
                     })
 
-                    console.log(params)
-
-                    return `${url}?page=${params.page}&per_page=${params.size}&customer_name=${localFilter.customerName}&name=${localFilter.employeeName}&department_id=${localFilter.department_id}&employee_category=${localFilter.employee_category}&employee_type=${localFilter.employee_type}&kanwil_name=${localFilter.kanwilName}&area_name=${localFilter.areaName}&cabang_name=${localFilter.cabangName}&outlet_name=${localFilter.outletName}&odoo_job_id=${localFilter.job_id}&corporate=${this.filterCorporate
+                    return `${url}?page=${params.page}&per_page=${params.size}&customer_name=${localFilter.customerName}&name=${localFilter.employeeName}&department_id=${localFilter.department_id}&team_id=${localFilter.team_id}&employee_category=${localFilter.employee_category}&employee_type=${localFilter.employee_type}&kanwil_name=${localFilter.kanwilName}&area_name=${localFilter.areaName}&cabang_name=${localFilter.cabangName}&outlet_name=${localFilter.outletName}&odoo_job_id=${localFilter.job_id}&corporate=${this.filterCorporate
                     }`
                 },
                 layout: 'fitData',
@@ -282,9 +336,12 @@ export default {
                     },
                     {
                         title: 'Team',
-                        field: 'department.teams.name',
+                        field: 'team.name',
                         headerHozAlign: 'center',
                         hozAlign: 'center',
+                        formatter: function (cell) {
+                            return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
+                        },
                     },
                     {
                         title: 'Department',
@@ -457,40 +514,6 @@ export default {
                 }, 1000)
             }
         },
-        async syncFromERP() {
-            this.syncLoading = true;
-            this.loading = true
-            this.startCountdown();
-            this.table.destroy()
-
-            await axios.create({
-                baseURL: import.meta.env.VITE_SYNC_ODOO_URL,
-            }).get('/sync-employee')
-                .then(async (response) => {
-                    if (await response.data.status === 201) {
-                        this.syncLoading = false;
-                        this.loading = false;
-                        await this.getEmployees()
-                        this.initializeEmployeesTable();
-                        useToast().success(response.data.message);
-                    } else {
-                        this.syncLoading = false;
-                        this.loading = false;
-                        await this.getEmployees()
-                        this.initializeEmployeesTable();
-                        useToast().error(response.data.message);
-                    }
-                }).catch(async () => {
-                    this.syncLoading = false;
-                    this.loading = false;
-                    await this.getEmployees()
-                    this.initializeEmployeesTable();
-                    useToast().error("Failed to Sync Data! Check connection.");
-                }).finally(() => {
-                    this.syncLoading = false;
-                    clearInterval(this.timerId);
-                });
-        }
     }
 }
 </script>

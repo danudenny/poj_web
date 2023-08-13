@@ -10,7 +10,7 @@
                 <a class="logo">
                   <img
                       class="img-fluid for-light"
-                      src="../assets/images/logo_square.png"
+                      :src="logo"
                       alt="looginpage"
                       width="150"
                   />
@@ -75,9 +75,24 @@ export default {
         email: '',
         password: '',
         active: true,
+        logo: ''
     };
   },
-  methods: {
+    async mounted() {
+        await this.getLogo();
+    },
+    methods: {
+      async getLogo() {
+          await this.$axios.get('/api/v1/admin/setting')
+              .then((response) => {
+                  response.data.data.map((item) => {
+                      if (item.key === 'app_logo') {
+                          this.logo = item.value;
+                          console.log(this.logo)
+                      }
+                  })
+              })
+      },
     ...mapActions(['login']),
     async signin() {
         try {
