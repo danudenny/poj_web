@@ -30,7 +30,7 @@ class EmployeeService extends BaseService
         $roleLevel = $request->header('X-Selected-Role');
 
         try {
-            $employees = Employee::query()->with(['department', 'corporate', 'kanwil', 'area', 'cabang', 'outlet', 'job', 'units', 'partner']);
+            $employees = Employee::query()->with(['department', 'department.teams', 'corporate', 'kanwil', 'area', 'cabang', 'outlet', 'job', 'units', 'partner']);
             $employeesData = [];
 
             $employees->when($request->filled('department_id'), function(Builder $builder) use ($request) {

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
  * @method static find($id)
@@ -20,9 +21,9 @@ class Department extends Model
         'write_date',
     ];
 
-    public function unit(): BelongsTo
+    public function unit(): BelongsToMany
     {
-        return $this->belongsTo(Unit::class, 'company_id', 'relation_id');
+        return $this->belongsToMany(Unit::class, 'unit_id')->distinct();
     }
 
     public function employee(): BelongsTo
@@ -32,6 +33,6 @@ class Department extends Model
 
     public function teams(): BelongsToMany
     {
-        return $this->belongsToMany(Team::class, 'department_has_teams', 'department_id', 'team_id');
+        return $this->belongsToMany(Team::class, 'department_has_teams')->withPivot('unit_id');
     }
 }

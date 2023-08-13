@@ -15,15 +15,11 @@
                                     <div class="col-md-12 d-flex row-gap-3 flex-column">
                                         <div>
                                             <label for="name">Name</label>
-                                            <input type="text" class="form-control" id="name" v-model="department.name" placeholder="Name" disabled>
+                                            <input type="text" class="form-control" id="name" v-model="department.department_name" placeholder="Name" disabled>
                                         </div>
                                         <div>
                                             <label for="unit">Unit</label>
-                                            <input type="text" class="form-control" id="unit" v-model="department.unit.name" placeholder="Unit Name" disabled>
-                                        </div>
-                                        <div>
-                                            <label for="total">Total Employee</label>
-                                            <input type="text" class="form-control" id="total" v-model="department.employee_count" placeholder="Total Employee" disabled>
+                                            <input type="text" class="form-control" id="unit" v-model="department.unit_name" placeholder="Unit Name" disabled>
                                         </div>
                                         <div>
                                             <label for="total">Select Teams</label>
@@ -66,11 +62,8 @@ export default {
     data() {
         return {
             department: {
-                name: '',
-                unit: {
-                    name: ''
-                },
-                employee_count: 0,
+                department_name: '',
+                unit_name: [],
                 teams: []
             },
             loading: false,
@@ -87,7 +80,7 @@ export default {
     methods: {
         async getDepartment() {
             this.loading = true;
-            await this.$axios.get(`/api/v1/admin/department/view/${this.$route.params.id}`)
+            await this.$axios.get(`/api/v1/admin/department/view/${this.$route.params.id}/${this.$route.params.unit_id}`)
                 .then(response => {
                     this.department = response.data.data;
                 })
@@ -113,7 +106,7 @@ export default {
         },
         async updateDepartment() {
             this.loading = true;
-            await this.$axios.post(`/api/v1/admin/department/assign-team/${this.$route.params.id}`, {
+            await this.$axios.post(`/api/v1/admin/department/assign-team/${this.$route.params.id}/${this.$route.params.unit_id}`, {
                 teams: this.department.teams.map(team => team.id)
             })
                 .then(response => {
@@ -121,7 +114,7 @@ export default {
                     this.$router.push('/management/department');
                 })
                 .catch(error => {
-                    useToast().success(error.response.data.message);
+                    useToast().error(error.response.data.message);
                     console.log(error);
                 })
                 .finally(() => {

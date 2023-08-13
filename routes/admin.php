@@ -232,9 +232,10 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
     // Begin Department
     Route::group(['prefix' => 'department'], function() {
         Route::get('', [DepartmentController::class, 'index']);
+        Route::get('all', [DepartmentController::class, 'all']);
         Route::put('create/{id}', [DepartmentController::class, 'assign']);
-        Route::get('view/{id}', [DepartmentController::class, 'show']);
-        Route::post('assign-team/{id}', [DepartmentController::class, 'assignTeam']);
+        Route::get('view/{id}/{unit_id}', [DepartmentController::class, 'show']);
+        Route::post('assign-team/{id}/{unit_id}', [DepartmentController::class, 'assignTeam']);
     });
     // End Department
 

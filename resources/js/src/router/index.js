@@ -333,7 +333,7 @@ const routes =[
               }
           },
           {
-              path: '/management/department/:id',
+              path: '/management/department/:id/:unit_id',
               name: 'department-edit',
               component: DepartmentEdit,
               meta: {
