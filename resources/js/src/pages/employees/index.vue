@@ -344,15 +344,6 @@ export default {
                         },
                     },
                     {
-                        title: 'Department',
-                        field: 'department.name',
-                        headerHozAlign: 'center',
-                        hozAlign: 'center',
-                        formatter: function (cell) {
-                            return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
-                        },
-                    },
-                    {
                         title: 'Current Work',
                         field: 'partner.name',
                         headerFilter:"input",
