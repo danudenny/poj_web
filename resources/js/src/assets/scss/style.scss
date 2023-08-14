@@ -12,7 +12,7 @@
 @import "utils/variables";
 
 :root {
-    --theme-deafult: #7366ff;
+    --theme-deafult: #0a5640;
     --theme-secondary: #f73164;
     --light-background: rgba(242, 243, 247, 0.7);
     --body-font-color: #2F2F3B;
@@ -37,7 +37,7 @@
     --fc-button-bg-color: var(--theme-deafult);
     --fc-button-active-bg-color: var(--theme-deafult);
     --fc-button-active-border-color: var(--theme-deafult);
-    --fc-button-border-color: var(--theme-deafult); 
+    --fc-button-border-color: var(--theme-deafult);
     --fc-button-hover-bg-color: var(--theme-deafult);
     --fc-button-hover-border-color: var(--theme-deafult);
 }
@@ -155,7 +155,7 @@ body[class='dark-only'] {
 @import "themes/dark";
 @import "themes/theme-customizer";
 @import "themes/update";
-// *** layout *** 
+// *** layout ***
 
 @import "layout/footer";
 @import "layout/grid";

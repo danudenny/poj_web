@@ -67,6 +67,7 @@
 
         </style>
         @vite(['resources/js/src/main.js', 'resources/js/src/assets/scss/app.scss'])
+
     </head>
     <body class="antialiased">
         <div id="app">
