@@ -10,6 +10,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
+ *
+ * Attributes:
+ * @property-read int $id
+ *
  * @method static find($id)
  * @method static leftJoin(string $string, string $string1, string $string2, string $string3)
  * @method static select(string[] $array)

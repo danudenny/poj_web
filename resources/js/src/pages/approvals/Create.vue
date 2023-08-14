@@ -64,6 +64,47 @@
                                             </multiselect>
                                         </div>
                                     </div>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label>Departments :</label>
+                                                <multiselect
+                                                    v-model="selectedDepartment"
+                                                    placeholder="Select Department"
+                                                    label="department_name"
+                                                    track-by="id"
+                                                    :options="departments"
+                                                    :multiple="false"
+                                                    @select="onDepartmentSelected"
+                                                >
+                                                </multiselect>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Team :</label>
+                                            <multiselect
+                                                v-model="selectedTeam"
+                                                placeholder="Select Team"
+                                                label="name"
+                                                track-by="id"
+                                                :options="teams"
+                                                :multiple="false"
+                                            >
+                                            </multiselect>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Job :</label>
+                                            <multiselect
+                                                v-model="selectedJob"
+                                                placeholder="Select Job"
+                                                label="job_name"
+                                                track-by="id"
+                                                :options="jobs"
+                                                :multiple="false"
+                                            >
+                                            </multiselect>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="row">
@@ -96,7 +137,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <label>Select Unit</label>
+                                            <label>Unit</label>
                                             <multiselect
                                                 v-model="approval.approvers[index].selectedUnit"
                                                 placeholder="Select Unit"
@@ -109,7 +150,48 @@
                                             </multiselect>
                                         </div>
                                         <div class="col-md-4">
-                                            <label>Select Employee</label>
+                                            <label>Job :</label>
+                                            <multiselect
+                                                v-model="approval.approvers[index].selectedJob"
+                                                placeholder="Select Job"
+                                                label="job_name"
+                                                track-by="id"
+                                                :options="approval.approvers[index].jobs"
+                                                :multiple="false"
+                                                @select="onApprovalJobSelected(index)"
+                                            >
+                                            </multiselect>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-4">
+                                            <label>Department :</label>
+                                            <multiselect
+                                                v-model="approval.approvers[index].selectedDepartment"
+                                                placeholder="Select Department"
+                                                label="department_name"
+                                                track-by="id"
+                                                :options="approval.approvers[index].departments"
+                                                :multiple="false"
+                                                @select="onApproverDepartmentSelected(index)"
+                                            >
+                                            </multiselect>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Team :</label>
+                                            <multiselect
+                                                v-model="approval.approvers[index].selectedTeam"
+                                                placeholder="Select Team"
+                                                label="name"
+                                                track-by="id"
+                                                :options="approval.approvers[index].teams"
+                                                :multiple="false"
+                                                @select="onApproverTeamSelected(index)"
+                                            >
+                                            </multiselect>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Employee</label>
                                             <multiselect
                                                 v-model="approval.approvers[index].selectedEmployee"
                                                 placeholder="Select Unit"
@@ -124,7 +206,7 @@
                                     <hr/>
                                 </div>
                             </div>
-                            <div style="align-self: flex-end;" v-if="approval.approvers.length < 6 && approval.unit_relation_id > 0">
+                            <div style="align-self: flex-end;" v-if="approval.approvers.length < 5 && approval.unit_relation_id > 0">
                                 <button class="btn btn-primary" @click="onAddApprover">
                                     <i class="fa fa-plus"></i>&nbsp;Add New Approver
                                 </button>
@@ -164,8 +246,14 @@ export default {
             },
             approvalModules: [],
             units: [],
+            departments: [],
+            teams: [],
+            jobs: [],
             selectedUnitLevel: 0,
             selectedUnit: null,
+            selectedDepartment: null,
+            selectedTeam: null,
+            selectedJob: null,
             unitsPagination: {
                 size: 20,
                 name: '',
@@ -196,6 +284,42 @@ export default {
                     console.error(error)
                 })
         },
+        getJobs() {
+            if(this.approval.unit_relation_id === null || this.approval.unit_relation_id === 0) {
+                return
+            }
+
+            this.$axios.get(`/api/v1/admin/unit-job?unit_relation_id=${this.approval.unit_relation_id}&append=job_name`)
+                .then(response => {
+                    this.selectedJob = null
+                    this.jobs = response.data.data
+                })
+                .catch(error => {
+                    console.error(error)
+                })
+        },
+        getDepartments() {
+            if(this.approval.unit_relation_id === null) {
+                return
+            }
+
+            this.$axios.get(`/api/v1/admin/department?unit_id=${this.approval.unit_relation_id}`)
+                .then(response => {
+                    this.selectedDepartment = null
+                    this.selectedTeam = null
+                    this.departments = response.data.data.filter((item) => item.unit_id === this.approval.unit_relation_id)
+                })
+                .catch(error => {
+                    console.error(error)
+                })
+        },
+        getTeam() {
+            if (this.selectedDepartment === null) {
+                return
+            }
+
+            this.teams = this.selectedDepartment.teams
+        },
         getApproverUnit(index) {
             let unitFilter = {
                 unit_level: this.approval.approvers[index].unit_level,
@@ -205,6 +329,11 @@ export default {
             this.$axios.get(`/api/v1/admin/unit/paginated?unit_level=${unitFilter.unit_level}&unit_relation_id_structured=${unitFilter.unit_relation_id_restructured}`)
                 .then(response => {
                     this.approval.approvers[index].units = response.data.data
+                    this.approval.approvers[index].jobs = []
+                    this.approval.approvers[index].selectedUnit = null
+                    this.approval.approvers[index].selectedJob = null
+                    this.approval.approvers[index].selectedDepartment = null
+                    this.approval.approvers[index].selectedTeam = null
                 })
                 .catch(error => {
                     console.error(error)
@@ -217,15 +346,62 @@ export default {
 
             let employeeFilter = {
                 last_unit_relation_id: this.approval.approvers[index].selectedUnit.relation_id,
+                odoo_job_id: this.approval.approvers[index].selectedJob?.job?.odoo_job_id ?? '',
+                department_id: this.approval.approvers[index].selectedDepartment?.id ?? '',
+                team_id: this.approval.approvers[index].selectedTeam?.id ?? '',
             }
 
-            this.$axios.get(`/api/v1/admin/employee/paginated?last_unit_relation_id=${employeeFilter.last_unit_relation_id}`)
+            this.$axios.get(`/api/v1/admin/employee/paginated?last_unit_relation_id=${employeeFilter.last_unit_relation_id}&odoo_job_id=${employeeFilter.odoo_job_id}&department_id=${employeeFilter.department_id}&team_id=${employeeFilter.team_id}`)
                 .then(response => {
                     this.approval.approvers[index].employees = response.data.data
                 })
                 .catch(error => {
                     console.error(error)
                 })
+        },
+        getApproverJobs(index) {
+            if (this.approval.approvers[index].selectedUnit === null) {
+                return
+            }
+
+            let employeeFilter = {
+                last_unit_relation_id: this.approval.approvers[index].selectedUnit.relation_id,
+            }
+
+            this.$axios.get(`/api/v1/admin/unit-job?unit_relation_id=${employeeFilter.last_unit_relation_id}&append=job_name`)
+                .then(response => {
+                    this.approval.approvers[index].selectedJob = null
+                    this.approval.approvers[index].jobs = response.data.data
+                })
+                .catch(error => {
+                    console.error(error)
+                })
+        },
+        getApproverDepartments(index) {
+            if (this.approval.approvers[index].selectedUnit === null) {
+                return
+            }
+
+            let employeeFilter = {
+                last_unit_relation_id: this.approval.approvers[index].selectedUnit.relation_id,
+            }
+
+            this.$axios.get(`/api/v1/admin/department?unit_id=${employeeFilter.last_unit_relation_id}`)
+                .then(response => {
+                    this.approval.approvers[index].selectedDepartment = null
+                    this.approval.approvers[index].selectedTeam = null
+                    this.approval.approvers[index].departments = response.data.data.filter((item) => item.unit_id === employeeFilter.last_unit_relation_id)
+                })
+                .catch(error => {
+                    console.error(error)
+                })
+        },
+        getApproverTeam(index) {
+            if (this.approval.approvers[index].selectedDepartment === null) {
+                return
+            }
+
+            this.approval.approvers[index].teams = this.approval.approvers[index].selectedDepartment.teams
         },
         onLoadUnit() {
             this.getUnits()
@@ -253,6 +429,12 @@ export default {
                 selectedUnit: null,
                 units: [],
                 selectedEmployee: null,
+                selectedJob: null,
+                jobs: [],
+                selectedDepartment: null,
+                departments: [],
+                selectedTeam: null,
+                teams: [],
                 employees: []
             })
         },
@@ -262,8 +444,30 @@ export default {
         onUnitSelected() {
             this.approval.approvers = []
             this.approval.unit_relation_id = this.selectedUnit.relation_id
+            this.approval.unit_level = this.selectedUnit.unit_level
+            this.getJobs()
+            this.getDepartments()
+        },
+        onDepartmentSelected() {
+            this.getTeam()
         },
         onApprovalUnitSelected(index) {
+            this.getApproverJobs(index)
+            this.getApproverDepartments(index)
+            this.getApproverEmployee(index)
+        },
+        onApproverDepartmentSelected(index) {
+            this.getApproverTeam(index)
+
+            this.approval.approvers[index].selectedEmployee = null
+            this.getApproverEmployee(index)
+        },
+        onApprovalJobSelected(index) {
+            this.approval.approvers[index].selectedEmployee = null
+            this.getApproverEmployee(index)
+        },
+        onApproverTeamSelected(index) {
+            this.approval.approvers[index].selectedEmployee = null
             this.getApproverEmployee(index)
         },
         onSave() {
@@ -271,7 +475,10 @@ export default {
                 unit_relation_id: this.approval.unit_relation_id,
                 unit_level: this.approval.unit_level,
                 name: this.approval.name,
-                approval_module_id: this.approval.approval_module_id?.id,
+                approval_module_id: this.approval.approval_module_id?.id ?? null,
+                department_id: this.selectedDepartment?.id ?? null,
+                team_id: this.selectedTeam?.id ?? null,
+                odoo_job_id: this.selectedJob?.odoo_job_id ?? null,
                 approvers: []
             }
 
@@ -279,13 +486,19 @@ export default {
                 approval.approvers.push({
                     employee_id: null,
                     unit_relation_id: null,
-                    unit_level: 0
+                    unit_level: 0,
+                    department_id: null,
+                    team_id: null,
+                    odoo_job_id: null
                 })
 
                 if (val.selectedEmployee != null && val.selectedUnit != null) {
                     approval.approvers[index].employee_id = val.selectedEmployee.id
                     approval.approvers[index].unit_relation_id = val.selectedUnit.relation_id
                     approval.approvers[index].unit_level = val.unit_level
+                    approval.approvers[index].department_id = val.selectedDepartment?.id ?? null
+                    approval.approvers[index].team_id = val.selectedTeam?.id ?? null
+                    approval.approvers[index].odoo_job_id = val.selectedJob?.odoo_job_id ?? null
                 }
             })
 

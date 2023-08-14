@@ -6,6 +6,7 @@ use App\Http\Requests\Backup\BackupApprovalRequest;
 use App\Http\Requests\Backup\BackupCheckInRequest;
 use App\Http\Requests\Backup\BackupCheckOutRequest;
 use App\Http\Requests\Backup\CreateBackupRequest;
+use App\Models\Approval;
 use App\Models\ApprovalModule;
 use App\Models\ApprovalUser;
 use App\Models\Backup;
@@ -41,6 +42,13 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class BackupService extends BaseService
 {
+    private ApprovalService $approvalService;
+
+    public function __construct()
+    {
+        $this->approvalService = new ApprovalService();
+    }
+
     public function index(Request $request): JsonResponse
     {
         /**
@@ -209,6 +217,7 @@ class BackupService extends BaseService
              * @var User $user
              */
             $user = $request->user();
+            $requestorEmployee = $user->employee;
 
             /**
              * @var Unit $unit
@@ -261,27 +270,10 @@ class BackupService extends BaseService
                     ], ResponseAlias::HTTP_BAD_REQUEST);
                 }
             } else {
-                /**
-                 * @var ApprovalUser[] $approvalUsers
-                 */
-                $approvalUsers = ApprovalUser::query()
-                    ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
-                    ->join('approval_modules', 'approvals.approval_module_id', '=', 'approval_modules.id')
-                    ->where('approval_modules.name', '=', ApprovalModule::ApprovalBackup)
-                    ->where('approvals.unit_relation_id', '=', $unit->relation_id)
-                    ->where('approvals.unit_level', '=', $unit->unit_level)
-                    ->where('approvals.is_active', '=', true)
-                    ->get(['approval_users.*']);
+                $approvalUsers = $this->approvalService->getApprovalUser($requestorEmployee, ApprovalModule::ApprovalBackup);
 
                 foreach ($approvalUsers as $approvalUser) {
                     $approvalUserIDs[] = $approvalUser->employee_id;
-                }
-
-                if (count($approvalUserIDs) <= 0) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Need to set approval for backup on your unit',
-                    ], ResponseAlias::HTTP_BAD_REQUEST);
                 }
             }
 
@@ -374,7 +366,7 @@ class BackupService extends BaseService
             $backup->request_type = $requestType;
             $backup->source_unit_relation_id = $sourceUnit->relation_id;
 
-            if ($backup->request_type == Backup::RequestTypeAssignment) {
+            if ($backup->request_type == Backup::RequestTypeAssignment || count($approvalUserIDs) <= 0) {
                 $backup->status = Backup::StatusApproved;
             }
 

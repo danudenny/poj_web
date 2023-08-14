@@ -10,6 +10,7 @@ use App\Models\ApprovalModule;
 use App\Models\ApprovalUser;
 use App\Models\Employee;
 use App\Models\Unit;
+use App\Models\UnitHasJob;
 use App\Models\User;
 use App\Services\BaseService;
 use Exception;
@@ -78,15 +79,36 @@ class ApprovalService extends BaseService
                 'unit_level' => $request->input('unit_level'),
                 'name' => $request->input('name'),
                 'approval_module_id' => $request->input('approval_module_id'),
-                'approvers' => $request->input('approvers', [])
+                'approvers' => $request->input('approvers', []),
+                'department_id' => $request->input('department_id'),
+                'team_id' => $request->input('team_id'),
+                'odoo_job_id' => $request->input('odoo_job_id'),
             ];
 
             $isApprovalExist = Approval::query()
                 ->where('unit_relation_id', '=', $arg['unit_relation_id'])
                 ->where('unit_level', '=', $arg['unit_level'])
-                ->where('approval_module_id', '=', $arg['approval_module_id'])
-                ->exists();
-            if ($isApprovalExist) {
+                ->where('approval_module_id', '=', $arg['approval_module_id']);
+
+            if ($arg['department_id']) {
+                $isApprovalExist->where('department_id', '=', $arg['department_id']);
+            } else {
+                $isApprovalExist->whereNull('department_id');
+            }
+
+            if ($arg['team_id']) {
+                $isApprovalExist->where('team_id', '=', $arg['team_id']);
+            } else {
+                $isApprovalExist->whereNull('team_id');
+            }
+
+            if ($arg['odoo_job_id']) {
+                $isApprovalExist->where('odoo_job_id', '=', $arg['odoo_job_id']);
+            } else {
+                $isApprovalExist->whereNull('odoo_job_id');
+            }
+
+            if ($isApprovalExist->exists()) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Data already exists.',
@@ -145,6 +167,9 @@ class ApprovalService extends BaseService
                 $approvalUser->employee_id = $approver['employee_id'];
                 $approvalUser->unit_relation_id = $approver['unit_relation_id'];
                 $approvalUser->unit_level = $approver['unit_level'];
+                $approvalUser->department_id = $approver['department_id'];
+                $approvalUser->team_id = $approver['team_id'];
+                $approvalUser->odoo_job_id = $approver['odoo_job_id'];
 
                 $approvalUsers[] = $approvalUser;
             }
@@ -156,6 +181,9 @@ class ApprovalService extends BaseService
             $approval->unit_level = $arg['unit_level'];
             $approval->name = $arg['name'];
             $approval->approval_module_id = $arg['approval_module_id'];
+            $approval->department_id = $arg['department_id'];
+            $approval->team_id = $arg['team_id'];
+            $approval->odoo_job_id = $arg['odoo_job_id'];
             $approval->save();
 
             foreach ($approvalUsers as $approvalUser) {
@@ -228,6 +256,9 @@ class ApprovalService extends BaseService
                 $approvalUser->employee_id = $approver['employee_id'];
                 $approvalUser->unit_relation_id = $approver['unit_relation_id'];
                 $approvalUser->unit_level = $approver['unit_level'];
+                $approvalUser->department_id = $approver['department_id'];
+                $approvalUser->team_id = $approver['team_id'];
+                $approvalUser->odoo_job_id = $approver['odoo_job_id'];
 
                 $approvalUsers[] = $approvalUser;
             }
@@ -264,7 +295,7 @@ class ApprovalService extends BaseService
     public function show($id): JsonResponse
     {
         try {
-            $approval = Approval::with(['approvalModule', 'approvalUsers'])
+            $approval = Approval::with(['approvalModule', 'team', 'department', 'job', 'approvalUsers'])
                 ->orderBy('id', 'desc')
                 ->find($id);
 
@@ -338,5 +369,138 @@ class ApprovalService extends BaseService
             'message' => 'Data retrieved successfully.',
             'data' => $flattenedUnits,
         ]);
+    }
+
+    /**
+     * @param Employee $employee
+     * @param string $approvalType
+     *
+     * @return ApprovalUser[]
+     */
+    public function getApprovalUser(Employee $employee, string $approvalType): array {
+        /**
+         * @var ApprovalUser[] $result
+         */
+        $result = [];
+
+        $lastUnit = $employee->getLastUnit();
+
+        if ($lastUnit && $employee->department_id && $employee->team_id && $employee->job_id) {
+            $result = ApprovalUser::query()->select(['approval_users.*'])
+                ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
+                ->join('approval_modules', 'approval_modules.id', '=', 'approvals.approval_module_id')
+                ->where('approval_modules.name', '=', $approvalType)
+                ->where('approvals.unit_relation_id', '=', $lastUnit->relation_id)
+                ->where('approvals.unit_level', '=', $lastUnit->unit_level)
+                ->where('approvals.department_id', '=', $employee->department->id)
+                ->where('approvals.team_id', '=', $employee->team_id)
+                ->where('approvals.odoo_job_id', '=', $employee->job_id)
+                ->get();
+
+            if (count($result) > 0) {
+                return $result;
+            }
+        }
+
+        if ($lastUnit && $employee->department_id && $employee->team_id) {
+            $result = ApprovalUser::query()->select(['approval_users.*'])
+                ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
+                ->join('approval_modules', 'approval_modules.id', '=', 'approvals.approval_module_id')
+                ->where('approval_modules.name', '=', $approvalType)
+                ->where('approvals.unit_relation_id', '=', $lastUnit->relation_id)
+                ->where('approvals.unit_level', '=', $lastUnit->unit_level)
+                ->where('approvals.department_id', '=', $employee->department->id)
+                ->where('approvals.team_id', '=', $employee->team_id)
+                ->whereNull('approvals.odoo_job_id')
+                ->get();
+
+            if (count($result) > 0) {
+                return $result;
+            }
+        }
+
+        if ($lastUnit && $employee->department_id) {
+            $result = ApprovalUser::query()->select(['approval_users.*'])
+                ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
+                ->join('approval_modules', 'approval_modules.id', '=', 'approvals.approval_module_id')
+                ->where('approval_modules.name', '=', $approvalType)
+                ->where('approvals.unit_relation_id', '=', $lastUnit->relation_id)
+                ->where('approvals.unit_level', '=', $lastUnit->unit_level)
+                ->where('approvals.department_id', '=', $employee->department->id)
+                ->whereNull('approvals.team_id')
+                ->whereNull('approvals.odoo_job_id')
+                ->get();
+
+            if (count($result) > 0) {
+                return $result;
+            }
+        }
+
+        if ($lastUnit && $employee->job_id) {
+            $result = ApprovalUser::query()->select(['approval_users.*'])
+                ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
+                ->join('approval_modules', 'approval_modules.id', '=', 'approvals.approval_module_id')
+                ->where('approval_modules.name', '=', $approvalType)
+                ->where('approvals.unit_relation_id', '=', $lastUnit->relation_id)
+                ->where('approvals.unit_level', '=', $lastUnit->unit_level)
+                ->whereNull('approvals.department_id')
+                ->whereNull('approvals.team_id')
+                ->where('approvals.odoo_job_id', '=', $employee->job_id)
+                ->get();
+
+            if (count($result) > 0) {
+                return $result;
+            }
+        }
+
+        if ($lastUnit) {
+            $result = ApprovalUser::query()->select(['approval_users.*'])
+                ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
+                ->join('approval_modules', 'approval_modules.id', '=', 'approvals.approval_module_id')
+                ->where('approval_modules.name', '=', $approvalType)
+                ->where('approvals.unit_relation_id', '=', $lastUnit->relation_id)
+                ->where('approvals.unit_level', '=', $lastUnit->unit_level)
+                ->whereNull('approvals.department_id')
+                ->whereNull('approvals.team_id')
+                ->whereNull('approvals.odoo_job_id')
+                ->get();
+
+            if (count($result) > 0) {
+                return $result;
+            }
+        }
+
+        if ($lastUnit) {
+            /**
+             * @var UnitHasJob $unitJob
+             */
+            $unitJob = UnitHasJob::query()
+                ->where('unit_relation_id', '=', $lastUnit->relation_id)
+                ->where('odoo_job_id', '=', $employee->job_id)
+                ->first();
+
+            if (!$unitJob) {
+                return $result;
+            }
+            if (!$unitJob->parent) {
+                return $result;
+            }
+
+            /**
+             * @var Employee $employee
+             */
+            $employee = Employee::query()
+                ->where('unit_id', '=', $unitJob->parent->unit_relation_id)
+                ->where('job_id', '=', $unitJob->parent->odoo_job_id)
+                ->first();
+            if ($employee) {
+                $approvalUser = new ApprovalUser();
+                $approvalUser->employee_id = $employee->id;
+
+                $result[] = $approvalUser;
+            }
+        }
+
+        return $result;
     }
 }

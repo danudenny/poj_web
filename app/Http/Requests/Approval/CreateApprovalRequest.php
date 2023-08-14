@@ -28,10 +28,16 @@ class CreateApprovalRequest extends FormRequest
             'unit_level' => ['required', 'numeric'],
             'name' => ['required'],
             'approval_module_id' => ['required'],
+            'department_id' => ['nullable', 'numeric'],
+            'team_id' => ['nullable', 'numeric'],
+            'odoo_job_id' => ['nullable', 'numeric'],
             'approvers' => ['required', 'array'],
             'approvers.*.employee_id' => ['required'],
             'approvers.*.unit_relation_id' => ['required'],
             'approvers.*.unit_level' => ['required'],
+            'approvers.*.department_id' => ['nullable', 'numeric'],
+            'approvers.*.team_id' => ['nullable', 'numeric'],
+            'approvers.*.odoo_job_id' => ['nullable', 'numeric'],
         ];
     }
 }

@@ -346,12 +346,17 @@ class EmployeeService extends BaseService
                 });
             });
 
+            $employees->when($request->filled('odoo_department_id'), function(Builder $builder) use ($request) {
+                $builder->where('employees.department_id', '=', $request->query('odoo_department_id'));
+            });
+
             $employees->when($request->filled('department_id'), function(Builder $builder) use ($request) {
-                $builder->where('employees.department_id', '=', $request->query('department_id'));
+                $builder->join('departments', 'departments.odoo_department_id', '=', 'employees.department_id');
+                $builder->where('departments.id', '=', $request->query('department_id'));
             });
 
             $employees->when($request->filled('team_id'), function(Builder $builder) use ($request) {
-                $builder->where('team_id', '=', intval($request->input('team_id')));
+                $builder->where('employees.team_id', '=', intval($request->input('team_id')));
             });
 
             $employees->when($request->filled('employee_category'), function(Builder $builder) use ($request) {
