@@ -33,6 +33,13 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class OvertimeService extends BaseService
 {
+    private ApprovalService $approvalService;
+
+    public function __construct()
+    {
+        $this->approvalService = new ApprovalService();
+    }
+
     /**
      * @param Request $request
      * @return JsonResponse
@@ -236,6 +243,7 @@ class OvertimeService extends BaseService
              * @var User $user
              */
             $user = $request->user();
+            $requestorEmployee = $user->employee;
             $lastUnit = $user->employee->last_unit;
 
             /**
@@ -299,27 +307,10 @@ class OvertimeService extends BaseService
                     ], ResponseAlias::HTTP_BAD_REQUEST);
                 }
             } else {
-                /**
-                 * @var ApprovalUser[] $approvalUsers
-                 */
-                $approvalUsers = ApprovalUser::query()
-                    ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
-                    ->join('approval_modules', 'approvals.approval_module_id', '=', 'approval_modules.id')
-                    ->where('approval_modules.name', '=', ApprovalModule::ApprovalOvertime)
-                    ->where('approvals.unit_relation_id', '=', $unit->relation_id)
-                    ->where('approvals.unit_level', '=', $unit->unit_level)
-                    ->where('approvals.is_active', '=', true)
-                    ->get(['approval_users.*']);
+                $approvalUsers = $this->approvalService->getApprovalUser($requestorEmployee, ApprovalModule::ApprovalOvertime);
 
                 foreach ($approvalUsers as $approvalUser) {
                     $approvalUserIDs[] = $approvalUser->employee_id;
-                }
-
-                if (count($approvalUserIDs) <= 0) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Need to set approval for overtime on your unit',
-                    ], ResponseAlias::HTTP_BAD_REQUEST);
                 }
             }
 
@@ -398,7 +389,7 @@ class OvertimeService extends BaseService
             $overtime->image_url = $request->input('image_url');
             $overtime->request_type = $requestType;
 
-            if ($overtime->request_type == Overtime::RequestTypeAssignment) {
+            if ($overtime->request_type == Overtime::RequestTypeAssignment || count($approvalUserIDs) <= 0) {
                 $overtime->last_status = OvertimeHistory::TypeApproved;
             }
 

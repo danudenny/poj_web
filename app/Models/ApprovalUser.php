@@ -11,11 +11,17 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $employee_id
  * @property int $unit_relation_id
  * @property int $unit_level
+ * @property int $department_id
+ * @property int $team_id
+ * @property int $odoo_job_id
  *
  * Relations:
  * @property-read Approval $approval
  * @property-read Employee $employee
  * @property-read Unit $unit
+ * @property-read Department $department
+ * @property-read Team $team
+ * @property-read Job $job
  */
 class ApprovalUser extends Model
 {
@@ -31,7 +37,10 @@ class ApprovalUser extends Model
     ];
 
     protected $with = [
-        'employee'
+        'employee',
+        'department',
+        'team',
+        'job'
     ];
 
     protected $fillable = [
@@ -65,5 +74,20 @@ class ApprovalUser extends Model
     public function unit()
     {
         return $this->belongsTo(Unit::class, 'unit_relation_id', 'relation_id');
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class, 'department_id');
+    }
+
+    public function team()
+    {
+        return $this->belongsTo(Team::class, 'team_id');
+    }
+
+    public function job()
+    {
+        return $this->belongsTo(Job::class, 'odoo_job_id', 'odoo_job_id');
     }
 }

@@ -20,6 +20,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int $kanwil_id
  * @property int $corporate_id
  * @property int $default_operating_unit_id
+ * @property int $unit_id
+ * @property int $department_id
+ * @property int $team_id
+ * @property int $job_id
  *
  * Relations:
  * @property-read User $user
@@ -32,7 +36,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read EmployeeTimesheetSchedule[] $timesheetSchedules
  * @property-read Unit $operatingUnit
  * @property-read Job $job
- * @property mixed $department
+ * @property-read Department $department
  * @method static find($id)
  * @method static leftJoin(string $string, string $string1, string $string2, string $string3)
  */

@@ -64,6 +64,49 @@
                                             </multiselect>
                                         </div>
                                     </div>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label>Departments :</label>
+                                                <multiselect
+                                                    v-model="approval.department"
+                                                    placeholder="Select Department"
+                                                    label="name"
+                                                    track-by="id"
+                                                    :options="departments"
+                                                    :multiple="false"
+                                                    disabled
+                                                >
+                                                </multiselect>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Team :</label>
+                                            <multiselect
+                                                v-model="approval.team"
+                                                placeholder="Select Team"
+                                                label="name"
+                                                track-by="id"
+                                                :options="teams"
+                                                :multiple="false"
+                                                disabled
+                                            >
+                                            </multiselect>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Job :</label>
+                                            <multiselect
+                                                v-model="approval.job"
+                                                placeholder="Select Job"
+                                                label="name"
+                                                track-by="id"
+                                                :options="jobs"
+                                                :multiple="false"
+                                                disabled
+                                            >
+                                            </multiselect>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="row">
@@ -91,7 +134,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <label>Select Unit</label>
+                                            <label>Unit</label>
                                             <multiselect
                                                 v-model="approval.approval_users[index].unit"
                                                 placeholder="Select Unit"
@@ -104,7 +147,48 @@
                                             </multiselect>
                                         </div>
                                         <div class="col-md-4">
-                                            <label>Select Employee</label>
+                                            <label>Job :</label>
+                                            <multiselect
+                                                v-model="approval.approval_users[index].job"
+                                                placeholder="Select Job"
+                                                label="name"
+                                                track-by="id"
+                                                :options="jobs"
+                                                :multiple="false"
+                                                disabled
+                                            >
+                                            </multiselect>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3 mb-3">
+                                        <div class="col-md-4">
+                                            <label>Department :</label>
+                                            <multiselect
+                                                v-model="approval.approval_users[index].department"
+                                                placeholder="Select Department"
+                                                label="name"
+                                                track-by="id"
+                                                :options="departments"
+                                                :multiple="false"
+                                                disabled
+                                            >
+                                            </multiselect>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Team :</label>
+                                            <multiselect
+                                                v-model="approval.approval_users[index].team"
+                                                placeholder="Select Team"
+                                                label="name"
+                                                track-by="id"
+                                                :options="teams"
+                                                :multiple="false"
+                                                disabled
+                                            >
+                                            </multiselect>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>Employee</label>
                                             <multiselect
                                                 v-model="approval.approval_users[index].employee"
                                                 placeholder="Select Unit"
@@ -155,6 +239,9 @@ export default {
             units: [],
             selectedUnitLevel: 0,
             selectedUnit: null,
+            departments: [],
+            teams: [],
+            jobs: [],
             unitsPagination: {
                 size: 20,
                 name: '',
