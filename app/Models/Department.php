@@ -6,10 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
  * @method static find($id)
+ * @method static leftJoin(string $string, string $string1, string $string2, string $string3)
+ * @method static select(string[] $array)
+ * @method static where(string $string, $id)
+ * @method static whereHas(string $string, \Closure $param)
  */
 class Department extends Model
 {
@@ -21,9 +26,10 @@ class Department extends Model
         'write_date',
     ];
 
-    public function unit(): BelongsToMany
+    public function units(): BelongsToMany
     {
-        return $this->belongsToMany(Unit::class, 'unit_id')->distinct();
+        return $this->belongsToMany(Unit::class, 'department_has_teams')
+            ->withPivot('team_id');
     }
 
     public function employee(): BelongsTo
@@ -33,6 +39,6 @@ class Department extends Model
 
     public function teams(): BelongsToMany
     {
-        return $this->belongsToMany(Team::class, 'department_has_teams')->withPivot('unit_id');
+        return $this->belongsToMany(Team::class, 'department_has_teams')->withPivot('team_id');
     }
 }

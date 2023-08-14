@@ -63,6 +63,7 @@ export default {
         },
         initializeDepartmentTable() {
             this.table = new Tabulator(this.$refs.departmentTable, {
+                paginationCounter:"rows",
                 data: this.departments,
                 layout: 'fitColumns',
                 columns: [
@@ -87,6 +88,29 @@ export default {
                         headerFilter:"input",
                         hozAlign: 'center',
                         headerHozAlign: 'center',
+                        formatter: function (cell) {
+                            const rowData = cell.getRow().getData();
+                            if (rowData.unit_name) {
+                                return `<span>${rowData.unit_name}</span>`
+                            } else {
+                                return `<span class="badge badge-danger">No Unit</span>`
+                            }
+                        }
+                    },
+                    {
+                        title: 'Teams',
+                        field: '',
+                        hozAlign: 'center',
+                        headerHozAlign: 'center',
+                        formatter: function (cell) {
+                            const rowData = cell.getRow().getData();
+                            if (rowData.teams.length === 0) {
+                                return `<span class="badge badge-warning">No Team</span>`
+                            }
+                            return rowData.teams.map(team => {
+                                return `<span class="badge badge-primary">${team.name}</span><br>`
+                            }).join(' ');
+                        }
                     },
                     {
                         title: 'Total Teams',
