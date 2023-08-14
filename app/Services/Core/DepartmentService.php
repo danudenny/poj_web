@@ -28,16 +28,17 @@ class DepartmentService
 
     public function index($request): JsonResponse
     {
-        $departmentsWithUnitsAndTeams = Department::select([
+       $departmentsWithUnitsAndTeams = Department::select([
             'departments.name AS department_name',
             'u.name AS unit_name',
+            'u.unit_level AS unit_level',
             'departments.id',
             'emp.unit_id',
             'teams.id AS team_id',
             'teams.name AS team_name',
             'department_has_teams.unit_id AS team_unit_id'
         ])
-            ->leftJoinSub(function ($join) {
+            ->leftJoinSub(function ($join) use ($request) {
                 $join->select('unit_id', 'department_id')
                     ->from('employees')
                     ->whereNotNull('department_id')
@@ -53,7 +54,7 @@ class DepartmentService
                     ->on('emp.unit_id', '=', 'department_has_teams.unit_id');
             })
             ->leftJoin('teams', 'department_has_teams.team_id', '=', 'teams.id')
-            ->get();
+           ->get();
 
         $processedData = [];
 
@@ -73,16 +74,28 @@ class DepartmentService
                 $processedData[$departmentId]['units'][$unitId] = [
                     'unit_name' => $row->unit_name,
                     'unit_id' => $row->unit_id,
+                    'unit_level' => $row->unit_level,
                     'teams' => []
                 ];
             }
 
             if (!empty($row->team_name)) {
-                $processedData[$departmentId]['units'][$unitId]['teams'][] = [
-                    'id' => $row->team_id,
-                    'name' => $row->team_name,
-                    'team_unit_id' => $row->team_unit_id
-                ];
+                // Check if the team has not been added for this unit and unit level
+                $teamAlreadyAdded = false;
+                foreach ($processedData[$departmentId]['units'][$unitId]['teams'] as $addedTeam) {
+                    if ($addedTeam['id'] == $row->team_id && $addedTeam['team_unit_id'] == $row->team_unit_id) {
+                        $teamAlreadyAdded = true;
+                        break;
+                    }
+                }
+
+                if (!$teamAlreadyAdded) {
+                    $processedData[$departmentId]['units'][$unitId]['teams'][] = [
+                        'id' => $row->team_id,
+                        'name' => $row->team_name,
+                        'team_unit_id' => $row->team_unit_id
+                    ];
+                }
             }
         }
 
@@ -95,10 +108,12 @@ class DepartmentService
                     'unit_name' => $unitData['unit_name'],
                     'id' => $departmentData['id'],
                     'unit_id' => $unitData['unit_id'],
+                    'unit_level' => $unitData['unit_level'],
                     'teams' => $unitData['teams']
                 ];
             }
         }
+
 
         return response()->json([
             'status' => 'success',
