@@ -3,6 +3,7 @@
 namespace App\Services\Core;
 
 use App\Models\Department;
+use App\Models\Unit;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -27,39 +28,163 @@ class DepartmentService
 
     public function index($request): JsonResponse
     {
-        $department = Department::with('teams')
-            ->leftJoin('employees as emp', 'departments.odoo_department_id', '=', 'emp.department_id')
-            ->leftJoin('units as u', 'u.relation_id', '=', 'emp.unit_id')
-            ->whereNotNull('emp.department_id')
-            ->where('emp.unit_id', '<>', 0)
-            ->select('departments.name as department_name', 'u.name as unit_name', 'departments.id', 'emp.unit_id');
-        $department->when($request->name, function ($query) use ($request) {
-            $query->where('departments.name', 'like', '%' . $request->name . '%');
-        });
+        $departmentsWithUnitsAndTeams = Department::select([
+            'departments.name AS department_name',
+            'u.name AS unit_name',
+            'departments.id',
+            'emp.unit_id',
+            'teams.id AS team_id',
+            'teams.name AS team_name',
+            'department_has_teams.unit_id AS team_unit_id'
+        ])
+            ->leftJoinSub(function ($join) {
+                $join->select('unit_id', 'department_id')
+                    ->from('employees')
+                    ->whereNotNull('department_id')
+                    ->where('unit_id', '<>', 0)
+                    ->groupBy('unit_id', 'department_id');
+            }, 'emp', function ($join) {
+                $join->on('departments.odoo_department_id', '=', 'emp.department_id');
+            })
+            ->leftJoin('units AS u', 'u.relation_id', '=', 'emp.unit_id')
+            ->leftJoin('department_has_teams', function ($join) {
+                $join->on('departments.id', '=', 'department_has_teams.department_id')
+                    ->on('emp.unit_id', '=', 'department_has_teams.unit_id');
+            })
+            ->leftJoin('teams', 'department_has_teams.team_id', '=', 'teams.id')
+            ->get();
+
+        $processedData = [];
+
+        foreach ($departmentsWithUnitsAndTeams as $row) {
+            $departmentId = $row->id;
+            $unitId = $row->unit_id;
+
+            if (!isset($processedData[$departmentId])) {
+                $processedData[$departmentId] = [
+                    'department_name' => $row->department_name,
+                    'id' => $row->id,
+                    'units' => []
+                ];
+            }
+
+            if (!isset($processedData[$departmentId]['units'][$unitId])) {
+                $processedData[$departmentId]['units'][$unitId] = [
+                    'unit_name' => $row->unit_name,
+                    'unit_id' => $row->unit_id,
+                    'teams' => []
+                ];
+            }
+
+            if (!empty($row->team_name)) {
+                $processedData[$departmentId]['units'][$unitId]['teams'][] = [
+                    'id' => $row->team_id,
+                    'name' => $row->team_name,
+                    'team_unit_id' => $row->team_unit_id
+                ];
+            }
+        }
+
+        $result = [];
+
+        foreach ($processedData as $departmentData) {
+            foreach ($departmentData['units'] as $unitData) {
+                $result[] = [
+                    'department_name' => $departmentData['department_name'],
+                    'unit_name' => $unitData['unit_name'],
+                    'id' => $departmentData['id'],
+                    'unit_id' => $unitData['unit_id'],
+                    'teams' => $unitData['teams']
+                ];
+            }
+        }
 
         return response()->json([
             'status' => 'success',
             'message' => 'Success fetch data',
-            'data' => $department->get()
+            'data' => $result
         ]);
     }
 
     public function show($id, $unit_id): JsonResponse
     {
-        $department = Department::with('teams')
-            ->leftJoin('employees as emp', 'departments.odoo_department_id', '=', 'emp.department_id')
-            ->leftJoin('units as u', 'u.relation_id', '=', 'emp.unit_id')
-            ->whereNotNull('emp.department_id')
-            ->where('emp.unit_id', '<>', 0)
-            ->select('departments.name as department_name', 'u.name as unit_name', 'departments.id', 'emp.unit_id')
+        $departmentsWithUnitsAndTeams = Department::select([
+            'departments.name AS department_name',
+            'u.name AS unit_name',
+            'departments.id',
+            'emp.unit_id',
+            'teams.id AS team_id',
+            'teams.name AS team_name',
+            'department_has_teams.unit_id AS team_unit_id'
+        ])
+            ->leftJoinSub(function ($join) {
+                $join->select('unit_id', 'department_id')
+                    ->from('employees')
+                    ->whereNotNull('department_id')
+                    ->where('unit_id', '<>', 0)
+                    ->groupBy('unit_id', 'department_id');
+            }, 'emp', function ($join) {
+                $join->on('departments.odoo_department_id', '=', 'emp.department_id');
+            })
+            ->leftJoin('units AS u', 'u.relation_id', '=', 'emp.unit_id')
+            ->leftJoin('department_has_teams', function ($join) {
+                $join->on('departments.id', '=', 'department_has_teams.department_id')
+                    ->on('emp.unit_id', '=', 'department_has_teams.unit_id');
+            })
+            ->leftJoin('teams', 'department_has_teams.team_id', '=', 'teams.id')
             ->where('departments.id', $id)
             ->where('emp.unit_id', $unit_id)
-            ->first();
+            ->get();
+
+        $processedData = [];
+
+        foreach ($departmentsWithUnitsAndTeams as $row) {
+            $departmentId = $row->id;
+            $unitId = $row->unit_id;
+
+            if (!isset($processedData[$departmentId])) {
+                $processedData[$departmentId] = [
+                    'department_name' => $row->department_name,
+                    'id' => $row->id,
+                    'units' => []
+                ];
+            }
+
+            if (!isset($processedData[$departmentId]['units'][$unitId])) {
+                $processedData[$departmentId]['units'][$unitId] = [
+                    'unit_name' => $row->unit_name,
+                    'unit_id' => $row->unit_id,
+                    'teams' => []
+                ];
+            }
+
+            if (!empty($row->team_name)) {
+                $processedData[$departmentId]['units'][$unitId]['teams'][] = [
+                    'id' => $row->team_id,
+                    'name' => $row->team_name,
+                    'team_unit_id' => $row->team_unit_id
+                ];
+            }
+        }
+
+        $result = [];
+
+        foreach ($processedData as $departmentData) {
+            foreach ($departmentData['units'] as $unitData) {
+                $result[] = [
+                    'department_name' => $departmentData['department_name'],
+                    'unit_name' => $unitData['unit_name'],
+                    'id' => $departmentData['id'],
+                    'unit_id' => $unitData['unit_id'],
+                    'teams' => $unitData['teams']
+                ];
+            }
+        }
 
         return response()->json([
             'status' => 'success',
             'message' => 'Success fetch data',
-            'data' => $department
+            'data' => $result[0]
         ]);
     }
 
@@ -95,11 +220,9 @@ class DepartmentService
 
     public function assignTeam($request, $id, $unit_id): JsonResponse
     {
-        $department = Department::where('departments.id', $id)
-            ->whereHas('employee', function ($query) use ($unit_id) {
-                $query->where('unit_id', $unit_id);
-            })
-            ->first();
+        $department = Department::where('id', $id)->first();
+        $unit = Unit::where('relation_id', $unit_id)->first();
+
         if (!$department) {
             return response()->json([
                 'status' => 'error',
@@ -109,18 +232,10 @@ class DepartmentService
 
         DB::beginTransaction();
         try {
-            $department->teams()->whereNotIn('id', $request->teams)->detach();
+            $department->units()->detach($unit->relation_id);
 
             foreach ($request->teams as $teamId) {
-                DB::table('department_has_teams')->updateOrInsert(
-                    [
-                        'department_id' => $id,
-                        'team_id' => $teamId
-                    ],
-                    [
-                        'unit_id' => $unit_id
-                    ]
-                );
+                $department->units()->attach($unit->relation_id, ['team_id' => $teamId]);
             }
 
             DB::commit();

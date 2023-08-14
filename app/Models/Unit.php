@@ -26,6 +26,7 @@ use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
  * Relations:
  * @property-read OperatingUnitCorporate[] $operatingUnitCorporates
  * @property-read OperatingUnitDetail $operatingUnitDetail
+ * @method static where(string $string, $unit_id)
  */
 class Unit extends Model
 {
@@ -87,9 +88,15 @@ class Unit extends Model
         return $this->hasMany(Employee::class, 'id', 'unit_key');
     }
 
-    public function department(): HasOne
+    public function department(): BelongsTo
     {
-        return $this->hasOne(Department::class, 'company_id', 'id');
+        return $this->belongsTo(Department::class);
+    }
+
+    public function departments(): BelongsToMany
+    {
+        return $this->belongsToMany(Department::class, 'department_has_teams')
+            ->withPivot('team_id');
     }
 
     public function jobs(): BelongsToMany
