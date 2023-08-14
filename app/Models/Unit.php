@@ -96,7 +96,13 @@ class Unit extends Model
     public function departments(): BelongsToMany
     {
         return $this->belongsToMany(Department::class, 'department_has_teams')
-            ->withPivot('team_id');
+            ->withPivot('team_id', 'unit_level');
+    }
+
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Team::class, 'department_has_teams')
+            ->withPivot('team_id', 'unit_level');
     }
 
     public function jobs(): BelongsToMany

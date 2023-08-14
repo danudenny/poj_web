@@ -168,8 +168,46 @@ class EmployeeService extends BaseService
 
     public function syncToUser(): JsonResponse
     {
-        dispatch(new SyncEmployeesJob());
-        return response()->json(['message' => 'Your Synchronization is running on background. Refresh after 5 minutes to see the result.']);
+        try {
+            Employee::chunk(1000, function ($employees) {
+                $userInsertData = [];
+                $userIdsToUpdate = [];
+                $employeeIds = $employees->pluck('id')->toArray();
+                $existingEmails = User::whereIn('employee_id', $employeeIds)->pluck('email')->toArray();
+
+                foreach ($employees as $employee) {
+                    if (!filter_var($employee->work_email, FILTER_VALIDATE_EMAIL) || in_array($employee->work_email, $existingEmails)) {
+                        continue;
+                    }
+
+                    $userInsertData[] = [
+                        'name' => $employee->name,
+                        'email' => $employee->work_email,
+                        'employee_id' => $employee->id,
+                        'email_verified_at' => now(),
+                        'password' => '$2y$10$m54GoOajOHJ4AYs2VnfP7e3hPBf3pJw.Omimsct0m6gDcHCt8hTHi',
+                        'is_active' => true,
+                        'is_new' => true,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+
+                    $userIdsToUpdate[] = $employee->id;
+                }
+
+                User::upsert($userInsertData, ['id'], ['name', 'email', 'employee_id', 'email_verified_at', 'password', 'is_active', 'is_new', 'created_at', 'updated_at']);
+            });
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to sync users',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Users synced successfully',
+        ], 201);
     }
 
     public function update($request, $id): JsonResponse

@@ -41,6 +41,7 @@ class DepartmentService
                 $join->select('unit_id', 'department_id')
                     ->from('employees')
                     ->whereNotNull('department_id')
+                    ->where('department_id', '<>', 0)
                     ->where('unit_id', '<>', 0)
                     ->groupBy('unit_id', 'department_id');
             }, 'emp', function ($join) {
@@ -104,6 +105,7 @@ class DepartmentService
             'message' => 'Success fetch data',
             'data' => $result
         ]);
+
     }
 
     public function show($id, $unit_id): JsonResponse
@@ -236,6 +238,7 @@ class DepartmentService
 
             foreach ($request->teams as $teamId) {
                 $department->units()->attach($unit->relation_id, ['team_id' => $teamId]);
+                $department->units()->updateExistingPivot($unit->relation_id, ['unit_level' => $unit->unit_level]);
             }
 
             DB::commit();

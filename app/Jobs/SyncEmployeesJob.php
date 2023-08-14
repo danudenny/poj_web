@@ -27,6 +27,7 @@ class SyncEmployeesJob implements ShouldQueue
         //
     }
 
+
     public function handle(): void
     {
 
@@ -44,6 +45,7 @@ class SyncEmployeesJob implements ShouldQueue
                         'name' => $employee->name,
                         'email' => $employee->work_email,
                         'email_verified_at' => now(),
+                        'employee_id' => $employee->id,
                         'password' => '$2y$10$m54GoOajOHJ4AYs2VnfP7e3hPBf3pJw.Omimsct0m6gDcHCt8hTHi',
                         'is_active' => true,
                         'is_new' => true,

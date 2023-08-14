@@ -35,6 +35,6 @@ class Team extends Model
     public function departments(): BelongsToMany
     {
         return $this->belongsToMany(Department::class, 'department_has_teams')
-            ->withPivot('unit_id');
+            ->withPivot('unit_id', 'unit_level');
     }
 }

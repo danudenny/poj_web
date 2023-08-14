@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Watson\Rememberable\Rememberable;
 
 /**
@@ -22,10 +22,14 @@ use Watson\Rememberable\Rememberable;
  * Relations:
  * @property-read Employee $employee
  * @method static firstWhere(string $string, $id)
+ * @method static whereIn(string $string, Collection $pluck)
+ * @method static where(string $string, mixed $email)
+ * @method static upsert(array $userInsertData, string[] $array, string[] $array1)
+ * @method static whereNotIn(string $string, array $userIdsToUpdate)
  */
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles, SoftDeletes, Rememberable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, Rememberable;
 
     /**
      * The attributes that are mass assignable.
@@ -63,7 +67,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
-    public function getIsInRepresentativeUnitAttribute() {
+    public function getIsInRepresentativeUnitAttribute(): bool
+    {
         $employee = $this->employee;
 
         return Unit::query()

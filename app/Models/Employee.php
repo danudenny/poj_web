@@ -35,6 +35,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property mixed $department
  * @method static find($id)
  * @method static leftJoin(string $string, string $string1, string $string2, string $string3)
+ * @method static chunk(int $chunkSize, \Closure $param)
  */
 class Employee extends Model
 {

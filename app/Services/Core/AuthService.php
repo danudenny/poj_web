@@ -26,8 +26,7 @@ class AuthService extends BaseService
     {
         try {
 
-            $user = User::with(['roles.permissions', 'employee.employeeDetail.employeeTimesheet'])->where('email', $data['email'])
-                ->first();
+            $user = User::where('email', $data['email'])->first();
 
             if (!$user) {
                 throw new \InvalidArgumentException(self::NOT_REGISTERED, 401);

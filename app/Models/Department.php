@@ -29,7 +29,7 @@ class Department extends Model
     public function units(): BelongsToMany
     {
         return $this->belongsToMany(Unit::class, 'department_has_teams')
-            ->withPivot('team_id');
+            ->withPivot('team_id', 'unit_level');
     }
 
     public function employee(): BelongsTo
@@ -39,6 +39,6 @@ class Department extends Model
 
     public function teams(): BelongsToMany
     {
-        return $this->belongsToMany(Team::class, 'department_has_teams')->withPivot('team_id');
+        return $this->belongsToMany(Team::class, 'department_has_teams')->withPivot('team_id', 'unit_level');
     }
 }

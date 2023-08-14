@@ -65,7 +65,7 @@ export default {
             this.table = new Tabulator(this.$refs.departmentTable, {
                 paginationCounter:"rows",
                 data: this.departments,
-                layout: 'fitColumns',
+                layout: 'fitData',
                 columns: [
                     {
                         title: 'No',
