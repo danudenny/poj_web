@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Services\BaseService;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -375,9 +376,9 @@ class ApprovalService extends BaseService
      * @param Employee $employee
      * @param string $approvalType
      *
-     * @return ApprovalUser[]
+     * @return ApprovalUser[]|Collection
      */
-    public function getApprovalUser(Employee $employee, string $approvalType): array {
+    public function getApprovalUser(Employee $employee, string $approvalType) {
         /**
          * @var ApprovalUser[] $result
          */
