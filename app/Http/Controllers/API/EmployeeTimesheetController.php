@@ -59,7 +59,7 @@ class EmployeeTimesheetController extends BaseController
     /**
      * @throws Exception
      */
-    public function edit(UpdateEmployeeTimesheetRequest $request, $id): JsonResponse
+    public function edit(Request $request, $id): JsonResponse
     {
         try {
             return $this->employeeTimesheetService->update($request, $id);
@@ -115,6 +115,11 @@ class EmployeeTimesheetController extends BaseController
     public function deleteEmployeeSchedule(Request $request): JsonResponse
     {
         return $this->employeeTimesheetService->deleteSchedule($request);
+    }
+
+    public function indexSchedule(Request $request): JsonResponse
+    {
+        return $this->employeeTimesheetService->indexSchedule($request);
     }
 
 }

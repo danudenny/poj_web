@@ -147,6 +147,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::get('get-schedule', [EmployeeTimesheetController::class, 'getEmployeeSchedule']);
         Route::get('view-schedule', [EmployeeTimesheetController::class, 'showEmployeeSchedule']);
         Route::get('show-schedule', [EmployeeTimesheetController::class, 'scheduleById']);
+        Route::get('schedules', [EmployeeTimesheetController::class, 'indexSchedule']);
     });
     Route::group(['prefix' => 'periods'], function() {
         Route::get('', [PeriodController::class, 'index']);

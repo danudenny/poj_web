@@ -42,7 +42,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -66,8 +66,5 @@ export default {
     overflow-y: auto; /* Enable vertical scrolling if the content exceeds the modal height */
 }
 
-.modal-content {
-    /* Add your custom styles for the modal content here */
-}
 </style>
 

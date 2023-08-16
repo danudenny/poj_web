@@ -4,10 +4,12 @@ namespace App\Services\Core;
 
 use App\Models\Employee;
 use App\Models\EmployeeTimesheet;
+use App\Models\EmployeeTimesheetDay;
 use App\Models\EmployeeTimesheetSchedule;
 use App\Models\Period;
 use App\Services\BaseService;
 use Carbon\Carbon;
+use DateTime;
 use Exception;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Http\JsonResponse;
@@ -28,7 +30,7 @@ class EmployeeTimesheetService extends BaseService {
     public function index($request, $id): JsonResponse
     {
         try {
-            $data = EmployeeTimesheet::query();
+            $data = EmployeeTimesheet::query()->with('timesheetDays');
             $data->when(request()->has('name'), function ($query) {
                 $query->where('name', 'like', '%' . request()->get('name') . '%');
             });
@@ -42,12 +44,13 @@ class EmployeeTimesheetService extends BaseService {
                 $query->orderBy(request()->get('sort'), request()->get('order'));
             });
             $data->where('unit_id', $id);
+            $data->orderBy('id');
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data fetched successfully',
                 'data' => $data->paginate(request()->get('limit') ?? 10)
-            ], 200);
+            ], 201);
         } catch (InvalidArgumentException $e) {
             throw new InvalidArgumentException($e->getMessage());
         } catch (Exception $e) {
@@ -60,33 +63,43 @@ class EmployeeTimesheetService extends BaseService {
      */
     public function save($request, $id): JsonResponse
     {
-
         DB::beginTransaction();
         try {
 
-            $data = new EmployeeTimesheet();
-            $data->unit_id = $id;
-            $data->name = $request->name;
-            $data->start_time = $request->start_time;
-            $data->end_time = $request->end_time;
-            $data->is_active = $request->is_active;
-            $data->days = $request->days;
-            $data->shift_type = $request->shift_type;
+            $timeshift = EmployeeTimesheet::create([
+                'unit_id' => $id,
+                'name' => $request->name,
+                'start_time' => $request->start_time,
+                'end_time' => $request->end_time,
+                'shift_type' => $request->shift_type,
+            ]);
 
-            if (!$data->save()) {
-                throw new Exception('Failed to save data');
+            if ($request->input('shift_type') === 'non_shift') {
+                foreach ($request->input('days') as $dayData) {
+                    $dayData['employee_timesheet_id'] = $timeshift->id;
+                    EmployeeTimesheetDay::create($dayData);
+                }
+            }
+
+            if (!$timeshift->save()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Failed to save data',
+                ], 500);
             }
 
             DB::commit();
-
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data saved successfully',
-                'data' => $data
-            ], 200);
+                'data' => $timeshift
+            ]);
         } catch (Exception $e) {
             DB::rollBack();
-            throw new Exception($e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ], 500);
         }
 
     }
@@ -97,7 +110,8 @@ class EmployeeTimesheetService extends BaseService {
     public function show($unit_id, $id): JsonResponse
     {
         try {
-            $timesheet = EmployeeTimesheet::where('unit_id', $unit_id)
+            $timesheet = EmployeeTimesheet::with('timesheetDays')
+                ->where('unit_id', $unit_id)
                 ->where('id', $id)
                 ->first();
 
@@ -128,25 +142,40 @@ class EmployeeTimesheetService extends BaseService {
 
         DB::beginTransaction();
         try {
-            $data = EmployeeTimesheet::find($id);
-            $data->name = $request->name;
-            $data->start_time = $request->start_time;
-            $data->end_time = $request->end_time;
-            $data->is_active = $request->is_active ?? true;
-            $data->days = $request->days;
-            $data->shift_type = $request->shift_type;
+            $timeshift = EmployeeTimesheet::find($id);
+            $timeshift->name = $request->name;
+            $timeshift->start_time = $request->start_time;
+            $timeshift->end_time = $request->end_time;
+            $timeshift->shift_type = $request->shift_type;
 
-            if (!$data->save()) {
-                throw new Exception('Failed to update data');
+            if ($request->input('shift_type') === 'non_shift') {
+                foreach ($request->input('days') as $dayData) {
+                    $dayData['employee_timesheet_id'] = $timeshift->id;
+                    if (isset($dayData['id'])) {
+                        $day = EmployeeTimesheetDay::find($dayData['id']);
+                        $day->day = $dayData['day'];
+                        $day->start_time = $dayData['start_time'];
+                        $day->end_time = $dayData['end_time'];
+                        $day->save();
+                    } else {
+                        EmployeeTimesheetDay::create($dayData);
+                    }
+                }
+            }
+
+            if (!$timeshift->save()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Failed to save data',
+                ], 500);
             }
 
             DB::commit();
-
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data updated successfully',
-                'data' => $data
-            ], 200);
+                'data' => $timeshift
+            ], 201);
         } catch (Exception $e) {
             DB::rollBack();
             throw new Exception($e->getMessage());
@@ -235,11 +264,18 @@ class EmployeeTimesheetService extends BaseService {
             ], 404);
         }
 
-        $parsedStartTime = Carbon::parse(sprintf("%s-%s-%s %s:00", $periodsExists->year, $periodsExists->month, $request->date, $timesheetExists->start_time), $timezone);
-        $parsedEndTime = Carbon::parse(sprintf("%s-%s-%s %s:00", $periodsExists->year, $periodsExists->month, $request->date, $timesheetExists->end_time), $timezone);
-        if ($parsedEndTime->lessThan($parsedStartTime)) {
-            $parsedEndTime->addDays(1);
+
+        $parsedStartTime = '';
+        $parsedEndTime = '';
+        if ($timesheetExists->shift_type == 'shift') {
+            $parsedStartTime = Carbon::parse(sprintf("%s-%s-%s %s:00", $periodsExists->year, $periodsExists->month, $request->date, $timesheetExists->start_time), $timezone);
+            $parsedEndTime = Carbon::parse(sprintf("%s-%s-%s %s:00", $periodsExists->year, $periodsExists->month, $request->date, $timesheetExists->end_time), $timezone);
+            if ($parsedEndTime->lessThan($parsedStartTime)) {
+                $parsedEndTime->addDays();
+            }
         }
+
+        $schedule = null;
 
         DB::beginTransaction();
         try {
@@ -264,18 +300,58 @@ class EmployeeTimesheetService extends BaseService {
                     ], 409);
                 }
 
-                $schedule = new EmployeeTimesheetSchedule();
-                $schedule->employee_id = $employeeId;
-                $schedule->timesheet_id = $request->timesheet_id;
-                $schedule->period_id = $request->period_id;
-                $schedule->date = $request->date;
-                $schedule->start_time = $parsedStartTime->setTimezone('UTC');
-                $schedule->end_time = $parsedEndTime->setTimezone('UTC');
-                $schedule->early_buffer = $unit->early_buffer ?? 0;
-                $schedule->late_buffer = $unit->late_buffer ?? 0;
-                $schedule->timezone = $timezone;
-                $schedule->latitude = $unit->lat;
-                $schedule->longitude = $unit->long;
+                if ($timesheetExists->shift_type == 'shift') {
+                    $schedule = new EmployeeTimesheetSchedule();
+                    $schedule->employee_id = $employeeId;
+                    $schedule->timesheet_id = $request->timesheet_id;
+                    $schedule->period_id = $request->period_id;
+                    $schedule->date = $request->date;
+                    $schedule->start_time = $parsedStartTime->setTimezone('UTC');
+                    $schedule->end_time = $parsedEndTime->setTimezone('UTC');
+                    $schedule->early_buffer = $unit->early_buffer ?? 0;
+                    $schedule->late_buffer = $unit->late_buffer ?? 0;
+                    $schedule->timezone = $timezone;
+                    $schedule->latitude = $unit->lat;
+                    $schedule->longitude = $unit->long;
+                } else {
+                    $year = Carbon::now($timezone)->year;
+                    $month = Carbon::now($timezone)->month;
+                    $requestedDay = $request->date;
+
+                    $startDate = Carbon::create($year, $month, $requestedDay, 0, 0, 0, $timezone);
+                    $lastDayOfMonth = Carbon::parse($startDate)->endOfMonth();
+
+                    foreach ($timesheetExists->timesheetDays as $timesheet) {
+                        $dayIndex = array_search($timesheet->day, ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
+
+
+                        if ($dayIndex !== false) {
+                            $dayOffset = ($dayIndex + 7 - $startDate->dayOfWeek) % 7;
+                            $currentDate = $startDate->copy()->addDays($dayOffset);
+                            while ($currentDate <= $lastDayOfMonth) {
+                                $parsedStartTime = Carbon::parse(sprintf("%s-%s-%s %s:00", $currentDate->year, $currentDate->month, $currentDate->day, $timesheet->start_time), $timezone);
+                                $parsedEndTime = Carbon::parse(sprintf("%s-%s-%s %s:00", $currentDate->year, $currentDate->month, $currentDate->day, $timesheet->end_time), $timezone);
+
+                                $schedule = new EmployeeTimesheetSchedule();
+                                $schedule->employee_id = $employeeId;
+                                $schedule->timesheet_id = $request->timesheet_id;
+                                $schedule->period_id = $request->period_id;
+                                $schedule->date = $currentDate->format('d');
+                                $schedule->start_time = $parsedStartTime->setTimezone('UTC');
+                                $schedule->end_time = $parsedEndTime->setTimezone('UTC');
+                                $schedule->early_buffer = $unit->early_buffer ?? 0;
+                                $schedule->late_buffer = $unit->late_buffer ?? 0;
+                                $schedule->timezone = $timezone;
+                                $schedule->latitude = $unit->lat;
+                                $schedule->longitude = $unit->long;
+
+                                $schedule->save();
+                                $currentDate->addWeek();
+                            }
+                        }
+                    }
+                }
+
 
                 if (!$schedule->save()) {
                     return response()->json([
@@ -291,7 +367,7 @@ class EmployeeTimesheetService extends BaseService {
                 'status' => 'success',
                 'message' => 'Data updated successfully',
                 'data' => $schedule
-            ], 200);
+            ], 201);
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -601,5 +677,119 @@ class EmployeeTimesheetService extends BaseService {
                 'data' => ''
             ], 500);
         }
+    }
+
+    public function indexSchedule($request): JsonResponse
+    {
+        $timesheetAssignments = EmployeeTimesheetSchedule::with([
+                'employee',
+                'timesheet',
+                'period',
+                'timesheet.timesheetDays'
+            ])
+            ->groupBy('employee_id', 'employee_timesheet_schedules.id')
+            ->get();
+
+        $daysOfMonth = range(1, now()->daysInMonth);
+
+        $transformedData = [];
+        $rowNumber = 1;
+
+        foreach ($timesheetAssignments as $assignment) {
+            $employeeName = $assignment->employee->name;
+            $date = $assignment->date;
+
+            if (!isset($transformedData[$employeeName])) {
+                $transformedData[$employeeName] = [
+                    'no' => $rowNumber,
+                    'employee_name' => $employeeName,
+                    'unit' => $assignment->employee->last_unit->name,
+                    'job' => $assignment->employee->job->name,
+                ];
+
+                foreach ($daysOfMonth as $day) {
+                    $transformedData[$employeeName][$day] = '';
+                }
+            }
+
+            $dailyEntries = $transformedData[$employeeName];
+
+            if ($assignment->timesheet->shift_type === 'shift') {
+                $shiftEntry = $assignment->timesheet->start_time . '-' . $assignment->timesheet->end_time;
+                $dailyEntries[$date] = $shiftEntry;
+            } else {
+                if ($date >= 1 && $date <= count($daysOfMonth)) {
+                    $timesheetDay = null;
+                    foreach ($assignment->timesheet->timesheetDays as $day) {
+                        if ($day->day === now()->setDay($date)->englishDayOfWeek) {
+                            $timesheetDay = $day;
+                            break;
+                        }
+                    }
+                    if ($timesheetDay) {
+                        $shiftEntry = $timesheetDay->start_time . '-' . $timesheetDay->end_time;
+                        $dailyEntries[$date] = $shiftEntry;
+                    }
+                }
+
+            }
+
+
+            $totalHours = $assignment->timesheet->shift_type === 'shift'
+                ? $this->calculateTotalHours($assignment->timesheet->start_time, $assignment->timesheet->end_time)
+                : $this->calculateTotalHoursFromDays($assignment->timesheet->timesheetDays);
+
+            $transformedData[$employeeName] = $dailyEntries;
+            $transformedData[$employeeName]['total_hours'] = isset($transformedData[$employeeName]['total_hours'])
+                ? $transformedData[$employeeName]['total_hours'] + $totalHours
+                : $totalHours;
+
+            $rowNumber++;
+        }
+
+        $transformedData = array_values($transformedData);
+
+        $startDate = Carbon::now()->startOfMonth();
+        $endDate = Carbon::now()->endOfMonth();
+
+        $dayAbbreviations = [];
+        $daysOfMonth = [];
+
+        for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+            $dayAbbreviations[] = $date->locale('id')->dayName;
+            $daysOfMonth[] = $date->day;
+        }
+
+        $header = array_merge(['No', 'Employee Name', 'Unit', 'Job Title'], $daysOfMonth, ['Total Hours']);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Data fetched successfully',
+            'data' => $transformedData,
+            'header' => $header,
+            'header_abbrv' => $dayAbbreviations,
+        ]);
+    }
+
+    private function calculateTotalHours($startTime, $endTime): float
+    {
+        $start = Carbon::parse($startTime);
+        $end = Carbon::parse($endTime);
+
+        $totalMinutes = $end->diffInMinutes($start);
+        return floor($totalMinutes / 60);
+    }
+
+    private function calculateTotalHoursFromDays($days): float
+    {
+        $totalMinutes = 0;
+
+        foreach ($days as $day) {
+            $start = Carbon::parse($day->start_time);
+            $end = Carbon::parse($day->end_time);
+            $totalMinutes += $end->diffInMinutes($start);
+        }
+
+        return floor($totalMinutes / 60);
     }
 }

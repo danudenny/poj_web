@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Attributes:
  * @property string $year
  * @property string $month
+ * @method static where(string $string, $period_id)
  */
 class Period extends Model
 {
