@@ -111,6 +111,11 @@ class Unit extends Model
             ->withPivot('is_camera', 'is_upload', 'is_reporting', 'is_mandatory_reporting', 'type', 'total_reporting', 'reporting_names');
     }
 
+    public function jobHasUnits(): BelongsToMany
+    {
+        return $this->belongsToMany(Job::class, 'job_has_units',  'unit_id', 'job_id', 'relation_id', 'id');
+    }
+
     public function operatingUnitDetail()
     {
         return $this->hasOne(OperatingUnitDetail::class, 'unit_relation_id', 'relation_id');

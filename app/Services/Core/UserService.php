@@ -40,12 +40,20 @@ class UserService extends BaseService
     {
         $auth = auth()->user();
         $roleLevel = $data->header('X-Selected-Role');
+        $userHasRoles = $auth->employee->job->roles->pluck('name')->toArray();
+        $userHasRoles = array_map('strtolower', $userHasRoles);
         try {
             $users = User::query();
             $userData = [];
-            $users->with(['roles:name', 'employee', 'employee.department']);
+            $users->with(['employee', 'employee.job', 'employee.job.roles', 'employee.department']);
             $users->when(request()->filled('name'), function ($query) {
                 $query->whereRaw('LOWER("name") LIKE ? ', '%'.strtolower(request()->query('name')).'%');
+            });
+
+            $users->when(request()->filled('job_name'), function ($query) {
+                $query->whereHas('employee.job', function ($query) {
+                    $query->whereRaw('LOWER("name") LIKE ? ', '%'.strtolower(request()->query('job_name')).'%');
+                });
             });
             $users->when(request()->filled('last_unit_id'), function ($query) {
                 $query->whereHas('employee', function ($query) {

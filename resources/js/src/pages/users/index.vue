@@ -88,6 +88,7 @@ export default {
             filterName: '',
             filterEmail: '',
             filterDepartment: '',
+            filterJob: '',
             filter: {
                 unit_relation_id: ''
             },
@@ -169,8 +170,9 @@ export default {
                         if (item.field === 'name') this.filterName = item.value
                         if (item.field === 'email') this.filterEmail = item.value
                         if (item.field === 'employee.department.name') this.filterDepartment = item.value
+                        if (item.field === 'employee.job.name') this.filterJob = item.value
                     })
-                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&email=${this.filterEmail}&last_unit_id=${this.filter.unit_relation_id}&department_id=${this.filterDepartment}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&email=${this.filterEmail}&last_unit_id=${this.filter.unit_relation_id}&department_id=${this.filterDepartment}&job_name=${this.filterJob}`
                 },
                 ajaxResponse: function (url, params, response) {
                     return {
@@ -231,16 +233,34 @@ export default {
                         }
                     },
                     {
+                        title: 'Job',
+                        field: 'employee.job.name',
+                        headerHozAlign: 'center',
+                        hozAlign: 'center',
+                        headerSort: 'false',
+                        headerFilter: 'input',
+                        formatter: function(row) {
+                            if (row.getData().employee.job.name === null) {
+                                return `<span class='badge badge-danger '>No Job</span>`;
+                            } else {
+                                return row.getData().employee.job.name;
+                            }
+                        }
+                    },
+                    {
                         title: 'Role',
-                        field: '',
+                        field: 'employee.job.roles',
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilter:"input",
                         width: 300,
                         formatter: function(row) {
-                           return row.getData().roles.map(function(role) {
-                                return `<span class='badge badge-success '>${role.name.toUpperCase()}</span>`;
-                            }).join(" ");
+                            let roles = row.getData().employee.job.roles
+                            let html = ''
+                            roles.forEach((role) => {
+                                html += `<span class="badge badge-primary">${role.name}</span> `
+                            })
+                            return html
                         }
                     },
                     {
