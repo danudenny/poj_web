@@ -353,13 +353,13 @@ class UnitService extends BaseService
         }
     }
 
-    public function getRelatedUnit(): JsonResponse
+    public function getRelatedUnit($request): JsonResponse
     {
         $role = auth()->user()->getHighestRole();
         $datas = [];
 
         if ($role->role_level === 'superadmin') {
-            $datas = Unit::all();
+            $datas = Unit::where('unit_level', $request->unit_level)->get();
         } else {
             $empUnit = auth()->user()->employee->getRelatedUnit();
             $lastUnit = auth()->user()->employee->getLastUnit();

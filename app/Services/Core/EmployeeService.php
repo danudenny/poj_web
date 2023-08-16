@@ -37,6 +37,12 @@ class EmployeeService extends BaseService
                 $builder->where('department_id', '=', $request->query('department_id'));
             });
 
+            $employees->when($request->filled('unit_level'), function(Builder $builder) use ($request) {
+                $builder->whereHas('units', function (Builder $builder) use ($request) {
+                    $builder->where('unit_level', '=', $request->query('unit_level'));
+                });
+            });
+
             $employees->when($request->filled('team_id'), function(Builder $builder) use ($request) {
                 $builder->where('team_id', '=', intval($request->input('team_id')));
             });
@@ -264,13 +270,15 @@ class EmployeeService extends BaseService
         $user = $request->user();
 
         try {
-            $employees = Employee::query()->with(['department', 'corporate', 'kanwil', 'area', 'cabang', 'outlet', 'job', 'units', 'partner', 'team']);
+            $employees = Employee::query()->with(['department', 'operatingUnit', 'corporate', 'kanwil', 'area', 'cabang', 'outlet', 'job', 'units', 'partner', 'team']);
 
             $lastUnitRelationID = $request->get('last_unit_relation_id');
             $unitRelationID = $request->get('unit_relation_id');
 
-            $employees->when($request->unit_id, function (Builder $builder) use ($request) {
-                $builder->where('unit_id', '=', $request->unit_id);
+            $employees->when($request->filled('unit_level'), function (Builder $builder) use ($request) {
+                $builder->whereHas('units', function (Builder $builder) use ($request) {
+                    $builder->where('unit_level', '=', $request->query('unit_level'));
+                });
             });
 
             if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
@@ -304,6 +312,10 @@ class EmployeeService extends BaseService
 
             $employees->when($request->input('name'), function (Builder $builder) use ($request) {
                 $builder->where('employees.name', "ILIKE", "%" . $request->input('name') . "%");
+            });
+
+            $employees->when($request->input('unit_id'), function (Builder $builder) use ($request) {
+                $builder->where('unit_id', '=', $request->input('unit_id'));
             });
 
             $employees->when($lastUnitRelationID, function (Builder $builder) use ($lastUnitRelationID) {
