@@ -24,7 +24,20 @@
                                             >
                                             </Datepicker>
                                         </div>
-                                        <div class="col-md-6 mb-3">
+                                        <div class="col-md-4 mb-3">
+                                            <label>Unit :</label>
+                                            <multiselect
+                                                v-model="selectedLevel"
+                                                placeholder="Select Unit"
+                                                label="name"
+                                                track-by="name"
+                                                :options="unitLevels"
+                                                :multiple="false"
+                                                @select="onSelectUnitLevel"
+                                            >
+                                            </multiselect>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
                                             <label>Unit :</label>
                                             <multiselect
                                                 v-model="selectedOptions"
@@ -37,11 +50,13 @@
                                             >
                                             </multiselect>
                                         </div>
-                                        <div class="col-md-6 mb-3">
+                                        <div class="col-md-4 mb-3">
                                             <label>Timesheet :</label>
                                             <select v-model="timesheet_id" class="form-control" >
-                                                <option value="">Select Timesheet</option>
-                                                <option :value="item.id" v-for="item in timesheets">{{item.name}} ( {{item.start_time}} - {{item.end_time}} )</option>
+                                                <option value="null">Select Timesheet</option>
+                                                <option :value="item.id" v-for="item in timesheets">{{item.name}}
+                                                    ( {{item.start_time}} - {{item.end_time || 'Non Shift'}} )
+                                                </option>
                                             </select>
                                         </div>
                                         <div class="col-md-12 mb-3">
@@ -95,17 +110,41 @@ export default {
             lastDayOfCurrentMonth: null,
             selectedDate: 0,
             selectedEmployeeIds: [],
+            selectedLevel: null,
+            unitLevels: [
+                {
+                    name: 'Corporate',
+                    value: 3
+                },
+                {
+                    name: 'Kanwil',
+                    value: 4
+                },
+                {
+                    name: 'Area',
+                    value: 5
+                },
+                {
+                    name: 'Cabang',
+                    value: 6
+                },
+                {
+                    name: 'Outlet',
+                    value: 7
+                },
+            ]
         }
     },
     async mounted() {
         await this.getPeriods();
         await this.getTotalDays();
-        await this.getEmployee();
-        await this.getUnit();
-        // this.initializeEmployeeTable()
         this.getCurrentMonthEndDate();
     },
     methods: {
+        onSelectUnitLevel(e) {
+            this.selectedOptions = [];
+            this.getUnit(e.value);
+        },
         handleDate(e) {
             const date = new Date(e);
             this.date = date;
@@ -120,11 +159,11 @@ export default {
         },
          selectedUnit() {
             this.initializeEmployeeTable()
-            this.table.setFilter('last_unit_relation_id', "=", this.selectedOptions.relation_id);
+            this.table.setFilter('unit_id', "=", this.selectedOptions.relation_id);
             this.getTimesheet(this.selectedOptions.id)
         },
-        async getUnit() {
-            await this.$axios.get(`api/v1/admin/unit/related-unit`)
+        async getUnit(value) {
+            await this.$axios.get(`api/v1/admin/unit/related-unit?unit_level=${value}`)
                 .then(response => {
                     this.units = response.data.data;
                 }).catch(error => {
@@ -163,16 +202,6 @@ export default {
             } catch (error) {
                 console.log(error);
             }
-        },
-        async getEmployee() {
-            this.loading = true;
-            await this.$axios.get(`/api/v1/admin/employee`)
-                .then(response => {
-                    this.employees = response.data.data.data;
-                })
-                .catch(error => {
-                    console.error(error);
-                });
         },
         initializeEmployeeTable() {
             const ls = localStorage.getItem('my_app_token')
@@ -236,11 +265,15 @@ export default {
                     size: this.pageSize,
                 },
                 ajaxURLGenerator: (url, config, params) => {
+                    const filters = {
+                        unit_level: this.selectedLevel?.value ?? '',
+                    }
                     params.filter.map((item) => {
                         if (item.field === 'name') this.filterName = item.value
-                        if (item.field === 'last_unit_relation_id') this.filterUnitId = item.value
+                        if (item.field === 'unit_id') this.filterUnitId = item.value
+                        if (item.field === 'unit_level') filters.unit_level = item.value
                     })
-                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&last_unit_relation_id=${this.filterUnitId}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&unit_id=${this.filterUnitId}`
                 },
                 ajaxResponse: function (url, params, response) {
                     return {
@@ -275,11 +308,19 @@ export default {
                 }
             });
 
+            const timesheet = {}
+            this.timesheets.forEach((item, index) => {
+                if (item.id === this.timesheet_id) {
+                    timesheet.id = item.id
+                    timesheet.shift_type = item.shift_type
+                }
+            })
+
             const period = this.periods.find(item => item.id === this.period_id);
             await this.$axios.post(`/api/v1/admin/employee-timesheet/assign-schedule`, {
                 employee_ids: ls,
                 period_id: this.period_id,
-                timesheet_id: this.timesheet_id,
+                timesheet_id: timesheet.shift_type === 'shift' ? this.timesheet_id : timesheet.id,
                 date: queryPeriod.getDate(),
             }).then(response => {
                 localStorage.removeItem('selectedEmployees');

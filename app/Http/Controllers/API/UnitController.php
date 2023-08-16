@@ -60,9 +60,9 @@ class UnitController extends BaseController
         return $this->unitService->update($request, $id);
     }
 
-    public function relatedUnit(): JsonResponse
+    public function relatedUnit(Request $request): JsonResponse
     {
-        return $this->unitService->getRelatedUnit();
+        return $this->unitService->getRelatedUnit($request);
     }
 
     public function detailUnit(Request $request, int $id): JsonResponse
