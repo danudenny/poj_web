@@ -10,279 +10,86 @@
                             <h5>Timesheet Assignment List</h5>
                         </div>
                         <div class="card-body">
-                            <calendar-view
-                                :show-date="showDate"
-                                :enable-date-selection="true"
-                                class="theme-default"
-                                @click-date="clickedDate"
-                                @click-item="toggleDrawer"
-                                title="Create New Assignment"
-                                :items="items"
-                            >
-                                <template #header="{ headerProps }">
-                                    <calendar-view-header
-                                        :header-props="headerProps"
-                                        @input="setShowDate"
-                                        style="background-color: #0A5640; color: white;"
-                                    />
-                                </template>
-                            </calendar-view>
+                            <div class="d-flex justify-content-end mb-2">
+                                <button class="btn btn-success" @click="createSchedule">
+                                    <i class="fa fa-plus"></i>&nbsp;Create Schedule
+                                </button>
+                            </div>
+                            <table class="table table-striped table-bordered table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th v-for="(header, index) in headers" :key="index">
+                                            {{ header }}
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="4"></th>
+                                        <th v-for="(header, index) in headerAbbrvs" :key="index" style="font-size:10px">
+                                            {{ header.substring(0, 3) }}
+                                        </th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(timesheet, index) in timesheetData" :key="index" class="text-center">
+                                        <td>{{ index + 1 }}</td>
+                                        <td>{{ timesheet.employee_name }}</td>
+                                        <td>{{ timesheet.unit }}</td>
+                                        <td>{{ timesheet.job }}</td>
+                                        <td v-for="day in dateRanges">
+                                            <span v-if="timesheet[day] === ''" class="text-danger"><i class="fa fa-times"></i></span>
+                                            <span class="badge badge-success" v-else>{{ timesheet[day] }}</span>
+                                        </td>
+                                        <td>{{ formatHours(timesheet.total_hours) }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div v-if="isOpen" class="drawer-overlay" @click="closeDrawer">
-            <div class="drawer" @click.stop>
-                <div class="row">
-                    <div class="d-flex column-gap-2 m-2">
-                        <button class="btn btn-primary" @click="closeDrawer">
-                            <i class="fa fa-times-circle"></i>&nbsp;Close</button>
-                        <button class="btn btn-warning" @click="editTimesheet">
-                            <i class="fa fa-pencil"></i>&nbsp;Edit</button>
-                    </div>
-                    <div class="col-md-7">
-                        <table class="table table-striped table-responsive">
-                            <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>Name</th>
-                                <th>Days</th>
-                                <th>Unit</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr v-for="(item, index) in clickedSchedule">
-                                <td>{{ index + 1 }}</td>
-                                <td>
-                                   <div>
-                                         <div class="d-flex justify-content-start column-gap-2 avatar avatar-sm">
-                                            <img :src="`https://ui-avatars.com/api/?name=${item.employee.name}&background=0A5640&color=fff&length=2&rounded=false&size=32`" alt="avatar" class="avatar-img rounded">
 
-                                             <div class="d-flex flex-column">
-                                                 <span>{{ item.employee.name }}</span>
-                                                 <small class="text-danger">
-                                                     <b>{{ item.timesheet.start_time}} - {{item.timesheet.end_time}}</b>
-                                                 </small>
-                                                 <div>
-                                                     <span class="badge badge-primary">{{item.timesheet.shift_type}}</span>
-                                                 </div>
-                                             </div>
-                                         </div>
-                                   </div>
-                                </td>
-                                <td>
-                                    <span v-if="item.timesheet.shift_type === 'non_shift'" class="badge badge-danger" v-for="day in item.timesheet.days">
-                                        {{day}}
-                                    </span>
-                                </td>
-                                <td>{{item.employee.last_unit.name}}</td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div>
-        <SmallModal :visible="isModalVisible" :title="modalTitle" @update:visible="isModalVisible = $event">
-            <div class="row">
-                <div class="col-md-12">
-                    <table class="table table-hover table-responsive">
-                        <thead>
-                        <tr class="text-center" style="font-weight: 700;">
-                            <td>Unit Name</td>
-                            <td>Edit</td>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr v-for="(item, index) in multipleUnits">
-                            <td>{{item.name}}</td>
-                            <td>
-                                <button class="btn btn-primary" @click="goToUpdate(item.id)">
-                                    <i class="fa fa-pencil"></i>&nbsp;Edit</button>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </SmallModal>
     </div>
 </template>
 
 <script>
-import {CalendarView, CalendarViewHeader} from "vue-simple-calendar"
-import {useToast} from "vue-toastification";
-import "../../../../../node_modules/vue-simple-calendar/dist/style.css"
-import "../../../../../node_modules/vue-simple-calendar/dist/css/default.css"
-import SmallModal from "../../components/small_modal.vue";
-
 export default {
-    components: {
-        SmallModal,
-        CalendarView,
-        CalendarViewHeader,
-    },
     data() {
         return {
-            isModalVisible: false,
-            modalTitle: 'Select Unit',
             loading: false,
-            schedules: [],
-            date: 0,
-            showDate: new Date(),
-            isOpen: false,
-            items: [
-                {
-                    id: '',
-                    startDate: '',
-                    title: '',
-                }
-            ],
-            clickedSchedule: [],
-            scheduleInfo: [],
-            multipleUnits: [],
-            finalMultipleUnits: [],
+            timesheetData: [],
+            dateRanges: [],
+            headers: [],
+            headerAbbrvs: [],
+            daysOfMonth: [],
+            timesheetSplit: ''
         }
     },
-    mounted() {
-        this.getScheduleData()
+    async mounted() {
+        await this.fetchTimesheetData();
+        this.dateRange()
     },
     methods: {
-        goToUpdate(id) {
-            this.clickedSchedule.filter((item) => {
-                if (item.timesheet.unit_id === id) {
-                    const date = item.date
-                    const year = item.period.year
-                    const month = item.period.month
-
-                    const dateObj = new Date(year, month - 1, date)
-                    const dateStr = dateObj.toLocaleDateString()
-                    this.$router.push({
-                        name: 'timesheet-schedule-edit',
-                        query: {
-                            date: dateStr,
-                            unit_id: id,
-                            timesheet_id: item.timesheet.id,
-                        }
+        dateRange() {
+            const currentDate = new Date();
+            const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+            this.dateRanges = Array.from({ length: lastDayOfMonth }, (_, index) => (index + 1).toString());
+        },
+        async fetchTimesheetData() {
+            try {
+                await this.$axios.get('/api/v1/admin/timesheet-schedule/schedules')
+                    .then(response => {
+                        this.timesheetData = response.data.data;
+                        this.headers = response.data.header;
+                        this.headerAbbrvs = response.data.header_abbrv;
                     })
-                }
-            })
-        },
-        editTimesheet() {
-            const units = [];
-            this.clickedSchedule.forEach((item) => {
-                units.push(item.timesheet.unit_id);
-                this.multipleUnits.push(item.timesheet.unit);
-            });
-
-            const uniqueUnitIdsSet = new Set(units);
-            const uniqueUnitIdsArray = Array.from(uniqueUnitIdsSet);
-
-            const uniqueObjectMap = {};
-            this.multipleUnits = this.multipleUnits.filter((item) => {
-                if (!uniqueObjectMap[item.id]) {
-                    uniqueObjectMap[item.id] = true;
-                    return true;
-                }
-                return false;
-            });
-
-            if (uniqueUnitIdsArray.length > 1) {
-                this.isModalVisible = true;
-            } else {
-                const date = this.clickedSchedule[0].date
-                const year = this.clickedSchedule[0].period.year
-                const month = this.clickedSchedule[0].period.month
-
-                const dateObj = new Date(year, month - 1, date)
-                const dateStr = dateObj.toLocaleDateString()
-                this.$router.push({
-                    name: 'timesheet-schedule-edit',
-                    query: {
-                        date: dateStr,
-                        unit_id: this.clickedSchedule[0].timesheet.unit_id,
-                        timesheet_id: this.clickedSchedule[0].timesheet.id,
-                    }
-                })
+            } catch (error) {
+                console.error(error);
             }
         },
-        toggleDrawer(item) {
-            this.schedules.filter((schedule) => {
-                if (schedule.date === item.startDate.getDate()) {
-                    this.clickedSchedule.push(schedule)
-                }
-            });
-            this.isOpen = !this.isOpen;
-        },
-        closeDrawer() {
-            this.clickedSchedule = []
-            this.multipleUnits = []
-            this.isOpen = false;
-            document.removeEventListener("click", this.closeOnOutsideClick);
-        },
-        closeOnOutsideClick(event) {
-            const drawerElement = this.$el.querySelector(".drawer");
-            if (drawerElement && !drawerElement.contains(event.target)) {
-                this.closeDrawer();
-            }
-        },
-        thisMonth(d) {
-            const t = new Date()
-            return new Date(t.getFullYear(), t.getMonth(), d)
-        },
-        clickedDate(date) {
-            if (date.toLocaleDateString() < new Date().toLocaleDateString()) {
-                return useToast().error('You cannot create schedule in the past');
-            }
-            this.$router.push({
-                name: 'timesheet-schedule-create',
-                query: {
-                    date: date
-                }
-            })
-        },
-        setShowDate(d) {
-            this.showDate = d;
-        },
-         viewData(e) {
-            this.$store.dispatch('setData', this.schedules[e]);
-            this.$router.push({
-                name: 'timesheet-schedule-detail'
-            })
-        },
-        getScheduleData() {
-            this.loading = true
-            this.$axios.get('/api/v1/admin/timesheet-schedule/get-schedule')
-                .then((response) => {
-                    this.schedules = response.data.data
-                    const groupedItems = this.schedules.reduce((result, schedule) => {
-                        const day = schedule.date;
-                        const monthNumber = schedule.period.month;
-                        const year = schedule.period.year;
-                        const dateObject = new Date(Date.UTC(year, monthNumber - 1, day, 5, 0, 0)); // Setting time to 5:00 AM (GMT+0)
-
-                        const key = `${year}-${monthNumber}-${day}`;
-                        if (!result[key]) {
-                            result[key] = {
-                                id: schedule.id,
-                                startDate: dateObject,
-                                title: 'Lihat Data',
-                            };
-                        }
-
-                        return result;
-                    }, {});
-
-                    this.items = Object.values(groupedItems);
-                    this.loading = false
-                })
-                .catch((error) => {
-                    console.log(error)
-                    this.loading = false
-                })
+        formatHours(hours) {
+            return hours === 0 ? '-' : hours.toString();
         },
         createSchedule() {
             this.$router.push({ name: 'timesheet-schedule-create' })
@@ -294,11 +101,17 @@ export default {
 </script>
 
 <style scoped>
+table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+}
 .table thead th {
     text-align: center;
     font-weight: bold;
     background-color: #0A5640;
     color: #fff;
+    vertical-align: middle;
 }
 
 .table tbody td:last-child {

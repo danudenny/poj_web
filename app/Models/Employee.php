@@ -40,6 +40,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @method static find($id)
  * @method static leftJoin(string $string, string $string1, string $string2, string $string3)
  * @method static chunk(int $chunkSize, \Closure $param)
+ * @method static where(string $string, mixed $employeeId)
  */
 class Employee extends Model
 {

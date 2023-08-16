@@ -1,5 +1,5 @@
 <template>
-    <Breadcrumbs main="Timesheet Assignment / Timesheet Assignment Create" />
+    <Breadcrumbs main="Timesheet Assignment" />
 
     <div class="container-fluid">
         <div class="email-wrap bookmark-wrap">
@@ -7,7 +7,7 @@
                 <div class="col-md-12">
                     <div class="card card-absolute">
                         <div class="card-header bg-primary">
-                            <h5>Timesheet Assignment Create</h5>
+                            <h5>Timesheet Assignment</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -16,9 +16,11 @@
                                         <div class="col-md-12 mb-3">
                                             <label>Date :</label>
                                             <Datepicker
-                                                v-model="date"
+                                                :model-value="date"
                                                 :enable-time-picker="false"
-                                                disabled
+                                                :min-date="new Date()"
+                                                auto-apply
+                                                @update:model-value="handleDate"
                                             >
                                             </Datepicker>
                                         </div>
@@ -44,9 +46,6 @@
                                         </div>
                                         <div class="col-md-12 mb-3">
                                             <label>Assign To (Employees) :</label>
-                                            <div v-if="loading" class="text-center">
-                                                <img src="../../assets/loader.gif" alt="loading" width="100">
-                                            </div>
                                             <div ref="employeeTable"></div>
                                         </div>
                                     </div>
@@ -95,7 +94,7 @@ export default {
             table: null,
             lastDayOfCurrentMonth: null,
             selectedDate: 0,
-            selectedEmployeeIds: []
+            selectedEmployeeIds: [],
         }
     },
     async mounted() {
@@ -103,7 +102,7 @@ export default {
         await this.getTotalDays();
         await this.getEmployee();
         await this.getUnit();
-        this.initializeEmployeeTable()
+        // this.initializeEmployeeTable()
         this.getCurrentMonthEndDate();
     },
     methods: {
@@ -120,6 +119,7 @@ export default {
             return new Date(firstDayOfNextMonth.getTime() - 1);
         },
          selectedUnit() {
+            this.initializeEmployeeTable()
             this.table.setFilter('last_unit_relation_id', "=", this.selectedOptions.relation_id);
             this.getTimesheet(this.selectedOptions.id)
         },
@@ -263,7 +263,7 @@ export default {
         },
         async saveSchedule() {
             const ls = JSON.parse(localStorage.getItem('selectedEmployees'));
-            const queryPeriod = new Date(this.$route.query.date);
+            const queryPeriod = this.date
             const month = queryPeriod.getMonth() + 1;
             const year = queryPeriod.getFullYear();
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];

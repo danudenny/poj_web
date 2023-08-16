@@ -17,6 +17,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * Relations:
  * @property-read Unit $unit
+ * @method static create($timeshiftData)
+ * @method static find($id)
+ * @method static where(string $string, $timesheet_id)
  */
 class EmployeeTimesheet extends Model
 {
@@ -30,7 +33,6 @@ class EmployeeTimesheet extends Model
         'end_time',
         'is_active',
         'unit_id',
-        'days',
         'shift_type',
     ];
 
@@ -56,5 +58,10 @@ class EmployeeTimesheet extends Model
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class, 'unit_id');
+    }
+
+    public function timesheetDays(): HasMany
+    {
+        return $this->hasMany(EmployeeTimesheetDay::class, 'employee_timesheet_id');
     }
 }

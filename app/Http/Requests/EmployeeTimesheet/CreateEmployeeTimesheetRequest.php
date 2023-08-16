@@ -25,9 +25,12 @@ class CreateEmployeeTimesheetRequest extends FormRequest
     {
         return [
             'name' => 'required|string',
-            'start_time' => 'required',
-            'end_time' => 'required',
+            'start_time' => 'nullable',
+            'end_time' => 'nullable',
             'is_active' => 'boolean',
+            'days.*.day' => 'required_with:days.*.start_time,days.*.end_time',
+            'days.*.start_time' => 'nullable|required_with:days.*.end_time',
+            'days.*.end_time' => 'nullable|required_with:days.*.start_time',
         ];
     }
 
