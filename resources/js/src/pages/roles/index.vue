@@ -11,11 +11,11 @@
                                 <h5>Role List</h5>
                             </div>
                             <div class="card-body">
-                                <div class="d-flex justify-content-end mb-2">
-                                    <button class="btn btn-success" type="button" @click="createData">
-                                        <i class="fa fa-plus-circle" /> &nbsp; Create New
-                                    </button>
-                                </div>
+<!--                                <div class="d-flex justify-content-end mb-2">-->
+<!--                                    <button class="btn btn-success" type="button" @click="createData">-->
+<!--                                        <i class="fa fa-plus-circle" /> &nbsp; Create New-->
+<!--                                    </button>-->
+<!--                                </div>-->
                                 <div v-if="loading" class="text-center">
                                     <img src="../../assets/loader.gif" alt="loading" width="100">
                                 </div>

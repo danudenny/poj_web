@@ -14,6 +14,37 @@
                                 <div v-if="loading" class="text-center">
                                     <img src="../../assets/loader.gif" alt="loading" width="100">
                                 </div>
+                                <div class="d-flex justify-content-start column-gap-2 my-3">
+                                    <div class="col-md-4">
+                                        <multiselect
+                                            v-model="selectedUnitLevel"
+                                            placeholder="Select Unit Level"
+                                            label="name"
+                                            track-by="id"
+                                            :options="unitLevels"
+                                            :multiple="false"
+                                            @select="onSelectUnitLevel">
+                                        </multiselect>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <multiselect
+                                            v-model="selectedUnit"
+                                            placeholder="Select Unit"
+                                            label="name"
+                                            track-by="id"
+                                            :options="units"
+                                            :multiple="false"
+                                            @select="onSelectUnit"
+                                            @search-change="onSearchUnit"
+                                        >
+                                        </multiselect>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-primary" @click="resetFilter">
+                                            <i class="fa fa-rotate-left"></i>&nbsp;Reset Filter
+                                        </button>
+                                    </div>
+                                </div>
                                 <div ref="jobTable"></div>
                             </div>
                         </div>
@@ -39,13 +70,73 @@ export default {
             timerId: null,
             currentPage: 1,
             pageSize: 10,
+            filterName: '',
+            selectedUnitLevel: null,
+            unitLevels: [
+                {
+                    id: 1,
+                    name: 'Head Office'
+                },
+                {
+                    id: 2,
+                    name: 'Operating Unit'
+                },
+                {
+                    id: 3,
+                    name: 'Corporate'
+                },
+                {
+                    id: 4,
+                    name: 'Kantor Wilayah'
+                },
+                {
+                    id: 5,
+                    name: 'Area'
+                },
+                {
+                    id: 6,
+                    name: 'Cabang'
+                },
+                {
+                    id: 7,
+                    name: 'Outlet'
+                },
+            ],
+            selectedUnit: null,
+            units: [],
+            searchUnitName: '',
         }
     },
     async mounted() {
-        // await this.getJobs();
         this.initializeDepartmentTable();
     },
     methods: {
+        resetFilter() {
+            this.initializeDepartmentTable();
+            this.selectedUnit = null;
+            this.selectedUnitLevel = null;
+            this.searchUnitName = '';
+        },
+        onSearchUnit(e) {
+            this.searchUnitName = e;
+        },
+        onSelectUnitLevel(e) {
+            this.selectedUnitLevel = this.unitLevels.find(unitLevel => unitLevel.id === e.id);
+            this.getUnits();
+        },
+        onSelectUnit(e) {
+            this.selectedUnit = this.units.find(unit => unit.id === e.id);
+            this.table.setFilter('unit_id', '=', this.selectedUnit.id);
+        },
+        async getUnits() {
+            await this.$axios.get(`/api/v1/admin/unit?unit_level=${this.selectedUnitLevel.id}&name=${this.searchUnitName}`)
+                .then(res => {
+                    this.units = res.data.data;
+                })
+                .catch(e => {
+                    console.log(e);
+                });
+        },
         startCountdown() {
             this.countdown = 1;
             this.timerId = setInterval(() => {
@@ -63,6 +154,7 @@ export default {
                         "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
                     },
                 },
+                filterMode:"remote",
                 ajaxParams: {
                     page: this.currentPage,
                     size: this.pageSize,
@@ -74,7 +166,17 @@ export default {
                     }
                 },
                 ajaxURLGenerator: (url, config, params) => {
-                    return `${url}?page=${params.page}&per_page=${params.size}`
+                    const filters = {
+                        unit_id: this.selectedUnit?.id ?? '',
+                    }
+
+                    params.filter.map((item) => {
+                        if (item.field === 'job_name') this.filterName = item.value
+                        if (item.field === 'unit_id') filters.unit_id = item.value
+                    })
+
+                    console.log(this.filterName)
+                    return `${url}?flat=true&page=${params.page}&per_page=${params.size}&name=${this.filterName}&unit_id=${filters.unit_id}`
                 },
                 layout: 'fitColumns',
                 columns: [
@@ -88,10 +190,18 @@ export default {
                     },
                     {
                         title: 'Name',
-                        field: 'name',
+                        field: 'job_name',
                         headerFilter:"input",
                         headerHozAlign: 'center',
                         headerSort: false,
+                    },
+                    {
+                        title: 'Unit',
+                        field: 'unit_name',
+                        headerFilter:"input",
+                        headerHozAlign: 'center',
+                        headerSort: false,
+                        hozAlign: 'center',
                     },
                     {
                         title: 'Roles',
@@ -99,7 +209,7 @@ export default {
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerSort: false,
-                        formatter: function (cell, formatterParams, onRendered) {
+                        formatter: function (cell) {
                             const roles = cell.getValue();
                             let html = '';
                             roles.forEach((role) => {

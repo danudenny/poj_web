@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -42,12 +43,6 @@ class Job extends Authenticatable
             ->withPivot('is_camera', 'is_upload', 'is_reporting', 'is_mandatory_reporting', 'total_reporting');
     }
 
-    public function unitJob(): BelongsToMany
-    {
-        return $this->belongsToMany(Unit::class, 'unit_jobs')
-            ->withPivot('is_camera', 'is_upload', 'is_reporting', 'is_mandatory_reporting', 'total_reporting');
-    }
-
     public function roles(): BelongsToMany
     {
         return $this->morphToMany(Role::class, 'model', 'model_has_roles', 'role_id', 'model_id');
@@ -56,5 +51,10 @@ class Job extends Authenticatable
     public function permissions(): BelongsToMany
     {
         return $this->belongsToMany(Permission::class);
+    }
+
+    public function unitJob(): BelongsToMany
+    {
+        return $this->belongsToMany(Unit::class, 'job_has_units',  'job_id', 'unit_id');
     }
 }

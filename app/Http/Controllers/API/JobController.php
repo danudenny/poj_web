@@ -18,9 +18,9 @@ class JobController extends Controller
         $this->jobService = $jobService;
     }
 
-    public function index($id): JsonResponse
+    public function index(Request $request, $id): JsonResponse
     {
-        return $this->jobService->index($id);
+        return $this->jobService->index($request, $id);
     }
 
     public function allJobs(Request $request): JsonResponse

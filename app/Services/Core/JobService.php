@@ -10,6 +10,9 @@ use App\Models\UnitHasJob;
 use App\Services\BaseService;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class JobService extends BaseService
@@ -35,7 +38,6 @@ class JobService extends BaseService
             ->mergeBindings($subquery)
             ->get();
 
-
         return response()->json([
             'status' => 'success',
             'message' => 'Data retrieved successfully',
@@ -46,16 +48,71 @@ class JobService extends BaseService
     public function allJobs($request): JsonResponse
     {
         $jobs = Job::query();
-        $jobs->with(['roles', 'units']);
+        $jobs->with(['roles', 'unitJob']);
         $jobs->when($request->input('name'), function ($query, $name) {
             $query->whereRaw("LOWER(name) ILIKE '%" . strtolower($name) . "%'");
         });
+        $jobs->when($request->input('unit_id'), function ($query, $unitId) {
+            $query->whereHas('unitJob', function ($query) use ($unitId) {
+                $query->where('unit_id', intval($unitId));
+            });
+        });
+        $jobs = $jobs->get();
+
+        $data = [];
+
+        foreach ($jobs as $job) {
+            if ($request->input('flat', false)) {
+                foreach ($job->unitJob as $unit) {
+                    if (!$request->input('unit_id') || $unit->id == $request->input('unit_id')) {
+                        $data[] = [
+                            'job_id' => $job->id,
+                            'unit_id' => $unit->id,
+                            'job_name' => $job->name,
+                            'roles' => $job->roles,
+                            'unit_name' => $unit->name,
+                        ];
+                    }
+                }
+            } else {
+                if (!$request->input('unit_id')) {
+                    $data[] = [
+                        'job_id' => $job->id,
+                        'job_name' => $job->name,
+                        'roles' => $job->roles,
+                        'units' => $job->unitJob,
+                    ];
+                }
+            }
+        }
+
+        $perPage = $request->input('per_page', 10);
+        $currentPage = $request->input('page', 1);
+
+        $totalDataCount = count($data);
+        $totalPages = ceil($totalDataCount / $perPage);
+
+        $paginatedData = array_slice($data, ($currentPage - 1) * $perPage, $perPage);
 
         return response()->json([
             'status' => 'success',
             'message' => 'Data retrieved successfully',
-            'data' => $jobs->paginate($request->input('per_page', 10))
+            'data' => [
+                'current_page' => $currentPage,
+                'data' => $paginatedData,
+                'per_page' => $perPage,
+                'total' => count($data),
+                'last_page' => $totalPages,
+            ]
         ]);
+
+    }
+
+    public function paginate($items, $perPage = 5, $page = null, $options = []): LengthAwarePaginator
+    {
+        $page = $page ?: (Paginator::resolveCurrentPage() ?: 1);
+        $items = Collection::make($items);
+        return new LengthAwarePaginator($items->forPage($page, $perPage), $items->count(), $perPage, $page, $options);
     }
 
     public function view($id): JsonResponse

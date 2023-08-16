@@ -71,6 +71,9 @@ class UnitService extends BaseService
                         'child.parent_unit_id as child_parent_unit_id'
                     )
                     ->where('parent.unit_level', $parentLevel)
+                    ->when($data->name, function ($query) use ($data) {
+                        $query->whereRaw('LOWER(parent.name) LIKE ?', ['%'.strtolower($data->name).'%']);
+                    })
                     ->orderBy('parent.id')
                     ->orderBy('child.id')
                     ->get();
@@ -359,7 +362,8 @@ class UnitService extends BaseService
         $datas = [];
 
         if ($role->role_level === 'superadmin') {
-            $datas = Unit::where('unit_level', $request->unit_level)->get();
+            $datas = Unit::where('unit_level', $request->unit_level)
+                ->get();
         } else {
             $empUnit = auth()->user()->employee->getRelatedUnit();
             $lastUnit = auth()->user()->employee->getLastUnit();

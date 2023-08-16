@@ -185,4 +185,8 @@ class User extends Authenticatable
 
         return $operatingUnitIDs;
     }
+
+    public function getJobRole() {
+        return $this->employee->job->roles();
+    }
 }
