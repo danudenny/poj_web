@@ -10,6 +10,7 @@ use App\Models\UnitHasJob;
 use App\Services\BaseService;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 
 class JobService extends BaseService
 {
-    public function index($id): JsonResponse
+    public function index($request, $id): JsonResponse
     {
         $subquery = DB::table('jobs as j')
             ->select('j.id', 'j.name', 'u.id AS unitID', 'u.relation_id')
@@ -155,6 +156,9 @@ class JobService extends BaseService
             $job->is_mandatory_reporting = $job->pivot->is_mandatory_reporting;
             $job->reporting_type = $job->pivot->type;
             $job->total_reporting = $job->pivot->total_reporting;
+            $job->total_normal = $job->pivot->total_normal;
+            $job->total_backup = $job->pivot->total_backup;
+            $job->total_overtime = $job->pivot->total_overtime;
             $job->reporting_names = $job->pivot->reporting_names;
             unset($job->pivot);
             return $job;
@@ -337,29 +341,41 @@ class JobService extends BaseService
         }
     }
 
-    public function updateMandatoryReporting($request, $id): JsonResponse
+    public function updateMandatoryReporting(Request $request, int $id): JsonResponse
     {
-        $unit = Unit::find($id);
-        if (!$unit) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Unit not found'
-            ], 404);
-        }
-
-        DB::beginTransaction();
         try {
-            $jobIds = $request->input('job_ids');
-            $type = $request->input('type');
-            $totalReporting = $request->input('total_reporting');
-            $reportingNames = $request->input('reporting_names');
+            /**
+             * @var Unit $unit
+             */
+            $unit = Unit::query()->where('id', '=', $id)->first();
+            if (!$unit) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Unit not found'
+                ], 404);
+            }
+
+            $arg = [
+                'job_ids' => $request->input('job_ids', []),
+                'type' => $request->input('type'),
+                'total_reporting' => $request->input('total_reporting'),
+                'reporting_names' => $request->input('reporting_names'),
+                'total_normal' => $request->input('total_normal'),
+                'total_overtime' => $request->input('total_overtime'),
+                'total_backup' => $request->input('total_backup')
+            ];
+
+            DB::beginTransaction();
 
             $syncData = [];
-            foreach ($jobIds as $jobId) {
+            foreach ($arg['job_ids'] as $jobId) {
                 $syncData[$jobId] = [
-                    'type' => $type,
-                    'total_reporting' => $totalReporting,
-                    'reporting_names' => json_encode($reportingNames)
+                    'type' => $arg['type'],
+                    'total_reporting' => $arg['total_reporting'],
+                    'reporting_names' => json_encode($arg['reporting_names']),
+                    'total_normal' => $arg['total_normal'],
+                    'total_backup' => $arg['total_backup'],
+                    'total_overtime' => $arg['total_overtime']
                 ];
             }
 
