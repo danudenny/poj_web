@@ -154,72 +154,7 @@
                           <Timesheet :id="paramsId"/>
                         </div>
                         <div class="tab-pane fade" id="pills-reporting" role="tabpanel" aria-labelledby="pills-reporting-tab">
-                            <table class="table table-striped table-responsive">
-                                <thead>
-                                <tr>
-                                    <th>No</th>
-                                    <th>Job Title</th>
-                                    <th>Reporting</th>
-                                    <th>Total Reporting</th>
-                                    <th>Type Reporting</th>
-                                    <th></th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr v-for="(job, index) in reportJobs" :key="job.id">
-                                    <td>{{index+1}}</td>
-                                    <td>{{ job.name }}</td>
-                                    <td class="text-center">
-                                        <span class="badge badge-pill badge-success" v-if="job.is_mandatory_reporting">Yes</span>
-                                        <span class="badge badge-pill badge-danger" v-else>No</span>
-                                    </td>
-                                    <td class="text-center">{{job.total_reporting}}</td>
-                                    <td class="text-center">{{job.reporting_type.toUpperCase()}}</td>
-                                    <td>
-                                        <button class="btn btn-primary" type="button" data-bs-toggle="modal"
-                                                data-bs-target=".bd-example-modal-lg">Manage
-                                        </button>
-                                        <div class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel"
-                                             aria-hidden="true">
-                                            <AssignWorkReporting :modalTitle="modalTitle" @save="updateData(job.id)">
-                                                <div class="row">
-
-                                                    <div class="col-md-5">
-                                                        <div class="form-group">
-                                                            <div class="media">
-                                                                <label class="col-form-label m-r-10">Single Work Reporting</label>
-                                                                <div class="media-body text-end icon-state">
-                                                                    <label class="switch">
-                                                                        <input type="checkbox" v-model="singleWork"><span class="switch-state"></span>
-                                                                    </label>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-md-5 mb-2">
-                                                        <div class="form-group">
-                                                            <div class="media">
-                                                                <label class="col-form-label">Multiple Work Reporting</label>
-                                                                <div class="media-body text-end icon-state">
-                                                                    <label class="switch">
-                                                                        <input type="checkbox" v-model="multipleWork" @change="handleMultipleWorkChange"><span class="switch-state"></span>
-                                                                    </label>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <hr v-if="multipleWork">
-                                                    <div class="col-md-12" v-if="multipleWork">
-                                                        <label class="col-form-label">Total Work Reporting</label>
-                                                        <input type="number" class="form-control" v-model="numberOfWorks" min="1">
-                                                    </div>
-                                                </div>
-                                            </AssignWorkReporting>
-                                        </div>
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
+                            <WorkReporting :unit_id="paramsId"/>
                         </div>
                         <div class="tab-pane fade" id="pills-employee" role="tabpanel" aria-labelledby="pills-employee-tab">
                             <Employee :id="paramsId"/>
@@ -238,6 +173,7 @@ import {useToast} from 'vue-toastification';
 import {TabulatorFull as Tabulator} from "tabulator-tables";
 import Timesheet from "./timesheet.vue";
 import AssignWorkReporting from "@/pages/area/modal/assignWorkReporting.vue";
+import WorkReporting from "@components/work_reporting.vue";
 import Employee from "./employee.vue";
 import L from "leaflet";
 import {buffer, point} from "@turf/turf";
@@ -246,7 +182,8 @@ export default {
     components: {
         Timesheet,
         Employee,
-        AssignWorkReporting
+        AssignWorkReporting,
+        WorkReporting
     },
     data() {
         return {
