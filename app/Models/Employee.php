@@ -268,6 +268,7 @@ class Employee extends Model
         $parentRelationId = $workLocation->relation_id;
 
         $otherUnits = Unit::with(['children'])->where('parent_unit_id', $parentRelationId)
+            ->where('id', '!=', $workLocation->id)
             ->get();
 
         return $otherUnits->toArray();

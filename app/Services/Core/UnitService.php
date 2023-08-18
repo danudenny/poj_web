@@ -21,16 +21,6 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class UnitService extends BaseService
 {
-    function getLastUnit($data) {
-        $lastData = null;
-        foreach ($data as $item) {
-            if ($item === null) {
-                break;
-            }
-            $lastData = $item;
-        }
-        return $lastData;
-    }
     /**
      * @param $data
      * @return JsonResponse
@@ -45,7 +35,7 @@ class UnitService extends BaseService
             $childLevel = $parentLevel + 1;
             $units = [];
 
-            if ($roleLevel === 'superadmin') {
+            if ($roleLevel === Role::RoleSuperAdministrator) {
                 $units = DB::table('units as parent')
                     ->leftJoin('units as child', function ($join) use ($parentLevel, $childLevel) {
                         $join->on('parent.relation_id', '=', 'child.parent_unit_id')
@@ -70,7 +60,7 @@ class UnitService extends BaseService
                     ->get();
 
             }
-            else if ($roleLevel === 'admin_unit') {
+            else if ($roleLevel === Role::RoleAdmin) {
                 $empUnit = $auth->employee->getRelatedUnit();
                 $lastUnit = $auth->employee->getLastUnit();
                 $empUnit[] = $lastUnit;
@@ -152,7 +142,10 @@ class UnitService extends BaseService
 
     }
 
-    public function paginatedListUnit(Request $request): JsonResponse
+    /**
+     * @throws Exception
+     */
+    public function paginatedListUnit($request): JsonResponse
     {
         try {
             /**
