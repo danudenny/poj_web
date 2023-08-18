@@ -16,11 +16,12 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read int $id
  * @property int $odoo_job_id
  * @property string $name
+ * @property Role $roles
  */
 class Job extends Authenticatable
 {
     use HasFactory, HasRoles;
-    protected $guard_name = 'web';
+    protected string $guard_name = 'web';
 
     public function hasPermissionName(string $permissionName): bool {
         foreach ($this->roles->flatMap->permissions as $permission) {

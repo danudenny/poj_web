@@ -131,17 +131,17 @@ abstract class BaseService
         return $this->notificationService;
     }
 
-    protected function getRequestedUnitID(): int|null {
+    protected function getRequestedUnitID(): string {
 
         /**
          * @var User $user
          */
         $user = request()->user();
 
-        $requestID = (int) request()->header('X-Unit-Relation-ID');
+        $requestID = (string) request()->header('X-Unit-Relation-ID');
 
         if ($user->employee->getLastUnitID() == $requestID) {
-            return null;
+            return "";
         }
 
         return $requestID;

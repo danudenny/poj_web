@@ -148,12 +148,6 @@ export default {
                     console.error(error);
                 });
         },
-        startCountdown() {
-            this.countdown = 1;
-            this.timerId = setInterval(() => {
-                this.countdown++;
-            }, 1000);
-        },
         initializeUsersTable() {
             const ls = localStorage.getItem('my_app_token')
             const selectedROle = localStorage.getItem('USER_ROLES')

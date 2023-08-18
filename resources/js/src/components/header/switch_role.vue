@@ -1,6 +1,6 @@
 <template>
     <select class="form-control" v-model="selectedRoles" @change="switchRoles(selectedRoles)" :disabled="roles.length <= 1">
-        <option v-for="item in roles" :value="item" >{{ item.toUpperCase() }}</option>
+        <option v-for="item in roles" :value="item" >{{ item.split("_").join(" ").toUpperCase() }}</option>
     </select>
 </template>
 

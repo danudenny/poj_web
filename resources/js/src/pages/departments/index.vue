@@ -53,7 +53,12 @@ export default {
         },
         async getDepartments() {
             this.loading = true;
-            await this.$axios.get(`/api/v1/admin/department`)
+            const ls = localStorage.getItem('USER_ROLES');
+            await this.$axios.get(`/api/v1/admin/department`, {
+                headers: {
+                    'X-Selected-Role': ls
+                }
+            })
                 .then(response => {
                     this.departments = response.data.data;
                 })
@@ -145,9 +150,6 @@ export default {
                 paginationSizeSelector: [10, 20, 50, 100],
                 headerFilter: true,
                 paginationInitialPage:1,
-                rowFormatter: (row) => {
-                    //
-                },
                 placeholder:"No Data Available",
             });
             this.loading = false

@@ -109,11 +109,11 @@ class EmployeeService extends BaseService
                 $builder->whereRaw('LOWER(work_email) LIKE ?', ['%'.strtolower(request()->query('email')).'%']);
             });
 
-            if ($roleLevel === 'superadmin') {
+            if ($roleLevel === Role::RoleSuperAdministrator) {
                 $employeesData = $employees->paginate($request->get('per_page', 10));
-            } else if ($roleLevel === 'staff') {
+            } else if ($roleLevel === Role::RoleStaff) {
                 $employeesData = $employees->where('id', '=', $auth->employee_id)->first();
-            } else if ($roleLevel === 'admin_branch') {
+            } else if ($roleLevel === Role::RoleAdmin) {
                 $empUnit = $auth->employee->getRelatedUnit();
 
                 $relationIds = [];
