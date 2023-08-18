@@ -43,6 +43,9 @@ class EmployeeTimesheetService extends BaseService {
             $data->when(request()->has('sort'), function ($query) {
                 $query->orderBy(request()->get('sort'), request()->get('order'));
             });
+            $data->when(request()->has('shift_type'), function ($query) {
+                $query->where('shift_type', '=', request()->get('shift_type'));
+            });
             $data->where('unit_id', $id);
             $data->orderBy('id');
 

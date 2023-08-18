@@ -84,13 +84,13 @@
                                             <div class="col-md-3">
                                                 <div class="mt-2">
                                                     <label for="name">Jam Mulai</label>
-                                                    <input type="time" class="form-control" v-model="backup.dates[index].start_time" :disabled="backup.shift_type === 'Shift'" required>
+                                                    <input type="time" class="form-control" v-model="backup.dates[index].start_time" disabled required>
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
                                                 <div class="mt-2">
                                                     <label for="name">Jam Akhir</label>
-                                                    <input type="time" class="form-control" v-model="backup.dates[index].end_time" :disabled="backup.shift_type === 'Shift'" required>
+                                                    <input type="time" class="form-control" v-model="backup.dates[index].end_time" disabled required>
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
@@ -99,7 +99,6 @@
                                                         :class="'btn btn-primary mt-3' + (backup.unit_relation_id === null ? ' disabled' : '')"
                                                         data-bs-toggle="modal"
                                                         data-bs-target="#timesheetModal"
-                                                        v-if="backup.shift_type === 'Shift'"
                                                         @click="onSelectDateSheet(index)"
                                                     >
                                                         Pilih Timesheet
@@ -147,7 +146,7 @@
             <VerticalModal :title="'Select Timesheet for ' + this.selectedDateTimesheet">
                 <div class="row">
                     <div class="col-md-12">
-                        <div ref="timesheetTable" v-if="backup.shift_type === 'Shift'"></div>
+                        <div ref="timesheetTable"></div>
                     </div>
                 </div>
             </VerticalModal>
@@ -292,7 +291,6 @@ export default {
             this.backup.unit_relation_id = this.selectedUnit.relation_id
             this.jobs = []
             this.getJobsData()
-            this.generateTimeSheetTable()
         },
         onEmployeeUnitSelected(val) {
             this.backup.requestor_unit_id = this.selectedEmployeeUnit.id
@@ -309,7 +307,7 @@ export default {
                 columns: [
                     {
                         title: 'Timtesheet Name',
-                        field: 'name',
+                        field: 'timesheet_name',
                     },
                     {
                         title: 'From',
@@ -354,20 +352,26 @@ export default {
                 },
                 ajaxURLGenerator: (url, config, params) => {
                     let localFilter = {
-                        name: ''
+                        name: '',
+                        shift_type: 'non_shift'
                     }
+
+                    if (this.backup.shift_type === 'Shift') {
+                        localFilter.shift_type = "shift"
+                    }
+
                     params.filter.map((item) => {
                         if (item.field === 'name') localFilter.name = item.value
                     })
-                    return `${url}?page=${params.page}&per_page=${params.size}&size=${params.size}&name=${localFilter.name}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&size=${params.size}&name=${localFilter.name}&shift_type=${localFilter.shift_type}`
                 },
-                ajaxResponse: function (url, params, response) {
+                ajaxResponse: (url, params, response) => {
                     return {
-                        data: response.data.data,
+                        data: this.processData(response.data.data),
                         last_page: response.data.last_page,
                     }
                 },
-                paginationSizeSelector: [10, 20, 50, 100],
+                paginationSizeSelector: [100],
                 headerFilter: true,
                 rowFormatter: (row) => {
                 },
@@ -387,6 +391,41 @@ export default {
                     }
                 }
             })
+        },
+        processData(datas) {
+            if(this.selectedDateTimesheet === null) {
+                return
+            }
+
+            console.log(this.selectedDateTimesheet)
+
+            let daysName = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+            let currDate = new Date(this.selectedDateTimesheet)
+            let currDay = daysName[currDate.getDay()]
+
+            let respondedData = [];
+
+            datas.forEach((value) => {
+                if (value.start_time === null && value.end_time === null) {
+                    value.timesheet_days.forEach((day) => {
+                        if (day.day === currDay) {
+                            respondedData.push({
+                                timesheet_name: value.name,
+                                start_time: day.start_time,
+                                end_time: day.end_time
+                            })
+                        }
+                    })
+                } else {
+                    respondedData.push({
+                        timesheet_name: value.name,
+                        start_time: value.start_time,
+                        end_time: value.end_time
+                    })
+                }
+            })
+
+            return respondedData
         },
         generateEmployeesTable() {
             if (this.selectedEmployeeUnit.relation_id === null) {
@@ -479,9 +518,6 @@ export default {
             })
         },
         onChangeBackupType(e) {
-            if (e.target.value === 'Shift') {
-                this.generateTimeSheetTable()
-            }
         },
         onDateChanged() {
             if (this.backup.start_date != null && this.backup.end_date != null) {
@@ -502,6 +538,7 @@ export default {
         },
         onSelectDateSheet(data) {
             this.selectedDateTimesheet = data
+            this.generateTimeSheetTable()
         },
         onChangeFile(e) {
             let formData = new FormData()

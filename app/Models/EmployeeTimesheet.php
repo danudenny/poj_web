@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Attributes:
  * @property-read int $id
  * @property int $unit_id
+ * @property string $shift_type
  * @property string $start_time
  * @property string $end_time
  * @property string $name
