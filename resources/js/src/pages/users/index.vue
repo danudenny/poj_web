@@ -134,7 +134,12 @@ export default {
                 })
         },
         getUnitsData() {
-            this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.unitPagination.pageSize}&page=${this.unitPagination.currentPage}&name=${this.unitPagination.name}`)
+            const ls = localStorage.getItem('USER_ROLES')
+            this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.unitPagination.pageSize}&page=${this.unitPagination.currentPage}&name=${this.unitPagination.name}`, {
+                headers: {
+                    'X-Selected-Role': ls
+                }
+            })
                 .then(response => {
                     this.units = response.data.data.data
                     this.unitPagination.onSearch = false

@@ -188,7 +188,7 @@ class Employee extends Model
 
     public function unit(): HasOne
     {
-        return $this->hasOne(Unit::class, 'id', 'unit_id');
+        return $this->hasOne(Unit::class, 'relation_id', 'unit_id');
     }
 
     public function timesheetSchedules(): HasMany

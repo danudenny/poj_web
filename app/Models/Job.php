@@ -55,6 +55,6 @@ class Job extends Authenticatable
 
     public function unitJob(): BelongsToMany
     {
-        return $this->belongsToMany(Unit::class, 'job_has_units',  'job_id', 'unit_id');
+        return $this->belongsToMany(Unit::class, 'unit_has_jobs', 'odoo_job_id', 'unit_relation_id', 'odoo_job_id', 'relation_id');
     }
 }

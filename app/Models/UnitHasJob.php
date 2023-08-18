@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read Unit $unit
  * @property-read Job $job
  * @property-read UnitHasJob $parent
+ * @method static updateOrInsert(array $array, array $array1)
  */
 class UnitHasJob extends Model
 {

@@ -125,11 +125,14 @@ export default {
             this.getUnits();
         },
         onSelectUnit(e) {
-            this.selectedUnit = this.units.find(unit => unit.id === e.id);
-            this.table.setFilter('unit_id', '=', this.selectedUnit.id);
+            this.selectedUnit = this.units.find(unit => unit.parent_relation_id === e.parent_relation_id);
+            this.table.setFilter('unit_id', '=', this.selectedUnit.parent_relation_id);
         },
         async getUnits() {
-            await this.$axios.get(`/api/v1/admin/unit?unit_level=${this.selectedUnitLevel.id}&name=${this.searchUnitName}`)
+            const ls = localStorage.getItem('USER_ROLES');
+            await this.$axios.get(`/api/v1/admin/unit?unit_level=${this.selectedUnitLevel.id}&name=${this.searchUnitName}`, {
+                headers: {'X-Selected-Role': ls}
+            })
                 .then(res => {
                     this.units = res.data.data;
                 })
@@ -167,7 +170,7 @@ export default {
                 },
                 ajaxURLGenerator: (url, config, params) => {
                     const filters = {
-                        unit_id: this.selectedUnit?.id ?? '',
+                        unit_id: this.selectedUnit?.parent_relation_id ?? '',
                     }
 
                     params.filter.map((item) => {
@@ -175,7 +178,6 @@ export default {
                         if (item.field === 'unit_id') filters.unit_id = item.value
                     })
 
-                    console.log(this.filterName)
                     return `${url}?flat=true&page=${params.page}&per_page=${params.size}&name=${this.filterName}&unit_id=${filters.unit_id}`
                 },
                 layout: 'fitColumns',
@@ -256,7 +258,7 @@ export default {
             if (action === 'edit') {
                 this.$router.push({
                     name: 'job-edit',
-                    params: { id: rowData.id }
+                    params: { id: rowData.job_id }
                 })
             } else if (action === 'view') {
                 this.$router.push({

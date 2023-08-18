@@ -113,7 +113,7 @@ class Unit extends Model
 
     public function jobHasUnits(): BelongsToMany
     {
-        return $this->belongsToMany(Job::class, 'job_has_units',  'unit_id', 'job_id', 'relation_id', 'id');
+        return $this->belongsToMany(Job::class, 'unit_has_jobs',  'unit_relation_id', 'job_id', 'relation_id', 'id');
     }
 
     public function operatingUnitDetail()

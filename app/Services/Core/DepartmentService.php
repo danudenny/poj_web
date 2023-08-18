@@ -80,7 +80,6 @@ class DepartmentService
             }
 
             if (!empty($row->team_name)) {
-                // Check if the team has not been added for this unit and unit level
                 $teamAlreadyAdded = false;
                 foreach ($processedData[$departmentId]['units'][$unitId]['teams'] as $addedTeam) {
                     if ($addedTeam['id'] == $row->team_id && $addedTeam['team_unit_id'] == $row->team_unit_id) {
