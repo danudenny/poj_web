@@ -2,13 +2,16 @@
 
 namespace App\Services\Core;
 
+use App\Helpers\UnitHelper;
 use App\Models\Department;
+use App\Models\Role;
 use App\Models\Unit;
+use App\Services\BaseService;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
-class DepartmentService
+class DepartmentService extends BaseService
 {
 
     public function getAll($request): JsonResponse
@@ -28,6 +31,8 @@ class DepartmentService
 
     public function index($request): JsonResponse
     {
+        $roleLevel = $request->header('X-Selected-Role');
+        $user = auth()->user();
        $departmentsWithUnitsAndTeams = Department::select([
             'departments.name AS department_name',
             'u.name AS unit_name',
@@ -38,12 +43,27 @@ class DepartmentService
             'teams.name AS team_name',
             'department_has_teams.unit_id AS team_unit_id'
         ])
-            ->leftJoinSub(function ($join) use ($request) {
+            ->leftJoinSub(function ($join) use ($user, $roleLevel, $request) {
                 $join->select('unit_id', 'department_id')
                     ->from('employees')
+                    ->when($roleLevel === Role::RoleSuperAdministrator, function ($query) use ($request) {
+                        $query->where('unit_id', '<>', 0);
+                    })
+                    ->when($roleLevel === Role::RoleAdmin, function ($query) use ($user, $request) {
+                        $empUnit = $user->employee->getRelatedUnit();
+                        $relationIds = [];
+
+                        if ($requestRelationID = request()->header('X-Unit-Relation-ID')) {
+                            $relationIds[] = $requestRelationID;
+                        } else {
+                            $flatUnit = UnitHelper::flattenUnits($empUnit);
+                            $relationIds = array_column($flatUnit, 'relation_id');
+                        }
+
+                        $query->whereIn('unit_id', $relationIds);
+                    })
                     ->whereNotNull('department_id')
-                    ->where('department_id', '<>', 0)
-                    ->where('unit_id', '<>', 0)
+                    ->whereNotNull('unit_id')
                     ->groupBy('unit_id', 'department_id');
             }, 'emp', function ($join) {
                 $join->on('departments.odoo_department_id', '=', 'emp.department_id');
@@ -59,6 +79,9 @@ class DepartmentService
         $processedData = [];
 
         foreach ($departmentsWithUnitsAndTeams as $row) {
+            if ($row->unit_id === null) {
+                continue;
+            }
             $departmentId = $row->id;
             $unitId = $row->unit_id;
 

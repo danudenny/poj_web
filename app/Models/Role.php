@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Closure;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Permission\Models\Role as SpatieRole;
@@ -11,14 +12,15 @@ use Spatie\Permission\Models\Role as SpatieRole;
  * @property-read int $id
  * @property string $role_level
  * @property int $priority
+ * @property mixed $is_active
+ * @method map(Closure $param)
  */
 class Role extends SpatieRole
 {
     const RoleSuperAdministrator = "superadmin";
-    const RoleAdmin = "admin";
+    const RoleAdmin = "admin_unit";
     const RoleStaff = "staff";
     const RoleAdminOperatingUnit = "admin_operating_unit";
-    const RoleAdminBranch = "admin_branch";
 
     protected $appends = ['status'];
     protected $dates = ['deleted_at'];
@@ -32,13 +34,13 @@ class Role extends SpatieRole
         if ($this->is_active) {
             return "Active";
         } else {
-            return "In Active";
+            return "Inactive";
         }
     }
 
     public function getNameAttribute($value): string
     {
-        return ucwords(str_replace('_', ' ', $value));
+        return $value;
     }
 
     public function permissions(): BelongsToMany

@@ -2,29 +2,36 @@
 
 namespace App\Http\Resources;
 
-use Illuminate\Contracts\Support\Arrayable;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @method getHighestRole($role)
+ * @property Employee $employee
+ */
 class UserMobileResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
      *
-     * @param  Request  $request
+     * @param Request $request
      * @return array
      */
     public function toArray($request): array
     {
-        $role = $this->roles;
+        $role = $this->employee->job->roles;
         $availableRole = $role->map(function ($role) {
             return $role->name;
         });
+
         $roleLevel = $this->getHighestRole($role);
         $permission = $roleLevel->permissions;
+
         $permissionName = $permission->map(function ($permission) {
-            return $permission->name;
+            return strtolower($permission->name);
         });
+
         return [
             'id' => $this->id,
             'name' => $this->name,

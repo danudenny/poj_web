@@ -68,9 +68,9 @@ class Employee extends Model
     }
 
     /**
-     * @return int|null
+     * @return string
      */
-    public function getLastUnitID(): int|null {
+    public function getLastUnitID(): string {
         if ($this->default_operating_unit_id) {
             return $this->default_operating_unit_id;
         } else if ($this->outlet_id) {
@@ -85,7 +85,7 @@ class Employee extends Model
             return $this->corporate_id;
         }
 
-        return null;
+        return "";
     }
 
     /**
@@ -264,11 +264,10 @@ class Employee extends Model
 
     public function getRelatedUnit(): mixed
     {
-        $workLocation = $this->getLastUnit();
+        $workLocation = $this->last_unit;
         $parentRelationId = $workLocation->relation_id;
 
         $otherUnits = Unit::with(['children'])->where('parent_unit_id', $parentRelationId)
-            ->where('id', '!=', $workLocation->id)
             ->get();
 
         return $otherUnits->toArray();

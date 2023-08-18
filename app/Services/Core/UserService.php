@@ -15,7 +15,9 @@ use App\Services\BaseService;
 use App\Services\MinioService;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use InvalidArgumentException;
@@ -23,25 +25,26 @@ use InvalidArgumentException;
 class UserService extends BaseService
 {
     private MinioService $minioService;
-    private JobService $jobService;
 
-    public function __construct(MinioService $minioService, JobService $jobService)
+    public function __construct(MinioService $minioService)
     {
         $this->minioService = $minioService;
-        $this->jobService = $jobService;
     }
 
     /**
      * @param $data
-     * @return mixed
+     * @return JsonResponse
      * @throws Exception
      */
-    public function index($data): mixed
+    public function index($data): JsonResponse
     {
         $auth = auth()->user();
         $roleLevel = $data->header('X-Selected-Role');
-        $userHasRoles = $auth->employee->job->roles->pluck('name')->toArray();
-        $userHasRoles = array_map('strtolower', $userHasRoles);
+        $userHasRoles = [];
+        if (isset($auth->employee)) {
+            $userHasRoles = $auth->employee->job->roles->pluck('name')->toArray();
+        }
+        array_map('strtolower', $userHasRoles);
         try {
             $users = User::query();
             $userData = [];
@@ -73,16 +76,22 @@ class UserService extends BaseService
                 });
             });
 
-            $users->orderBy('name', 'asc');
+            $users->orderBy('name');
 
 
-            if ($roleLevel == 'superadmin') {
+            if ($roleLevel == Role::RoleSuperAdministrator) {
                 $userData = $users->paginate($data->per_page ?? 10);
-            } else if ($roleLevel === 'staff') {
+            } else if ($roleLevel === Role::RoleStaff) {
                 $userData = $users->where('id', '=', $auth->id)->first();
-            } else if ($roleLevel === 'admin_branch') {
-                $empUnit = $auth->employee->getRelatedUnit();
-                $lastUnit = $auth->employee->getLastUnit();
+            } else if ($roleLevel === Role::RoleAdmin) {
+                $empUnit = [];
+                $lastUnit = null;
+                if (!empty($auth->employee)) {
+                    $empUnit = $auth->employee->getRelatedUnit();
+                }
+                if (!empty($auth->employee)) {
+                    $lastUnit = $auth->employee->getLastUnit();
+                }
                 $empUnit[] = $lastUnit;
                 $relationIds = [];
 
@@ -118,11 +127,11 @@ class UserService extends BaseService
     }
 
     /**
-     * @param $id
-     * @return mixed
+     * @param $data
+     * @return Model|Builder
      * @throws Exception
      */
-    public function view($data): mixed
+    public function view($data): Model|Builder
     {
         try {
             $user = User::with(['roles:id,name'])->firstWhere('id', $data['id']);
@@ -143,10 +152,10 @@ class UserService extends BaseService
     }
 
     /**
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @return AnonymousResourceCollection
      * @throws Exception
      */
-    public function getRoles()
+    public function getRoles(): AnonymousResourceCollection
     {
         try {
             $roles = Role::where('is_active', '=', 1)->get();
@@ -204,10 +213,10 @@ class UserService extends BaseService
 
     /**
      * @param $request
-     * @return mixed
+     * @return Model|Builder
      * @throws Exception
      */
-    public function update($request): mixed
+    public function update($request): Model|Builder
     {
         DB::beginTransaction();
         try {
