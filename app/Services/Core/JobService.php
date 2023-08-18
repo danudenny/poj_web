@@ -54,8 +54,8 @@ class JobService extends BaseService
             $query->whereRaw("LOWER(name) ILIKE '%" . strtolower($name) . "%'");
         });
         $jobs->when($request->input('unit_id'), function ($query, $unitId) {
-            $query->whereHas('unitJob', function ($query) use ($unitId) {
-                $query->where('unit_id', intval($unitId));
+            $query->whereHas('unitJob', function ($subquery) use ($unitId) {
+                $subquery->where('unit_relation_id', '=', $unitId);
             });
         });
         $jobs = $jobs->get();
@@ -65,10 +65,10 @@ class JobService extends BaseService
         foreach ($jobs as $job) {
             if ($request->input('flat', false)) {
                 foreach ($job->unitJob as $unit) {
-                    if (!$request->input('unit_id') || $unit->id == $request->input('unit_id')) {
+                    if (!$request->input('unit_id') || $unit->relation_id == $request->input('unit_id')) {
                         $data[] = [
                             'job_id' => $job->id,
-                            'unit_id' => $unit->id,
+                            'unit_id' => $unit->relation_id,
                             'job_name' => $job->name,
                             'roles' => $job->roles,
                             'unit_name' => $unit->name,

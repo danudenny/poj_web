@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs main="Kantor Perwakilan"/>
+        <Breadcrumbs main="Operating Unit"/>
 
         <div class="container-fluid">
             <div class="email-wrap bookmark-wrap">
@@ -8,7 +8,7 @@
                     <div class="col-md-12">
                         <div class="card card-absolute">
                             <div class="card-header bg-primary">
-                                <h5>Kantor Perwakilan</h5>
+                                <h5>Operating Unit</h5>
                             </div>
                             <div class="card-body">
                                 <div v-if="loading" class="text-center">
@@ -70,7 +70,7 @@ export default {
                         if (item.field === 'name') localFilter.name = item.value
                     })
 
-                    return `${url}?page=${params.page}&per_page=${params.size}&name=${localFilter.name}&unit_level=2&append=total_managed_operating_unit`
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${localFilter.name}&unit_level=2`
                 },
                 layout: 'fitColumns',
                 columns: [

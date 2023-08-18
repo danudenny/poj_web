@@ -40,28 +40,19 @@ class UnitService extends BaseService
     {
         $auth = auth()->user();
         try {
-            $highestPriorityRole = null;
-            $highestPriority = null;
-
-            foreach ($auth->roles as $role) {
-                if ($highestPriority === null || $role['priority'] < $highestPriority) {
-                    $highestPriorityRole = $role;
-                    $highestPriority = $role['priority'];
-                }
-            }
-
+            $roleLevel = $data->header('X-Selected-Role');
             $parentLevel = intval($data->unit_level);
             $childLevel = $parentLevel + 1;
-            $employees = [];
+            $units = [];
 
-            if ($highestPriorityRole->role_level === 'superadmin') {
+            if ($roleLevel === 'superadmin') {
                 $units = DB::table('units as parent')
                     ->leftJoin('units as child', function ($join) use ($parentLevel, $childLevel) {
                         $join->on('parent.relation_id', '=', 'child.parent_unit_id')
                             ->where('child.unit_level', $childLevel);
-                    })
-                    ->select(
+                    })->select(
                         'parent.id as parent_id',
+                        'parent.relation_id as parent_relation_id',
                         'parent.name as parent_name',
                         'parent.unit_level as parent_unit_level',
                         'parent.parent_unit_id as parent_parent_unit_id',
@@ -77,7 +68,9 @@ class UnitService extends BaseService
                     ->orderBy('parent.id')
                     ->orderBy('child.id')
                     ->get();
-            } else if ($highestPriorityRole->role_level === 'admin') {
+
+            }
+            else if ($roleLevel === 'admin_unit') {
                 $empUnit = $auth->employee->getRelatedUnit();
                 $lastUnit = $auth->employee->getLastUnit();
                 $empUnit[] = $lastUnit;
@@ -97,6 +90,7 @@ class UnitService extends BaseService
                     })
                     ->select(
                         'parent.id as parent_id',
+                        'parent.relation_id as parent_relation_id',
                         'parent.name as parent_name',
                         'parent.unit_level as parent_unit_level',
                         'parent.parent_unit_id as parent_parent_unit_id',
@@ -126,6 +120,7 @@ class UnitService extends BaseService
                 if (!isset($nestedUnits[$unit->parent_id])) {
                     $parentUnit = [
                         'id' => $unit->parent_id,
+                        'parent_relation_id' => $unit->parent_relation_id,
                         'name' => $unit->parent_name,
                         'unit_level' => $unit->parent_unit_level,
                         'parent_unit_id' => $unit->parent_parent_unit_id,
@@ -140,15 +135,6 @@ class UnitService extends BaseService
                 }
             }
 
-//            if ($highestPriorityRole->role_level === 'admin') {
-//                $latestUnit = auth()->user()->employee->last_unit;
-//                $nestedUnits[] = $latestUnit;
-//                $nestedUnits = array_filter($nestedUnits, function ($unit) {
-//                    return array_filter(auth()->user()->employee->getRelatedUnit(), function ($emp) use ($unit) {
-//                        return $emp['id'] === $unit['id'];
-//                    });
-//                });
-//            }
             $nestedUnits = array_values($nestedUnits);
 
             return response()->json([

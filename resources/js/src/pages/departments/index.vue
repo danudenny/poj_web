@@ -162,6 +162,10 @@ export default {
             const action = e.target.dataset.action
 
             if (action === 'edit') {
+                if (cell.getData().unit_id === '') {
+                    useToast().warning('Please assign a unit first');
+                    return;
+                }
                 this.$router.push({
                     name: 'department-edit',
                     params: {
