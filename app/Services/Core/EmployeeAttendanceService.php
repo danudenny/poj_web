@@ -11,6 +11,7 @@ use App\Models\EmployeeAttendance;
 use App\Models\EmployeeAttendanceHistory;
 use App\Models\EmployeeTimesheetSchedule;
 use App\Models\LateCheckin;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\WorkReporting;
 use App\Services\BaseService;
@@ -22,7 +23,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Arr;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class EmployeeAttendanceService extends BaseService
@@ -38,7 +38,7 @@ class EmployeeAttendanceService extends BaseService
     public function index(Request $request): JsonResponse
     {
         $auth = Auth::user();
-        $roles = Auth::user()->roles;
+        $roles = $request->headers('X-Selected-Role');
         try {
             $attendances = EmployeeAttendance::query();
             $attendancesData = [];
@@ -50,29 +50,20 @@ class EmployeeAttendanceService extends BaseService
                 });
             });
 
-            $highestPriorityRole = null;
-            $highestPriority = null;
-
-            foreach ($roles as $role) {
-                if ($highestPriority === null || $role['priority'] < $highestPriority) {
-                    $highestPriorityRole = $role;
-                    $highestPriority = $role['priority'];
-                }
-            }
-
-            if ($highestPriorityRole->role_level === 'superadmin') {
+            if ($roles === Role::RoleSuperAdministrator) {
                 $attendancesData = $attendances->paginate($request->get('limit', 10));
-            } else if ($highestPriorityRole->role_level === 'staff') {
+            } else if ($roles === Role::RoleStaff) {
                 $attendancesData = $attendances->where('employee_id', Auth::user()->employee_id)
                     ->paginate($request->get('limit', 10));
-            } else if ($highestPriorityRole->role_level === 'admin') {
+            } else if ($roles === Role::RoleAdmin) {
                 $empUnit = $auth->employee->getRelatedUnit();
                 $lastUnit = $auth->employee->getLastUnit();
                 $empUnit[] = $lastUnit;
                 $flatUnit = UnitHelper::flattenUnits($empUnit);
                 $relationIds = array_column($flatUnit, 'relation_id');
                 $attendancesData = $attendances->whereHas('employee', function (Builder $query) use ($relationIds) {
-                    $query->whereIn('kanwil_id', $relationIds)
+                    $query->whereIn('corporate_id', $relationIds)
+                        ->orWhereIn('kanwil_id', $relationIds)
                         ->orWhereIn('area_id', $relationIds)
                         ->orWhereIn('cabang_id', $relationIds)
                         ->orWhereIn('outlet_id', $relationIds);

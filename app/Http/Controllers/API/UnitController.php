@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\BaseController;
 use App\Services\Core\UnitService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -26,11 +27,14 @@ class UnitController extends BaseController
         try {
             return $this->unitService->index($request);
 
-        } catch (\Exception | \InvalidArgumentException $error) {
+        } catch (Exception | \InvalidArgumentException $error) {
             return $this->sendError($error->getMessage());
         }
     }
 
+    /**
+     * @throws Exception
+     */
     public function paginatedListUnits(Request $request): JsonResponse {
         return $this->unitService->paginatedListUnit($request);
     }
@@ -38,6 +42,7 @@ class UnitController extends BaseController
     /**
      * view specific resource
      * @param Request $request
+     * @param $id
      * @return JsonResponse
      */
     public function view(Request $request, $id): JsonResponse
@@ -45,7 +50,7 @@ class UnitController extends BaseController
         try {
             return $this->unitService->view($request, $id);
 
-        } catch (\Exception | \InvalidArgumentException $error) {
+        } catch (Exception | \InvalidArgumentException $error) {
 
             return $this->sendError($error->getMessage(), [], 500);
         }
