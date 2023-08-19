@@ -23,13 +23,7 @@ class JobService extends BaseService
         $subquery = DB::table('jobs as j')
             ->select('j.id', 'j.name', 'u.id AS unitID', 'u.relation_id')
             ->join('employees as e', 'j.odoo_job_id', '=', 'e.job_id')
-            ->join('units as u', function ($join) {
-                $join->on('u.relation_id', '=', DB::raw('CAST(e.corporate_id AS BIGINT)'))
-                    ->orWhere('u.relation_id', '=', DB::raw('CAST(e.kanwil_id AS BIGINT)'))
-                    ->orWhere('u.relation_id', '=', DB::raw('CAST(e.area_id AS BIGINT)'))
-                    ->orWhere('u.relation_id', '=', DB::raw('CAST(e.cabang_id AS BIGINT)'))
-                    ->orWhere('u.relation_id', '=', DB::raw('CAST(e.outlet_id AS BIGINT)'));
-            })
+            ->join('units as u', 'u.relation_id', '=', 'e.unit_id')
             ->when($id, function ($query, $id) {
                 $query->where('u.id', $id);
             })

@@ -14,8 +14,8 @@ use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
  * Attributes:
  * @property-read int $id
  * @property string $name
- * @property int $parent_unit_id
- * @property int $relation_id
+ * @property string $parent_unit_id
+ * @property string $relation_id
  * @property int $unit_level
  * @property float $lat
  * @property float $long

@@ -315,37 +315,11 @@ class EmployeeService extends BaseService
             });
 
             $employees->when($request->input('unit_id'), function (Builder $builder) use ($request) {
-                $builder->where('unit_id', '=', $request->input('unit_id'));
+                $builder->where('employees.unit_id', '=', $request->input('unit_id'));
             });
 
             $employees->when($lastUnitRelationID, function (Builder $builder) use ($lastUnitRelationID) {
-                $builder->where(function(Builder $builder) use ($lastUnitRelationID) {
-                    $builder->orWhere(function(Builder $builder) use ($lastUnitRelationID) {
-                        $builder->whereIn('outlet_id', explode(',', $lastUnitRelationID));
-                    })
-                        ->orWhere(function(Builder $builder) use ($lastUnitRelationID) {
-                            $builder->where('outlet_id', '=', 0)
-                                ->whereIn('cabang_id', explode(',', $lastUnitRelationID));
-                        })
-                        ->orWhere(function(Builder $builder) use ($lastUnitRelationID) {
-                            $builder->where('outlet_id', '=', 0)
-                                ->where('cabang_id', '=', 0)
-                                ->whereIn('area_id', explode(',', $lastUnitRelationID));
-                        })
-                        ->orWhere(function(Builder $builder) use ($lastUnitRelationID) {
-                            $builder->where('outlet_id', '=', 0)
-                                ->where('cabang_id', '=', 0)
-                                ->where('area_id', '=', 0)
-                                ->whereIn('kanwil_id', explode(',', $lastUnitRelationID));
-                        })
-                        ->orWhere(function(Builder $builder) use ($lastUnitRelationID) {
-                            $builder->where('outlet_id', '=', 0)
-                                ->where('cabang_id', '=', 0)
-                                ->where('area_id', '=', 0)
-                                ->where('kanwil_id', '=', 0)
-                                ->whereIn('corporate_id', explode(',', $lastUnitRelationID));
-                        });
-                });
+                $builder->where('employees.unit_id', '=', $lastUnitRelationID);
             });
 
             $employees->when($unitRelationID, function(Builder $builder) use ($unitRelationID) {

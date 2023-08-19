@@ -46,7 +46,7 @@ class Job extends Authenticatable
 
     public function roles(): BelongsToMany
     {
-        return $this->morphToMany(Role::class, 'model', 'model_has_roles', 'role_id', 'model_id');
+        return $this->morphToMany(Role::class, 'model', 'model_has_roles', 'model_id', 'role_id');
     }
 
     public function permissions(): BelongsToMany

@@ -248,7 +248,7 @@ export default {
             this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.employeeUnitPagination.pageSize}&page=${this.employeeUnitPagination.currentPage}&name=${this.employeeUnitPagination.name}`)
                 .then(response => {
                     this.employeeUnits = response.data.data.data
-                    this.employeePagination.onSearch = false
+                    this.employeeUnitPagination.onSearch = false
                 })
                 .catch(error => {
                     console.error(error);
@@ -278,10 +278,10 @@ export default {
             }
         },
         onEmployeeUnitSearchName(val) {
-            this.employeeUnits.name = val
+            this.employeeUnitPagination.name = val
 
-            if (!this.employeeUnits.onSearch) {
-                this.employeeUnits.onSearch = true
+            if (!this.employeeUnitPagination.onSearch) {
+                this.employeeUnitPagination.onSearch = true
                 setTimeout(() => {
                     this.getEmployeeUnitsData()
                 }, 1000)

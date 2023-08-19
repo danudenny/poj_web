@@ -51,10 +51,7 @@ class OperatingUnitService extends BaseService
 
             if ($representOfficeID = $request->input('representative_office_id')) {
                 $query->join('operating_unit_corporates', 'operating_unit_corporates.id', '=', 'operating_unit_details.operating_unit_corporate_id');
-                $query->join('units', function(JoinClause $clause) {
-                    $clause->on('units.relation_id', '=', 'operating_unit_corporates.operating_unit_relation_id')
-                        ->where('units.unit_level', '=', Unit::UnitLevelOperatingUnit);
-                });
+                $query->join('units', 'units.relation_id', '=', 'operating_unit_corporates.operating_unit_relation_id');
                 $query->where('units.id', '=', $representOfficeID);
             }
 

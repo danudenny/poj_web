@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Attributes:
  * @property-read int $id
  * @property int $requestor_employee_id
- * @property int $unit_id
+ * @property string $unit_id
  * @property int $job_id
  * @property string $start_date
  * @property string $end_date

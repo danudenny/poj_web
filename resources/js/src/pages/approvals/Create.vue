@@ -206,7 +206,7 @@
                                     <hr/>
                                 </div>
                             </div>
-                            <div style="align-self: flex-end;" v-if="approval.approvers.length < 5 && approval.unit_relation_id > 0">
+                            <div style="align-self: flex-end;" v-if="approval.approvers.length < 5 && approval.unit_relation_id != null">
                                 <button class="btn btn-primary" @click="onAddApprover">
                                     <i class="fa fa-plus"></i>&nbsp;Add New Approver
                                 </button>
@@ -285,7 +285,7 @@ export default {
                 })
         },
         getJobs() {
-            if(this.approval.unit_relation_id === null || this.approval.unit_relation_id === 0) {
+            if(this.approval.unit_relation_id === null || this.approval.unit_relation_id === '') {
                 return
             }
 

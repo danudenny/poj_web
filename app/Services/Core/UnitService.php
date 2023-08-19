@@ -183,14 +183,12 @@ class UnitService extends BaseService
                     ->withRecursiveExpression('child_data', Unit::query()->where('relation_id', '=', $allUnitStructured)->unionAll(
                         Unit::query()->select(['units.*'])
                             ->join('child_data', function (JoinClause $query) {
-                                $query->on('units.parent_unit_id', '=', 'child_data.relation_id')
-                                    ->whereRaw('units.unit_level = child_data.unit_level + 1');
+                                $query->on('units.parent_unit_id', '=', 'child_data.relation_id');
                             })
                     ))->withRecursiveExpression('parent_data', Unit::query()->where('relation_id', '=', $allUnitStructured)->unionAll(
                         Unit::query()->select(['units.*'])
                             ->join('parent_data', function (JoinClause $query) {
-                                $query->on('units.relation_id', '=', 'parent_data.parent_unit_id')
-                                    ->whereRaw('units.unit_level = parent_data.unit_level - 1');
+                                $query->on('units.relation_id', '=', 'parent_data.parent_unit_id');
                             })
                     ));
             }

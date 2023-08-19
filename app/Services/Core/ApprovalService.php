@@ -43,16 +43,6 @@ class ApprovalService extends BaseService
                 $q->where('unit_id', $request->unit_id);
             });
 
-             if ($highestRoles->role_level === 'admin') {
-                $empUnit = $user->employee->getRelatedUnit();
-                $lastUnit = $user->employee->getLastUnit();
-                $empUnit[] = $lastUnit;
-                $flatUnit = UnitHelper::flattenUnits($empUnit);
-                $relationIds = array_column($flatUnit, 'relation_id');
-                $relationIds[] = $lastUnit->id;
-                $approvals->whereIn('unit_id', $relationIds);
-            }
-
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data retrieved successfully.',

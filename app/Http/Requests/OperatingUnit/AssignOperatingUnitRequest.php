@@ -26,8 +26,8 @@ class AssignOperatingUnitRequest extends FormRequest
         return [
             'representative_office_id' => ['required'],
             'corporates' => ['required', 'array'],
-            'corporates.*.unit_relation_id' => ['required', 'numeric'],
-            'corporates.*.unit_level' => ['required', 'numeric']
+            'corporates.*.unit_relation_id' => ['required'],
+            'corporates.*.unit_level' => ['required']
         ];
     }
 }

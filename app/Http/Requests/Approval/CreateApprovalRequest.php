@@ -24,8 +24,8 @@ class CreateApprovalRequest extends FormRequest
     public function rules()
     {
         return [
-            'unit_relation_id' => ['required', 'numeric'],
-            'unit_level' => ['required', 'numeric'],
+            'unit_relation_id' => ['required'],
+            'unit_level' => ['required'],
             'name' => ['required'],
             'approval_module_id' => ['required'],
             'department_id' => ['nullable', 'numeric'],
