@@ -275,8 +275,9 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::get('', [EventController::class, 'index']);
         Route::get('view/{id}', [EventController::class, 'view']);
         Route::get('employee-event', [EventController::class, 'employeeEvent']);
+        Route::get('approvals', [EventController::class, 'listApproval']);
         Route::post('create', [EventController::class, 'create']);
-        Route::post('/approve/{id}', [EventController::class, 'approve']);
+        Route::post('/approval/{id}', [EventController::class, 'approval']);
         Route::post('/check-in/{id}', [EventController::class, 'checkIn']);
         Route::post('/check-out/{id}', [EventController::class, 'checkOut']);
         Route::post('/publish/{id}', [EventController::class, 'publish']);
@@ -358,9 +359,11 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
     Route::group(['prefix' => 'leave_request'], function() {
         Route::get('', [LeaveRequestController::class, 'index']);
         Route::get('view/{id}', [LeaveRequestController::class, 'show']);
+        Route::get('approvals', [LeaveRequestController::class, 'listApproval']);
         Route::post('create', [LeaveRequestController::class, 'save']);
         Route::put('approve/{id}', [LeaveRequestController::class, 'approve']);
         Route::put('reject/{id}', [LeaveRequestController::class, 'reject']);
+        Route::post('approval/{id}', [LeaveRequestController::class, 'approval']);
         Route::post('upload', [LeaveRequestController::class, 'upload']);
     });
     // End Leave Request

@@ -33,7 +33,7 @@ class BackupApproval extends Model
         if ($this->priority > 0) {
             $lastStatus = BackupApproval::query()
                 ->where('backup_id', '=', $this->backup_id)
-                ->where('priority', '=', $this->priority-1)
+                ->where('priority', '<', $this->priority)
                 ->where('status', '=', self::StatusPending)
                 ->exists();
 

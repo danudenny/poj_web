@@ -14,6 +14,7 @@ class ApprovalModule extends Model
     const ApprovalEvent = "Event";
     const ApprovalBackup = "Backup";
     const ApprovalOvertime = "Overtime";
+    const ApprovalLeave = "Leave";
 
     protected $table = 'approval_modules';
 

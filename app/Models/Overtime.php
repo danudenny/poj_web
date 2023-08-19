@@ -73,7 +73,7 @@ class Overtime extends Model
         }
 
         $lastApproval = $this->overtimeApprovals()
-            ->where('priority', '=', $overtimeApproval->priority - 1)
+            ->where('priority', '<', $overtimeApproval->priority)
             ->where('status', '=', OvertimeApproval::StatusPending)
             ->exists();
         if ($lastApproval) {

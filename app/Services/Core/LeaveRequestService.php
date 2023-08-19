@@ -2,27 +2,38 @@
 
 namespace App\Services\Core;
 
+use App\Http\Requests\LeaveRequest\ApprovalRequest;
+use App\Models\ApprovalModule;
+use App\Models\Employee;
 use App\Models\LeaveRequest;
+use App\Models\LeaveRequestApproval;
 use App\Models\LeaveRequestHistory;
 use App\Models\MasterLeave;
+use App\Models\Role;
 use App\Services\BaseService;
 use App\Services\MinioService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class LeaveRequestService extends BaseService {
 
+    private ApprovalService $approvalService;
+
     private MinioService $minioService;
+
     public function __construct(MinioService $minioService) {
         $this->minioService = $minioService;
+        $this->approvalService = new ApprovalService();
     }
 
     public function index($request): JsonResponse
     {
         $auth = auth()->user();
-        $roles = $auth->roles->sortBy('priority')->first();
         $employee = $auth->employee;
         $leaveRequest = LeaveRequest::with(['employee', 'leaveType', 'leaveHistory']);
         $leaveRequest->when($request->employee_id, function ($query) use ($request) {
@@ -41,9 +52,9 @@ class LeaveRequestService extends BaseService {
             $query->where('last_status', $request->last_status);
         });
 
-        if ($roles->role_level === 'superadmin') {
+        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
             $leaveRequest = $leaveRequest->paginate($request->per_page ?? 10);
-        } else if ($roles->role_level === 'admin') {
+        } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
             $leaveRequest = $leaveRequest->whereHas('employee', function ($query) use ($employee) {
                 $query->where('corporate_id', $employee->last_unit->id);
                 $query->orWhere('kanwil_id', $employee->last_unit->id);
@@ -51,7 +62,7 @@ class LeaveRequestService extends BaseService {
                 $query->orWhere('cabang_id', $employee->last_unit->id);
                 $query->orWhere('outlet_id', $employee->last_unit->id);
             })->paginate($request->per_page ?? 10);
-        } else if ($roles->role_level === 'staff') {
+        } else if ($this->isRequestedRoleLevel(Role::RoleStaff)) {
             $leaveRequest = $leaveRequest->where('employee_id', $auth->employee->id)->paginate($request->per_page ?? 10);;
         }
         return response()->json([
@@ -59,6 +70,35 @@ class LeaveRequestService extends BaseService {
             'message' => 'Successfully get leave request data',
             'data' => $leaveRequest
         ]);
+    }
+
+    public function listApprovals(Request $request) {
+        try {
+            /**
+             * @var Employee $employee
+             */
+            $employee = $request->user()->employee;
+
+            $query = LeaveRequestApproval::query()->with(['leaveRequest', 'leaveRequest.employee'])
+                ->where('employee_id', '=', $employee->id);
+
+            if ($status = $request->query('status')) {
+                $query->where('status', '=', $status);
+            }
+
+            $query->orderBy('id', 'DESC');
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success!',
+                'data' => $this->list($query, $request)
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     public function show($id): JsonResponse
@@ -70,6 +110,8 @@ class LeaveRequestService extends BaseService {
                 'message' => 'Leave request data not found'
             ], 404);
         }
+
+        $leaveRequest->append(['is_can_approve']);
         return response()->json([
             'status' => 'success',
             'message' => 'Successfully get leave request data',
@@ -79,6 +121,9 @@ class LeaveRequestService extends BaseService {
 
     public function save($request): JsonResponse
     {
+        /**
+         * @var Employee $employee
+         */
         $employee = auth()->user()->employee;
         if (!$employee) {
             return response()->json([
@@ -106,6 +151,12 @@ class LeaveRequestService extends BaseService {
             ], 404);
         }
 
+        $approverEmployeeIDs = [];
+        $approverEmployees = $this->approvalService->getApprovalUser($employee, ApprovalModule::ApprovalLeave);
+        foreach ($approverEmployees as $approverEmployee) {
+            $approverEmployeeIDs[] = $approverEmployee->employee_id;
+        }
+
         DB::beginTransaction();
         try {
             $startDate = Carbon::parse($request->start_date);
@@ -119,6 +170,11 @@ class LeaveRequestService extends BaseService {
                 ], 400);
             }
 
+            $status = LeaveRequest::StatusOnProcess;
+            if (count($approverEmployeeIDs) == 0) {
+                $status = LeaveRequest::StatusApproved;
+            }
+
             $leaveRequest = LeaveRequest::create([
                 'employee_id' => $employee->id,
                 'leave_type_id' => $request->leave_type_id,
@@ -126,36 +182,23 @@ class LeaveRequestService extends BaseService {
                 'end_date' => $request->end_date,
                 'days' => $diffInDays + 1,
                 'reason' => $request->reason,
-                'last_status' => 'on process',
+                'last_status' => $status,
                 'file_url' => $request->file_url
             ]);
 
-            if (!$leaveRequest) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Failed to create leave request data'
-                ], 500);
-            }
-
-            $leaveRequestHistory = LeaveRequestHistory::create([
-                'leave_request_id' => $leaveRequest->id,
-                'employee_id' => $employee->id,
-                'created_by' => $employee->id,
-                'status' => 'on process',
-            ]);
-
-            if (!$leaveRequestHistory) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Failed to create leave request history data'
-                ], 500);
+            foreach ($approverEmployeeIDs as $index => $approverEmployeeID) {
+                $leaveRequestApproval = new LeaveRequestApproval();
+                $leaveRequestApproval->priority = $index;
+                $leaveRequestApproval->leave_request_id = $leaveRequest->id;
+                $leaveRequestApproval->employee_id = $approverEmployeeID;
+                $leaveRequestApproval->status = LeaveRequestApproval::StatusPending;
+                $leaveRequestApproval->save();
             }
 
             DB::commit();
             return response()->json([
                 'status' => 'success',
-                'message' => 'Successfully create leave request data',
-                'data' => $leaveRequest
+                'message' => 'Successfully create leave request data'
             ]);
         } catch (Exception $e) {
             DB::rollBack();
@@ -166,53 +209,94 @@ class LeaveRequestService extends BaseService {
         }
     }
 
-    public function approve($id): JsonResponse
+    public function approval(ApprovalRequest $request, int $id): JsonResponse
     {
-        $leaveRequest = LeaveRequest::find($id);
-        if (!$leaveRequest) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Leave request data not found'
-            ], 404);
-        }
-
-        DB::beginTransaction();
         try {
-            $leaveRequest->last_status = 'approved';
-            if (!$leaveRequest->save()) {
+            /**
+             * @var Employee $employee
+             */
+            $employee = $request->user()->employee;
+
+            /**
+             * @var LeaveRequest $leaveRequest
+             */
+            $leaveRequest = LeaveRequest::find($id);
+            if (!$leaveRequest) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Failed to update leave request data'
-                ], 500);
+                    'message' => 'Leave request data not found'
+                ], 404);
             }
 
-            $leaveRequestHistory = LeaveRequestHistory::create([
-                'leave_request_id' => $leaveRequest->id,
-                'employee_id' => $leaveRequest->employee_id,
-                'created_by' => $leaveRequest->employee_id,
-                'approved_by' => auth()->user()->employee->id,
-                'status' => 'approved',
-            ]);
-
-            if (!$leaveRequestHistory) {
+            /**
+             * @var LeaveRequestApproval $leaveRequestApproval
+             */
+            $leaveRequestApproval = LeaveRequestApproval::query()
+                ->where('leave_request_id', '=', $leaveRequest->id)
+                ->where('employee_id', '=', $employee->id)
+                ->where('status', '=', LeaveRequestApproval::StatusPending)
+                ->first();
+            if (!$leaveRequestApproval) {
                 return response()->json([
-                    'status' => 'error',
-                    'message' => 'Failed to create leave request history data'
-                ], 500);
+                    'status' => false,
+                    'message' => 'You don\'t have access to do approval!'
+                ], ResponseAlias::HTTP_FORBIDDEN);
+            }
+
+            if ($leaveRequestApproval->priority > 0) {
+                $beforeApprovalExist = $leaveRequest->leaveRequestApprovals()
+                    ->where('priority', '<', $leaveRequestApproval->priority)
+                    ->where('status', '=', LeaveRequestApproval::StatusPending)
+                    ->exists();
+                if ($beforeApprovalExist) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Last approver not doing approval yet!',
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
+            }
+
+            DB::beginTransaction();
+
+            $leaveRequestApproval->status = $request->input('status');
+            $leaveRequestApproval->notes = $request->input('notes');
+            $leaveRequestApproval->save();
+
+            if ($leaveRequestApproval->status == LeaveRequestApproval::StatusRejected) {
+                $leaveRequest->last_status = LeaveRequestApproval::StatusRejected;
+                $leaveRequest->save();
+
+                /**
+                 * @var LeaveRequestApproval[] $nextApprovals
+                 */
+                $nextApprovals = $leaveRequest->leaveRequestApprovals()
+                    ->where('priority', '>', $leaveRequestApproval->priority)
+                    ->get();
+                foreach ($nextApprovals as $nextApproval) {
+                    $nextApproval->status = LeaveRequestApproval::StatusRejected;
+                    $nextApproval->save();
+                }
+            } else if ($leaveRequestApproval->status == LeaveRequestApproval::StatusApproved) {
+                $isNextApprovalExist = $leaveRequest->leaveRequestApprovals()
+                    ->where('priority', '>', $leaveRequestApproval->priority)
+                    ->exists();
+                if (!$isNextApprovalExist) {
+                    $leaveRequest->last_status = LeaveRequestApproval::StatusApproved;
+                    $leaveRequest->save();
+                }
             }
 
             DB::commit();
             return response()->json([
-                'status' => 'success',
-                'message' => 'Successfully approve leave request data',
-                'data' => $leaveRequest
+                'status' => true,
+                'message' => 'Successfully approve leave request data'
             ]);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
-                'status' => 'error',
+                'status' => false,
                 'message' => $e->getMessage()
-            ], 500);
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

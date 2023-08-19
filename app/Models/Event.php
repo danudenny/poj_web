@@ -35,6 +35,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read EventDate[] $eventDates
  * @property-read EventAttendance[] $eventAttendances
  * @property-read EventHistory[] $eventHistories
+ * @property-read EventApproval[] $eventApprovals
  */
 class Event extends Model
 {
@@ -94,24 +95,33 @@ class Event extends Model
     }
 
     public function getIsCanApproveAttribute() {
-        if ($this->event_type == self::EventTypeNonAnggaran) {
+        /**
+         * @var User $user
+         */
+        $user = request()->user();
+
+        if (!$user) {
             return false;
         }
 
-        $approvalUsers = ApprovalUser::query()
-            ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
-            ->join('approval_modules', 'approvals.approval_module_id', '=', 'approval_modules.id')
-            ->where('approval_modules.name', '=', ApprovalModule::ApprovalEvent)
-            ->where('approvals.unit_id', '=', $this->requestorEmployee->unit_id)
-            ->where('approvals.is_active', '=', true)
-            ->orderBy('approval_users.id', 'ASC')
-            ->get(['approval_users.*']);
+        /**
+         * @var EventApproval $eventApproval
+         */
+        $eventApproval = $this->eventApprovals()->where('employee_id', '=', $user->employee_id)
+            ->where('status', '=', EventApproval::StatusPending)
+            ->first();
+        if (!$eventApproval) {
+            return false;
+        }
 
-        $eventHistories = EventHistory::query()
-            ->where('event_id', '=', $this->id)
-            ->where('status', '!=', Event::StatusPending)->get();
-
-        if (count($eventHistories) >= count($approvalUsers)) {
+        /**
+         * @var EventApproval $lastApproval
+         */
+        $lastApproval = $this->eventApprovals()
+            ->where('status', '=', LeaveRequestApproval::StatusPending)
+            ->where('priority', '<', $eventApproval->priority)
+            ->exists();
+        if($lastApproval) {
             return false;
         }
 
@@ -138,5 +148,9 @@ class Event extends Model
 
     public function requestorEmployee() {
         return $this->belongsTo(Employee::class, 'requestor_employee_id');
+    }
+
+    public function eventApprovals() {
+        return $this->hasMany(EventApproval::class, 'event_id');
     }
 }

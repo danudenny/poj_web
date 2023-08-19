@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LeaveRequest\ApprovalRequest;
 use App\Services\Core\LeaveRequestService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class LeaveRequestController extends Controller
 {
@@ -30,18 +33,35 @@ class LeaveRequestController extends Controller
         return $this->leaveRequestService->save($request);
     }
 
-    public function approve($id): JsonResponse
+    public function approve(ApprovalRequest $request, int $id): JsonResponse
     {
-        return $this->leaveRequestService->approve($id);
+        return response()->json([
+            'status' => false,
+            'message' => 'Deprecated'
+        ], ResponseAlias::HTTP_SERVICE_UNAVAILABLE);
     }
 
     public function reject($id): JsonResponse
     {
-        return $this->leaveRequestService->reject($id);
+        return response()->json([
+            'status' => false,
+            'message' => 'Deprecated'
+        ], ResponseAlias::HTTP_SERVICE_UNAVAILABLE);
+    }
+
+    public function approval(ApprovalRequest $request, int $id): JsonResponse
+    {
+
+        return $this->leaveRequestService->approval($request, $id);
     }
 
     public function upload(Request $request): JsonResponse
     {
         return $this->leaveRequestService->upload($request);
+    }
+
+    public function listApproval(Request $request): JsonResponse
+    {
+        return $this->leaveRequestService->listApprovals($request);
     }
 }

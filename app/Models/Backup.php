@@ -76,7 +76,7 @@ class Backup extends Model
          */
         $lastApproval = $this->backupApprovals()
             ->where('status', '=', BackupApproval::StatusPending)
-            ->where('priority', '=', $backupApproval->priority - 1)
+            ->where('priority', '<', $backupApproval->priority)
             ->exists();
         if($lastApproval) {
             return false;

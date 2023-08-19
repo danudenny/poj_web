@@ -503,7 +503,8 @@ class BackupService extends BaseService
             }
 
             if ($userApproval->priority > 0) {
-                $beforeApproval = $backup->backupApprovals()->where('priority', '=', $userApproval->priority - 1)
+                $beforeApproval = $backup->backupApprovals()
+                    ->where('priority', '<', $userApproval->priority)
                     ->where('status', '=', BackupApproval::StatusPending)
                     ->exists();
                 if ($beforeApproval) {
@@ -539,11 +540,11 @@ class BackupService extends BaseService
                     $currentBackupApproval->save();
                 }
             } else {
-                /**
-                 * @var BackupApproval $lastApproval
-                 */
-                $lastApproval = $backup->backupApprovals()->orderBy('priority', 'DESC')->first();
-                if ($lastApproval->status == BackupApproval::StatusApproved) {
+                $lastApproval = $backup->backupApprovals()
+                    ->where('priority', '>', $userApproval->priority)
+                    ->where('status', '=', BackupApproval::StatusPending)
+                    ->exists();
+                if (!$lastApproval) {
                     $backup->status = BackupApproval::StatusApproved;
                 }
             }

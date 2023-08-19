@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read Unit $area
  * @property-read Unit $kanwil
  * @property-read Unit $corporate
+ * @property-read Unit $unit
  * @property-read EmployeeAttendance[] $attendances
  * @property-read EmployeeTimesheetSchedule[] $timesheetSchedules
  * @property-read Unit $operatingUnit

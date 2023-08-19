@@ -544,7 +544,7 @@ class OvertimeService extends BaseService
 
             if($userApproval->priority > 0) {
                 $lastApproval = $overtime->overtimeApprovals()
-                    ->where('priority', '=', $userApproval->priority - 1)
+                    ->where('priority', '<', $userApproval->priority)
                     ->where('status', '=', OvertimeApproval::StatusPending)
                     ->exists();
                 if ($lastApproval) {
@@ -582,11 +582,11 @@ class OvertimeService extends BaseService
                     $currentOvertimeApproval->save();
                 }
             } else {
-                /**
-                 * @var OvertimeApproval $lastApproval
-                 */
-                $lastApproval = $overtime->overtimeApprovals()->orderBy('priority', 'DESC')->first();
-                if ($lastApproval->status == OvertimeApproval::StatusApproved) {
+                $lastApproval = $overtime->overtimeApprovals()
+                    ->where('priority', '>', $userApproval->priority)
+                    ->where('status', '=', OvertimeApproval::StatusPending)
+                    ->first();
+                if (!$lastApproval) {
                     $overtime->last_status = OvertimeApproval::StatusApproved;
                 }
             }

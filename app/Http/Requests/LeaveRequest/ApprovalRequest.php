@@ -1,13 +1,12 @@
 <?php
 
-namespace App\Http\Requests\Event;
+namespace App\Http\Requests\LeaveRequest;
 
-use App\Models\Event;
-use App\Models\EventApproval;
+use App\Models\LeaveRequestApproval;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class EventApprovalRequest extends FormRequest
+class ApprovalRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -27,13 +26,8 @@ class EventApprovalRequest extends FormRequest
     public function rules()
     {
         return [
-            'status' => [
-                'required',
-                Rule::in([EventApproval::StatusApproved, EventApproval::StatusRejected])
-            ],
-            'notes' => [
-                Rule::requiredIf($this->input('status') == EventApproval::StatusRejected)
-            ]
+            'status' => ['required', Rule::in([LeaveRequestApproval::StatusRejected, LeaveRequestApproval::StatusApproved])],
+            'notes' => [Rule::requiredIf($this->input('status') == LeaveRequestApproval::StatusRejected)]
         ];
     }
 }

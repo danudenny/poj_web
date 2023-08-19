@@ -10,10 +10,12 @@ use App\Http\Requests\Event\EventApprovalRequest;
 use App\Http\Requests\Event\UpdateEventRequest;
 use App\Models\ApprovalModule;
 use App\Models\ApprovalUser;
+use App\Models\Employee;
 use App\Models\EmployeeAttendance;
 use App\Models\EmployeeEvent;
 use App\Models\EmployeeNotification;
 use App\Models\Event;
+use App\Models\EventApproval;
 use App\Models\EventAttendance;
 use App\Models\EventDate;
 use App\Models\EventHistory;
@@ -29,6 +31,13 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class EventService extends BaseService
 {
+    private ApprovalService $approvalService;
+
+    public function __construct()
+    {
+        $this->approvalService = new ApprovalService();
+    }
+
     public function index(Request $request) {
         /**
          * @var User $user
@@ -101,6 +110,28 @@ class EventService extends BaseService
             'status' => 'success',
             'message' => 'Data retrieved successfully',
             'data' => $event
+        ]);
+    }
+
+    public function listApproval(Request $request) {
+        /**
+         * @var Employee $employee
+         */
+        $employee = $request->user()->employee;
+
+        $query = EventApproval::query()->with(['event', 'event.requestorEmployee'])
+            ->where('employee_id', '=', $employee->id);
+
+        if ($status = $request->query('status')) {
+            $query->where('status', '=', $status);
+        }
+
+        $query->orderBy('id', 'DESC');
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Success!',
+            'data' => $this->list($query, $request)
         ]);
     }
 
@@ -199,7 +230,7 @@ class EventService extends BaseService
             return response()->json([
                 'status' => true,
                 'data' => $event
-            ], ResponseAlias::HTTP_OK);
+            ]);
         } catch (\Throwable $exception) {
             DB::rollBack();
             return response()->json([
@@ -420,6 +451,14 @@ class EventService extends BaseService
              * @var User $user
              */
             $user = $request->user();
+            $employee = $user->employee;
+
+            $approverEmployeeIDs = [];
+            $approverEmployees = $this->approvalService->getApprovalUser($employee, ApprovalModule::ApprovalEvent);
+            foreach ($approverEmployees as $approverEmployee) {
+                $approverEmployeeIDs[] = $approverEmployee->employee_id;
+            }
+
 
             /**
              * @var Event $event
@@ -439,7 +478,7 @@ class EventService extends BaseService
             DB::beginTransaction();
 
             $event->last_status = Event::StatusPending;
-            if ($event->event_type == Event::EventTypeNonAnggaran) {
+            if ($event->event_type == Event::EventTypeNonAnggaran || count($approverEmployeeIDs) == 0) {
                 $event->last_status = Event::StatusApprove;
             }
 
@@ -453,6 +492,15 @@ class EventService extends BaseService
 
             if ($event->last_status == Event::StatusApprove) {
                 $this->spreadEventDates($event);
+            } else {
+                foreach ($approverEmployeeIDs as $index => $approverEmployeeID) {
+                    $eventApproval = new EventApproval();
+                    $eventApproval->priority = $index;
+                    $eventApproval->event_id = $event->id;
+                    $eventApproval->employee_id = $approverEmployeeID;
+                    $eventApproval->status = EventApproval::StatusPending;
+                    $eventApproval->save();
+                }
             }
 
             DB::commit();
@@ -473,81 +521,82 @@ class EventService extends BaseService
     public function eventApproval(EventApprovalRequest $request, int $id) {
         try {
             /**
-             * @var User $user
+             * @var Employee $employee
              */
-            $user = $request->user();
-
-            /**
-             * @var ApprovalUser[] $approvalUsers
-             */
-            $approvalUsers = ApprovalUser::query()
-                ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
-                ->join('approval_modules', 'approvals.approval_module_id', '=', 'approval_modules.id')
-                ->where('approval_modules.name', '=', ApprovalModule::ApprovalEvent)
-                ->where('approvals.unit_id', '=', $user->employee->getLastUnitID())
-                ->where('approvals.is_active', '=', true)
-                ->orderBy('approval_users.id', 'ASC')
-                ->get(['approval_users.*']);
-
-            $isValidToCreate = false;
-            foreach ($approvalUsers as $approvalUser) {
-                if ($approvalUser->user_id == $user->id) {
-                    $isValidToCreate = true;
-                }
-            }
-
-            if (!$isValidToCreate) {
-                return response()->json([
-                    'message' => 'You don\'t have access to do approval!'
-                ], ResponseAlias::HTTP_BAD_REQUEST);
-            }
+            $employee = $request->user()->employee;
 
             /**
              * @var Event $event
              */
-            $event = Event::query()->find($id);
-            if (is_null($event)) {
+            $event = Event::query()
+                ->where('id', '=', $id)
+                ->where('last_status', '=', Event::StatusPending)
+                ->first();
+            if (!$event) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Event is not found!'
-                ], ResponseAlias::HTTP_BAD_REQUEST);
+                    'message' => 'Event not found!'
+                ], ResponseAlias::HTTP_NOT_FOUND);
             }
 
             /**
-             * @var EventHistory[] $eventHistories
+             * @var EventApproval $eventApproval
              */
-            $eventHistories = EventHistory::query()
+            $eventApproval = EventApproval::query()
                 ->where('event_id', '=', $event->id)
-                ->where('status', '!=', Event::StatusPending)->get();
-            if (count($eventHistories) >= count($approvalUsers)) {
+                ->where('employee_id', '=', $employee->id)
+                ->where('status', '=', EventApproval::StatusPending)
+                ->first();
+            if (!$eventApproval) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Event already approved!'
-                ], ResponseAlias::HTTP_BAD_REQUEST);
+                    'message' => 'You don\'t have access!'
+                ], ResponseAlias::HTTP_NOT_FOUND);
             }
 
-            if ($approvalUsers[count($eventHistories)]->user_id != $user->id) {
-                return response()->json([
-                    'message' => 'Last approver not doing approval!'
-                ], ResponseAlias::HTTP_BAD_REQUEST);
+            if($eventApproval->priority > 0) {
+                $isBeforeExist = $event->eventApprovals()
+                    ->where('priority', '<', $eventApproval->priority)
+                    ->where('status', '=', EventApproval::StatusPending)
+                    ->exists();
+                if ($isBeforeExist) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Last approver not doing approval yet!',
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
             }
 
             DB::beginTransaction();
 
-            $event->last_status = $request->input('status');
-            $event->save();
+            $eventApproval->status = $request->input('status');
+            $eventApproval->notes = $request->input('notes');
+            $eventApproval->save();
 
-            $eventHistory = new EventHistory();
-            $eventHistory->event_id = $event->id;
-            $eventHistory->employee_id = $user->employee_id;
-            $eventHistory->status = $event->last_status;
-            $eventHistory->notes = $request->input('notes');
-            $eventHistory->save();
+            if ($eventApproval->status == EventApproval::StatusRejected) {
+                $event->last_status = Event::StatusReject;
+                $event->save();
 
-            $eventHistories[] = $eventHistory;
+                /**
+                 * @var EventApproval[] $nextApprovals
+                 */
+                $nextApprovals = $event->eventApprovals()
+                    ->where('priority', '>', $eventApproval->priority)
+                    ->get();
+                foreach ($nextApprovals as $nextApproval) {
+                    $nextApproval->status = EventApproval::StatusRejected;
+                    $nextApproval->save();
+                }
+            } else if ($eventApproval->status == EventApproval::StatusApproved) {
+                $isNextExist = $event->eventApprovals()
+                    ->where('priority', '>', $eventApproval->priority)
+                    ->exists();
+                if (!$isNextExist) {
+                    $event->last_status = Event::StatusApprove;
+                    $event->save();
 
-            if (count($eventHistories) >= count($approvalUsers)) {
-                $this->spreadEventDates($event);
+                    $this->spreadEventDates($event);
+                }
             }
 
             DB::commit();

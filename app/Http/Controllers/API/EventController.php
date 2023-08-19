@@ -27,11 +27,15 @@ class EventController extends Controller
         return $service->view($request, $id);
     }
 
+    public function listApproval(Request $request, EventService $service) {
+        return $service->listApproval($request);
+    }
+
     public function create(CreateEventRequest $request, EventService $service) {
         return $service->createEvent($request);
     }
 
-    public function approve(EventApprovalRequest $request, EventService $service, int $id) {
+    public function approval(EventApprovalRequest $request, EventService $service, int $id) {
         return $service->eventApproval($request, $id);
     }
 
