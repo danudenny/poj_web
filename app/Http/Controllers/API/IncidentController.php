@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Incident\ApprovalRequest;
+use App\Http\Requests\Incident\ClosureRequest;
 use App\Services\Core\IncidentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,15 +21,19 @@ class IncidentController extends Controller
         return $service->view($incidentID);
     }
 
+    public function listApproval(Request $request, IncidentService $service) {
+        return $service->listApproval($request);
+    }
+
     public function create(Request $request, IncidentService $service): JsonResponse {
         return $service->createIncident($request);
     }
 
-    public function approval(Request $request, IncidentService $service, int $incidentID): JsonResponse {
+    public function approval(ApprovalRequest $request, IncidentService $service, int $incidentID): JsonResponse {
         return $service->incidentApproval($request, $incidentID);
     }
 
-    public function closure(Request $request, IncidentService $service, int $incidentID): JsonResponse {
+    public function closure(ClosureRequest $request, IncidentService $service, int $incidentID): JsonResponse {
         return $service->closure($request, $incidentID);
     }
 

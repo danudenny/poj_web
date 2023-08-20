@@ -263,6 +263,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
     Route::group(['prefix' => 'incident'], functioN() {
         Route::get('', [IncidentController::class, 'index']);
         Route::get('view/{incidentID}', [IncidentController::class, 'view']);
+        Route::get('list-approvals', [IncidentController::class, 'listApproval']);
         Route::post('create', [IncidentController::class, 'create']);
         Route::post('approval/{incidentID}', [IncidentController::class, 'approval']);
         Route::post('closure/{incidentID}', [IncidentController::class, 'closure']);

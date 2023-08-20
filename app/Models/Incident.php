@@ -31,6 +31,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read IncidentImage[] $incidentImages
  * @property-read IncidentImage[] $incidentImageFollowUp
  * @property-read IncidentHistory[] $incidentHistories
+ * @property-read IncidentApproval[] $incidentApprovals
  * @property Employee $employee
  */
 class Incident extends Model
@@ -92,5 +93,9 @@ class Incident extends Model
 
     public function employee() {
         return $this->belongsTo(Employee::class, 'employee_id');
+    }
+
+    public function incidentApprovals() {
+        return $this->hasMany(IncidentApproval::class, 'incident_id');
     }
 }

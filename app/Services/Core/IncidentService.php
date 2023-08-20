@@ -2,11 +2,14 @@
 
 namespace App\Services\Core;
 
+use App\Http\Requests\Incident\ApprovalRequest;
+use App\Http\Requests\Incident\ClosureRequest;
 use App\Models\Approval;
 use App\Models\ApprovalModule;
 use App\Models\ApprovalUser;
 use App\Models\Employee;
 use App\Models\Incident;
+use App\Models\IncidentApproval;
 use App\Models\IncidentHistory;
 use App\Models\IncidentImage;
 use App\Models\Role;
@@ -18,9 +21,18 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class IncidentService extends BaseService
 {
+
+    private ApprovalService $approvalService;
+
+    public function __construct()
+    {
+        $this->approvalService = new ApprovalService();
+    }
+
     public function index(Request $request) {
         /**
          * @var User $user
@@ -83,6 +95,35 @@ class IncidentService extends BaseService
         ]);
     }
 
+    public function listApproval(Request $request) {
+        try {
+            /**
+             * @var Employee $employee
+             */
+            $employee = $request->user()->employee;
+
+            $query = IncidentApproval::query()->with(['incident', 'incident.employee'])
+                ->where('employee_id', '=', $employee->id);
+
+            if ($status = $request->query('status')) {
+                $query->where('status', '=', $status);
+            }
+
+            $query->orderBy('id', 'DESC');
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success!',
+                'data' => $this->list($query, $request)
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     public function createIncident(Request $request) {
         try {
             /**
@@ -106,6 +147,12 @@ class IncidentService extends BaseService
                 'chronology' => ['required'],
                 'images' => ['required']
             ]);
+
+            $approverEmployeeIDs = [];
+            $approverEmployees = $this->approvalService->getApprovalUser($user->employee, ApprovalModule::ApprovalIncident);
+            foreach ($approverEmployees as $approverEmployee) {
+                $approverEmployeeIDs[] = $approverEmployee->employee_id;
+            }
 
             DB::beginTransaction();
 
@@ -135,121 +182,76 @@ class IncidentService extends BaseService
                 $incidentImage->save();
             }
 
-            $incidentHistory = new IncidentHistory();
-            $incidentHistory->incident_id = $incident->id;
-            $incidentHistory->history_type = $incident->last_stage;
-            $incidentHistory->status = $incident->last_status;
-            $incidentHistory->employee_id = $user->employee_id;
-
-            $incidentHistory->save();
+            foreach ($approverEmployeeIDs as $idx => $approverEmployeeID) {
+                $incidentApproval = new IncidentApproval();
+                $incidentApproval->priority = $idx;
+                $incidentApproval->incident_id = $incident->id;
+                $incidentApproval->employee_id = $approverEmployeeID;
+                $incidentApproval->status = IncidentApproval::StatusPending;
+                $incidentApproval->save();
+            }
 
             DB::commit();
 
             return response()->json([
                 'status' => true,
-                'message' => 'success',
-                'data' => $incident
-            ], Response::HTTP_OK);
-        } catch (ValidationException $exception) {
+                'message' => 'success'
+            ]);
+        } catch (\Throwable $exception) {
             DB::rollBack();
-
-            return response()->json([
-                'status' => false,
-                'message' => $exception->errors()
-            ], Response::HTTP_BAD_REQUEST);
-        } catch (\Exception $exception) {
-            DB::rollBack();
-
             return response()->json([
                 'status' => false,
                 'message' => $exception->getMessage()
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-    public function incidentApproval(Request $request, int $incidentID) {
+    public function incidentApproval(ApprovalRequest $request, int $incidentID) {
         try {
-            $request->validate([
-                'status' => [
-                    'required',
-                    Rule::in([IncidentHistory::StatusApprove, IncidentHistory::StatusReject])
-                ]
-            ]);
-
             /**
              * @var User $user
              */
             $user = $request->user();
 
             /**
-             * @var ApprovalUser[] $approvalUsers
+             * @var Incident $incident
              */
-            $approvalUsers = ApprovalUser::query()
-                ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
-                ->join('approval_modules', 'approvals.approval_module_id', '=', 'approval_modules.id')
-                ->where('approval_modules.name', '=', ApprovalModule::ApprovalIncident)
-                ->where('approvals.unit_relation_id', '=', $user->employee->getLastUnitID())
-                ->where('approvals.is_active', '=', true)
-                ->orderBy('approval_users.id', 'ASC')
-                ->get(['approval_users.*']);
-
-            $isValidToCreate = false;
-            foreach ($approvalUsers as $approvalUser) {
-                if ($approvalUser->user_id == $user->id) {
-                    $isValidToCreate = true;
-                }
-            }
-
-            if (!$isValidToCreate) {
+            $incident = Incident::query()->where('id', '=', $incidentID)->first();
+            if(is_null($incident)) {
                 return response()->json([
-                    'message' => 'You don\'t have access to do approval!'
-                ], Response::HTTP_BAD_REQUEST);
+                    'status' => false,
+                    'message' => 'Incident not found!'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
             /**
-             * @var Incident $incident
+             * @var IncidentApproval $incidentApproval
              */
-            $incident = Incident::query()->find($incidentID);
-            if(is_null($incident)) {
-                return response()->json([
-                    'message' => 'Incident not found!'
-                ], Response::HTTP_BAD_REQUEST);
-            }
-
-            if ($incident->last_status == IncidentHistory::StatusApprove) {
-                return response()->json([
-                    'message' => 'Incident cannot re-approve!'
-                ], Response::HTTP_BAD_REQUEST);
-            }
-
-            $incidentHistoryClosureTotal = IncidentHistory::query()
+            $incidentApproval = IncidentApproval::query()
                 ->where('incident_id', '=', $incident->id)
-                ->where('history_type', '=', IncidentHistory::TypeClosure)
-                ->count();
-            $incidentHistoryApprovalTotal = IncidentHistory::query()
-                ->where('incident_id', '=', $incident->id)
-                ->where('history_type', '=', IncidentHistory::TypeFollowUp)
-                ->where('status', '=', IncidentHistory::StatusReject)
-                ->count();
-
-            $totalIncidentHistory = $incidentHistoryClosureTotal + $incidentHistoryApprovalTotal;
-
-            if ($totalIncidentHistory >= count($approvalUsers)) {
+                ->where('employee_id', '=', $user->employee_id)
+                ->where('status', '=', IncidentApproval::StatusPending)
+                ->first();
+            if (!$incidentApproval) {
                 return response()->json([
-                    'message' => 'Incident approval is finished!'
-                ], Response::HTTP_BAD_REQUEST);
+                    'status' => false,
+                    'message' => 'You don\'t have access to do approval!'
+                ], ResponseAlias::HTTP_UNAUTHORIZED);
             }
 
-            if (!isset($approvalUsers[$totalIncidentHistory])) {
-                return response()->json([
-                    'message' => 'Invalid incident approval!'
-                ], Response::HTTP_BAD_REQUEST);
-            }
-
-            if ($approvalUsers[$totalIncidentHistory]->user_id != $user->id) {
-                return response()->json([
-                    'message' => 'Last approver not doing approval!'
-                ], Response::HTTP_BAD_REQUEST);
+            if ($incidentApproval->priority > 0) {
+                $isBeforePending = $incident->incidentApprovals()
+                    ->where('priority', '<', $incidentApproval->priority)
+                    ->where(function(Builder $builder) {
+                        $builder->orWhere('status', '=', IncidentApproval::StatusPending)
+                            ->orWhere('status', '=', IncidentApproval::StatusApprove);
+                    })->exists();
+                if ($isBeforePending) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Last approver is pending!'
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
             }
 
             $data = [
@@ -301,106 +303,72 @@ class IncidentService extends BaseService
             $incident->last_stage = $incidentHistory->history_type;
             $incident->save();
 
+            $incidentApproval->status = $data['status'];
+            $incidentApproval->notes = $data['reason'];
+            $incidentApproval->save();
+
             DB::commit();
 
             return response()->json([
                 'status' => true,
                 'message' => 'success',
-                'data' => $incident
-            ], Response::HTTP_OK);
-        } catch (ValidationException $exception) {
-            DB::rollBack();
-
-            return response()->json([
-                'status' => false,
-                'message' => $exception->errors()
-            ], Response::HTTP_BAD_REQUEST);
-        } catch (\Exception $exception) {
+            ]);
+        } catch (\Throwable $exception) {
             DB::rollBack();
 
             return response()->json([
                 'status' => false,
                 'message' => $exception->getMessage()
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
-    public function closure(Request $request, int $incidentID) {
+    public function closure(ClosureRequest $request, int $incidentID) {
         try {
-            $request->validate([
-                'status' => [
-                    'required',
-                    Rule::in([IncidentHistory::StatusClose, IncidentHistory::StatusDisclose])
-                ]
-            ]);
-
             /**
              * @var User $user
              */
             $user = $request->user();
 
             /**
-             * @var ApprovalUser[] $approvalUsers
+             * @var Incident $incident
              */
-            $approvalUsers = ApprovalUser::query()
-                ->join('approvals', 'approvals.id', '=', 'approval_users.approval_id')
-                ->join('approval_modules', 'approvals.approval_module_id', '=', 'approval_modules.id')
-                ->where('approval_modules.name', '=', ApprovalModule::ApprovalIncident)
-                ->where('approvals.unit_relation_id', '=', $user->employee->getLastUnitID())
-                ->where('approvals.is_active', '=', true)
-                ->orderBy('approval_users.id', 'ASC')
-                ->get(['approval_users.*']);
-
-            $isValidToCreate = false;
-            foreach ($approvalUsers as $approvalUser) {
-                if ($approvalUser->user_id == $user->id) {
-                    $isValidToCreate = true;
-                }
-            }
-
-            if (!$isValidToCreate) {
+            $incident = Incident::query()->where('id', '=', $incidentID)->first();
+            if(is_null($incident)) {
                 return response()->json([
-                    'message' => 'You don\'t have access to do approval!'
-                ], Response::HTTP_BAD_REQUEST);
+                    'status' => false,
+                    'message' => 'Incident not found!'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
             /**
-             * @var Incident $incident
+             * @var IncidentApproval $incidentApproval
              */
-            $incident = Incident::query()->find($incidentID);
-            if(is_null($incident)) {
-                return response()->json([
-                    'message' => 'Incident not found!'
-                ], Response::HTTP_BAD_REQUEST);
-            }
-
-            if ($incident->last_status == IncidentHistory::StatusClose || $incident->last_status == IncidentHistory::StatusDisclose) {
-                return response()->json([
-                    'message' => 'Incident cannot re-approve!'
-                ], Response::HTTP_BAD_REQUEST);
-            }
-
-            $totalIncidentHistoryClosure = IncidentHistory::query()
+            $incidentApproval = IncidentApproval::query()
                 ->where('incident_id', '=', $incident->id)
-                ->where('history_type', '=', IncidentHistory::TypeFollowUp)
-                ->count();
-
-            if ($totalIncidentHistoryClosure > count($approvalUsers)) {
+                ->where('employee_id', '=', $user->employee_id)
+                ->where('status', '=', IncidentApproval::StatusApprove)
+                ->first();
+            if (!$incidentApproval) {
                 return response()->json([
-                    'message' => 'Incident approval is finished!'
-                ], Response::HTTP_BAD_REQUEST);
+                    'status' => false,
+                    'message' => 'You don\'t have access to do approval!'
+                ], ResponseAlias::HTTP_UNAUTHORIZED);
             }
 
-            if (!isset($approvalUsers[($totalIncidentHistoryClosure - 1)])) {
-                return response()->json([
-                    'message' => 'Invalid incident closure!'
-                ], Response::HTTP_BAD_REQUEST);
-            }
-
-            if ($approvalUsers[($totalIncidentHistoryClosure - 1)]->user_id != $user->id) {
-                return response()->json([
-                    'message' => 'Last approver not doing approval!'
-                ], Response::HTTP_BAD_REQUEST);
+            if ($incidentApproval->priority > 0) {
+                $isBeforePending = $incident->incidentApprovals()
+                    ->where('priority', '<', $incidentApproval->priority)
+                    ->where(function(Builder $builder) {
+                        $builder->orWhere('status', '=', IncidentApproval::StatusPending)
+                            ->orWhere('status', '=', IncidentApproval::StatusApprove);
+                    })->exists();
+                if ($isBeforePending) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Last approver is pending!'
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
             }
 
             $data = [
@@ -421,6 +389,10 @@ class IncidentService extends BaseService
             $incident->last_status = $incidentHistory->status;
             $incident->last_stage = $incidentHistory->history_type;
             $incident->save();
+
+            $incidentApproval->status = $data['status'];
+            $incidentApproval->notes = $data['reason'];
+            $incidentApproval->save();
 
             DB::commit();
 
