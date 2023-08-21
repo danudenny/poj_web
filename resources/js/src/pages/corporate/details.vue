@@ -394,7 +394,7 @@ export default {
         actionButtonFormatter(cell) {
             const rowData = cell.getRow().getData();
             return `
-                <button class="button-icon button-warning" data-action="edit" data-row-id="${rowData.id}"><i data-action="edit" class="fa fa-pencil"></i> </button>
+<!--                <button class="button-icon button-warning" data-action="edit" data-row-id="${rowData.id}"><i data-action="edit" class="fa fa-pencil"></i> </button>-->
                 <button class="button-icon button-danger" data-action="delete" data-row-id="${rowData.id}"><i data-action="delete" class="fa fa-trash"></i> </button>
              `;
         },
@@ -402,13 +402,8 @@ export default {
             const action = e.target.dataset.action
             const rowData = cell.getRow().getData();
 
-            if (action === 'edit') {
-                this.$router.push({
-                    name: 'Role Edit',
-                    params: { id: rowData.id }
-                })
-            } else if (action === 'delete') {
-                this.basic_warning_alert(rowData.id);
+           if (action === 'delete') {
+                this.basic_warning_alert(rowData);
             }
         },
         saveAssignJob() {
@@ -468,7 +463,46 @@ export default {
                     console.error(error);
                     useToast().error(error.response.data.message);
                 });
-        }
+        },
+        redrawTable() {
+            this.$nextTick(() => {
+                this.table.redraw(true);
+            });
+        },
+        basic_warning_alert:function(data){
+            this.$swal({
+                icon: 'warning',
+                title:"Delete Data?",
+                text:'Once deleted, you will not be able to recover the data!',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                confirmButtonColor: '#e64942',
+                cancelButtonText: 'Cancel',
+                cancelButtonColor: '#efefef',
+            }).then((result)=>{
+                if(result.value){
+                    this.$axios.delete(`api/v1/admin/job/delete-assign/${data.id}`)
+                        .then(async (res) => {
+                            const pluck = this.jobs.filter((item) => {
+                                return item.odoo_job_id !== data.odoo_job_id
+                            });
+
+                            this.loading = true
+                            this.table.setData(pluck);
+                            this.redrawTable();
+                            this.loading = false
+                            useToast().success('Success Delete Data' , {
+                                position: 'bottom-right'
+                            });
+                        })
+                        .catch(() => {
+                            useToast().error('Failed Delete Data' , {
+                                position: 'bottom-right'
+                            });
+                        });
+                }
+            });
+        },
     },
     watch: {
         singleWork(newVal) {
