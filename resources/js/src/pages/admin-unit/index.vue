@@ -405,7 +405,7 @@ export default {
                 });
         },
         getEmployeesOperatingUnitData() {
-            this.$axios.get(`/api/v1/admin/employee/paginated?per_page=${this.employeeOperatingUnitPagination.pageSize}&page=${this.employeeOperatingUnitPagination.currentPage}&name=${this.employeeOperatingUnitPagination.name}&unit_level=2,1`)
+            this.$axios.get(`/api/v1/admin/employee/paginated?per_page=${this.employeeOperatingUnitPagination.pageSize}&page=${this.employeeOperatingUnitPagination.currentPage}&name=${this.employeeOperatingUnitPagination.name}&is_operating_unit_user=1`)
                 .then(response => {
                     this.employeesOperatingUnit = response.data.data.data
                     this.employeeOperatingUnitPagination.onSearch = false

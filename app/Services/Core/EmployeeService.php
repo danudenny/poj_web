@@ -305,6 +305,12 @@ class EmployeeService extends BaseService
                     ->where('jobs.id', '=', $request->input('job_id'));
             });
 
+            if ($isOperatingUnitUser = $request->input('is_operating_unit_user')) {
+                if ($isOperatingUnitUser == '1') {
+                    $employees->where('employees.default_operating_unit_id', '>', 0);
+                }
+            }
+
             $employees->when($request->filled('odoo_job_id'), function(Builder $builder) use ($request) {
                 $builder->where('employees.job_id', '=', $request->query('odoo_job_id'));
             });
