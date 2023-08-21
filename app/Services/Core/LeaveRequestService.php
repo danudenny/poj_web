@@ -79,7 +79,7 @@ class LeaveRequestService extends BaseService {
              */
             $employee = $request->user()->employee;
 
-            $query = LeaveRequestApproval::query()->with(['leaveRequest', 'leaveRequest.employee'])
+            $query = LeaveRequestApproval::query()->with(['leaveRequest', 'leaveRequest.employee', 'leaveRequest.leaveType'])
                 ->where('employee_id', '=', $employee->id);
 
             if ($status = $request->query('status')) {
