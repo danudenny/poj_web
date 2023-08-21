@@ -97,6 +97,9 @@ class UserRolePermissionResource extends JsonResource
                 'is_upload' => $job->pivot->is_upload,
                 'is_reporting' => $job->pivot->is_mandatory_reporting,
                 'total_reporting' => $job->pivot->total_normal,
+                'total_normal' => $job->pivot->total_normal,
+                'total_backup' => $job->pivot->total_backup,
+                'total_overtime' => $job->pivot->total_overtime,
             ];
 
             return array_filter($data, fn ($value) => !is_null($value) && $value !== '');
