@@ -83,13 +83,15 @@ export default {
         },
         initializeAttendanceTable() {
             const ls = localStorage.getItem('my_app_token')
+            const role = localStorage.getItem('USER_ROLES')
             this.table = new Tabulator(this.$refs.attendanceTable, {
                 paginationCounter:"rows",
                 ajaxURL: '/api/v1/admin/attendance',
                 ajaxConfig: {
                     headers: {
                         Authorization: `Bearer ${ls}`,
-                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
+                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? '',
+                        "X-Selected-Role": role
                     },
                 },
                 ajaxParams: {

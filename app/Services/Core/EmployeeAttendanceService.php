@@ -38,7 +38,7 @@ class EmployeeAttendanceService extends BaseService
     public function index(Request $request): JsonResponse
     {
         $auth = Auth::user();
-        $roles = $request->headers('X-Selected-Role');
+        $roles = $request->header('X-Selected-Role');
         try {
             $attendances = EmployeeAttendance::query();
             $attendancesData = [];

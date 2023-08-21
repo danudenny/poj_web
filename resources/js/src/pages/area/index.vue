@@ -1,6 +1,6 @@
 <template>
     <div className="container-fluid">
-        <Breadcrumbs main="Corporate"/>
+        <Breadcrumbs main="Area"/>
 
         <div className="container-fluid">
             <div className="email-wrap bookmark-wrap">
@@ -11,16 +11,6 @@
                                 <h5>Area List</h5>
                             </div>
                             <div className="card-body">
-<!--                                <div className="d-flex justify-content-end mb-2">-->
-<!--                                    <button className="btn btn-warning" :disable="syncLoading" type="button" @click="syncFromERP">-->
-<!--                                        <span v-if="syncLoading">-->
-<!--                                            <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)-->
-<!--                                        </span>-->
-<!--                                        <span v-else>-->
-<!--                                            <i class="fa fa-recycle"></i> &nbsp; Sync From ERP-->
-<!--                                        </span>-->
-<!--                                    </button>-->
-<!--                                </div>-->
                                 <div v-if="loading" className="text-center">
                                     <img src="../../assets/loader.gif" alt="loading" width="100">
                                 </div>
@@ -36,8 +26,6 @@
 
 <script>
 import {TabulatorFull as Tabulator} from 'tabulator-tables';
-import {useToast} from 'vue-toastification';
-import axios from 'axios';
 export default {
     data() {
         return {
@@ -102,7 +90,7 @@ export default {
                         hozAlign: 'center',
                         sortable: false,
                         cellClick: (e, cell) => {
-                            this.viewData(cell.getRow().getData().id);
+                            this.viewData(cell.getRow().getData());
                         }
                     },
                 ],
@@ -117,39 +105,17 @@ export default {
             });
             this.loading = false
         },
-        viewDetailsFormatter(cell, formatterParams, onRendered) {
-            return `<button title="Detail" class="button-icon button-success" data-id="${cell.getRow().getData().id}"><i class="fa fa-eye"></i> </button>`;
+        viewDetailsFormatter(cell) {
+            return `<button title="Detail" class="button-icon button-success" data-id="${cell.getRow().getData()}"><i class="fa fa-eye"></i> </button>`;
         },
-        viewData(id) {
-            this.$router.push({name: 'Area Detail', params: {id}});
-        },
-        async syncFromERP() {
-            this.syncLoading = true;
-            this.loading = true;
-            this.startCountdown();
-            this.table.destroy();
-
-            await axios.create({
-                baseURL: import.meta.env.VITE_SYNC_ODOO_URL,
-            }).get('/sync-area')
-                .then(async (response) => {
-                    if (await response.data.status === 201) {
-                        this.syncLoading = false;
-                        this.loading = false;
-                        await this.getCorporate()
-                        this.initializeCorporateTable()
-                        useToast().success(response.data.message);
-                    } else {
-                        this.syncLoading = false;
-                        useToast().error(response.data.message);
-                    }
-                }).catch(error => {
-                    this.syncLoading = false;
-                    useToast().error("Failed to Sync Data! Check if connection are stable");
-                }).finally(() => {
-                    this.syncLoading = false;
-                    clearInterval(this.timerId);
-                });
+        viewData(data) {
+            this.$router.push({
+                name: 'Area Detail',
+                params: {id: data.id},
+                query: {
+                    unit_id: data.parent_relation_id
+                }
+            })
         }
     }
 }

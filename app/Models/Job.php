@@ -40,7 +40,7 @@ class Job extends Authenticatable
 
     public function units(): BelongsToMany
     {
-        return $this->belongsToMany(Unit::class, 'unit_jobs')
+        return $this->belongsToMany(Unit::class, 'unit_jobs', 'job_id', 'unit_id', 'id', 'relation_id')
             ->withPivot('is_camera', 'is_upload', 'is_reporting', 'is_mandatory_reporting', 'total_reporting');
     }
 

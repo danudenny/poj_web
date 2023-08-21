@@ -49,7 +49,7 @@ class JobService extends BaseService
     public function allJobs($request): JsonResponse
     {
         $jobs = Job::query();
-        $jobs->with(['roles', 'unitJob']);
+        $jobs->with(['roles', 'unitJob', 'units']);
         $jobs->when($request->input('name'), function ($query, $name) {
             $query->whereRaw("LOWER(name) ILIKE '%" . strtolower($name) . "%'");
         });
@@ -72,6 +72,9 @@ class JobService extends BaseService
                             'job_name' => $job->name,
                             'roles' => $job->roles,
                             'unit_name' => $unit->name,
+                            'is_camera' => $unit->pivot->is_camera,
+                            'is_upload' => $unit->pivot->is_upload,
+                            'is_mandatory_reporting' => $unit->pivot->is_mandatory_reporting,
                         ];
                     }
                 }
@@ -138,9 +141,12 @@ class JobService extends BaseService
         $isMandatoryReporting = $request->is_mandatory_reporting;
         $unit = Unit::with(['jobs' => function ($query) use ($isMandatoryReporting) {
             if ($isMandatoryReporting) {
-                $query->wherePivot('is_mandatory_reporting', true);
+                $query->where('is_mandatory_reporting', true);
             }
-        }])->find($id);
+        }])
+            ->where('relation_id', '=', $id)
+            ->first();
+
 
         if (!$unit) {
             return response()->json([
@@ -185,7 +191,7 @@ class JobService extends BaseService
                 $isReporting = $unitData['is_reporting'] ?? false;
                 $isReportingMandatory = $unitData['is_mandatory_reporting'] ?? false;
 
-                $unit = Unit::find($unitId);
+                $unit = Unit::where('relation_id', (string) $unitId)->first();
 
                 if (!$unit) {
                     DB::rollBack();

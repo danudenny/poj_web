@@ -62,7 +62,7 @@ import AssignWorkReporting from "@/pages/outlet/modal/assignWorkReporting.vue";
 export default {
     props: {
         unit_id: {
-            type: Number,
+            type: String,
             required: true
         }
     },

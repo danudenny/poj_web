@@ -3,6 +3,7 @@
 namespace App\Services\Core;
 
 use App\Models\Employee;
+use App\Models\Role;
 use App\Models\Unit;
 use App\Models\UnitReporting;
 use App\Models\WorkReporting;
@@ -34,7 +35,7 @@ class WorkReportingService
     public function index($request): JsonResponse
     {
         try {
-            $roles = auth()->user()->roles()->pluck('role_level');
+            $roles = $request->header('X-Selected-Role');
 
             $empData = Employee::with(['kanwil', 'area', 'cabang', 'outlet'])
                 ->find(auth()->user()->employee_id);
@@ -42,10 +43,11 @@ class WorkReportingService
             $decodedEmpData = json_decode($empData, true);
             $filteredUnitData = Arr::only($decodedEmpData, ['kanwil', 'area', 'cabang', 'outlet']);
             $empUnit = $this->getLastUnit($filteredUnitData);
+            $workReporting = [];
 
-            if ($roles->contains('superadmin')) {
-                $workReporting = WorkReporting::query();
-            } elseif ($roles->contains('admin')) {
+            if ($roles === Role::RoleSuperAdministrator) {
+                $workReporting = WorkReporting::with('employee');
+            } elseif ($roles === Role::RoleAdmin) {
                 $workReporting = WorkReporting::with('employee');
                 if ($empUnit['unit_level'] === 3) {
                     $workReporting->whereHas('employee', function ($query) use ($empUnit) {
@@ -68,23 +70,19 @@ class WorkReportingService
                         $query->where('outlet_id', $empUnit['relation_id']);
                     });
                 }
-            } elseif ($roles->contains('staff')) {
+            } elseif ($roles === Role::RoleStaff) {
                 $workReporting = WorkReporting::query()->where('employee_id', auth()->user()->employee_id);
-            }
-
-            if ($request->has('title')) {
-                $workReporting->where('title', 'like', '%' . $request->search . '%');
             }
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Successfully fetch work reporting data',
-                'data' => $workReporting->simplePaginate(10)
+                'data' => $workReporting->paginate($request->input('per_page') ??10)
             ]);
         } catch (Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to fetch work reporting data',
+                'message' => $e->getMessage(),
                 'error' => $e->getMessage()
             ], 500);
         }
