@@ -42,28 +42,35 @@ export default {
     },
     async mounted() {
         await this.getWorkReportings();
-        this.initializeWrTable();
+        await this.initializeWrTable();
     },
     methods: {
         async getWorkReportings() {
             this.loading = true;
             await axios
-                .get(`/api/v1/admin/work-reporting`)
+                .get(`/api/v1/admin/work-reporting`, {
+                    headers: {
+                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? '',
+                        "X-Selected-Role": localStorage.getItem('USER_ROLES')
+                    }
+                })
                 .then(response => {
-                    this.users = response.data.data;
+                    this.workReportings = response.data.data;
                 })
                 .catch(error => {
                     console.error(error);
                 });
         },
-        initializeWrTable() {
+        async initializeWrTable() {
             const ls = localStorage.getItem('my_app_token')
+            const roles = localStorage.getItem('USER_ROLES')
             this.table = new Tabulator(this.$refs.wrTable, {
                 ajaxURL:"/api/v1/admin/work-reporting",
                 ajaxConfig: {
                     headers: {
                         Authorization: `Bearer ${ls}`,
-                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
+                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? '',
+                        "X-Selected-Role": roles
                     },
                 },
                 ajaxParams: {
@@ -71,10 +78,7 @@ export default {
                     size: this.pageSize,
                 },
                 ajaxURLGenerator: (url, config, params) => {
-                    params.filter.map((item) => {
-                        if (item.field === 'title') this.filterTitle = item.value
-                    })
-                    return `${url}?page=${params.page}&size=${params.size}&title=${this.filterTitle}`
+                    return `${url}?page=${params.page}&per_page=${params.size}`
                 },
                 ajaxResponse: function (url, params, response) {
                     return {
@@ -134,6 +138,7 @@ export default {
                 rowFormatter: (row) => {
                 }
             });
+            console.log(this.table)
             this.loading = false
         },
         viewDetailsFormatter(cell, formatterParams, onRendered) {

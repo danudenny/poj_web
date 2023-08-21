@@ -107,13 +107,13 @@ class Unit extends Model
 
     public function jobs(): BelongsToMany
     {
-        return $this->belongsToMany(Job::class, 'unit_jobs')
+        return $this->belongsToMany(Job::class, 'unit_jobs', 'unit_id', 'job_id', 'relation_id', 'id')
             ->withPivot('is_camera', 'is_upload', 'is_reporting', 'is_mandatory_reporting', 'type', 'total_reporting', 'total_normal', 'total_backup', 'total_overtime', 'reporting_names');
     }
 
     public function jobHasUnits(): BelongsToMany
     {
-        return $this->belongsToMany(Job::class, 'unit_has_jobs',  'unit_relation_id', 'job_id', 'relation_id', 'id');
+        return $this->belongsToMany(Job::class, 'unit_has_jobs', 'odoo_job_id', 'unit_relation_id', 'odoo_job_id', 'relation_id');
     }
 
     public function operatingUnitDetail()

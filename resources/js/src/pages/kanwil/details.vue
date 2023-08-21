@@ -6,7 +6,7 @@
                 <div className="card-header bg-primary">
                     <div class="d-flex justify-content-between">
                         <h5>{{item.name}}</h5>
-                        <button class="btn btn-sm btn-outline-warning" @click="$router.push('/kanwil')">
+                        <button class="btn btn-sm btn-outline-warning" @click="$router.push('/kanwils')">
                             <i class="icofont icofont-double-left"></i>&nbsp;Back
                         </button>
                     </div>
@@ -128,15 +128,15 @@
                                     <tr>
                                         <th></th>
                                         <th>Job Title</th>
-                                        <th>Is Camera</th>
-                                        <th>Is Upload</th>
-                                        <th>Is Reporting</th>
+                                        <th>Need Camera</th>
+                                        <th>Need Upload</th>
+                                        <th>Need Reporting</th>
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <tr v-for="job in assignJob" :key="job.id" v-if="assignJob.length > 0">
-                                        <td><input type="checkbox" v-model="selectedJobs" :value="job.id"></td>
-                                        <td>{{ job.name }}</td>
+                                    <tr class="text-center" v-for="job in assignJob" :key="job.id" v-if="assignJob.length > 0">
+                                        <td><input type="checkbox" v-model="selectedJobs" :value="job.job_id"></td>
+                                        <td>{{ job.job_name }}</td>
                                         <td><input type="checkbox" v-model="job.is_camera"></td>
                                         <td><input type="checkbox" v-model="job.is_upload"></td>
                                         <td><input type="checkbox" v-model="job.is_mandatory_reporting"></td>
@@ -154,7 +154,7 @@
                           <Timesheet :id="paramsId"/>
                         </div>
                         <div class="tab-pane fade" id="pills-reporting" role="tabpanel" aria-labelledby="pills-reporting-tab">
-                            <WorkReporting :unit_id="paramsId"/>
+                            <WorkReporting :unit_id="queryUnitId"/>
                         </div>
                         <div class="tab-pane fade" id="pills-employee" role="tabpanel" aria-labelledby="pills-employee-tab">
                             <Employee :id="paramsId" />
@@ -189,6 +189,7 @@ export default {
         return {
             modalTitle: "Work Reporting",
             paramsId: this.$route.params.id,
+            queryUnitId: this.$route.query.unit_id,
             item: [],
             search: null,
             editing: true,
@@ -225,7 +226,6 @@ export default {
         await this.getJobs();
         this.initializeJobTable();
         await this.getReportingData();
-        this.initializeReportTable();
         if (this.item.lat && this.item.long && this.item.radius) {
             this.initMap();
         }
@@ -278,7 +278,7 @@ export default {
                     late_buffer: this.item.late_buffer,
                     radius: this.item.radius
                 })
-                .then(response => {
+                .then(() => {
                     this.editing = true;
                     this.getUnit();
                     this.initMap();
@@ -309,7 +309,7 @@ export default {
             }
         },
         async getJobs() {
-          await this.$axios.get(`/api/v1/admin/job/show/${this.$route.params.id}`)
+          await this.$axios.get(`/api/v1/admin/job/show/${this.$route.query.unit_id}`)
             .then(response => {
                 this.jobs = response.data.data.jobs
             })
@@ -318,8 +318,8 @@ export default {
             });
         },
         async getAllJobs() {
-            await this.$axios.get(`/api/v1/admin/job/${this.$route.params.id}`).then(response => {
-                this.assignJob = response.data.data
+            await this.$axios.get(`/api/v1/admin/job?flat=true&unit_id=${this.$route.query.unit_id}`).then(response => {
+                this.assignJob = response.data.data.data
             })
         },
         initializeJobTable() {
@@ -332,13 +332,18 @@ export default {
                         title: 'No',
                         field: '',
                         formatter: 'rownum',
-                        width: 100,
-                        headerSort:false
+                        width: 70,
+                        headerSort:false,
+                        hozAlign: 'center',
+                        headerHozAlign: 'center',
                     },
                     {
                         title: 'Name',
                         field: 'name',
-                        headerFilter: "input"
+                        headerFilter: "input",
+                        formatter: function(cell) {
+                            return cell.getRow().getData().name;
+                        }
                     },
                     {
                         title:"Camera",
@@ -383,9 +388,6 @@ export default {
                 paginationSizeSelector: [10, 20, 50, 100],
                 headerFilter: true,
                 paginationInitialPage: 1,
-                rowFormatter: (row) => {
-                    //
-                }
             });
             this.loading = false
         },
@@ -410,21 +412,20 @@ export default {
             }
         },
         saveAssignJob() {
-            console.log(this.selectedJobs)
             const dataToSave = this.assignJob
-                .filter(job => this.selectedJobs.includes(job.id))
+                .filter(job => this.selectedJobs.includes(job.job_id))
                 .map(job => {
-                    console.log(job)
                     return {
-                        job_ids: [job.id],
+                        job_ids: [job.job_id],
                         is_camera: job.is_camera || false,
                         is_upload: job.is_upload || false,
                         is_reporting: job.is_reporting || false,
                         is_mandatory_reporting: job.is_mandatory_reporting || false
                     };
                 });
+
             axios
-                .post(`/api/v1/admin/job/save/${this.$route.params.id}`, {
+                .post(`/api/v1/admin/job/save/${this.$route.query.unit_id}`, {
                     units: [...dataToSave]
                 })
                 .then(response => {
@@ -437,79 +438,13 @@ export default {
                 });
         },
         async getReportingData() {
-            await this.$axios.get(`/api/v1/admin/job/show/${this.$route.params.id}?is_mandatory_reporting=true`)
+            await this.$axios.get(`/api/v1/admin/job/show/${this.$route.query.unit_id}?is_mandatory_reporting=true`)
                 .then(response => {
                     this.reportJobs = response.data.data.jobs
                 })
                 .catch(error => {
                     console.error(error);
                 });
-        },
-        initializeReportTable() {
-            this.table = new Tabulator(this.$refs.jobTable, {
-                data: this.jobs,
-                layout: 'fitColumns',
-                columns: [
-                    {
-                        title: 'No',
-                        field: '',
-                        formatter: 'rownum',
-                        width: 100,
-                        headerSort:false
-                    },
-                    {
-                        title: 'Name',
-                        field: 'name',
-                        headerFilter: "input"
-                    },
-                    {
-                        title:"Camera",
-                        field:"is_camera",
-                        hozAlign:"center",
-                        headerHozAlign: "center",
-                        width: 100,
-                        formatter:"tickCross",
-                        headerSort:false
-                    },
-                    {
-                        title:"Upload",
-                        field:"is_upload",
-                        hozAlign:"center",
-                        headerHozAlign: "center",
-                        width: 120,
-                        formatter:"tickCross",
-                        headerSort:false
-                    },
-                    {
-                        title:"Reporting",
-                        field:"is_mandatory_reporting",
-                        hozAlign:"center",
-                        headerHozAlign: "center",
-                        width: 120,
-                        formatter:"tickCross",
-                        headerSort:false
-                    },
-                    {
-                        title: '',
-                        formatter: this.actionButtonFormatter,
-                        width: 100,
-                        hozAlign: 'center',
-                        cellClick: (e, cell) => {
-                            this.handleActionButtonClick(e, cell);
-                        }
-                    },
-                ],
-                pagination: true,
-                paginationMode: "local",
-                paginationSize: 10,
-                paginationSizeSelector: [10, 20, 50, 100],
-                headerFilter: true,
-                paginationInitialPage: 1,
-                rowFormatter: (row) => {
-                    //
-                }
-            });
-            this.loading = false
         },
         handleMultipleWorkChange() {
             this.singleWork = !this.multipleWork;
