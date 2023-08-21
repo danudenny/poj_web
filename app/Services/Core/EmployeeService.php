@@ -275,10 +275,9 @@ class EmployeeService extends BaseService
             $lastUnitRelationID = $request->get('last_unit_relation_id');
             $unitRelationID = $request->get('unit_relation_id');
 
-            $employees->when($request->filled('unit_level'), function (Builder $builder) use ($request) {
-                $builder->whereHas('units', function (Builder $builder) use ($request) {
-                    $builder->where('unit_level', '=', $request->query('unit_level'));
-                });
+            $employees->when($request->filled('unit_level'), function(Builder $builder) use ($request) {
+                $builder->join('units AS unitLevel', 'unitLevel.relation_id', '=', 'employees.unit_id');
+                $builder->whereIn('unitLevel.unit_level', explode(",", $request->query('unit_level')));
             });
 
             if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {

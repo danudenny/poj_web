@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AdminUnit\AssignMultipleUnitRequest;
 use App\Http\Requests\AdminUnit\CreateAdminUnitRequest;
 use App\Http\Requests\AdminUnit\RemoveAdminUnitRequest;
 use App\Services\Core\AdminUnitService;
@@ -26,6 +27,10 @@ class AdminUnitController extends Controller
      */
     public function create(CreateAdminUnitRequest $request, AdminUnitService $service) {
         return $service->insert($request);
+    }
+
+    public function assignMultiple(AssignMultipleUnitRequest $request, AdminUnitService $service) {
+        return $service->assignMultipleUnit($request);
     }
 
     /**

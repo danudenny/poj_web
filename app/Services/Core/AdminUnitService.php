@@ -2,6 +2,7 @@
 
 namespace App\Services\Core;
 
+use App\Http\Requests\AdminUnit\AssignMultipleUnitRequest;
 use App\Http\Requests\AdminUnit\CreateAdminUnitRequest;
 use App\Http\Requests\AdminUnit\RemoveAdminUnitRequest;
 use App\Models\AdminUnit;
@@ -103,6 +104,66 @@ class AdminUnitService extends BaseService
 
             $adminUnit->is_active = true;
             $adminUnit->save();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success!'
+            ]);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function assignMultipleUnit(AssignMultipleUnitRequest $request) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+
+            $unitRelationIDs = $request->input('unit_relation_ids', []);
+            $totalExistingUnit = Unit::query()->whereIn('relation_id', $unitRelationIDs)->count();
+            if ($totalExistingUnit < count($unitRelationIDs)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => sprintf("%s Unit Not Found!", (count($unitRelationIDs) - $totalExistingUnit))
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            /**
+             * @var Employee $employee
+             */
+            $employee = Employee::query()->where('id', '=', $request->input('employee_id'))->first();
+            if (!$employee) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Employee Not Found!'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            DB::beginTransaction();
+
+            foreach ($unitRelationIDs as $unitRelationID) {
+                $adminUnit = AdminUnit::query()
+                    ->where('employee_id', '=', $employee->id)
+                    ->where('unit_relation_id', '=', $unitRelationID)
+                    ->first();
+                if (!$adminUnit) {
+                    $adminUnit = new AdminUnit();
+                    $adminUnit->employee_id = $employee->id;
+                    $adminUnit->unit_relation_id = $unitRelationID;
+                }
+
+                $adminUnit->is_active = true;
+                $adminUnit->save();
+            }
 
             DB::commit();
 

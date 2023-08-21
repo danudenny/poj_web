@@ -344,6 +344,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::get('', [AdminUnitController::class, 'index']);
         Route::get('my', [AdminUnitController::class, 'myAdminUnits']);
         Route::post('create', [AdminUnitController::class, 'create']);
+        Route::post('assign-multiple', [AdminUnitController::class, 'assignMultiple']);
         Route::delete('remove/{id}', [AdminUnitController::class, 'remove']);
     });
 

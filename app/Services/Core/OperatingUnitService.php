@@ -27,8 +27,8 @@ class OperatingUnitService extends BaseService
         try {
             $query = OperatingUnitCorporate::query();
 
-            if ($representOfficeID = $request->input('representative_office_id')) {
-                $query->where('kantor_perwakilan_id', '=', $representOfficeID);
+            if ($representOfficeID = $request->input('operating_unit_relation_id')) {
+                $query->where('operating_unit_relation_id', '=', $representOfficeID);
             }
 
             return response()->json([
@@ -53,6 +53,20 @@ class OperatingUnitService extends BaseService
                 $query->join('operating_unit_corporates', 'operating_unit_corporates.id', '=', 'operating_unit_details.operating_unit_corporate_id');
                 $query->join('units', 'units.relation_id', '=', 'operating_unit_corporates.operating_unit_relation_id');
                 $query->where('units.id', '=', $representOfficeID);
+            }
+
+            if ($operatingUnitRelationID = $request->input('operating_unit_relation_id')) {
+                if (!($request->input('representative_office_id'))) {
+                    $query->join('operating_unit_corporates', 'operating_unit_corporates.id', '=', 'operating_unit_details.operating_unit_corporate_id');
+                }
+                $query->where('operating_unit_corporates.operating_unit_relation_id', '=', $operatingUnitRelationID);
+            }
+
+            if ($corporateRelationID = $request->input('corporate_relation_id')) {
+                if (!($request->input('representative_office_id')) && !($request->input('operating_unit_relation_id'))) {
+                    $query->join('operating_unit_corporates', 'operating_unit_corporates.id', '=', 'operating_unit_details.operating_unit_corporate_id');
+                }
+                $query->where('operating_unit_corporates.corporate_relation_id', '=', $corporateRelationID);
             }
 
             if ($name = $request->input('name')) {
