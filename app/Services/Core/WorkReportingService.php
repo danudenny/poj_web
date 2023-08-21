@@ -7,13 +7,14 @@ use App\Models\Role;
 use App\Models\Unit;
 use App\Models\UnitReporting;
 use App\Models\WorkReporting;
+use App\Services\BaseService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
-class WorkReportingService
+class WorkReportingService extends BaseService
 {
     function getLastUnit($data) {
         $bottomData = null;
@@ -35,7 +36,7 @@ class WorkReportingService
     public function index($request): JsonResponse
     {
         try {
-            $roles = $request->header('X-Selected-Role');
+            $roles = $this->getRequestedRole();
 
             $empData = Employee::with(['kanwil', 'area', 'cabang', 'outlet'])
                 ->find(auth()->user()->employee_id);
@@ -45,9 +46,9 @@ class WorkReportingService
             $empUnit = $this->getLastUnit($filteredUnitData);
             $workReporting = [];
 
-            if ($roles === Role::RoleSuperAdministrator) {
+            if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
                 $workReporting = WorkReporting::with('employee');
-            } elseif ($roles === Role::RoleAdmin) {
+            } elseif ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
                 $workReporting = WorkReporting::with('employee');
                 if ($empUnit['unit_level'] === 3) {
                     $workReporting->whereHas('employee', function ($query) use ($empUnit) {
@@ -70,7 +71,7 @@ class WorkReportingService
                         $query->where('outlet_id', $empUnit['relation_id']);
                     });
                 }
-            } elseif ($roles === Role::RoleStaff) {
+            } elseif ($this->isRequestedRoleLevel(Role::RoleStaff)) {
                 $workReporting = WorkReporting::query()->where('employee_id', auth()->user()->employee_id);
             }
 
