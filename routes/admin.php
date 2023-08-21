@@ -313,6 +313,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::put('assign-roles/{id}', [JobController::class, 'assignRoles']);
         Route::put('update-mandatory/{id}', [JobController::class, 'updateMandatoryReporting']);
         Route::delete('delete/{unit_id}/{job_id}', [JobController::class, 'delete']);
+        Route::delete('delete-assign/{id}', [JobController::class, 'deleteAssignJob']);
     });
     // End Job
 

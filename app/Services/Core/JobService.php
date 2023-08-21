@@ -261,7 +261,7 @@ class JobService extends BaseService
                 'data' => $request->roles
             ], 201);
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return response()->json([
                 'status' => 'error',
@@ -331,7 +331,7 @@ class JobService extends BaseService
                 'status' => 'success',
                 'message' => 'Job detached from unit successfully'
             ], 201);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return response()->json([
                 'status' => 'error',
@@ -426,7 +426,7 @@ class JobService extends BaseService
                 'message' => 'Jobs attached to units successfully',
                 'data' => $emp
             ], 201);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             return response()->json([
                 'status' => 'error',
@@ -435,5 +435,33 @@ class JobService extends BaseService
             ], 500);
         }
 
+    }
+
+    public function deleteAssignedJob($id) {
+        $job = Job::with(['units'])->find($id);
+
+        if (!$job) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Job not found'
+            ], 404);
+        }
+
+        DB::beginTransaction();
+        try {
+            $job->units()->detach();
+            DB::commit();
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Job detached from unit successfully'
+            ], 201);
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to detach job from unit',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

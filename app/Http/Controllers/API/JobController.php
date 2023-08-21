@@ -68,4 +68,9 @@ class JobController extends Controller
         return $this->jobService->pivotInsert();
     }
 
+    public function deleteAssignJob($id): JsonResponse
+    {
+        return $this->jobService->deleteAssignedJob($id);
+    }
+
 }
