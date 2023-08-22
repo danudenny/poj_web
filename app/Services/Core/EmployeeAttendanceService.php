@@ -851,8 +851,8 @@ class EmployeeAttendanceService extends BaseService
 
                 $activeSchedule['attendance']['normal'] = [
                     'minimum_start_time' => Carbon::parse($normal->start_time)->addMinutes(-$normal->early_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
-                    'start_time' => Carbon::parse($normal->start_time)->addMinutes($normal->late_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
-                    'maximum_start_time' => Carbon::parse($normal->start_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
+                    'start_time' => Carbon::parse($normal->start_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
+                    'maximum_start_time' => Carbon::parse($normal->start_time)->addMinutes($normal->late_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'end_time' => Carbon::parse($normal->end_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'check_in_time' => $normal->check_in_time ? Carbon::parse($normal->check_in_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
                     'check_out_time' => $normal->check_out_time ? Carbon::parse($normal->check_out_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
