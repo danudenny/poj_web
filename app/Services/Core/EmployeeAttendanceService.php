@@ -796,7 +796,8 @@ class EmployeeAttendanceService extends BaseService
                     'start_time' => Carbon::parse($event->event_datetime)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'check_in_time' => $event->check_in_time ? Carbon::parse($event->check_in_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
                     'check_out_time' => $event->check_out_time ? Carbon::parse($event->check_out_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
-                    'reference_id' => $event->id
+                    'reference_id' => $event->id,
+                    'total_reporting' => 0
                 ];
             }
 
@@ -807,7 +808,11 @@ class EmployeeAttendanceService extends BaseService
                     'check_in_time' => $overtime->check_in_time ? Carbon::parse($overtime->check_in_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
                     'check_out_time' => $overtime->check_out_time ? Carbon::parse($overtime->check_out_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
                     'reference_type' => 'overtime',
-                    'reference_id' => $overtime->id
+                    'reference_id' => $overtime->id,
+                    'total_reporting' => WorkReporting::query()
+                        ->where('reference_type', '=', WorkReporting::TypeOvertime)
+                        ->where('reference_id', '=', $overtime->id)
+                        ->count()
                 ];
 
                 $activeSchedule['current_attendance'] = $activeSchedule['attendance']['overtime'];
@@ -820,7 +825,11 @@ class EmployeeAttendanceService extends BaseService
                     'check_in_time' => $backup->check_in_time ? Carbon::parse($backup->check_in_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
                     'check_out_time' => $backup->check_out_time ? Carbon::parse($backup->check_out_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
                     'reference_type' => 'backup',
-                    'reference_id' => $backup->id
+                    'reference_id' => $backup->id,
+                    'total_reporting' => WorkReporting::query()
+                    ->where('reference_type', '=', WorkReporting::TypeBackup)
+                    ->where('reference_id', '=', $backup->id)
+                    ->count()
                 ];
 
                 if (is_null($activeSchedule['current_attendance'])) {
@@ -851,7 +860,11 @@ class EmployeeAttendanceService extends BaseService
                     'late_buffer' => $normal->late_buffer,
                     'timesheet_name' => $normal->timesheet->name,
                     'reference_type' => 'normal',
-                    'reference_id' => $normal->id
+                    'reference_id' => $normal->id,
+                    'total_reporting' => WorkReporting::query()
+                        ->where('reference_type', '=', WorkReporting::TypeNormal)
+                        ->where('reference_id', '=', $normal->id)
+                        ->count()
                 ];
 
                 if (is_null($activeSchedule['current_attendance'])) {

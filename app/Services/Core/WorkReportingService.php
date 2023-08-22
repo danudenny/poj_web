@@ -109,6 +109,8 @@ class WorkReportingService extends BaseService
             $workReporting->job_description = $request->job_description;
             $workReporting->image = $request->image;
             $workReporting->employee_id = auth()->user()->employee_id;
+            $workReporting->reference_type = $request->reference_type;
+            $workReporting->reference_id = $request->reference_id;
 
             if (!$workReporting->save()) {
                 DB::rollBack();
