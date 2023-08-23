@@ -56,9 +56,9 @@ class OvertimeService extends BaseService
             $builder->where('overtimes.last_status', '=', $request->input('status'));
         });
 
-        if ($user->isHighestRole(Role::RoleStaff)) {
+        if ($this->isRequestedRoleLevel(Role::RoleStaff)) {
             $overtimes->where('overtimes.requestor_employee_id', '=', $user->employee_id);
-        } else if ($user->isHighestRole(Role::RoleAdmin)) {
+        } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
             $overtimes->join('overtime_dates', 'overtime_dates.overtime_id', '=', 'overtimes.id');
             $overtimes->join('overtime_employees', 'overtime_employees.overtime_date_id', '=', 'overtime_dates.id');
             $overtimes->join('employees', 'employees.id', '=', 'overtime_employees.employee_id');
@@ -99,6 +99,9 @@ class OvertimeService extends BaseService
         $overtimes->when($request->filled('requestor_employee_id'), function(Builder $builder) use ($request) {
             $builder->where('overtimes.requestor_employee_id', '=', $request->input('requestor_employee_id'));
         });
+        if ($requestType = $request->query('request_type')) {
+            $overtimes->where('overtimes.request_type', '=', $requestType);
+        }
 
         $overtimes->select(['overtimes.*']);
         $overtimes->groupBy(['overtimes.id']);

@@ -80,6 +80,9 @@ class BackupService extends BaseService
         $backups->when($request->filled('requestor_employee_id'), function (Builder $builder) use ($request) {
             $builder->where('backups.requestor_employee_id', '=', $request->input('requestor_employee_id'));
         });
+        if ($requestType = $request->query('request_type')) {
+            $backups->where('backups.request_type', '=', $requestType);
+        }
 
         $backups->with(['unit:units.relation_id,name', 'job:jobs.odoo_job_id,name', 'requestorEmployee:employees.id,name', 'sourceUnit:units.relation_id,name']);
         $backups->select(['backups.*']);
