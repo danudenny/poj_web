@@ -79,4 +79,8 @@ class EmployeeAttendanceController extends BaseController
     public function listApproval(Request $request) {
         return $this->employeeAttendanceService->getListApproval($request);
     }
+
+    public function getAllSchedules(Request $request) {
+        return $this->employeeAttendanceService->getAllSchedules($request);
+    }
 }

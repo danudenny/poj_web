@@ -36,7 +36,8 @@ class AttendanceCorrectionService extends BaseService
          */
         $user = $request->user();
 
-        $query = AttendanceCorrectionRequest::query()->with(['employee']);
+        $query = AttendanceCorrectionRequest::query()->with(['employee'])
+            ->orderBy('id', 'DESC');
 
         $requestorEmployeeID = null;
 
@@ -49,6 +50,12 @@ class AttendanceCorrectionService extends BaseService
         }
         if ($status = $request->query('status')) {
             $query->where('status', '=', $status);
+        }
+        if ($startTime = $request->query('start_time')) {
+            $query->where('created_at', '>=', $startTime);
+        }
+        if ($endTime = $request->query('end_time')) {
+            $query->where('created_at', '<=', $endTime);
         }
 
         return response()->json([
@@ -101,6 +108,13 @@ class AttendanceCorrectionService extends BaseService
             $query->where('status', '=', $status);
         }
 
+        if ($startTime = $request->query('start_time')) {
+            $query->where('created_at', '>=', $startTime);
+        }
+        if ($endTime = $request->query('end_time')) {
+            $query->where('created_at', '<=', $endTime);
+        }
+
         return response()->json([
             'status' => 'success',
             'message' => 'Succcess fetch data',
@@ -115,84 +129,83 @@ class AttendanceCorrectionService extends BaseService
              */
             $user = $request->user();
 
-            /**
-             * @var EmployeeAttendance $employeeAttendance
-             */
-            $employeeAttendance = EmployeeAttendance::query()
-                ->where('id', '=', $request->input('employee_attendance_id'))
-                ->where('employee_id', '=', $user->employee_id)
-                ->first();
-            if (!$employeeAttendance) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Employee attendance not found!'
-                ], ResponseAlias::HTTP_BAD_REQUEST);
-            }
-
-            if ($employeeAttendance->real_check_in == null || $employeeAttendance->real_check_out == null) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'You need to check in / check out first before request correction!'
-                ], ResponseAlias::HTTP_BAD_REQUEST);
-            }
-
             $data = [
-                'reference_type' => $employeeAttendance->attendance_types,
-                'reference_id' => null,
+                'correction_date' => $request->input('correction_date'),
+                'check_in_time' => $request->input('check_in_time'),
+                'check_out_time' => $request->input('check_out_time'),
+                'reference_type' => $request->input('reference_type'),
+                'reference_id' => $request->input('reference_id'),
+                'employee_attendance_id' => 0,
+                'latitude' => null,
+                'longitude' => null,
+                'timezone' => null,
+                'data_schedule' => null
             ];
 
-            if ($data['reference_type'] == EmployeeAttendance::AttendanceTypeNormal) {
-                /**
-                 * @var EmployeeTimesheetSchedule $employeeTimesheetSchedule
-                 */
-                $employeeTimesheetSchedule = EmployeeTimesheetSchedule::query()
-                    ->where('employee_attendance_id', '=', $employeeAttendance->id)
-                    ->first();
-                if (!$employeeTimesheetSchedule) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'There is no employee timesheet schedule!'
-                    ], ResponseAlias::HTTP_BAD_REQUEST);
-                }
+            switch ($data['reference_type']) {
+                case AttendanceCorrectionRequest::TypeNormal:
+                    /**
+                     * @var EmployeeTimesheetSchedule $employeeTimesheetSchedule
+                     */
+                    $employeeTimesheetSchedule = EmployeeTimesheetSchedule::query()
+                        ->where('id', '=', $data['reference_id'])
+                        ->where('employee_id', '=', $user->employee_id)
+                        ->first();
+                    if (!$employeeTimesheetSchedule) {
+                        return response()->json([
+                            'status' => false,
+                            'message' => 'There is no employee timesheet schedule!'
+                        ], ResponseAlias::HTTP_BAD_REQUEST);
+                    }
 
-                $data['reference_id'] = $employeeTimesheetSchedule->id;
-            } else if ($data['reference_type'] == EmployeeAttendance::AttendanceTypeBackup) {
-                /**
-                 * @var BackupEmployeeTime $backupEmployeeTime
-                 */
-                $backupEmployeeTime = BackupEmployeeTime::query()
-                    ->where('employee_attendance_id', '=', $employeeAttendance->id)
-                    ->first();
-                if (!$backupEmployeeTime) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'There is no backup employee time!'
-                    ], ResponseAlias::HTTP_BAD_REQUEST);
-                }
+                    $data['employee_attendance_id'] = $employeeTimesheetSchedule->employee_attendance_id;
+                    $data['latitude'] = $employeeTimesheetSchedule->latitude;
+                    $data['longitude'] = $employeeTimesheetSchedule->longitude;
+                    $data['timezone'] = $employeeTimesheetSchedule->timezone;
+                    $data['data_schedule'] = $employeeTimesheetSchedule;
+                    break;
+                case AttendanceCorrectionRequest::TypeOvertime:
+                    /**
+                     * @var OvertimeEmployee $overtimeEmployee
+                     */
+                    $overtimeEmployee = OvertimeEmployee::query()
+                        ->where('id', '=', $data['reference_id'])
+                        ->where('employee_id', '=', $user->employee_id)
+                        ->first();
+                    if (!$overtimeEmployee) {
+                        return response()->json([
+                            'status' => false,
+                            'message' => 'There is no employee overtime!'
+                        ], ResponseAlias::HTTP_BAD_REQUEST);
+                    }
 
-                $data['reference_id'] = $backupEmployeeTime->id;
-            } else if ($data['reference_type'] == EmployeeAttendance::AttendanceTypeOvertime) {
-                /**
-                 * @var OvertimeEmployee $overtimeEmployee
-                 */
-                $overtimeEmployee = OvertimeEmployee::query()
-                    ->where('employee_attendance_id', '=', $employeeAttendance->id)
-                    ->first();
-                if (!$overtimeEmployee) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'There is no employee overtime!'
-                    ], ResponseAlias::HTTP_BAD_REQUEST);
-                }
+                    $data['employee_attendance_id'] = $overtimeEmployee->employee_attendance_id;
+                    $data['latitude'] = $overtimeEmployee->overtimeDate->overtime->location_lat;
+                    $data['longitude'] = $overtimeEmployee->overtimeDate->overtime->location_long;
+                    $data['timezone'] = $overtimeEmployee->overtimeDate->overtime->timezone;
+                    $data['data_schedule'] = $overtimeEmployee;
+                    break;
+                case AttendanceCorrectionRequest::TypeBackup:
+                    /**
+                     * @var BackupEmployeeTime $backupEmployeeTime
+                     */
+                    $backupEmployeeTime = BackupEmployeeTime::query()
+                        ->where('id', '=', $data['reference_id'])
+                        ->where('employee_id', '=', $user->employee_id)
+                        ->first();
+                    if (!$backupEmployeeTime) {
+                        return response()->json([
+                            'status' => false,
+                            'message' => 'There is no backup employee time!'
+                        ], ResponseAlias::HTTP_BAD_REQUEST);
+                    }
 
-                $data['reference_id'] = $overtimeEmployee->id;
-            }
-
-            if ($data['reference_id'] == null) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'There is no attendance reference!'
-                ], ResponseAlias::HTTP_BAD_REQUEST);
+                    $data['employee_attendance_id'] = $backupEmployeeTime->employee_attendance_id;
+                    $data['latitude'] = $backupEmployeeTime->backupTime->backup->location_lat;
+                    $data['longitude'] = $backupEmployeeTime->backupTime->backup->location_long;
+                    $data['timezone'] = $backupEmployeeTime->backupTime->backup->timezone;
+                    $data['data_schedule'] = $backupEmployeeTime;
+                    break;
             }
 
             $approvalEmployeeIDs = [];
@@ -203,14 +216,65 @@ class AttendanceCorrectionService extends BaseService
 
             DB::beginTransaction();
 
+            /**
+             * @var EmployeeAttendance $employeeAttendance
+             */
+            $employeeAttendance = EmployeeAttendance::query()
+                ->where('id', '=', $request->input('employee_attendance_id'))
+                ->where('employee_id', '=', $data['employee_attendance_id'])
+                ->first();
+            if (!$employeeAttendance) {
+                $checkInTime = Carbon::parse($data['correction_date'] . " " . $data['check_in_time'], $data['timezone'])->setTimezone('UTC');
+                $checkOutTime = Carbon::parse($data['correction_date'] . " " . $data['check_out_time'], $data['timezone'])->setTimezone('UTC');
+
+                if ($checkOutTime->isBefore($checkInTime)) {
+                    $checkOutTime->addDays(1);
+                }
+
+                $employeeAttendance = new EmployeeAttendance();
+                $employeeAttendance->employee_id = $user->employee_id;
+                $employeeAttendance->checkin_type = EmployeeAttendance::TypeOnSite;
+                $employeeAttendance->real_check_in = $checkInTime->format('Y-m-d H:i:s');
+                $employeeAttendance->real_check_out = $checkOutTime->format('Y-m-d H:i:s');
+                $employeeAttendance->checkin_lat = $data['latitude'];
+                $employeeAttendance->checkin_long = $data['longitude'];
+                $employeeAttendance->checkout_lat = $data['latitude'];
+                $employeeAttendance->checkout_long = $data['longitude'];
+                $employeeAttendance->check_in_tz = $data['timezone'];
+                $employeeAttendance->check_out_tz = $data['timezone'];
+                $employeeAttendance->is_need_approval = true;
+                $employeeAttendance->attendance_types = $data['reference_type'];
+                $employeeAttendance->checkin_real_radius = 0;
+                $employeeAttendance->approved = false;
+                $employeeAttendance->is_late = false;
+                $employeeAttendance->late_duration = 0;
+            }
+
+            $employeeAttendance->notes = "waiting_attendance_correction";
+            $employeeAttendance->save();
+
+            if ($data['data_schedule']) {
+                $data['data_schedule']->employee_attendance_id = $employeeAttendance->id;
+                $data['data_schedule']->save();
+            }
+
+            if ($data['reference_id'] == null) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'There is no attendance reference!'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
             $attendanceCorrectionRequest = new AttendanceCorrectionRequest();
+            $attendanceCorrectionRequest->correction_date = $data['correction_date'];
+            $attendanceCorrectionRequest->correction_type = $request->input('correction_type');
             $attendanceCorrectionRequest->employee_id = $user->employee_id;
             $attendanceCorrectionRequest->employee_attendance_id = $employeeAttendance->id;
             $attendanceCorrectionRequest->reference_type = $data['reference_type'];
             $attendanceCorrectionRequest->reference_id = $data['reference_id'];
             $attendanceCorrectionRequest->status = AttendanceCorrectionApproval::StatusPending;
-            $attendanceCorrectionRequest->check_in_time = $request->input('check_in_time');
-            $attendanceCorrectionRequest->check_out_time = $request->input('check_out_time');
+            $attendanceCorrectionRequest->check_in_time = $data['check_in_time'];
+            $attendanceCorrectionRequest->check_out_time = $data['check_out_time'];
             $attendanceCorrectionRequest->notes = $request->input('notes');
             $attendanceCorrectionRequest->file_url = $request->input('file');
 
@@ -376,6 +440,9 @@ class AttendanceCorrectionService extends BaseService
 
         $employeeAttendance->real_check_in = $checkInTime->format('Y-m-d H:i:s');
         $employeeAttendance->real_check_out = $checkOutTime->format('Y-m-d H:i:s');
+        $employeeAttendance->notes = null;
+        $employeeAttendance->is_need_approval = false;
+        $employeeAttendance->approved = true;
         $employeeAttendance->save();
 
         switch ($attendanceCorrectionRequest->reference_type) {
@@ -392,7 +459,13 @@ class AttendanceCorrectionService extends BaseService
                 }
 
                 $employeeTimesheetSchedule->check_in_time = $employeeAttendance->real_check_in;
+                $employeeTimesheetSchedule->check_in_latitude = $employeeAttendance->checkin_lat;
+                $employeeTimesheetSchedule->check_in_longitude = $employeeAttendance->checkin_long;
+                $employeeTimesheetSchedule->check_in_timezone = $employeeAttendance->check_in_tz;
                 $employeeTimesheetSchedule->check_out_time = $employeeAttendance->real_check_out;
+                $employeeTimesheetSchedule->check_out_latitude = $employeeAttendance->checkout_lat;
+                $employeeTimesheetSchedule->check_out_longitude = $employeeAttendance->checkout_long;
+                $employeeTimesheetSchedule->check_out_timezone = $employeeAttendance->check_out_tz;
                 $employeeTimesheetSchedule->save();
                 break;
             case EmployeeAttendance::AttendanceTypeOvertime:
@@ -407,7 +480,13 @@ class AttendanceCorrectionService extends BaseService
                 }
 
                 $overtimeEmployee->check_in_time = $employeeAttendance->real_check_in;
+                $overtimeEmployee->check_in_lat = $employeeAttendance->checkin_lat;
+                $overtimeEmployee->check_in_long = $employeeAttendance->checkin_long;
+                $overtimeEmployee->check_in_timezone = $employeeAttendance->check_in_tz;
                 $overtimeEmployee->check_out_time = $employeeAttendance->real_check_out;
+                $overtimeEmployee->check_out_lat = $employeeAttendance->checkout_lat;
+                $overtimeEmployee->check_out_long = $employeeAttendance->checkout_long;
+                $overtimeEmployee->check_out_timezone = $employeeAttendance->check_out_tz;
                 $overtimeEmployee->save();
                 break;
             case EmployeeAttendance::AttendanceTypeBackup:
@@ -422,7 +501,13 @@ class AttendanceCorrectionService extends BaseService
                 }
 
                 $backupEmployeeTime->check_in_time = $employeeAttendance->real_check_in;
+                $backupEmployeeTime->check_in_lat = $employeeAttendance->checkin_lat;
+                $backupEmployeeTime->check_in_long = $employeeAttendance->checkin_long;
+                $backupEmployeeTime->check_in_timezone = $employeeAttendance->check_in_tz;
                 $backupEmployeeTime->check_out_time = $employeeAttendance->real_check_out;
+                $backupEmployeeTime->check_out_lat = $employeeAttendance->checkout_lat;
+                $backupEmployeeTime->check_out_long = $employeeAttendance->checkout_long;
+                $backupEmployeeTime->check_out_timezone = $employeeAttendance->check_out_tz;
                 $backupEmployeeTime->save();
                 break;
         }

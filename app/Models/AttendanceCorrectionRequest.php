@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $check_out_time
  * @property string $notes
  * @property string $file_url
+ * @property string $correction_date
+ * @property string $correction_type
  *
  * Relations:
  * @property-read AttendanceCorrectionApproval[] $attendanceCorrectionApprovals
@@ -25,6 +27,10 @@ use Illuminate\Database\Eloquent\Model;
 class AttendanceCorrectionRequest extends Model
 {
     use HasFactory;
+
+    const TypeNormal = "normal";
+    const TypeBackup = "backup";
+    const TypeOvertime = "overtime";
 
     public function getIsCanApproveAttribute() {
         /**

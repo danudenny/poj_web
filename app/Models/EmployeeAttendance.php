@@ -29,6 +29,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property float $checkout_real_radius
  * @property string $checkout_type
  * @property string $check_out_tz
+ * @property string $notes
  *
  * Relations:
  * @property-read Employee $employee

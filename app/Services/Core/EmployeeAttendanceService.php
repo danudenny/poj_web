@@ -9,11 +9,13 @@ use App\Http\Requests\EmployeeAttendance\CheckOutAttendanceRequest;
 use App\Models\Approval;
 use App\Models\ApprovalModule;
 use App\Models\AttendanceApproval;
+use App\Models\BackupEmployeeTime;
 use App\Models\Employee;
 use App\Models\EmployeeAttendance;
 use App\Models\EmployeeAttendanceHistory;
 use App\Models\EmployeeTimesheetSchedule;
 use App\Models\LateCheckin;
+use App\Models\OvertimeEmployee;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\WorkReporting;
@@ -1007,5 +1009,57 @@ class EmployeeAttendanceService extends BaseService
                 'message' => $exception->getMessage()
             ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public function getAllSchedules(Request $request) {
+        /**
+         * @var User  $user
+         */
+        $user = $request->user();
+
+        $preQuery = EmployeeTimesheetSchedule::query()->selectRaw("
+                    'normal' AS reference_type,
+                    id AS reference_id,
+                    start_time AS start_time,
+                    end_time AS end_time,
+                    timezone AS timezone,
+                    (start_time::timestamp without time zone at time zone 'UTC' at time zone timezone) AS start_time_with_timezone,
+                    (end_time::timestamp without time zone at time zone 'UTC' at time zone timezone) AS end_time_with_timezone
+                ")->where('employee_id', '=', $user->employee_id)
+            ->unionAll(OvertimeEmployee::query()->selectRaw("
+                    'overtime' AS reference_type,
+                    overtime_employees.id AS reference_id,
+                    od.start_time AS start_time,
+                    od.end_time AS end_time,
+                    o.timezone AS timezone,
+                    (od.start_time::timestamp without time zone at time zone 'UTC' at time zone o.timezone) AS start_time_with_timezone,
+                    (od.end_time::timestamp without time zone at time zone 'UTC' at time zone o.timezone) AS end_time_with_timezone
+                ")->join('overtime_dates AS od', 'overtime_employees.overtime_date_id', '=', 'od.id')
+                ->join('overtimes AS o', 'o.id', '=', 'od.overtime_id')
+                ->where('employee_id', '=', $user->employee_id)
+            )->unionAll(BackupEmployeeTime::query()->selectRaw("
+                    'backup' AS reference_type,
+                    backup_employee_times.id AS reference_id,
+                    bt.start_time AS start_time,
+                    bt.end_time AS end_time,
+                    b.timezone AS timezone,
+                    (bt.start_time::timestamp without time zone at time zone 'UTC' at time zone b.timezone) AS start_time_with_timezone,
+                    (bt.end_time::timestamp without time zone at time zone 'UTC' at time zone b.timezone) AS end_time_with_timezone
+                ")->join('backup_times AS bt', 'backup_employee_times.backup_time_id', '=', 'bt.id')
+                ->join('backups AS b', 'b.id', '=', 'bt.backup_id')
+                ->where('employee_id', '=', $user->employee_id)
+            );
+
+        $query = DB::table(DB::raw("({$preQuery->toSql()}) as d"))->select('*')->mergeBindings($preQuery->getQuery());
+
+        if ($date = $request->input('date')) {
+            $query->whereRaw("start_time_with_timezone::DATE = '$date'");
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'success',
+            'data' => $this->list($query, $request)
+        ]);
     }
 }
