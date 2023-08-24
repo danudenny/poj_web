@@ -114,11 +114,20 @@ class EmployeeAttendanceService extends BaseService
         $user = $request->user();
 
         $query = AttendanceApproval::query()
+            ->with(['employeeAttendance', 'employeeAttendance.employee'])
             ->where('employee_id', '=', $user->employee_id)
             ->orderBy('id', 'DESC');
 
         if ($status = $request->query('status')) {
             $query->where('status', '=', $status);
+        }
+
+        if ($startTime = $request->query('start_time')) {
+            $query->where('created_at', '>=', $startTime);
+        }
+
+        if ($endTime = $request->query('end_time')) {
+            $query->where('created_at', '<=', $endTime);
         }
 
         return response()->json([
