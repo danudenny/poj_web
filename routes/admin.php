@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\AdminUnitController;
 use App\Http\Controllers\API\ApprovalController;
 use App\Http\Controllers\API\ApprovalModuleController;
+use App\Http\Controllers\API\AttendanceCorrectionController;
 use App\Http\Controllers\API\CabangController;
 use App\Http\Controllers\API\CompanyController;
 use App\Http\Controllers\API\CorporateController;
@@ -404,5 +405,13 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::get('chart-view', [UnitJobController::class, 'chartView']);
         Route::post('assign', [UnitJobController::class, 'assign']);
         Route::post('create', [UnitJobController::class, 'create']);
+    });
+
+    Route::group(['prefix' => 'attendance-correction'], function() {
+        Route::get('index', [AttendanceCorrectionController::class, 'index']);
+        Route::get('view/{od}', [AttendanceCorrectionController::class, 'view']);
+        Route::get('list-approval', [AttendanceCorrectionController::class, 'listApproval']);
+        Route::post('create', [AttendanceCorrectionController::class, 'create']);
+        Route::post('approval', [AttendanceCorrectionController::class, 'approval']);
     });
 });
