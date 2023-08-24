@@ -3,9 +3,12 @@
 namespace App\Services\Core;
 
 use App\Helpers\UnitHelper;
+use App\Http\Requests\EmployeeAttendance\ApprovalEmployeeAttendance;
 use App\Http\Requests\EmployeeAttendance\CheckInAttendanceRequest;
 use App\Http\Requests\EmployeeAttendance\CheckOutAttendanceRequest;
 use App\Models\Approval;
+use App\Models\ApprovalModule;
+use App\Models\AttendanceApproval;
 use App\Models\Employee;
 use App\Models\EmployeeAttendance;
 use App\Models\EmployeeAttendanceHistory;
@@ -27,13 +30,11 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class EmployeeAttendanceService extends BaseService
 {
+    private ApprovalService $approvalService;
 
-
-    private EmployeeTimesheetService $employeeTimesheetService;
-
-    public function __construct(EmployeeTimesheetService $employeeTimesheetService)
+    public function __construct(EmployeeTimesheetService $employeeTimesheetService, ApprovalService $approvalService)
     {
-        $this->employeeTimesheetService = $employeeTimesheetService;
+        $this->approvalService = $approvalService;
     }
     public function index(Request $request): JsonResponse
     {
@@ -97,10 +98,33 @@ class EmployeeAttendanceService extends BaseService
             ], 400);
         }
 
+        $attendance->append('is_can_approve');
+
         return response()->json([
             'status' => true,
             'message' => 'Success get data!',
             'data' => $attendance
+        ]);
+    }
+
+    public function getListApproval(Request $request) {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
+        $query = AttendanceApproval::query()
+            ->where('employee_id', '=', $user->employee_id)
+            ->orderBy('id', 'DESC');
+
+        if ($status = $request->query('status')) {
+            $query->where('status', '=', $status);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Succcess fetch data',
+            'data' => $this->list($query, $request),
         ]);
     }
 
@@ -405,11 +429,21 @@ class EmployeeAttendanceService extends BaseService
 
             $distance = calculateDistance($employeeTimesheetSchedule->latitude, $employeeTimesheetSchedule->longitude, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
 
-            $attendanceType = "onsite";
+            $attendanceType = EmployeeAttendance::TypeOnSite;
             $isNeedApproval = false;
             if ($distance > intval($employeeTimesheetSchedule->timesheet->unit->radius)) {
-                $attendanceType = "offsite";
+                $attendanceType = EmployeeAttendance::TypeOffSite;
                 $isNeedApproval = true;
+            }
+
+            $approvalEmployeeIDs = [];
+            $approvalType = null;
+            if ($isNeedApproval && $attendanceType == EmployeeAttendance::TypeOffSite) {
+                $approvalType = AttendanceApproval::TypeOffsite;
+                $approvalUsers = $this->approvalService->getApprovalUser($user->employee, ApprovalModule::ApprovalOffsiteAttendance);
+                foreach ($approvalUsers as $approvalUser) {
+                    $approvalEmployeeIDs[] = $approvalUser->employee_id;
+                }
             }
 
             DB::beginTransaction();
@@ -442,6 +476,16 @@ class EmployeeAttendanceService extends BaseService
             $employeeTimesheetSchedule->check_in_timezone = $employeeTimezone;
             $employeeTimesheetSchedule->employee_attendance_id = $checkIn->id;
             $employeeTimesheetSchedule->save();
+
+            foreach ($approvalEmployeeIDs as $idx => $approvalEmployeeID) {
+                $attendanceApproval = new AttendanceApproval();
+                $attendanceApproval->priority = $idx;
+                $attendanceApproval->approval_type = $approvalType;
+                $attendanceApproval->employee_attendance_id = $checkIn->id;
+                $attendanceApproval->employee_id = $approvalEmployeeID;
+                $attendanceApproval->status = AttendanceApproval::StatusPending;
+                $attendanceApproval->save();
+            }
 
             DB::commit();
 
@@ -674,78 +718,102 @@ class EmployeeAttendanceService extends BaseService
         }
     }
 
-    public function approve($request, $id): JsonResponse
+    public function approve(ApprovalEmployeeAttendance $request, $id): JsonResponse
     {
-        $items = [];
-        $user = \auth()->user();
-        $lastUnit = $user->employee->last_unit;
-        $findApproval = Approval::where('unit_id', $lastUnit->id)->get();
-        $findApproval->map(function ($item) {
-            $item->users = $item->users->map(function ($user) {
-                return [
-                    'id' => $user->user->id,
-                    'name' => $user->user->name,
-                    'email' => $user->user->email,
-                    'fcm_token' => $user->user->fcm_token,
-                ];
-            });
-            return $item;
-        });
-
-        $getAttendance = EmployeeAttendance::where('id', $id)->where('is_need_approval', true)->first();
-        if (!$getAttendance) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Data not found!'
-            ]);
-        }
-
-        DB::beginTransaction();
         try {
-            $getAttendance->is_need_approval = false;
-            $getAttendance->approved = true;
-            if (!$getAttendance->save()) {
-                DB::rollBack();
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            /**
+             * @var EmployeeAttendance $employeeAttendance
+             */
+            $employeeAttendance = EmployeeAttendance::query()->where('id', '=', $id)->first();
+            if (!$employeeAttendance) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Failed save data!'
-                ]);
+                    'message' => 'Employee attendance not found!'
+                ], ResponseAlias::HTTP_NOT_FOUND);
             }
 
-            $getHistory = EmployeeAttendanceHistory::where('employee_attendances_id', $id)->first();
-            $getHistory->status = 'approved';
-
-            if (!$getHistory->save()) {
-                DB::rollBack();
+            /**
+             * @var AttendanceApproval $attendanceApproval
+             */
+            $attendanceApproval = $employeeAttendance->attendanceApprovals()
+                ->where('employee_id', '=', $user->employee_id)
+                ->where('status', AttendanceApproval::StatusPending)
+                ->first();
+            if(!$attendanceApproval) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Failed save data hostory!'
-                ]);
+                    'message' => 'You don\'t have access to do approval!'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
             }
-            $getUser = $getHistory->employee->user;
 
-            fcm()
-                ->to([$getUser->fcm_token])
-                ->priority('high')
-                ->timeToLive(0)
-                ->notification([
-                    'title' => 'Approval',
-                    'body' => 'Your attendance has been approved!',
-                ])
-                ->enableResponseLog()
-                ->send();
+            if ($attendanceApproval->priority > 0) {
+                $isPendingBeforeExist = $employeeAttendance->attendanceApprovals()
+                    ->where('priority', '<', $attendanceApproval->priority)
+                    ->where('status', '=', AttendanceApproval::StatusPending)
+                    ->exists();
+                if ($isPendingBeforeExist) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Waiting last approver to do approval!'
+                    ], ResponseAlias::HTTP_BAD_REQUEST);
+                }
+            }
+
+            DB::beginTransaction();
+
+            $attendanceApproval->status = $request->input('status');
+            $attendanceApproval->notes = $request->input('notes');
+            $attendanceApproval->save();
+
+            if ($attendanceApproval->status == AttendanceApproval::StatusApproved) {
+                $isNextExist = $employeeAttendance->attendanceApprovals()
+                    ->where('priority', '>', $attendanceApproval->priority)
+                    ->where('status', '=', AttendanceApproval::StatusPending)
+                    ->exists();
+                if (!$isNextExist) {
+                    $employeeAttendance->is_need_approval = false;
+                    $employeeAttendance->approved = true;
+                    $employeeAttendance->save();
+
+                    $this->getNotificationService()->createNotification(
+                        $employeeAttendance->employee_id,
+                        'Your attendance has been approved',
+                        ''
+                    )->withSendPushNotification()->silent()->send();
+                }
+            } else if ($attendanceApproval->status == AttendanceApproval::StatusRejected){
+                /**
+                 * @var AttendanceApproval[] $nextApprovals
+                 */
+                $nextApprovals = $employeeAttendance->attendanceApprovals()
+                    ->where('priority', '>', $attendanceApproval->priority)
+                    ->get();
+                foreach ($nextApprovals as $nextApproval) {
+                    $nextApproval->status = AttendanceApproval::StatusRejected;
+                    $nextApproval->save();
+                }
+
+                $employeeAttendance->is_need_approval = false;
+                $employeeAttendance->save();
+            }
 
             DB::commit();
+
             return response()->json([
                 'status' => true,
                 'message' => 'Success save data!'
             ]);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
                 'status' => false,
                 'message' => $e->getMessage()
-            ]);
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

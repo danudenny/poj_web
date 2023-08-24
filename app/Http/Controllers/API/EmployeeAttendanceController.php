@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\BaseController;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\EmployeeAttendance\ApprovalEmployeeAttendance;
 use App\Http\Requests\EmployeeAttendance\CheckInAttendanceRequest;
 use App\Http\Requests\EmployeeAttendance\CheckOutAttendanceRequest;
 use App\Models\Employee;
@@ -62,7 +63,7 @@ class EmployeeAttendanceController extends BaseController
         return $this->employeeAttendanceService->checkOut($request);
     }
 
-    public function approve(Request $request, $id): JsonResponse
+    public function approve(ApprovalEmployeeAttendance $request, int $id): JsonResponse
     {
         return $this->employeeAttendanceService->approve($request, $id);
     }
@@ -73,5 +74,9 @@ class EmployeeAttendanceController extends BaseController
 
     public function getMonthlyEvaluate(Request $request) {
         return $this->employeeAttendanceService->monthEvaluate($request);
+    }
+
+    public function listApproval(Request $request) {
+        return $this->employeeAttendanceService->getListApproval($request);
     }
 }

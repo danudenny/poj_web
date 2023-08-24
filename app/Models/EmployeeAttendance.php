@@ -33,6 +33,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Relations:
  * @property-read Employee $employee
  * @property-read EmployeeAttendanceHistory[] $employeeAttendanceHistory
+ * @property-read AttendanceApproval[] $attendanceApprovals
  */
 class EmployeeAttendance extends Model
 {
@@ -62,6 +63,40 @@ class EmployeeAttendance extends Model
         'early_duration'
     ];
 
+    public function getIsCanApproveAttribute() {
+        /**
+         * @var User $user
+         */
+        $user = request()->user();
+
+        if (!$user) {
+            return false;
+        }
+
+        /**
+         * @var BackupApproval $backupApproval
+         */
+        $backupApproval = $this->attendanceApprovals()->where('employee_id', '=', $user->employee_id)
+            ->where('status', '=', BackupApproval::StatusPending)
+            ->first();
+        if (!$backupApproval) {
+            return false;
+        }
+
+        /**
+         * @var BackupApproval $lastApproval
+         */
+        $lastApproval = $this->backupApprovals()
+            ->where('status', '=', BackupApproval::StatusPending)
+            ->where('priority', '<', $backupApproval->priority)
+            ->exists();
+        if($lastApproval) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'employee_id', 'id');
@@ -70,5 +105,9 @@ class EmployeeAttendance extends Model
     public function employeeAttendanceHistory(): HasMany
     {
         return $this->hasMany(EmployeeAttendanceHistory::class, 'employee_attendances_id', 'id');
+    }
+
+    public function attendanceApprovals() {
+        return $this->hasMany(AttendanceApproval::class, 'employee_attendance_id');
     }
 }
