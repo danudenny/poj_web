@@ -1055,6 +1055,9 @@ class EmployeeAttendanceService extends BaseService
         if ($date = $request->input('date')) {
             $query->whereRaw("start_time_with_timezone::DATE = '$date'");
         }
+        if ($reference_type = $request->input('reference_type')) {
+            $query->where('reference_type', '=', $reference_type);
+        }
 
         return response()->json([
             'status' => true,
