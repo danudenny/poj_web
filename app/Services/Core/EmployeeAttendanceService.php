@@ -91,7 +91,8 @@ class EmployeeAttendanceService extends BaseService
 
     public function view(Request $request, int $id)
     {
-        $attendance = EmployeeAttendance::query()->with(['employeeAttendanceHistory', 'employee'])->where('id', '=', $id)->first();
+        $attendance = EmployeeAttendance::query()->with(['employeeAttendanceHistory', 'employee', 'attendanceApprovals', 'attendanceApprovals.employee'])
+            ->where('id', '=', $id)->first();
 
         if (!$attendance) {
             return response()->json([

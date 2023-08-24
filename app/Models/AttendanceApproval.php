@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Model;
  *
  * Relations:
  * @property-read EmployeeAttendance $employeeAttendance
+ * @property-read Employee $employee
  */
 class AttendanceApproval extends Model
 {
@@ -33,5 +34,9 @@ class AttendanceApproval extends Model
 
     public function employeeAttendance() {
         return $this->belongsTo(EmployeeAttendance::class, 'employee_attendance_id');
+    }
+
+    public function employee() {
+        return $this->belongsTo(Employee::class, 'employee_id');
     }
 }
