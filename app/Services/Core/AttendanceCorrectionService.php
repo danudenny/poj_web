@@ -64,6 +64,9 @@ class AttendanceCorrectionService extends BaseService
          */
         $user = $request->user();
 
+        /**
+         * @var AttendanceCorrectionRequest $attendanceCorrectionRequest
+         */
         $attendanceCorrectionRequest = AttendanceCorrectionRequest::query()
             ->with(['employee', 'attendanceCorrectionApprovals'])
             ->where('id', '=', $id)
@@ -74,6 +77,8 @@ class AttendanceCorrectionService extends BaseService
                 'message' => 'Attendance correction request not found!'
             ], ResponseAlias::HTTP_BAD_REQUEST);
         }
+
+        $attendanceCorrectionRequest->append(['is_can_approve']);
 
         return response()->json([
             'status' => 'success',
