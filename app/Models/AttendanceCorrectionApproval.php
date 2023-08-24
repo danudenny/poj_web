@@ -13,6 +13,9 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $employee_id
  * @property string $status
  * @property string $notes
+ *
+ * Relations:
+ * @property-read AttendanceCorrectionRequest $attendanceCorrectionRequest
  */
 class AttendanceCorrectionApproval extends Model
 {
@@ -21,4 +24,8 @@ class AttendanceCorrectionApproval extends Model
     const StatusPending = "pending";
     const StatusApproved = "approved";
     const StatusRejected = "rejected";
+
+    public function attendanceCorrectionRequest() {
+        return $this->belongsTo(AttendanceCorrectionRequest::class, 'attendance_correction_request_id');
+    }
 }

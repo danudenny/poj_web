@@ -412,6 +412,6 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::get('view/{od}', [AttendanceCorrectionController::class, 'view']);
         Route::get('list-approval', [AttendanceCorrectionController::class, 'listApproval']);
         Route::post('create', [AttendanceCorrectionController::class, 'create']);
-        Route::post('approval', [AttendanceCorrectionController::class, 'approval']);
+        Route::post('approval/{id}', [AttendanceCorrectionController::class, 'approval']);
     });
 });

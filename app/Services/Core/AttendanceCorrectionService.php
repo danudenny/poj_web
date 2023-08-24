@@ -47,6 +47,9 @@ class AttendanceCorrectionService extends BaseService
         if ($requestorEmployeeID) {
             $query->where('employee_id', '=', $requestorEmployeeID);
         }
+        if ($status = $request->query('status')) {
+            $query->where('status', '=', $status);
+        }
 
         return response()->json([
             'status' => 'success',
@@ -62,7 +65,7 @@ class AttendanceCorrectionService extends BaseService
         $user = $request->user();
 
         $attendanceCorrectionRequest = AttendanceCorrectionRequest::query()
-            ->with(['employee'])
+            ->with(['employee', 'attendanceCorrectionApprovals'])
             ->where('id', '=', $id)
             ->first();
         if (!$attendanceCorrectionRequest) {
@@ -85,7 +88,7 @@ class AttendanceCorrectionService extends BaseService
          */
         $user = $request->user();
 
-        $query = AttendanceCorrectionApproval::query()
+        $query = AttendanceCorrectionApproval::query()->with(['attendanceCorrectionRequest', 'attendanceCorrectionRequest.employee'])
             ->where('employee_id', '=', $user->employee_id)
             ->orderBy('id', 'DESC');
 
