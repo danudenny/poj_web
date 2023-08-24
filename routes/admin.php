@@ -181,6 +181,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::put('approve/{id}', [EmployeeAttendanceController::class, 'approve']);
         Route::post('my-active-schedule', [EmployeeAttendanceController::class, 'getActiveeSchedule']);
         Route::get('attendance-evaluate', [EmployeeAttendanceController::class, 'getMonthlyEvaluate']);
+        Route::get('list-approval', [EmployeeAttendanceController::class, 'listApproval']);
     });
     // End employee attendance
 
