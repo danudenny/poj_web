@@ -487,7 +487,7 @@ const routes =[
                 },
             },
             {
-                path: 'edit',
+                path: 'edit/:id',
                 name: 'timesheet-schedule-edit',
                 component: TimesheetScheduleEdit,
                 meta: {

@@ -34,7 +34,7 @@
                                         <multiselect
                                             v-model="filterJob"
                                             :options="jobs"
-                                            label="name"
+                                            label="job_name"
                                             track-by="id"
                                             placeholder="Select Jobs"
                                             @select="filterJobName"
@@ -92,6 +92,19 @@
                                             @select="filterEmployeeTypeName"
                                         ></multiselect>
                                     </div>
+                                  <div class="col-md-4 mt-3">
+                                    <label>Employee Unit</label>
+                                    <multiselect
+                                        v-model="filterUnit"
+                                        :options="units"
+                                        :multiple="false"
+                                        label="name"
+                                        track-by="relation_id"
+                                        placeholder="Select Employee Unit"
+                                        @search-change="onUnitSearchName"
+                                        @select="filterEmployeeUnit"
+                                    ></multiselect>
+                                  </div>
                                 </div>
                                 <hr>
                                 <div v-if="loading" class="text-center">
@@ -136,13 +149,20 @@ export default {
             filterJob: '',
             filterEmployeeCategory: '',
             filterEmployeeType: '',
+            filterUnit: '',
             showFilter: false,
             jobs: [],
             departments: [],
             partners: [],
+            units: [],
             jobPagination: {
                 name: '',
                 onSearch: false
+            },
+            unitPagination: {
+                name: '',
+                pageSize: 20,
+                isOnSearch: false
             },
             employeeCategories: [
                 {name: 'Karyawan Tetap', value: 'karyawan_tetap'},
@@ -163,11 +183,27 @@ export default {
         await this.getDepartments();
         await this.getPartner();
         await this.getTeam();
+        this.getUnitsData();
     },
     computed() {
         this.initializeEmployeesTable()
     },
     methods: {
+        getUnitsData() {
+              const ls = localStorage.getItem('USER_ROLES')
+              this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.unitPagination.pageSize}&page=1&name=${this.unitPagination.name}`, {
+                  headers: {
+                    'X-Selected-Role': ls
+                  }
+              })
+              .then(response => {
+                  this.units = response.data.data.data
+                  this.unitPagination.isOnSearch = false
+              })
+              .catch(error => {
+                  console.error(error);
+              });
+        },
         exportExcel() {
             this.table.download("xlsx", "employees.xlsx", {
                 sheetName: "Employees",
@@ -274,7 +310,8 @@ export default {
                         areaName: '',
                         cabangName: '',
                         outletName: '',
-                        customerName: ''
+                        customerName: '',
+                        last_unit_relation_id: '',
                     }
 
 
@@ -287,9 +324,10 @@ export default {
                         if (item.field === 'partner.name') localFilter.customerName = item.value
                         if (item.field === 'department_id') localFilter.department_id = item.value
                         if (item.field === 'team.name') localFilter.team_id = item.value
+                        if (item.field === 'unit.relation_id') localFilter.last_unit_relation_id = item.value
                     })
 
-                    return `${url}?page=${params.page}&per_page=${params.size}&customer_name=${localFilter.customerName}&name=${localFilter.employeeName}&odoo_department_id=${localFilter.department_id}&team_id=${localFilter.team_id}&employee_category=${localFilter.employee_category}&employee_type=${localFilter.employee_type}&kanwil_name=${localFilter.kanwilName}&area_name=${localFilter.areaName}&cabang_name=${localFilter.cabangName}&outlet_name=${localFilter.outletName}&odoo_job_id=${localFilter.job_id}&corporate=${this.filterCorporate
+                    return `${url}?page=${params.page}&per_page=${params.size}&last_unit_relation_id=${localFilter.last_unit_relation_id}&customer_name=${localFilter.customerName}&name=${localFilter.employeeName}&odoo_department_id=${localFilter.department_id}&team_id=${localFilter.team_id}&employee_category=${localFilter.employee_category}&employee_type=${localFilter.employee_type}&kanwil_name=${localFilter.kanwilName}&area_name=${localFilter.areaName}&cabang_name=${localFilter.cabangName}&outlet_name=${localFilter.outletName}&odoo_job_id=${localFilter.job_id}&corporate=${this.filterCorporate
                     }`
                 },
                 layout: 'fitData',
@@ -345,7 +383,6 @@ export default {
                     },
                     {
                         title: 'Current Work',
-                        field: 'partner.name',
                         headerFilter:"input",
                         headerHozAlign: 'center',
                         hozAlign: 'center',
@@ -384,7 +421,6 @@ export default {
                     {
                         title: 'Corporate',
                         field: 'corporate.name',
-                        headerFilter: "input",
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Corporate",
@@ -395,7 +431,6 @@ export default {
                     {
                         title: 'Kantor Wilayah',
                         field: 'kanwil.name',
-                        headerFilter: "input",
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Kanwil",
@@ -407,7 +442,6 @@ export default {
                     {
                         title: 'Area',
                         field: 'area.name',
-                        headerFilter: "input",
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Area",
@@ -418,7 +452,6 @@ export default {
                     {
                         title: 'Cabang',
                         field: 'cabang.name',
-                        headerFilter: "input",
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Cabang",
@@ -429,7 +462,6 @@ export default {
                     {
                         title: 'Outlet',
                         field: 'outlet.name',
-                        headerFilter: "input",
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Outlet",
@@ -486,6 +518,13 @@ export default {
             }
             this.table.setFilter('employee_type', "=", this.filterEmployeeType.value);
         },
+        filterEmployeeUnit() {
+            if (this.filterUnit === "") {
+                this.table.clearFilter();
+                return;
+            }
+            this.table.setFilter('unit.relation_id', "=", this.filterUnit.relation_id);
+        },
         filtering() {
             this.showFilter = !this.showFilter;
         },
@@ -504,6 +543,16 @@ export default {
                     this.getJobs()
                 }, 1000)
             }
+        },
+        onUnitSearchName(val) {
+          this.unitPagination.name = val
+
+          if (!this.unitPagination.isOnSearch) {
+            this.unitPagination.isOnSearch = true
+            setTimeout(() => {
+              this.getUnitsData()
+            }, 1000)
+          }
         },
     }
 }

@@ -37,8 +37,17 @@
                                         <td>{{ timesheet.unit }}</td>
                                         <td>{{ timesheet.job }}</td>
                                         <td v-for="day in dateRanges">
-                                            <span v-if="timesheet[day] === ''" class="text-danger"><i class="fa fa-times"></i></span>
-                                            <span class="badge badge-success" v-else>{{ timesheet[day] }}</span>
+                                            <span v-if="timesheet[day] === null" class="text-danger"><i class="fa fa-times"></i></span>
+                                            <div class="schedule-section" v-else>
+                                                <span class="badge badge-danger" v-if="timesheet[day].check_in_time === null">{{ timesheet[day].time }}</span>
+                                                <span class="badge badge-success" v-else>{{ timesheet[day].time }}</span>
+                                                <br/>
+                                                <span class="badge badge-warning">{{ timesheet[day].unit }}</span>
+                                                <div class="action-button" v-if="timesheet[day].check_in_time === null">
+                                                    <button class="button-icon button-warning" @click="onEditEmployeeTimesheet(timesheet[day].id)"><i data-action="view" class="fa fa-pencil"></i> </button>
+                                                    <button class="button-icon button-danger" @click="onDeleteEmployeeTimesheet(timesheet[day].id)"><i data-action="view" class="fa fa-trash"></i> </button>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td>{{ formatHours(timesheet.total_hours) }}</td>
                                     </tr>
@@ -54,6 +63,8 @@
 </template>
 
 <script>
+import {useToast} from "vue-toastification";
+
 export default {
     data() {
         return {
@@ -88,11 +99,40 @@ export default {
                 console.error(error);
             }
         },
+        onDeleteEmployeeTimesheet:function(id){
+            this.$swal({
+                icon: 'warning',
+                title:"Delete Data?",
+                text:'Once deleted, you will not be able to recover the data!',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                confirmButtonColor: '#e64942',
+                cancelButtonText: 'Cancel',
+                cancelButtonColor: '#efefef',
+            }).then((result)=>{
+                if(result.value){
+                    this.$axios.delete(`api/v1/admin/employee-timesheet/delete-employee-timesheet/${id}`)
+                        .then(() => {
+                            useToast().success("Data successfully deleted!");
+                            this.fetchTimesheetData()
+                        })
+                        .catch(error => {
+                            useToast().error(error.response.data.message);
+                        });
+                }
+            });
+        },
+        onEditEmployeeTimesheet(id) {
+            this.$router.push({ name: 'timesheet-schedule-edit', params: {id}})
+        },
         formatHours(hours) {
             return hours === 0 ? '-' : hours.toString();
         },
         createSchedule() {
             this.$router.push({ name: 'timesheet-schedule-create' })
+        },
+        onClickSchedule(data) {
+            console.log(data)
         }
     }
 
@@ -210,5 +250,17 @@ table {
 }
 .card-absolute .card-body {
     height: 550px !important;
+}
+
+.action-button {
+    display: none;
+}
+
+.schedule-section:hover {
+
+}
+
+.schedule-section:hover .action-button {
+    display: block;
 }
 </style>

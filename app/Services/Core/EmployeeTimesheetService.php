@@ -2,17 +2,21 @@
 
 namespace App\Services\Core;
 
+use App\Http\Requests\EmployeeTimesheet\UpdateEmployeeTimesheetScheduleRequest;
 use App\Models\Employee;
 use App\Models\EmployeeTimesheet;
 use App\Models\EmployeeTimesheetDay;
 use App\Models\EmployeeTimesheetSchedule;
 use App\Models\Period;
+use App\Models\Unit;
+use App\Models\User;
 use App\Services\BaseService;
 use Carbon\Carbon;
 use DateTime;
 use Exception;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -105,6 +109,27 @@ class EmployeeTimesheetService extends BaseService {
             ], 500);
         }
 
+    }
+
+    public function view(Request $request, int $id) {
+        /**
+         * @var EmployeeTimesheetSchedule $employeeTimesheetSchedule
+         */
+        $employeeTimesheetSchedule = EmployeeTimesheetSchedule::query()->with(['employee', 'unit', 'timesheet'])
+            ->where('id', '=', $id)
+            ->first();
+        if (!$employeeTimesheetSchedule) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Employee timesheet schedule not found!'
+            ], ResponseAlias::HTTP_NOT_FOUND);
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Success',
+            'data' => $employeeTimesheetSchedule
+        ]);
     }
 
     /**
@@ -316,6 +341,7 @@ class EmployeeTimesheetService extends BaseService {
                     $schedule->timezone = $timezone;
                     $schedule->latitude = $unit->lat;
                     $schedule->longitude = $unit->long;
+                    $schedule->unit_relation_id = $unit->relation_id;
                 } else {
                     $year = Carbon::now($timezone)->year;
                     $month = Carbon::now($timezone)->month;
@@ -347,6 +373,7 @@ class EmployeeTimesheetService extends BaseService {
                                 $schedule->timezone = $timezone;
                                 $schedule->latitude = $unit->lat;
                                 $schedule->longitude = $unit->long;
+                                $schedule->unit_relation_id = $unit->relation_id;
 
                                 $schedule->save();
                                 $currentDate->addWeek();
@@ -684,6 +711,9 @@ class EmployeeTimesheetService extends BaseService {
 
     public function indexSchedule($request): JsonResponse
     {
+        /**
+         * @var EmployeeTimesheetSchedule[] $timesheetAssignments
+         */
         $timesheetAssignments = EmployeeTimesheetSchedule::with([
                 'employee',
                 'timesheet',
@@ -711,7 +741,7 @@ class EmployeeTimesheetService extends BaseService {
                 ];
 
                 foreach ($daysOfMonth as $day) {
-                    $transformedData[$employeeName][$day] = '';
+                    $transformedData[$employeeName][$day] = null;
                 }
             }
 
@@ -719,7 +749,13 @@ class EmployeeTimesheetService extends BaseService {
 
             if ($assignment->timesheet->shift_type === 'shift') {
                 $shiftEntry = $assignment->timesheet->start_time . '-' . $assignment->timesheet->end_time;
-                $dailyEntries[$date] = $shiftEntry;
+                $dailyEntries[$date] = [
+                    'time' => $shiftEntry,
+                    'id' => $assignment->id,
+                    'check_in_time' => $assignment->check_in_time,
+                    'check_out_time' => $assignment->check_out_time,
+                    'unit' => $assignment->unit->name
+                ];
             } else {
                 if ($date >= 1 && $date <= count($daysOfMonth)) {
                     $timesheetDay = null;
@@ -731,7 +767,13 @@ class EmployeeTimesheetService extends BaseService {
                     }
                     if ($timesheetDay) {
                         $shiftEntry = $timesheetDay->start_time . '-' . $timesheetDay->end_time;
-                        $dailyEntries[$date] = $shiftEntry;
+                        $dailyEntries[$date] = [
+                            'time' => $shiftEntry,
+                            'id' => $assignment->id,
+                            'check_in_time' => $assignment->check_in_time,
+                            'check_out_time' => $assignment->check_out_time,
+                            'unit' => $assignment->unit->name
+                        ];
                     }
                 }
 
@@ -794,5 +836,139 @@ class EmployeeTimesheetService extends BaseService {
         }
 
         return floor($totalMinutes / 60);
+    }
+
+    public function deleteEmployeeTimesheetSchedule(Request $request, int $id) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            /**
+             * @var EmployeeTimesheetSchedule $employeeTimesheetSchedule
+             */
+            $employeeTimesheetSchedule = EmployeeTimesheetSchedule::query()
+                ->where('id', '=', $id)
+                ->first();
+            if (!$employeeTimesheetSchedule) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "employee timesheet schedule not found"
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            if ($employeeTimesheetSchedule->check_in_time != null || $employeeTimesheetSchedule->check_out_time) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "employee timesheet schedule not found"
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            DB::beginTransaction();
+
+            $employeeTimesheetSchedule->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => "Success!"
+            ]);
+        } catch (\Throwable $throwable) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $throwable->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function updateEmployeeTimesheet(UpdateEmployeeTimesheetScheduleRequest $request, int $id) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            /**
+             * @var EmployeeTimesheetSchedule $employeeTimesheetSchedule
+             */
+            $employeeTimesheetSchedule = EmployeeTimesheetSchedule::query()
+                ->where('id', '=', $id)
+                ->first();
+            if (!$employeeTimesheetSchedule) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "employee timesheet schedule not found"
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            /**
+             * @var Unit $unit
+             */
+            $unit = Unit::query()
+                ->where('relation_id', '=', $request->input('unit_relation_id'))
+                ->first();
+            if(!$unit) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "unit not found!"
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            if ($unit->lat == null || $unit->long == null) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Target unit don't have location!"
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            $data = [
+                'timesheet_date' => $request->input('timesheet_date'),
+                'timesheet' => $request->input('timesheet')
+            ];
+
+            /**
+             * @var EmployeeTimesheet $timesheet
+             */
+            $timesheet = EmployeeTimesheet::query()->where('id', '=', $data['timesheet']['id'])->first();
+            if (!$timesheet) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Timesheet not found!"
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            $timezone = getTimezoneV2($unit->lat, $unit->long);
+            $startTime = Carbon::parse($data['timesheet_date'] . " " . $data['timesheet']['start_time'], $timezone);
+            $endTime = Carbon::parse($data['timesheet_date'] . " " . $data['timesheet']['end_time'], $timezone);
+
+            DB::beginTransaction();
+
+            $employeeTimesheetSchedule->timesheet_id = $timesheet->id;
+            $employeeTimesheetSchedule->start_time = $startTime->setTimezone('UTC')->format('Y-m-d H:i:s');
+            $employeeTimesheetSchedule->end_time = $endTime->setTimezone('UTC')->format('Y-m-d H:i:s');
+            $employeeTimesheetSchedule->early_buffer = $unit->early_buffer;
+            $employeeTimesheetSchedule->late_buffer = $unit->late_buffer;
+            $employeeTimesheetSchedule->timezone = $timezone;
+            $employeeTimesheetSchedule->latitude = $unit->lat;
+            $employeeTimesheetSchedule->longitude = $unit->long;
+            $employeeTimesheetSchedule->unit_relation_id = $unit->relation_id;
+            $employeeTimesheetSchedule->save();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => "Success!"
+            ]);
+        } catch (\Throwable $throwable) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $throwable->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\EmployeeTimesheet\CreateEmployeeTimesheetRequest;
 use App\Http\Requests\EmployeeTimesheet\UpdateEmployeeTimesheetRequest;
+use App\Http\Requests\EmployeeTimesheet\UpdateEmployeeTimesheetScheduleRequest;
 use App\Services\Core\EmployeeTimesheetService;
 use App\Services\Core\PeriodService;
 use Exception;
@@ -122,4 +123,15 @@ class EmployeeTimesheetController extends BaseController
         return $this->employeeTimesheetService->indexSchedule($request);
     }
 
+    public function deleteEmployeeTimesheet(Request $request, int $id) {
+        return $this->employeeTimesheetService->deleteEmployeeTimesheetSchedule($request, $id);
+    }
+
+    public function viewEmployeeTimesheetSchedule(Request $request, int $id) {
+        return $this->employeeTimesheetService->view($request, $id);
+    }
+
+    public function updateEmployeeTimesheetSchedule(UpdateEmployeeTimesheetScheduleRequest $request, int $id) {
+        return $this->employeeTimesheetService->updateEmployeeTimesheet($request, $id);
+    }
 }

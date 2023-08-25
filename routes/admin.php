@@ -142,7 +142,10 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::post('reassign-schedule', [EmployeeTimesheetController::class, 'reAssignSchedule']);
         Route::put('update-schedule', [EmployeeTimesheetController::class, 'updateEmployeeSchedule']);
         Route::delete('delete-schedule', [EmployeeTimesheetController::class, 'deleteEmployeeSchedule']);
+        Route::delete('delete-employee-timesheet/{id}', [EmployeeTimesheetController::class, 'deleteEmployeeTimesheet']);
         Route::get('periods', [EmployeeTimesheetController::class, 'getPeriods']);
+        Route::get('view-employee-schedule/{id}', [EmployeeTimesheetController::class, 'viewEmployeeTimesheetSchedule']);
+        Route::post('update-employee-schedule/{id}', [EmployeeTimesheetController::class, 'updateEmployeeTimesheetSchedule']);
     });
     Route::group(['prefix' => 'timesheet-schedule'], function() {
         Route::get('get-schedule', [EmployeeTimesheetController::class, 'getEmployeeSchedule']);

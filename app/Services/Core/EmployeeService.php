@@ -85,6 +85,12 @@ class EmployeeService extends BaseService
                 });
             });
 
+            $employees->when($request->filled('default_operating_unit_id'), function(Builder $builder) use ($request) {
+                $builder->whereHas('operatingUnit', function (Builder $builder) use ($request) {
+                    $builder->where('id', '=', $request->query('default_operating_unit_id'));
+                });
+            });
+
             $employees->when($request->filled('job_id'), function(Builder $builder) use ($request) {
                 $builder->where('job_id', '=', $request->query('job_id'));
             });

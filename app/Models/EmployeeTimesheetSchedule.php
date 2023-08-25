@@ -31,10 +31,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property string $check_out_longitude
  * @property string $check_out_timezone
  * @property int $employee_attendance_id
+ * @property string $unit_relation_id
  *
  * Relations:
  * @property-read EmployeeTimesheet $timesheet
  * @property-read EmployeeAttendance|null $employeeAttendance
+ * @property-read Employee $employee
+ * @property-read Unit $unit
  * @method static where(string $string, mixed $employeeId)
  */
 class EmployeeTimesheetSchedule extends Model
@@ -49,6 +52,14 @@ class EmployeeTimesheetSchedule extends Model
         'employee_id',
         'date'
     ];
+
+    protected $appends = [
+        'real_date'
+    ];
+
+    public function getRealDateAttribute() {
+        return Carbon::parse($this->start_time, 'UTC')->setTimezone($this->timezone)->format('Y-m-d');
+    }
 
     public function timesheet(): BelongsTo
     {
@@ -68,5 +79,9 @@ class EmployeeTimesheetSchedule extends Model
     public function employeeAttendance(): BelongsTo
     {
         return $this->belongsTo(EmployeeAttendance::class, 'employee_attendance_id');
+    }
+
+    public function unit() {
+        return  $this->belongsTo(Unit::class, 'unit_relation_id', 'relation_id');
     }
 }

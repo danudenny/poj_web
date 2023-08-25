@@ -17,6 +17,7 @@
                             <ul class="nav nav-pills nav-primary" id="pills-icontab" role="tablist">
                                 <li class="nav-item"><a class="nav-link active" id="pills-iconhome-tab" data-bs-toggle="pill" href="#pills-iconhome" role="tab" aria-controls="pills-iconhome" aria-selected="true"><i class="icofont icofont-info"></i>Basic Information</a></li>
                                 <li class="nav-item"><a class="nav-link" id="pills-operating-unit-tab" data-bs-toggle="pill" href="#pills-operating-unit" role="tab" aria-controls="pills-operating-unit" aria-selected="false"><i class="icofont icofont-tools"></i>Operating Unit</a></li>
+                              <li class="nav-item"><a class="nav-link" id="pills-employee-tab" data-bs-toggle="pill" href="#pills-employee" role="tab" aria-controls="pills-employee" aria-selected="false"><i class="icofont icofont-users"></i>Employee</a></li>
                             </ul>
                         </div>
                     </div>
@@ -49,6 +50,9 @@
                         <div class="tab-pane fade show" id="pills-operating-unit" role="tabpanel" aria-labelledby="pills-operating-unit">
                             <OperatingUnit :id="this.$route.params.id"/>
                         </div>
+                        <div class="tab-pane fade" id="pills-employee" role="tabpanel" aria-labelledby="pills-employee-tab">
+                            <Employee :id="this.$route.params.id"/>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -59,9 +63,10 @@
 <script>
 import {TabulatorFull as Tabulator} from "tabulator-tables";
 import OperatingUnit from "./operating-unit.vue";
+import Employee from "./employee.vue";
 
 export default {
-    components: {OperatingUnit},
+    components: {Employee, OperatingUnit},
     data() {
         return {
             item: [],

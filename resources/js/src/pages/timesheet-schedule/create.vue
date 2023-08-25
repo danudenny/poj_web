@@ -25,10 +25,10 @@
                                             </Datepicker>
                                         </div>
                                         <div class="col-md-4 mb-3">
-                                            <label>Unit :</label>
+                                            <label>Target Unit Level:</label>
                                             <multiselect
                                                 v-model="selectedLevel"
-                                                placeholder="Select Unit"
+                                                placeholder="Select Target Unit Level"
                                                 label="name"
                                                 track-by="name"
                                                 :options="unitLevels"
@@ -38,10 +38,10 @@
                                             </multiselect>
                                         </div>
                                         <div class="col-md-4 mb-3">
-                                            <label>Unit :</label>
+                                            <label>Target Unit :</label>
                                             <multiselect
                                                 v-model="selectedOptions"
-                                                placeholder="Select Unit"
+                                                placeholder="Select Target Unit"
                                                 label="name"
                                                 track-by="name"
                                                 :options="units"
@@ -58,6 +58,32 @@
                                                     ( {{item.start_time}} - {{item.end_time || 'Non Shift'}} )
                                                 </option>
                                             </select>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>Employee Unit Level:</label>
+                                            <multiselect
+                                                v-model="selectedEmployeeLevel"
+                                                placeholder="Select Employee Unit Level"
+                                                label="name"
+                                                track-by="name"
+                                                :options="unitLevels"
+                                                :multiple="false"
+                                                @select="onSelectUnitLevelEmployee"
+                                            >
+                                            </multiselect>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>Employee Unit :</label>
+                                            <multiselect
+                                                v-model="selectedEmployeeOptions"
+                                                placeholder="Select Employee Unit"
+                                                label="name"
+                                                track-by="name"
+                                                :options="unitsEmployee"
+                                                :multiple="false"
+                                                @select="selectedUnitEmployee"
+                                            >
+                                            </multiselect>
                                         </div>
                                         <div class="col-md-12 mb-3">
                                             <label>Assign To (Employees) :</label>
@@ -104,13 +130,16 @@ export default {
             filterName: "",
             filterUnitId: "",
             units: [],
+            unitsEmployee: [],
             selectedOptions: [],
+            selectedEmployeeOptions: [],
             visibleOptions: [],
             table: null,
             lastDayOfCurrentMonth: null,
             selectedDate: 0,
             selectedEmployeeIds: [],
             selectedLevel: null,
+            selectedEmployeeLevel: null,
             unitLevels: [
                 {
                     name: 'Head Office',
@@ -153,6 +182,10 @@ export default {
             this.selectedOptions = [];
             this.getUnit(e.value);
         },
+        onSelectUnitLevelEmployee(e) {
+            this.selectedEmployeeOptions = [];
+            this.getEmployeeUnit(e.value);
+        },
         handleDate(e) {
             const date = new Date(e);
             this.date = date;
@@ -166,14 +199,24 @@ export default {
             return new Date(firstDayOfNextMonth.getTime() - 1);
         },
          selectedUnit() {
+            this.getTimesheet(this.selectedOptions.id)
+        },
+        selectedUnitEmployee() {
             this.initializeEmployeeTable()
             this.table.setFilter('unit_id', "=", this.selectedOptions.relation_id);
-            this.getTimesheet(this.selectedOptions.id)
         },
         async getUnit(value) {
             await this.$axios.get(`api/v1/admin/unit/related-unit?unit_level=${value}`)
                 .then(response => {
                     this.units = response.data.data;
+                }).catch(error => {
+                    console.error(error);
+                });
+        },
+        async getEmployeeUnit(value) {
+            await this.$axios.get(`api/v1/admin/unit/related-unit?unit_level=${value}`)
+                .then(response => {
+                    this.unitsEmployee = response.data.data;
                 }).catch(error => {
                     console.error(error);
                 });
