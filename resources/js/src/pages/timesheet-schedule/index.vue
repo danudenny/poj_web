@@ -15,7 +15,7 @@
                                     <i class="fa fa-plus"></i>&nbsp;Create Schedule
                                 </button>
                             </div>
-                            <table class="table table-striped table-bordered table-condensed">
+                            <table class="table table-striped table-bordered table-condensed wrapable-table">
                                 <thead>
                                     <tr>
                                         <th v-for="(header, index) in headers" :key="index">
@@ -262,5 +262,10 @@ table {
 
 .schedule-section:hover .action-button {
     display: block;
+}
+
+.wrapable-table {
+  height: 90%;
+  overflow-y: auto;
 }
 </style>
