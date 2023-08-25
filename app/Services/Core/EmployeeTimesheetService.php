@@ -944,6 +944,10 @@ class EmployeeTimesheetService extends BaseService {
             $startTime = Carbon::parse($data['timesheet_date'] . " " . $data['timesheet']['start_time'], $timezone);
             $endTime = Carbon::parse($data['timesheet_date'] . " " . $data['timesheet']['end_time'], $timezone);
 
+            if ($endTime->isBefore($startTime)) {
+                $endTime->addDays(1);
+            }
+
             DB::beginTransaction();
 
             $employeeTimesheetSchedule->timesheet_id = $timesheet->id;
