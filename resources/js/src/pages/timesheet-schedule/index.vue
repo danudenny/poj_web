@@ -12,13 +12,6 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-10">
-<!--                                    <div class="d-flex justify-content-start mb-2">-->
-<!--                                        <button class="btn btn-primary" @click="onChangeFilterVisibility">-->
-<!--                                            <i class="fa fa-filter"></i> &nbsp;-->
-<!--                                            <span v-if="showFilter">Hide Filter</span>-->
-<!--                                            <span v-else>Show Filter</span>-->
-<!--                                        </button>-->
-<!--                                    </div>-->
                                     <div class="row">
                                         <div class="col-md-3 mb-3">
                                             <label>Unit</label>
@@ -102,11 +95,10 @@
                                         <td v-for="day in dateRanges">
                                             <span v-if="timesheet[day] === null" class="text-danger"><i class="fa fa-times"></i></span>
                                             <div class="schedule-section" v-else>
-                                                <span class="badge badge-danger" v-if="timesheet[day].check_in_time === null">{{ timesheet[day].time }}</span>
-                                                <span class="badge badge-success" v-else>{{ timesheet[day].time }}</span>
+                                                <span :class="'badge badge-' + timesheet[day].color">{{ timesheet[day].time }}</span>
                                                 <br/>
                                                 <span class="badge badge-warning">{{ timesheet[day].unit }}</span>
-                                                <div class="action-button" v-if="timesheet[day].check_in_time === null">
+                                                <div class="action-button" v-if="timesheet[day].is_can_change">
                                                     <button class="button-icon button-warning" @click="onEditEmployeeTimesheet(timesheet[day].id)"><i data-action="view" class="fa fa-pencil"></i> </button>
                                                     <button class="button-icon button-danger" @click="onDeleteEmployeeTimesheet(timesheet[day].id)"><i data-action="view" class="fa fa-trash"></i> </button>
                                                 </div>
@@ -175,8 +167,7 @@ export default {
             this.unitPagination.name = this.selectedUnit.name
         },
         dateRange() {
-            const currentDate = new Date();
-            const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+            const lastDayOfMonth = new Date(this.selectedMonth.year, this.selectedMonth.month + 1, 0).getDate();
             this.dateRanges = Array.from({ length: lastDayOfMonth }, (_, index) => (index + 1).toString());
         },
         async fetchTimesheetData() {
@@ -200,8 +191,15 @@ export default {
                     odoo_job_id: this.selectedJob?.odoo_job_id ?? ''
 
                 }
-                await this.$axios.get(`/api/v1/admin/timesheet-schedule/schedules?unit_relation_id=${localFilter.unit_relation_id}&monthly_year=${localFilter.monthly_year}&shift_type=${localFilter.shift_type}&employee_name=${localFilter.employee_name}&employee_job_id=${localFilter.odoo_job_id}`)
+                await this.$axios.get(`/api/v1/admin/timesheet-schedule/schedules?unit_relation_id=${localFilter.unit_relation_id}&monthly_year=${localFilter.monthly_year}&shift_type=${localFilter.shift_type}&employee_name=${localFilter.employee_name}&employee_job_id=${localFilter.odoo_job_id}`,
+                    {
+                        headers: {
+                            'X-Client-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone
+                        }
+                    })
                     .then(response => {
+                        this.dateRange()
+
                         this.timesheetData = response.data.data;
                         this.headers = response.data.header;
                         this.headerAbbrvs = response.data.header_abbrv;
@@ -298,6 +296,7 @@ export default {
         },
         onMonthSelected(val) {
             this.selectedMonth = val
+            console.log("DEBUGGER::SELECTED_DATE", new Date(this.selectedMonth.year, this.selectedMonth.month + 1, 0))
             this.fetchTimesheetData()
         },
         onChangeShiftType() {

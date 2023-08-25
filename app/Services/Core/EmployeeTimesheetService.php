@@ -735,12 +735,21 @@ class EmployeeTimesheetService extends ScheduleService {
 
     public function indexSchedule(Request $request): JsonResponse
     {
+        $now = Carbon::now();
+        $currTime = Carbon::today();
+
+        if ($clientTimezone = $this->getClientTimezone()) {
+            $now->setTimezone($clientTimezone);
+            $currTime = Carbon::now($clientTimezone)->setHour(0)->setMinute(0)->setSecond(0);
+        }
+
         $query = EmployeeTimesheetSchedule::with([
                 'employee',
                 'timesheet',
                 'period',
                 'timesheet.timesheetDays'
             ])
+            ->select(['employee_timesheet_schedules.*'])
             ->groupBy('employees.id', 'employee_timesheet_schedules.id', 'employee_timesheet.id')
             ->join('employees', 'employees.id', '=', 'employee_timesheet_schedules.employee_id')
             ->join('employee_timesheet', 'employee_timesheet.id', '=', 'employee_timesheet_schedules.timesheet_id');
@@ -749,6 +758,7 @@ class EmployeeTimesheetService extends ScheduleService {
             $query->where('employees.unit_id', '=', $unitRelationID);
         }
         if ($monthlyYear = $request->query('monthly_year')) {
+            $now = Carbon::parse(sprintf("%s-01", $monthlyYear));
             $query->whereRaw("TO_CHAR(employee_timesheet_schedules.start_time::DATE, 'YYYY-mm')::TEXT = '${monthlyYear}'");
         }
         if ($shiftType = $request->query('shift_type')) {
@@ -766,7 +776,7 @@ class EmployeeTimesheetService extends ScheduleService {
          */
         $timesheetAssignments = $query->get();
 
-        $daysOfMonth = range(1, now()->daysInMonth);
+        $daysOfMonth = range(1, $now->daysInMonth);
 
         $transformedData = [];
         $rowNumber = 1;
@@ -792,12 +802,23 @@ class EmployeeTimesheetService extends ScheduleService {
 
             if ($assignment->timesheet->shift_type === 'shift') {
                 $shiftEntry = $assignment->timesheet->start_time . '-' . $assignment->timesheet->end_time;
+                $isAfterCurrTime = Carbon::parse($assignment->start_time)->isAfter($currTime);
+                $color = "success";
+
+                if (!$isAfterCurrTime && $assignment->check_in_time == null) {
+                    $color = "dark";
+                } else if ($isAfterCurrTime && $assignment->check_in_time == null) {
+                    $color = "danger";
+                }
+
                 $dailyEntries[$date] = [
                     'time' => $shiftEntry,
                     'id' => $assignment->id,
                     'check_in_time' => $assignment->check_in_time,
                     'check_out_time' => $assignment->check_out_time,
-                    'unit' => $assignment->unit->name
+                    'unit' => $assignment->unit->name,
+                    'is_can_change' => $isAfterCurrTime && $assignment->check_in_time == null,
+                    'color' => $color
                 ];
             } else {
                 if ($date >= 1 && $date <= count($daysOfMonth)) {
@@ -810,12 +831,23 @@ class EmployeeTimesheetService extends ScheduleService {
                     }
                     if ($timesheetDay) {
                         $shiftEntry = $timesheetDay->start_time . '-' . $timesheetDay->end_time;
+                        $isAfterCurrTime = Carbon::parse($assignment->start_time)->isAfter($currTime);
+                        $color = "success";
+
+                        if (!$isAfterCurrTime && $assignment->check_in_time == null) {
+                            $color = "dark";
+                        } else if ($isAfterCurrTime && $assignment->check_in_time == null) {
+                            $color = "danger";
+                        }
+
                         $dailyEntries[$date] = [
                             'time' => $shiftEntry,
                             'id' => $assignment->id,
                             'check_in_time' => $assignment->check_in_time,
                             'check_out_time' => $assignment->check_out_time,
-                            'unit' => $assignment->unit->name
+                            'unit' => $assignment->unit->name,
+                            'is_can_change' => $isAfterCurrTime && $assignment->check_in_time == null,
+                            'color' => $color
                         ];
                     }
                 }

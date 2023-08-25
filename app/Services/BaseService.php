@@ -186,4 +186,13 @@ abstract class BaseService
     protected function isRequestedRoleLevel(string $name): bool {
         return str_replace(" ", "_", strtolower($this->getRequestedRole()->name)) == $name;
     }
+
+    protected function getClientTimezone(): string|null {
+        $clientTimezone = (string) request()->header('X-Client-Timezone');
+        if ($clientTimezone == "") {
+            return null;
+        }
+
+        return $clientTimezone;
+    }
 }
