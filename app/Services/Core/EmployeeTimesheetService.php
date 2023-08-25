@@ -733,19 +733,38 @@ class EmployeeTimesheetService extends ScheduleService {
         }
     }
 
-    public function indexSchedule($request): JsonResponse
+    public function indexSchedule(Request $request): JsonResponse
     {
-        /**
-         * @var EmployeeTimesheetSchedule[] $timesheetAssignments
-         */
-        $timesheetAssignments = EmployeeTimesheetSchedule::with([
+        $query = EmployeeTimesheetSchedule::with([
                 'employee',
                 'timesheet',
                 'period',
                 'timesheet.timesheetDays'
             ])
-            ->groupBy('employee_id', 'employee_timesheet_schedules.id')
-            ->get();
+            ->groupBy('employees.id', 'employee_timesheet_schedules.id', 'employee_timesheet.id')
+            ->join('employees', 'employees.id', '=', 'employee_timesheet_schedules.employee_id')
+            ->join('employee_timesheet', 'employee_timesheet.id', '=', 'employee_timesheet_schedules.timesheet_id');
+
+        if ($unitRelationID = $request->query('unit_relation_id')) {
+            $query->where('employees.unit_id', '=', $unitRelationID);
+        }
+        if ($monthlyYear = $request->query('monthly_year')) {
+            $query->whereRaw("TO_CHAR(employee_timesheet_schedules.start_time::DATE, 'YYYY-mm')::TEXT = '${monthlyYear}'");
+        }
+        if ($shiftType = $request->query('shift_type')) {
+            $query->where('employee_timesheet.shift_type', '=', $shiftType);
+        }
+        if ($employeeName = $request->query('employee_name')) {
+            $query->whereRaw("employees.name ILIKE '%{$employeeName}%'");
+        }
+        if ($employeeJobID = $request->query('employee_job_id')) {
+            $query->where('employees.job_id', '=', $employeeJobID);
+        }
+
+        /**
+         * @var EmployeeTimesheetSchedule[] $timesheetAssignments
+         */
+        $timesheetAssignments = $query->get();
 
         $daysOfMonth = range(1, now()->daysInMonth);
 
