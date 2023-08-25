@@ -11,6 +11,7 @@ use App\Models\Period;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\BaseService;
+use App\Services\ScheduleService;
 use Carbon\Carbon;
 use DateTime;
 use Exception;
@@ -25,7 +26,7 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
-class EmployeeTimesheetService extends BaseService {
+class EmployeeTimesheetService extends ScheduleService {
     /**
      * @throws NotFoundExceptionInterface
      * @throws ContainerExceptionInterface
@@ -329,13 +330,25 @@ class EmployeeTimesheetService extends BaseService {
                 }
 
                 if ($timesheetExists->shift_type == 'shift') {
+                    $parsedUTCStartTime = $parsedStartTime->setTimezone('UTC');
+                    $parsedUTCEndTime = $parsedEndTime->setTimezone('UTC');
+
+                    $isExistActiveSchedule = $this->isEmployeeActiveScheduleExist([$employeeId], $parsedUTCStartTime->format('Y-m-d H:i:s'), $parsedUTCEndTime->format('Y-m-d H:i:s'));
+                    if ($isExistActiveSchedule) {
+                        /**
+                         * @var Employee $employee
+                         */
+                        $employee = Employee::query()->where('id', '=', $employeeId)->first();
+                        throw new Exception(sprintf("%s has active schedule", $employee->name));
+                    }
+
                     $schedule = new EmployeeTimesheetSchedule();
                     $schedule->employee_id = $employeeId;
                     $schedule->timesheet_id = $request->timesheet_id;
                     $schedule->period_id = $request->period_id;
                     $schedule->date = $request->date;
-                    $schedule->start_time = $parsedStartTime->setTimezone('UTC');
-                    $schedule->end_time = $parsedEndTime->setTimezone('UTC');
+                    $schedule->start_time = $parsedUTCStartTime;
+                    $schedule->end_time = $parsedUTCEndTime;
                     $schedule->early_buffer = $unit->early_buffer ?? 0;
                     $schedule->late_buffer = $unit->late_buffer ?? 0;
                     $schedule->timezone = $timezone;
@@ -353,21 +366,32 @@ class EmployeeTimesheetService extends BaseService {
                     foreach ($timesheetExists->timesheetDays as $timesheet) {
                         $dayIndex = array_search($timesheet->day, ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
 
-
                         if ($dayIndex !== false) {
                             $dayOffset = ($dayIndex + 7 - $startDate->dayOfWeek) % 7;
                             $currentDate = $startDate->copy()->addDays($dayOffset);
                             while ($currentDate <= $lastDayOfMonth) {
-                                $parsedStartTime = Carbon::parse(sprintf("%s-%s-%s %s:00", $currentDate->year, $currentDate->month, $currentDate->day, $timesheet->start_time), $timezone);
-                                $parsedEndTime = Carbon::parse(sprintf("%s-%s-%s %s:00", $currentDate->year, $currentDate->month, $currentDate->day, $timesheet->end_time), $timezone);
+                                $parsedStartTime = Carbon::parse(sprintf("%s-%s-%s %s:00", $currentDate->year, $currentDate->month, $currentDate->day, $timesheet->start_time), $timezone)->setTimezone('UTC');
+                                $parsedEndTime = Carbon::parse(sprintf("%s-%s-%s %s:00", $currentDate->year, $currentDate->month, $currentDate->day, $timesheet->end_time), $timezone)->setTimezone('UTC');
+                                if ($parsedEndTime->isBefore($parsedStartTime)) {
+                                    $parsedEndTime->addDays(1);
+                                }
+
+                                $isExistActiveSchedule = $this->isEmployeeActiveScheduleExist([$employeeId], $parsedStartTime->format('Y-m-d H:i:s'), $parsedEndTime->format('Y-m-d H:i:s'));
+                                if ($isExistActiveSchedule) {
+                                    /**
+                                     * @var Employee $employee
+                                     */
+                                    $employee = Employee::query()->where('id', '=', $employeeId)->first();
+                                    throw new Exception(sprintf("%s has active schedule", $employee->name));
+                                }
 
                                 $schedule = new EmployeeTimesheetSchedule();
                                 $schedule->employee_id = $employeeId;
                                 $schedule->timesheet_id = $request->timesheet_id;
                                 $schedule->period_id = $request->period_id;
                                 $schedule->date = $currentDate->format('d');
-                                $schedule->start_time = $parsedStartTime->setTimezone('UTC');
-                                $schedule->end_time = $parsedEndTime->setTimezone('UTC');
+                                $schedule->start_time = $parsedStartTime;
+                                $schedule->end_time = $parsedEndTime;
                                 $schedule->early_buffer = $unit->early_buffer ?? 0;
                                 $schedule->late_buffer = $unit->late_buffer ?? 0;
                                 $schedule->timezone = $timezone;

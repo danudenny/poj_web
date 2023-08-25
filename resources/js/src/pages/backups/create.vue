@@ -43,13 +43,6 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="mt-2">
-                                            <label for="status">Jenis Request:</label>
-                                            <select id="status" name="request-type" class="form-select" v-model="backup.request_type" required>
-                                                <option value="assignment" :selected="backup.request_type === 'assignment' ? 'selected' : ''">Assignment</option>
-                                                <option value="request" :selected="backup.request_type === 'request' ? 'selected' : ''">Request</option>
-                                            </select>
-                                        </div>
-                                        <div class="mt-2">
                                             <label for="status">Kategori Backup:</label>
                                             <select id="status" name="status" class="form-select" v-model="backup.shift_type" @change="onChangeBackupType" required>
                                                 <option value="Shift" :selected="backup.shift_type === 'Shift' ? 'selected' : ''">Shift</option>
@@ -132,8 +125,15 @@
                                 <br/>
                                 <div ref="employeeTable"></div>
                                 <br/>
-                                <button class="btn btn-primary">Simpan</button> &nbsp;
-                                <button class="btn btn-secondary" @click="$router.go(-1)">Back</button>&nbsp;
+                                <button class="btn btn-secondary" @click="$router.go(-1)"><i data-action="view" class="fa fa-arrow-left"></i> Back</button>&nbsp;
+                                <button class="btn btn-primary" :disabled="this.isOnProcess">
+                                    <span v-if="this.isOnProcess">
+                                        ...
+                                    </span>
+                                    <span v-else>
+                                        <i data-action="view" class="fa fa-save"></i> Simpan
+                                    </span>
+                                </button> &nbsp;
                             </form>
                         </div>
                     </div>
@@ -165,6 +165,7 @@ export default {
     },
     data() {
         return {
+            isOnProcess: false,
             backup: {
                 unit_relation_id:null,
                 start_date: null,
@@ -176,7 +177,7 @@ export default {
                 dates: {},
                 employee_ids: [],
                 file_url: null,
-                request_type: 'assigned',
+                request_type: 'assignment',
                 requestor_unit_id: 0
             },
             selectedDateTimesheet: null,
@@ -559,12 +560,15 @@ export default {
                 });
         },
         onSubmitForm() {
+            this.isOnProcess = true
             this.$axios.post(`/api/v1/admin/backup/create`, this.backup)
                 .then(response => {
                     useToast().success("Success to create data", { position: 'bottom-right' });
+                    this.isOnProcess = false;
                     this.$router.push({name: 'Backup', params: {}});
                 })
                 .catch(error => {
+                    this.isOnProcess = false;
                     if(error.response.data.message instanceof Object) {
                         for (const key in error.response.data.message) {
                             useToast().error(error.response.data.message[key][0], { position: 'bottom-right' });

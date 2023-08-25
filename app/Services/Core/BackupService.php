@@ -29,6 +29,7 @@ use App\Models\Unit;
 use App\Models\User;
 use App\Notifications\AssignBackupRequestNotification;
 use App\Services\BaseService;
+use App\Services\ScheduleService;
 use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
@@ -40,7 +41,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
-class BackupService extends BaseService
+class BackupService extends ScheduleService
 {
     private ApprovalService $approvalService;
 
@@ -295,57 +296,15 @@ class BackupService extends BaseService
 
             foreach ($backupDates as $backupDateData) {
                 foreach ($employeeIDs as $employeeID) {
-                    $isExistOvertime = OvertimeEmployee::query()
-                        ->join('overtime_dates', 'overtime_dates.id', '=', 'overtime_employees.overtime_date_id')
-                        ->join('overtimes', 'overtimes.id', '=', 'overtime_dates.overtime_id')
-                        ->where('overtime_employees.employee_id', '=', $employeeID)
-                        ->where('overtimes.last_status', '!=', OvertimeHistory::TypeRejected)
-                        ->where(function(Builder $builder) use ($backupDateData) {
-                            $builder->orWhere(function(Builder $builder) use ($backupDateData) {
-                                $builder->where( 'overtime_dates.start_time', '<=', $backupDateData['start_time'])
-                                    ->where('overtime_dates.end_time', '>=', $backupDateData['start_time']);
-                            })->orWhere(function(Builder $builder) use ($backupDateData) {
-                                $builder->where('overtime_dates.start_time', '<=', $backupDateData['end_time'])
-                                    ->where('overtime_dates.end_time', '>=', $backupDateData['end_time']);
-                            });
-                        })
-                        ->exists();
-                    if ($isExistOvertime) {
+                    $isExist = $this->isEmployeeActiveScheduleExist([$employeeID], $backupDateData['start_time'], $backupDateData['end_time']);
+                    if ($isExist) {
                         /**
                          * @var Employee $employee
                          */
                         $employee = Employee::query()->where('id', '=', $employeeID)->first();
-
                         return response()->json([
                             'status' => false,
-                            'message' => sprintf("%s has active overtime in %s", $employee->name, $backupDateData['date']),
-                        ], ResponseAlias::HTTP_BAD_REQUEST);
-                    }
-
-                    $isExistBackup = BackupEmployeeTime::query()
-                        ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
-                        ->join('backups', 'backups.id', '=', 'backup_times.backup_id')
-                        ->where('status', '!=', Backup::StatusRejected)
-                        ->where('backup_employee_times.employee_id', '=', $employeeID)
-                        ->where(function(Builder $builder) use ($backupDateData) {
-                            $builder->orWhere(function(Builder $builder) use ($backupDateData) {
-                                $builder->where( 'backup_times.start_time', '<=', $backupDateData['start_time'])
-                                    ->where('backup_times.end_time', '>=', $backupDateData['start_time']);
-                            })->orWhere(function(Builder $builder) use ($backupDateData) {
-                                $builder->where('backup_times.start_time', '<=', $backupDateData['end_time'])
-                                    ->where('backup_times.end_time', '>=', $backupDateData['end_time']);
-                            });
-                        })
-                        ->exists();
-                    if ($isExistBackup) {
-                        /**
-                         * @var Employee $employee
-                         */
-                        $employee = Employee::query()->where('id', '=', $employeeID)->first();
-
-                        return response()->json([
-                            'status' => false,
-                            'message' => sprintf("%s has active backup in %s", $employee->name, $backupDateData['date']),
+                            'message' => sprintf("%s has active schedule at %s", $employee->name, $backupDateData['date'])
                         ], ResponseAlias::HTTP_BAD_REQUEST);
                     }
                 }
