@@ -15,15 +15,14 @@
                                     <i class="fa fa-plus"></i>&nbsp;Create Schedule
                                 </button>
                             </div>
-                            <table class="table table-striped table-bordered table-condensed wrapable-table">
-                                <thead>
+                            <table class="table table-striped table-bordered table-condensed wrapable-table table-sticky">
+                                <thead class="table-header-sticky">
                                     <tr>
-                                        <th v-for="(header, index) in headers" :key="index">
+                                        <th v-for="(header, index) in headers" :key="index" :rowspan="index < 4 ? 2 : 1" :class="header === 'Employee Name' ? 'column-sticky-table' : ''">
                                             {{ header }}
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th colspan="4"></th>
                                         <th v-for="(header, index) in headerAbbrvs" :key="index" style="font-size:10px">
                                             {{ header.substring(0, 3) }}
                                         </th>
@@ -33,7 +32,7 @@
                                 <tbody>
                                     <tr v-for="(timesheet, index) in timesheetData" :key="index" class="text-center">
                                         <td>{{ index + 1 }}</td>
-                                        <td>{{ timesheet.employee_name }}</td>
+                                        <td class="column-sticky-table">{{ timesheet.employee_name }}</td>
                                         <td>{{ timesheet.unit }}</td>
                                         <td>{{ timesheet.job }}</td>
                                         <td v-for="day in dateRanges">
@@ -267,5 +266,21 @@ table {
 .wrapable-table {
   height: 90%;
   overflow-y: auto;
+}
+
+.table-sticky {
+    position: relative;
+}
+
+.table-header-sticky {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.column-sticky-table {
+    position: sticky;
+    left: 0;
+    z-index: 0;
 }
 </style>
