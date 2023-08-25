@@ -56,7 +56,7 @@
                       <select v-model="timesheet_id" class="form-control" >
                         <option value="null">Select Timesheet</option>
                         <option :value="item.id" v-for="item in timesheets">{{item.name}}
-                          ( {{item.start_time}} - {{item.end_time || 'Non Shift'}} )
+                          ( {{item.start_time}} - {{item.end_time}} | {{ item.shift_type }} )
                         </option>
                       </select>
                     </div>
@@ -345,7 +345,8 @@ export default {
                 id: value.id,
                 name: value.name,
                 start_time: day.start_time,
-                end_time: day.end_time
+                end_time: day.end_time,
+                shift_type: value.shift_type === 'non_shift' ? 'Non Shift' : 'Shift',
               })
             }
           })
@@ -354,7 +355,8 @@ export default {
             id: value.id,
             name: value.name,
             start_time: value.start_time,
-            end_time: value.end_time
+            end_time: value.end_time,
+            shift_type: value.shift_type === 'non_shift' ? 'Non Shift' : 'Shift',
           })
         }
       })
