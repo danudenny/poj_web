@@ -82,6 +82,18 @@ export default {
                         headerHozAlign: 'center'
                     },
                     {
+                        title: 'Employee Name',
+                        field: 'employee.name',
+                        headerFilter:"input",
+                        headerHozAlign: 'center'
+                    },
+                    {
+                        title: 'Unit Name',
+                        field: 'employee.last_unit.name',
+                        headerFilter:"input",
+                        headerHozAlign: 'center'
+                    },
+                    {
                         title: 'Title',
                         field: 'title',
                         headerFilter:"input",

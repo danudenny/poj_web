@@ -41,7 +41,6 @@ class EmployeeAttendanceService extends BaseService
     public function index(Request $request): JsonResponse
     {
         $auth = Auth::user();
-        $roles = $request->header('X-Selected-Role');
         try {
             $attendances = EmployeeAttendance::query();
             $attendancesData = [];
@@ -53,12 +52,12 @@ class EmployeeAttendanceService extends BaseService
                 });
             });
 
-            if ($roles === Role::RoleSuperAdministrator) {
+            if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
                 $attendancesData = $attendances->paginate($request->get('limit', 10));
-            } else if ($roles === Role::RoleStaff) {
+            } else if ($this->isRequestedRoleLevel(Role::RoleStaff)) {
                 $attendancesData = $attendances->where('employee_id', Auth::user()->employee_id)
                     ->paginate($request->get('limit', 10));
-            } else if ($roles === Role::RoleAdmin) {
+            } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
                 $empUnit = $auth->employee->getRelatedUnit();
                 $lastUnit = $auth->employee->getLastUnit();
                 $empUnit[] = $lastUnit;

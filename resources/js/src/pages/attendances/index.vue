@@ -62,28 +62,9 @@ export default {
             const seconds = String(date.getSeconds()).padStart(2, '0');
             return `${year}-${month}-${day}`;
         },
-        getAttendances() {
-            if (this.date) {
-                this.filter.check_in = this.date[0]
-                this.filter.check_out = this.date[1]
-            }
-
-            if (this.filter.check_in && this.filter.check_out) {
-                this.formattedCheckIn = this.formatDate(this.filter.check_in)
-                this.formattedCheckOut = this.formatDate(this.filter.check_out)
-            }
-
-            this.$axios.get(`/api/v1/admin/attendance?name=${this.filter.name}&check_in=${this.formattedCheckIn}&check_out=${this.formattedCheckOut}&checkin_type=${this.filter.location}`)
-                .then(response => {
-                    this.attendances = response.data.data
-                })
-                .catch(error => {
-                    console.log(error)
-                })
-        },
         initializeAttendanceTable() {
             const ls = localStorage.getItem('my_app_token')
-            const role = localStorage.getItem('USER_ROLES')
+            const role = JSON.parse(localStorage.getItem('USER_ROLES'))
             this.table = new Tabulator(this.$refs.attendanceTable, {
                 paginationCounter:"rows",
                 ajaxURL: '/api/v1/admin/attendance',
