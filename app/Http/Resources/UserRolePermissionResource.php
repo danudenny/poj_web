@@ -90,20 +90,27 @@ class UserRolePermissionResource extends JsonResource
             });
         })->collapse()->unique()->values();
 
+        /**
+         * @var Employee $employee
+         */
+        $employee = $this->employee;
         $lastUnit = $this->employee->last_unit;
-	    $job = $lastUnit->jobs->map(function ($job) use ($lastUnit) {
-            $data = [
-                'is_camera' => $job->pivot->is_camera,
-                'is_upload' => $job->pivot->is_upload,
-                'is_reporting' => $job->pivot->is_mandatory_reporting,
-                'total_reporting' => $job->pivot->total_normal,
-                'total_normal' => $job->pivot->total_normal,
-                'total_backup' => $job->pivot->total_backup,
-                'total_overtime' => $job->pivot->total_overtime,
-            ];
+	    $jobs = $lastUnit->jobs;
+        $listJobs = [];
 
-            return array_filter($data, fn ($value) => !is_null($value) && $value !== '');
-        });
+        foreach ($jobs as $job) {
+            if ($job->odoo_job_id === $employee->job_id) {
+                $listJobs[] = [
+                    'is_camera' => $job->pivot->is_camera,
+                    'is_upload' => $job->pivot->is_upload,
+                    'is_reporting' => $job->pivot->is_mandatory_reporting,
+                    'total_reporting' => $job->pivot->total_normal,
+                    'total_normal' => $job->pivot->total_normal,
+                    'total_backup' => $job->pivot->total_backup,
+                    'total_overtime' => $job->pivot->total_overtime,
+                ];
+            }
+        }
 
         /**
          * @var Employee $employee
@@ -155,7 +162,7 @@ class UserRolePermissionResource extends JsonResource
             'time_schedules' => $timesheet,
             'corporate' => $this->employee->corporate,
             'job' => $this->employee->job,
-            'misc' => array_filter($job->all()),
+            'misc' => $listJobs,
             'active_units' => $activeAdminUnit
         ];
     }
