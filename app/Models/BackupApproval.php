@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Relations:
  * @property-read Backup $backup
  * @property-read User $user
+ * @property-read Employee $employee
  */
 class BackupApproval extends Model
 {
@@ -57,5 +58,9 @@ class BackupApproval extends Model
      */
     public function User(): BelongsTo {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function employee() {
+        return $this->belongsTo(Employee::class, 'employee_id');
     }
 }

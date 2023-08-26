@@ -128,6 +128,8 @@ export default createStore({
       setCurrentRole(state, data) {
           state.currentRole = data
           localStorage.setItem("USER_ROLES", JSON.stringify(data));
+
+          axios.defaults.headers['X-Selected-Role'] = data
       },
       clearToken(state){
         state.token = null;

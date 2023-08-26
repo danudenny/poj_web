@@ -6,11 +6,14 @@ use App\Models\Employee;
 use App\Models\Role;
 use App\Models\Unit;
 use App\Models\UnitReporting;
+use App\Models\User;
 use App\Models\WorkReporting;
 use App\Services\BaseService;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
@@ -33,52 +36,54 @@ class WorkReportingService extends BaseService
         return $bottomData;
     }
 
-    public function index($request): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         try {
-            $roles = $this->getRequestedRole();
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
 
-            $empData = Employee::with(['kanwil', 'area', 'cabang', 'outlet'])
-                ->find(auth()->user()->employee_id);
-
-            $decodedEmpData = json_decode($empData, true);
-            $filteredUnitData = Arr::only($decodedEmpData, ['kanwil', 'area', 'cabang', 'outlet']);
-            $empUnit = $this->getLastUnit($filteredUnitData);
-            $workReporting = [];
+            $unitRelationID = $request->get('unit_relation_id');
+            $workReporting = WorkReporting::with('employee');
+            $workReporting->join('employees', 'employees.id', '=', 'work_reportings.employee_id');
+            $workReporting->select(['work_reportings.*']);
 
             if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
-                $workReporting = WorkReporting::with('employee');
+
             } elseif ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
-                $workReporting = WorkReporting::with('employee');
-                if ($empUnit['unit_level'] === 3) {
-                    $workReporting->whereHas('employee', function ($query) use ($empUnit) {
-                        $query->where('corporate_id', $empUnit['relation_id']);
-                    });
-                } elseif ($empUnit['unit_level'] === 4) {
-                    $workReporting->whereHas('employee', function ($query) use ($empUnit) {
-                        $query->where('kanwil_id', $empUnit['relation_id']);
-                    });
-                } elseif ($empUnit['unit_level'] === 5) {
-                    $workReporting->whereHas('employee', function ($query) use ($empUnit) {
-                        $query->where('area_id', $empUnit['relation_id']);
-                    });
-                } elseif ($empUnit['unit_level'] === 6) {
-                    $workReporting->whereHas('employee', function ($query) use ($empUnit) {
-                        $query->where('cabang_id', $empUnit['relation_id']);
-                    });
-                } elseif ($empUnit['unit_level'] === 7) {
-                    $workReporting->whereHas('employee', function ($query) use ($empUnit) {
-                        $query->where('outlet_id', $empUnit['relation_id']);
-                    });
+                if (!$unitRelationID) {
+                    $defaultUnitRelationID = $user->employee->unit_id;
+
+                    if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                        $defaultUnitRelationID = $requestUnitRelationID;
+                    }
+
+                    $unitRelationID = $defaultUnitRelationID;
                 }
-            } elseif ($this->isRequestedRoleLevel(Role::RoleStaff)) {
-                $workReporting = WorkReporting::query()->where('employee_id', auth()->user()->employee_id);
+            } else if ($this->isRequestedRoleLevel(Role::RoleStaff)) {
+                $workReporting->where('employee_id', $user->employee_id);
             }
+
+            if ($unitRelationID) {
+                $workReporting->where(function (Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere(function(Builder $builder) use ($unitRelationID) {
+                        $builder->orWhere('employees.outlet_id', '=', $unitRelationID)
+                            ->orWhere('employees.cabang_id', '=', $unitRelationID)
+                            ->orWhere('employees.area_id', '=', $unitRelationID)
+                            ->orWhere('employees.kanwil_id', '=', $unitRelationID)
+                            ->orWhere('employees.corporate_id', '=', $unitRelationID);
+                    });
+                });
+            }
+
+            $workReporting->groupBy('work_reportings.id');
+            $workReporting->orderBy('work_reportings.id', 'DESC');
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Successfully fetch work reporting data',
-                'data' => $workReporting->paginate($request->input('per_page') ??10)
+                'data' => $this->list($workReporting, $request)
             ]);
         } catch (Exception $e) {
             return response()->json([

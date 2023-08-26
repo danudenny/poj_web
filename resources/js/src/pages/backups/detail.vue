@@ -72,7 +72,7 @@
                     </div>
                 </div>
                 <div class="card-footer text-end">
-                    <button class="btn btn-secondary" @click="$router.push('/attendance/backup')">Back</button>&nbsp;
+                    <button class="btn btn-secondary" @click="$router.go(-1)">Back</button>&nbsp;
                     <div
                         class="btn btn-secondary button-info"
                         data-bs-toggle="modal"

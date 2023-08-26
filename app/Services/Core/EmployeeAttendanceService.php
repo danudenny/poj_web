@@ -40,45 +40,61 @@ class EmployeeAttendanceService extends BaseService
     }
     public function index(Request $request): JsonResponse
     {
-        $auth = Auth::user();
-        try {
-            $attendances = EmployeeAttendance::query();
-            $attendancesData = [];
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
 
+        try {
+
+            $unitRelationID = $request->get('unit_relation_id');
+
+            $attendances = EmployeeAttendance::query();
             $attendances->with(['employee', 'employee.kanwil', 'employee.area', 'employee.cabang', 'employee.outlet', 'employee.employeeDetail', 'employee.employeeDetail.employeeTimesheet', 'employeeAttendanceHistory']);
+            $attendances->join('employees', 'employees.id', '=', 'employee_attendances.employee_id');
+
+            if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+            } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
+                if (!$unitRelationID) {
+                    $defaultUnitRelationID = $user->employee->unit_id;
+
+                    if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                        $defaultUnitRelationID = $requestUnitRelationID;
+                    }
+
+                    $unitRelationID = $defaultUnitRelationID;
+                }
+            } else {
+                $attendances->where('employee_id', '=', $user->employee_id);
+            }
+
+            if ($unitRelationID) {
+                $attendances->where(function (Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere(function(Builder $builder) use ($unitRelationID) {
+                        $builder->orWhere('employees.outlet_id', '=', $unitRelationID)
+                            ->orWhere('employees.cabang_id', '=', $unitRelationID)
+                            ->orWhere('employees.area_id', '=', $unitRelationID)
+                            ->orWhere('employees.kanwil_id', '=', $unitRelationID)
+                            ->orWhere('employees.corporate_id', '=', $unitRelationID);
+                    });
+                });
+            }
+
             $attendances->when($request->name, function ($query) use ($request) {
                 $query->whereHas('employee', function (Builder $query) use ($request) {
                     $query->whereRaw('LOWER(name) LIKE ?', [strtolower('%' . request()->query('name') . '%')]);
                 });
             });
 
-            if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
-                $attendancesData = $attendances->paginate($request->get('limit', 10));
-            } else if ($this->isRequestedRoleLevel(Role::RoleStaff)) {
-                $attendancesData = $attendances->where('employee_id', Auth::user()->employee_id)
-                    ->paginate($request->get('limit', 10));
-            } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
-                $empUnit = $auth->employee->getRelatedUnit();
-                $lastUnit = $auth->employee->getLastUnit();
-                $empUnit[] = $lastUnit;
-                $flatUnit = UnitHelper::flattenUnits($empUnit);
-                $relationIds = array_column($flatUnit, 'relation_id');
-                $attendancesData = $attendances->whereHas('employee', function (Builder $query) use ($relationIds) {
-                    $query->whereIn('corporate_id', $relationIds)
-                        ->orWhereIn('kanwil_id', $relationIds)
-                        ->orWhereIn('area_id', $relationIds)
-                        ->orWhereIn('cabang_id', $relationIds)
-                        ->orWhereIn('outlet_id', $relationIds);
-                })->paginate(10);
-            } else {
-                $attendancesData = $attendances->where('employee_id', Auth::user()->employee_id)
-                    ->paginate($request->get('limit', 10));
-            }
+            $attendances->groupBy('employee_attendances.id')
+                ->select(['employee_attendances.*'])
+                ->orderBy('employee_attendances.id', 'DESC');
 
             return response()->json([
                 'status' => true,
                 'message' => 'Success get data!',
-                'data' => $attendancesData
+                'data' => $this->list($attendances, $request)
             ]);
         } catch (Exception $e) {
             return response()->json([

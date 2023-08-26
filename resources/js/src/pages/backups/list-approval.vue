@@ -55,7 +55,7 @@ export default {
         initializeDepartmentTable() {
             const table = new Tabulator(this.$refs.backupTable, {
                 data: this.backups,
-                layout: 'fitColumns',
+                layout: 'fitData',
                 columns: [
                     {
                         title: 'No',
@@ -69,9 +69,27 @@ export default {
                         headerFilter:"input"
                     },
                     {
+                        title: 'Approver Name',
+                        field: 'employee.name',
+                        headerFilter:"input"
+                    },
+                    {
                         title: 'Status',
                         field: 'real_status',
-                        headerFilter:"input"
+                        headerFilter:"input",
+                        formatter: function (cell, formatterParams, onRendered) {
+                            let val = cell.getValue()
+
+                            if (val === 'approved') {
+                                return `<span class="badge badge-success">Approved</span>`
+                            } else if (val === 'rejected') {
+                                return `<span class="badge badge-danger">Rejected</span>`
+                            } else if (val === 'pending') {
+                                return `<span class="badge badge-info">Pending</span>`
+                            } else {
+                                return `<span class="badge badge-warning">${val}</span>`
+                            }
+                        },
                     },
                     {
                         title: 'Request Type',
@@ -84,14 +102,26 @@ export default {
                         headerFilter:"input"
                     },
                     {
-                        title: 'Source Unit',
-                        field: 'backup.source_unit.name',
-                        headerFilter:"input"
-                    },
-                    {
-                        title: 'Destination Unit',
-                        field: 'backup.unit.name',
-                        headerFilter:"input"
+                        title:"Assigned",
+                        headerHozAlign:"center",
+                        columns:[
+                            {
+                                title:"From",
+                                field:"backup.source_unit.name",
+                                headerHozAlign:"center",
+                                formatter: function (cell, formatterParams, onRendered) {
+                                    return `<span><i class="fa fa-arrow-left text-warning"></i>&nbsp; <span class="badge badge-warning">${cell.getValue()}</span></span>`;
+                                },
+                            },
+                            {
+                                title:"To",
+                                field:"backup.unit.name",
+                                headerHozAlign:"center",
+                                formatter: function (cell, formatterParams, onRendered) {
+                                    return `<span><span class="badge badge-success">${cell.getValue()}</span> &nbsp; <i class="fa fa-arrow-right text-success"></i></span>`;
+                                },
+                            },
+                        ],
                     },
                     {
                         title: 'Start Date',
@@ -106,6 +136,9 @@ export default {
                     {
                         title: 'Duration (in Days)',
                         field: 'backup.duration',
+                        formatter: function (cell, formatterParams, onRendered) {
+                            return `<span class="badge badge-success">${cell.getValue()}</span>`;
+                        },
                     },
                     {
                         title: 'Created At',

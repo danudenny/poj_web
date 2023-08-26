@@ -70,21 +70,11 @@ class User extends Authenticatable
 
     public function getIsInRepresentativeUnitAttribute(): bool
     {
-        $employee = $this->employee;
-
-        return Unit::query()
-            ->where('relation_id', '=', $employee->default_operating_unit_id)
-            ->whereIn('unit_level', [Unit::UnitLevelOperatingUnit])
-            ->exists();
+        return false;
     }
 
     public function getIsInCentralUnitAttribute() {
-        $employee = $this->employee;
-
-        return Unit::query()
-            ->where('relation_id', '=', $employee->default_operating_unit_id)
-            ->whereIn('unit_level', [Unit::UnitLevelPOJ])
-            ->exists();
+        return false;
     }
 
     /**

@@ -85,6 +85,9 @@ export default {
                         last_page: response.data.last_page,
                     }
                 },
+                ajaxURLGenerator: (url, config, params) => {
+                    return `${url}?page=${params.page}&per_page=${params.size}`
+                },
                 layout: 'fitDataStretch',
                 columns: [
                     {

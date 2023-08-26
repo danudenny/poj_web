@@ -57,22 +57,52 @@ class BackupService extends ScheduleService
          */
         $user = $request->user();
 
-        $backups = Backup::query();
-        if ($user->isHighestRole(Role::RoleStaff)) {
-            $backups->where('backups.requestor_employee_id', '=', $user->employee_id);
-        } else if ($user->isHighestRole(Role::RoleAdmin)) {
-            $backups->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'backups.requestor_employee_id');
+        $unitRelationID = $request->get('unit_relation_id');
+        $employeeID = $request->get('employee_id');
 
-            $backups->where(function(Builder $builder) use ($user) {
-                $lastUnitID = $user->employee->getLastUnitID();
-                if ($requestUnitID = $this->getRequestedUnitID()) {
-                    $lastUnitID = $requestUnitID;
+        $backups = Backup::query();
+        $backups->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'backups.requestor_employee_id');
+        $backups->join('backup_employees', 'backup_employees.backup_id', '=', 'backups.id');
+        $backups->join('employees AS backupEmployee', 'backupEmployee.id', '=', 'backup_employees.employee_id');
+
+        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+        } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
+            if (!$unitRelationID) {
+                $defaultUnitRelationID = $user->employee->unit_id;
+
+                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                    $defaultUnitRelationID = $requestUnitRelationID;
                 }
 
-                $builder->orWhere('backups.unit_id', '=', $lastUnitID)
-                    ->orWhere('backups.source_unit_relation_id', '=', $lastUnitID)
-                    ->orWhere('backups.requestor_employee_id', '=', $user->employee_id);
-            });
+                $unitRelationID = $defaultUnitRelationID;
+            }
+        } else {
+            $employeeID = $user->employee_id;
+        }
+
+        if ($unitRelationID) {
+            $backups->orWhere('backups.unit_id', '=', $unitRelationID)
+                ->orWhere('backups.source_unit_relation_id', '=', $unitRelationID)
+                ->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('backupEmployee.outlet_id', '=', $unitRelationID)
+                        ->orWhere('backupEmployee.cabang_id', '=', $unitRelationID)
+                        ->orWhere('backupEmployee.area_id', '=', $unitRelationID)
+                        ->orWhere('backupEmployee.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('backupEmployee.corporate_id', '=', $unitRelationID);
+                })
+                ->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('reqEmployee.outlet_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.cabang_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.area_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.corporate_id', '=', $unitRelationID);
+                });
+        }
+
+        if ($employeeID) {
+            $backups->orWhere('reqEmployee.id', '=', $employeeID)
+                ->orWhere('backupEmployee.id', '=', $employeeID);
         }
 
         $backups->when($request->filled('status'), function (Builder $builder) use ($request) {
@@ -130,32 +160,45 @@ class BackupService extends ScheduleService
          */
         $user = $request->user();
 
+        $unitRelationID = $request->get('unit_relation_id');
+
         $query = BackupEmployeeTime::query()->with(['backupTime.backup', 'employee:employees.id,name'])
             ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
             ->join('backups', 'backups.id', '=', 'backup_times.backup_id')
-            ->where('backups.status', '!=', BackupApproval::StatusRejected)
-            ->orderBy('backup_times.start_time', 'ASC')
-            ->select(['backup_employee_times.*']);
+            ->join('employees', 'employees.id', '=', 'backup_employee_times.employee_id')
+            ->where('backups.status', '!=', BackupApproval::StatusRejected);
 
-        if ($user->isHighestRole(Role::RoleStaff)) {
-            $query->where('employee_id', '=', $user->employee_id);
-        } else if ($user->isHighestRole(Role::RoleAdmin)) {
-            $query->join('employees', 'employees.id', '=', 'backup_employee_times.employee_id');
-            $query->where(function(Builder $builder) use ($user) {
-                $lastUnitID = $user->employee->getLastUnitID();
-                if ($requestUnitID = $this->getRequestedUnitID()) {
-                    $lastUnitID = $requestUnitID;
+        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+        } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
+            if (!$unitRelationID) {
+                $defaultUnitRelationID = $user->employee->unit_id;
+
+                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                    $defaultUnitRelationID = $requestUnitRelationID;
                 }
 
-                $builder->where(function(Builder $builder) use ($lastUnitID) {
-                    $builder->orWhere('employees.outlet_id', '=', $lastUnitID)
-                        ->orWhere('employees.cabang_id', '=', $lastUnitID)
-                        ->orWhere('employees.area_id', '=', $lastUnitID)
-                        ->orWhere('employees.kanwil_id', '=', $lastUnitID)
-                        ->orWhere('employees.corporate_id', '=', $lastUnitID);
+                $unitRelationID = $defaultUnitRelationID;
+            }
+        } else {
+            $query->where('backup_employee_times.employee_id', '=', $user->employee_id);
+        }
+
+        if ($unitRelationID) {
+            $query->where(function (Builder $builder) use ($unitRelationID) {
+                $builder->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('employees.outlet_id', '=', $unitRelationID)
+                        ->orWhere('employees.cabang_id', '=', $unitRelationID)
+                        ->orWhere('employees.area_id', '=', $unitRelationID)
+                        ->orWhere('employees.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('employees.corporate_id', '=', $unitRelationID);
                 });
             });
         }
+
+        $query->orderBy('backup_times.start_time', 'ASC')
+            ->groupBy('backup_employee_times.id', 'backup_times.start_time')
+            ->select(['backup_employee_times.*']);
 
         return response()->json([
             'status' => 'success',
@@ -170,13 +213,66 @@ class BackupService extends ScheduleService
          */
         $user = $request->user();
 
-        $query = BackupApproval::query()->with(['backup', 'backup.unit:units.relation_id,name', 'backup.job:jobs.odoo_job_id,name', 'backup.requestorEmployee:employees.id,name', 'backup.sourceUnit:units.relation_id,name'])
-            ->where('employee_id', '=', $user->employee_id)
-            ->orderBy('id', 'DESC');
+        $unitRelationID = $request->get('unit_relation_id');
+
+        $query = BackupApproval::query()->with(['backup', 'employee', 'backup.unit:units.relation_id,name', 'backup.job:jobs.odoo_job_id,name', 'backup.requestorEmployee:employees.id,name', 'backup.sourceUnit:units.relation_id,name'])
+            ->where('backup_approvals.employee_id', '=', $user->employee_id);
+
+        $query->join('backups', 'backups.id', '=', 'backup_approvals.backup_id');
+        $query->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'backups.requestor_employee_id');
+        $query->join('backup_employees', 'backup_employees.backup_id', '=', 'backups.id');
+        $query->join('employees AS backupEmployee', 'backupEmployee.id', '=', 'backup_employees.employee_id');
+        $query->join('employees AS approvalEmployee', 'approvalEmployee.id', '=', 'backup_approvals.employee_id');
+
+        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+        } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
+            if (!$unitRelationID) {
+                $defaultUnitRelationID = $user->employee->unit_id;
+
+                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                    $defaultUnitRelationID = $requestUnitRelationID;
+                }
+
+                $unitRelationID = $defaultUnitRelationID;
+            }
+        } else {
+            $query->where('backup_approvals.employee_id', '=', $user->employee_id);
+        }
+
+        if ($unitRelationID) {
+            $query->orWhere('backups.unit_id', '=', $unitRelationID)
+                ->orWhere('backups.source_unit_relation_id', '=', $unitRelationID)
+                ->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('backupEmployee.outlet_id', '=', $unitRelationID)
+                        ->orWhere('backupEmployee.cabang_id', '=', $unitRelationID)
+                        ->orWhere('backupEmployee.area_id', '=', $unitRelationID)
+                        ->orWhere('backupEmployee.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('backupEmployee.corporate_id', '=', $unitRelationID);
+                })
+                ->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('reqEmployee.outlet_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.cabang_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.area_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.corporate_id', '=', $unitRelationID);
+                })
+                ->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('approvalEmployee.outlet_id', '=', $unitRelationID)
+                        ->orWhere('approvalEmployee.cabang_id', '=', $unitRelationID)
+                        ->orWhere('approvalEmployee.area_id', '=', $unitRelationID)
+                        ->orWhere('approvalEmployee.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('approvalEmployee.corporate_id', '=', $unitRelationID);
+                });
+        }
 
         if($status = $request->query('status')) {
-            $query->where('status', '=', $status);
+            $query->where('backup_approvals.status', '=', $status);
         }
+
+        $query->select(['backup_approvals.*']);
+        $query->groupBy('backup_approvals.id');
+        $query->orderBy('backup_approvals.id', 'DESC');
 
         return response()->json([
             'status' => 'success',

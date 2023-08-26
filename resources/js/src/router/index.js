@@ -606,7 +606,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Detail Backup',
                     requiresAuth: true,
-                    permission: 'backup-request-read',
+                    permission: 'backup-read',
                 },
             },
             {
@@ -626,7 +626,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Approval Backup',
                     requiresAuth: true,
-                    permission: 'backup-schedule-read',
+                    permission: 'backup-approval-read',
                 },
             },
             {
