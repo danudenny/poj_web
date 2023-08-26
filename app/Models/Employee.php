@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int $kanwil_id
  * @property int $corporate_id
  * @property int $default_operating_unit_id
- * @property int $unit_id
+ * @property string $unit_id
  * @property int $department_id
  * @property int $team_id
  * @property int $job_id
@@ -68,13 +68,31 @@ class Employee extends Model
         return $this->getLastUnit();
     }
 
+    public function getUnitOutletAttribute() {
+        return $this->outlet;
+    }
+
+    public function getUnitCabangAttribute() {
+        return $this->cabang;
+    }
+
+    public function getUnitAreaAttribute() {
+        return $this->area;
+    }
+
+    public function getUnitKanwilAttribute() {
+        return $this->kanwil;
+    }
+
+    public function getUnitCorporateAttribute() {
+        return $this->corporate;
+    }
+
     /**
      * @return string
      */
     public function getLastUnitID(): string {
-        if ($this->default_operating_unit_id) {
-            return $this->default_operating_unit_id;
-        } else if ($this->outlet_id) {
+        if ($this->outlet_id) {
             return $this->outlet_id;
         } else if ($this->cabang_id) {
             return $this->cabang_id;
@@ -84,6 +102,8 @@ class Employee extends Model
             return $this->kanwil_id;
         } else if ($this->corporate_id) {
             return $this->corporate_id;
+        } else if ($this->default_operating_unit_id) {
+            return $this->default_operating_unit_id;
         }
 
         return "";
@@ -93,9 +113,7 @@ class Employee extends Model
      * @return Unit|null
      */
     public function getLastUnit(): Unit|null {
-        if ($this->operatingUnit) {
-            return $this->operatingUnit;
-        } else if ($this->outlet) {
+        if ($this->outlet) {
             return $this->outlet;
         } else if ($this->cabang) {
             return $this->cabang;
@@ -105,6 +123,8 @@ class Employee extends Model
             return $this->kanwil;
         } else if ($this->corporate) {
             return $this->corporate;
+        } else if ($this->operatingUnit) {
+            return $this->operatingUnit;
         }
 
         return null;

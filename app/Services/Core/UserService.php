@@ -17,6 +17,7 @@ use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -36,21 +37,54 @@ class UserService extends BaseService
      * @return JsonResponse
      * @throws Exception
      */
-    public function index($data): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $auth = auth()->user();
-        $roleLevel = $data->header('X-Selected-Role');
-        $userHasRoles = [];
-        if (isset($auth->employee)) {
-            $userHasRoles = $auth->employee->job->roles->pluck('name')->toArray();
-        }
-        array_map('strtolower', $userHasRoles);
+        /**
+         * @var User $user
+         */
+        $user = auth()->user();
+
         try {
             $users = User::query();
-            $userData = [];
             $users->with(['employee', 'employee.job', 'employee.job.roles', 'employee.department']);
+            $users->join('employees', 'employees.id', '=', 'users.employee_id');
+            $users->select(['users.*']);
+
+            $unitRelationID = $request->get('unit_relation_id');
+            $lastUnitRelationID = $request->get('last_unit_id');
+
+            if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+            } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
+                if (!$unitRelationID) {
+                    $defaultUnitRelationID = $user->employee->unit_id;
+
+                    if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                        $defaultUnitRelationID = $requestUnitRelationID;
+                    }
+
+                    $unitRelationID = $defaultUnitRelationID;
+                }
+            } else if ($this->isRequestedRoleLevel(Role::RoleStaffApproval)) {
+                if (!$lastUnitRelationID) {
+                    $lastUnitRelationID = $user->employee->unit_id;
+                }
+            } else {
+                $users->where('users.id', '=', $user->id);
+            }
+
+            if ($unitRelationID) {
+                $users->where(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('employees.outlet_id', '=', $unitRelationID)
+                        ->orWhere('employees.cabang_id', '=', $unitRelationID)
+                        ->orWhere('employees.area_id', '=', $unitRelationID)
+                        ->orWhere('employees.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('employees.corporate_id', '=', $unitRelationID);
+                });
+            }
+
             $users->when(request()->filled('name'), function ($query) {
-                $query->whereRaw('LOWER("name") LIKE ? ', '%'.strtolower(request()->query('name')).'%');
+                $query->whereRaw('LOWER("users.name") LIKE ? ', '%'.strtolower(request()->query('name')).'%');
             });
 
             $users->when(request()->filled('job_name'), function ($query) {
@@ -58,11 +92,11 @@ class UserService extends BaseService
                     $query->whereRaw('LOWER("name") LIKE ? ', '%'.strtolower(request()->query('job_name')).'%');
                 });
             });
-            $users->when(request()->filled('last_unit_id'), function ($query) {
-                $query->whereHas('employee', function ($query) {
-                    $query->where('unit_id', '=', request()->query('last_unit_id'));
-                });
-            });
+
+            if ($lastUnitRelationID) {
+                $users->where('employees.unit_id', '=', $lastUnitRelationID);
+            }
+
             $users->when(request()->filled('email'), function ($query) {
                 $query->whereRaw('LOWER("email") LIKE ? ', '%'.strtolower(request()->query('email')).'%');
             });
@@ -76,47 +110,13 @@ class UserService extends BaseService
                 });
             });
 
-            $users->orderBy('name');
-
-
-            if ($roleLevel == Role::RoleSuperAdministrator) {
-                $userData = $users->paginate($data->per_page ?? 10);
-            } else if ($roleLevel === Role::RoleStaff) {
-                $userData = $users->where('id', '=', $auth->id)->first();
-            } else if ($roleLevel === Role::RoleAdmin) {
-                $empUnit = [];
-                $lastUnit = null;
-                if (!empty($auth->employee)) {
-                    $empUnit = $auth->employee->getRelatedUnit();
-                }
-                if (!empty($auth->employee)) {
-                    $lastUnit = $auth->employee->getLastUnit();
-                }
-                $empUnit[] = $lastUnit;
-                $relationIds = [];
-
-                if ($requestRelationID = $this->getRequestedUnitID()) {
-                    $relationIds[] = $requestRelationID;
-                } else {
-                    $flatUnit = UnitHelper::flattenUnits($empUnit);
-                    $relationIds = array_column($flatUnit, 'relation_id');
-                }
-
-                $userData = $users->whereHas('employee', function ($query) use ($relationIds) {
-                    $query->whereIn('corporate_id', $relationIds)
-                        ->orWhereIn('kanwil_id', $relationIds)
-                        ->orWhereIn('area_id', $relationIds)
-                        ->orWhereIn('cabang_id', $relationIds)
-                        ->orWhereIn('outlet_id', $relationIds);
-                })
-                ->paginate($data->get('per_page', 10));
-            }
+            $users->orderBy('users.name');
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data retrieved successfully',
-                'data' => $userData
-            ], 200);
+                'data' => $this->list($users, $request)
+            ]);
 
         } catch (InvalidArgumentException $e) {
             throw new InvalidArgumentException($e->getMessage());

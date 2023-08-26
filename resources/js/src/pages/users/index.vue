@@ -286,7 +286,8 @@ export default {
             this.loading = false
         },
         viewDetailsFormatter(cell) {
-            return `
+            if (this.$store.state.permissions?.includes("user-update")) {
+                return `
                 <div>
                     <button class="button-icon button-success" data-action="view" data-id="${cell.getRow().getData().id}">
                         <i class="fa fa-eye" data-action="view" data-id="${cell.getRow().getData().id}"></i>
@@ -295,6 +296,14 @@ export default {
                         <i class="fa fa-pencil" data-action="edit" data-id="${cell.getRow().getData().id}"></i>
                     </button>
                 </div>`;
+            } else {
+                return `
+                <div>
+                    <button class="button-icon button-success" data-action="view" data-id="${cell.getRow().getData().id}">
+                        <i class="fa fa-eye" data-action="view" data-id="${cell.getRow().getData().id}"></i>
+                    </button>
+                </div>`;
+            }
 
         },
         handleActionButtonClick(e, cell) {

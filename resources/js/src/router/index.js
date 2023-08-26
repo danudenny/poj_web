@@ -1030,10 +1030,9 @@ const permissions = JSON.parse(localStorage.getItem('USER_PERMISSIONS'));
 
 router.beforeEach((to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
-
       if (!store.getters.isAuthenticated) {
         next('/auth/login');
-      } else if (!to.meta.requiresAuth && store.getters.isAuthenticated && !permissions.includes(to.meta.permission)) {
+      } else if (to.meta.requiresAuth && (!store.getters.isAuthenticated || !permissions.includes(to.meta.permission))) {
           next('/');
           useToast().error('You are not authorized to access this page', {
               duration: 5000,

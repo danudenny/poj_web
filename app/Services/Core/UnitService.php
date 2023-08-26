@@ -145,7 +145,7 @@ class UnitService extends BaseService
     /**
      * @throws Exception
      */
-    public function paginatedListUnit($request): JsonResponse
+    public function paginatedListUnit(Request $request): JsonResponse
     {
         try {
             /**
@@ -156,26 +156,38 @@ class UnitService extends BaseService
             $query = Unit::query();
             $query->select(['units.*']);
 
-            if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
-                $defaultUnitID = $user->employee->getLastUnitID();
+            $unitRelationIDTopButtom = $request->get('unit_relation_id_top_buttom');
 
-                if ($requestRelationID = $this->getRequestedUnitID()) {
-                    $defaultUnitID = $requestRelationID;
+            if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+            } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
+                if (!$unitRelationIDTopButtom) {
+                    $defaultUnitRelationID = $user->employee->unit_id;
+
+                    if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                        $defaultUnitRelationID = $requestUnitRelationID;
+                    }
+
+                    $unitRelationIDTopButtom = $defaultUnitRelationID;
                 }
+            } else if ($this->isRequestedRoleLevel(Role::RoleStaffApproval)) {
+                $query->where('units.relation_id', '=', $user->employee->unit_id);
+            } else {
+                $query->where('units.relation_id', '=', $user->employee->unit_id);
+            }
 
+            if ($unitRelationIDTopButtom) {
                 /**
                  * @var Builder $query
                  */
                 $query = Unit::query()->from('unit_data')
-                    ->withRecursiveExpression('unit_data', Unit::query()->where('relation_id', '=', $defaultUnitID)->unionAll(
-                            Unit::query()->select(['units.*'])
-                                ->join('unit_data', function (JoinClause $query) {
-                                    $query->on('units.parent_unit_id', '=', 'unit_data.relation_id')
-                                        ->whereRaw('units.unit_level = unit_data.unit_level + 1');
-                                })
+                    ->withRecursiveExpression('unit_data', Unit::query()->where('relation_id', '=', $unitRelationIDTopButtom)->unionAll(
+                        Unit::query()->select(['units.*'])
+                            ->join('unit_data', function (JoinClause $query) {
+                                $query->on('units.parent_unit_id', '=', 'unit_data.relation_id')
+                                    ->whereRaw('units.unit_level = unit_data.unit_level + 1');
+                            })
                     ));
-            } else if ($this->isRequestedRoleLevel(Role::RoleStaff)) {
-                $query->where('relation_id', '=', $user->employee->getLastUnitID());
             }
 
             if ($allUnitStructured = $request->query('unit_relation_id_structured')) {

@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div class="d-flex justify-content-end mb-2">
+        <div class="d-flex justify-content-end mb-2" v-if="this.$store.state.permissions?.includes('unit-update')">
             <button @click="openModal" class="btn btn-primary">Create</button>
         </div>
         <table class="table table-striped table-hover table-responsive">
@@ -12,7 +12,7 @@
                 <th>End Time</th>
                 <th>Shift Type</th>
                 <th>Days</th>
-                <th>Action</th>
+                <th v-if="this.$store.state.permissions?.includes('unit-update')">Action</th>
             </tr>
             </thead>
             <tbody>
@@ -37,7 +37,7 @@
                         <i class="fa fa-calendar-check-o"></i>
                     </button>
                 </td>
-                <td>
+                <td v-if="this.$store.state.permissions?.includes('unit-update')">
                     <button class="button-icon button-info" data-bs-toggle="modal"
                             data-bs-target="#updateModal" @click="openEditModal(item.id)">
                         <i class="fa fa-pencil text-center"></i>

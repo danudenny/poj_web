@@ -15,13 +15,14 @@ export default {
         };
     },
     mounted() {
+        this.$store.getters.currentRole
+        this.$store.getters.getPermissions
         this.getProfile();
     },
     methods: {
         async switchRoles(role) {
-            const setRole = localStorage.setItem("USER_ROLES", JSON.stringify(role));
-            await this.getUserProfile(setRole);
-            this.getProfile();
+            this.$store.commit('setCurrentRole', role)
+            await this.getUserProfile(role);
             window.location.reload();
             useToast().success("Role Changed Successfully");
         },

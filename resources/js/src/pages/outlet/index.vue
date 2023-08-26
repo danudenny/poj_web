@@ -34,33 +34,51 @@ export default {
             syncLoading: false,
             table: null,
             countdown: 0,
-            timerId: null
+            timerId: null,
+            pageSize: 10,
+            pagination: {
+                pageSize: 10,
+                currentPage: 1
+            }
         }
     },
     async mounted() {
-        await this.getCorporate();
         this.initializeCorporateTable();
     },
     methods: {
-        startCountdown() {
-            this.countdown = 1;
-            this.timerId = setInterval(() => {
-                this.countdown++;
-            }, 1000);
-        },
-        async getCorporate() {
-            this.loading = true;
-            await this.$axios.get(`/api/v1/admin/unit?unit_level=7`)
-                .then(response => {
-                    this.corporates = response.data.data;
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-        },
         initializeCorporateTable() {
+            const ls = localStorage.getItem('my_app_token');
+
             this.table = new Tabulator(this.$refs.corporateTable, {
-                data: this.corporates,
+                ajaxURL: '/api/v1/admin/unit/paginated',
+                ajaxConfig: {
+                    headers: {
+                        Authorization: `Bearer ${ls}`,
+                        "X-Selected-Role": this.$store.state.currentRole,
+                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
+                    }
+                },
+                ajaxParams: {
+                    page: this.pagination.currentPage,
+                    size: this.pagination.pageSize,
+                },
+                ajaxResponse: function (url, params, response) {
+                    return {
+                        data: response.data.data,
+                        last_page: response.data.last_page,
+                    }
+                },
+                ajaxURLGenerator: (url, config, params) => {
+					let localFilter = {
+						name: ''
+					}
+
+	                params.filter.map((item) => {
+		                if (item.field === 'name') localFilter.name = item.value
+	                })
+
+                    return `${url}?page=${params.page}&per_page=${params.size}&append=total_child&unit_level=7&name=${localFilter.name}`
+                },
                 layout: 'fitColumns',
                 columns: [
                     {
@@ -85,14 +103,14 @@ export default {
                         }
                     },
                 ],
-                pagination: 'local',
-                paginationSize: 10,
+                placeholder: 'No Data Available',
+                pagination: true,
+                paginationMode: 'remote',
+                filterMode:"remote",
+                paginationSize: this.pageSize,
                 paginationSizeSelector: [10, 20, 50, 100],
                 headerFilter: true,
-                paginationInitialPage: 1,
-                rowFormatter: (row) => {
-                    //
-                }
+                paginationInitialPage:1,
             });
             this.loading = false
         },
@@ -104,7 +122,7 @@ export default {
                 name: 'Outlet Detail',
                 params: {id: data.id},
                 query: {
-                    unit_id: data.parent_relation_id
+                    unit_id: data.relation_id
                 }
             })
         }

@@ -34,61 +34,6 @@ class UserRolePermissionResource extends JsonResource
         $permissionName = $permission->map(function ($permission) {
             return strtolower($permission->name);
         });
-        $schedule = $this->employee->timesheetSchedules;
-        $overtime = $this->employee->overtime;
-        $backup = $this->employee->backup;
-
-        if (count($schedule) > 0) {
-            $periods = $schedule->map(function ($schedule) {
-                $timezone = getTimezoneV2(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
-                $scheduleDate = Carbon::createFromDate($schedule->period->year, $schedule->period->month, $schedule->date, $timezone);
-
-                return [
-                    'date' => $scheduleDate->format('d F Y'),
-                    'name' => $schedule->timesheet->name,
-                    'start_time' => $schedule->timesheet->start_time,
-                    'end_time' => $schedule->timesheet->end_time,
-                ];
-            })->unique()->values();
-
-            $timesheet['daily'] = $periods->map(function ($period) {
-                return [
-                    'date' => $period['date'],
-                    'name' => $period['name'],
-                    'start_time' => $period['start_time'],
-                    'end_time' => $period['end_time'],
-                ];
-            });
-        }
-
-        $overtimeDate = $overtime->map(function ($overtime) {
-            return $overtime->overtimeDate;
-        })->unique()->values();
-
-        $timesheet['overtime'] = $overtimeDate->map(function ($overtimeDate) {
-            $timezone = getTimezoneV2(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
-            return [
-                'date' => Carbon::parse($overtimeDate->date, 'UTC')->addDay(1)->setTimezone($timezone)->format('d F Y'),
-                'start_time' => Carbon::parse($overtimeDate->start_time, 'UTC')->setTimezone($timezone)->format('H:i'),
-                'end_time' => Carbon::parse($overtimeDate->end_time, 'UTC')->setTimezone($timezone)->format('H:i'),
-            ];
-        })->values();
-
-        $backupDate = $backup->map(function ($backup) {
-            return $backup->backup;
-        })->unique()->values();
-
-        $timesheet['backup'] = $backupDate->map(function ($backupDate) {
-            return $backupDate->backupTimes->map(function ($backupTime) {
-                $timezone = getTimezoneV2(floatval($this->employee->last_unit->lat), floatval($this->employee->last_unit->long));
-
-                return [
-                    'date' => Carbon::parse($backupTime->backup_date, 'UTC')->addDay(1)->setTimezone($timezone)->format('d F Y'),
-                    'start_time' => Carbon::parse($backupTime->start_time, 'UTC')->setTimezone($timezone)->format('H:i'),
-                    'end_time' => Carbon::parse($backupTime->end_time, 'UTC')->setTimezone($timezone)->format('H:i'),
-                ];
-            });
-        })->collapse()->unique()->values();
 
         /**
          * @var Employee $employee

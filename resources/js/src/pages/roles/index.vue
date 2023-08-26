@@ -81,17 +81,6 @@ export default {
                         headerHozAlign: 'center'
                     },
                     {
-                        title: 'Role Level',
-                        field: 'role_level',
-                        headerFilter:"input",
-                        hozAlign: 'center',
-                        headerSort: false,
-                        headerHozAlign: 'center',
-                        formatter: function(cell, formatterParams) {
-                            return `<span class="badge badge-primary">${cell.getValue().toUpperCase()}</span>`
-                        }
-                    },
-                    {
                         title: 'Permissions',
                         field: 'permissions',
                         hozAlign: 'center',
@@ -147,9 +136,7 @@ export default {
         actionButtonFormatter(cell) {
             const rowData = cell.getRow().getData();
             return `
-                <button class="button-icon button-success" data-action="view" data-row-id="${rowData.id}"><i data-action="view" class="fa fa-eye"></i> </button>
                 <button class="button-icon button-warning" data-action="edit" data-row-id="${rowData.id}"><i data-action="edit" class="fa fa-pencil"></i> </button>
-                <button class="button-icon button-danger" data-action="delete" data-row-id="${rowData.id}"><i data-action="delete" class="fa fa-trash"></i> </button>
              `;
         },
         redrawTable() {

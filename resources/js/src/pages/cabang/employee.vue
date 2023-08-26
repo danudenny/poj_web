@@ -46,10 +46,11 @@ export default {
             const ls = localStorage.getItem('my_app_token')
             this.table = new Tabulator(this.$refs.employeesTable, {
                 paginationCounter:"rows",
-                ajaxURL: `/api/v1/admin/employee?cabang_id=${this.id}`,
+                ajaxURL: `/api/v1/admin/employee/paginated`,
                 ajaxConfig: {
                     headers: {
                         Authorization: `Bearer ${ls}`,
+	                    "X-Selected-Role": this.$store.state.currentRole,
                         "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
                     },
                 },
@@ -71,7 +72,8 @@ export default {
                         if (item.field === 'cabang.name') this.filterCabang = item.value
                         if (item.field === 'outlet.name') this.filterOutlet = item.value
                     })
-                    return `${url}&page=${params.page}&size=${params.size}&name=${this.filterName}&email=${this.filterEmail}&cabang=${this.filterCabang}&outlet=${this.filterOutlet}&job=${this.filterJob}`
+                    // return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&email=${this.filterEmail}&cabang=${this.filterCabang}&outlet=${this.filterOutlet}&job=${this.filterJob}`
+	                return `${url}?page=${params.page}&per_page=${params.size}&append=unit_outlet,unit_cabang,unit_area,unit_kanwil,unit_corporate&unit_relation_id=${this.id}`
                 },
                 layout: 'fitDataFill',
                 renderHorizontal:"virtual",
@@ -125,6 +127,24 @@ export default {
                             return cell.getValue() ? arr.join(" ") : '<i class="fa fa-times text-danger"></i>'
                         },
                     },
+	                {
+		                title: 'Cabang',
+		                field: 'cabang.name',
+		                headerFilter: "list",
+		                hozAlign: 'center',
+		                headerHozAlign: 'center',
+		                headerFilterPlaceholder:"Select Outlet",
+		                formatter: function (cell, formatterParams, onRendered) {
+			                return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
+		                },
+		                headerFilterParams: {
+			                values: this.outlet.map((item) => {
+				                return item.name
+			                }),
+			                clearable:true,
+			                freetext:true
+		                },
+	                },
                     {
                         title: 'Outlet',
                         field: 'outlet.name',

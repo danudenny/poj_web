@@ -32,8 +32,12 @@ export default {
         return {
             loading: false,
             currentPage: 1,
-            pageSize: 10,
             filterName: '',
+            pageSize: 10,
+            pagination: {
+                pageSize: 10,
+                currentPage: 1
+            }
         }
     },
     async mounted() {
@@ -42,18 +46,19 @@ export default {
     methods: {
         initializeRegionalTable() {
             const ls = localStorage.getItem('my_app_token');
-            const table = new Tabulator(this.$refs.regionalTable, {
+
+            this.table = new Tabulator(this.$refs.regionalTable, {
                 ajaxURL: '/api/v1/admin/unit/paginated',
                 ajaxConfig: {
                     headers: {
                         Authorization: `Bearer ${ls}`,
+                        "X-Selected-Role": this.$store.state.currentRole,
                         "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
-                    },
+                    }
                 },
-                filterMode:"remote",
                 ajaxParams: {
-                    page: this.currentPage,
-                    size: this.pageSize,
+                    page: this.pagination.currentPage,
+                    size: this.pagination.pageSize,
                 },
                 ajaxResponse: function (url, params, response) {
                     return {
@@ -62,15 +67,7 @@ export default {
                     }
                 },
                 ajaxURLGenerator: (url, config, params) => {
-                    let localFilter = {
-                        name: ''
-                    }
-
-                    params.filter.map((item) => {
-                        if (item.field === 'name') localFilter.name = item.value
-                    })
-
-                    return `${url}?page=${params.page}&per_page=${params.size}&name=${localFilter.name}&unit_level=2`
+                    return `${url}?page=${params.page}&per_page=${params.size}&append=total_child&unit_level=2`
                 },
                 layout: 'fitColumns',
                 columns: [
@@ -83,20 +80,7 @@ export default {
                     {
                         title: 'Name',
                         field: 'name',
-                        headerFilter:"input"
-                    },
-                    {
-                        title: 'Total Unit',
-                        field: 'total_managed_operating_unit',
-                        width: 120,
-                        formatter: (cell) => {
-                            let data = cell.getRow().getData().total_managed_operating_unit;
-                            if (data === 0) {
-                                return `<span class="badge badge-danger">${data}</span> `;;
-                            } else {
-                                return `<span class="badge badge-primary">${data}</span> `;;
-                            }
-                        }
+                        headerFilter: "input"
                     },
                     {
                         title: '',
@@ -105,19 +89,18 @@ export default {
                         hozAlign: 'center',
                         sortable: false,
                         cellClick: (e, cell) => {
-                            this.viewData(cell.getRow().getData().id);
+                            this.viewData(cell.getRow().getData());
                         }
                     },
                 ],
+                placeholder: 'No Data Available',
                 pagination: true,
                 paginationMode: 'remote',
-                paginationSize: 10,
+                filterMode:"remote",
+                paginationSize: this.pageSize,
                 paginationSizeSelector: [10, 20, 50, 100],
                 headerFilter: true,
                 paginationInitialPage:1,
-                rowFormatter: (row) => {
-                    //
-                }
             });
             this.loading = false
         },

@@ -18,9 +18,9 @@ use Spatie\Permission\Models\Role as SpatieRole;
 class Role extends SpatieRole
 {
     const RoleSuperAdministrator = "superadmin";
-    const RoleAdmin = "admin_unit";
+    const RoleAdmin = "admin_operating_unit";
     const RoleStaff = "staff";
-    const RoleAdminOperatingUnit = "admin_operating_unit";
+    const RoleStaffApproval = "staff_approvals";
 
     protected $appends = ['status'];
     protected $dates = ['deleted_at'];

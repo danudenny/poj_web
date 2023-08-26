@@ -28,10 +28,10 @@
             <hr>
             <div class="tab-pane fade show active" id="pills-iconhome" role="tabpanel" aria-labelledby="pills-iconhome-tab">
               <div>
-                <button type="button" v-if="editing" class="btn btn-warning" @click="editData">
+                <button type="button" v-if="editing && this.$store.state.permissions?.includes('unit-update')" class="btn btn-warning" @click="editData">
                   <i class="fa fa-pencil-square"></i> Edit Data
                 </button>
-                <div v-else class="d-flex justify-content-end column-gap-2">
+                <div v-else-if="!editing && this.$store.state.permissions?.includes('unit-update')" class="d-flex justify-content-end column-gap-2">
                   <button type="button" class="btn btn-success" @click="saveData">
                     <i class="fa fa-save"></i> Save Data
                   </button>
@@ -107,7 +107,7 @@
                 <div v-if="loading" className="text-center">
                   <img src="../../assets/loader.gif" alt="loading" width="100">
                 </div>
-                <div class="d-flex justify-content-end mb-2">
+                <div class="d-flex justify-content-end mb-2" v-if="this.$store.state.permissions?.includes('unit-update')">
                   <button class="btn btn-success" @click.prevent="hideTableJob">
                     <i class="icofont icofont-briefcase"></i> &nbsp; Assign Jobs
                   </button>
@@ -157,7 +157,7 @@
               <WorkReporting :unit_id="queryUnitId"/>
             </div>
             <div class="tab-pane fade" id="pills-employee" role="tabpanel" aria-labelledby="pills-employee-tab">
-              <Employee :id="paramsId" />
+              <Employee :id="queryUnitId" />
             </div>
           </div>
         </div>
@@ -393,10 +393,13 @@ export default {
     },
     actionButtonFormatter(cell) {
       const rowData = cell.getRow().getData();
-      return `
-<!--                <button class="button-icon button-warning" data-action="edit" data-row-id="${rowData.id}"><i data-action="edit" class="fa fa-pencil"></i> </button>-->
+      if (this.$store.state.permissions?.includes('unit-update')) {
+          return `
                 <button class="button-icon button-danger" data-action="delete" data-row-id="${rowData.id}"><i data-action="delete" class="fa fa-trash"></i> </button>
              `;
+      }
+
+      return ``
     },
     handleActionButtonClick(e, cell) {
       const action = e.target.dataset.action

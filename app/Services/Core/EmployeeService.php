@@ -139,8 +139,6 @@ class EmployeeService extends BaseService
                     ->orWhereIn('outlet_id', $relationIds)
                     ->with(['job', 'corporate', 'kanwil', 'area', 'cabang', 'outlet'])
                     ->paginate($request->get('per_page', 10));
-            } else if ($this->isRequestedRoleLevel(Role::RoleAdminOperatingUnit)) {
-
             } else {
                 $employeesData = $employees->paginate($request->get('per_page', 10));
             }
@@ -280,15 +278,18 @@ class EmployeeService extends BaseService
 
             $lastUnitRelationID = $request->get('last_unit_relation_id');
             $unitRelationID = $request->get('unit_relation_id');
+            $unitID = $request->get('unit_id');
 
             $employees->when($request->filled('unit_level'), function(Builder $builder) use ($request) {
                 $builder->join('units AS unitLevel', 'unitLevel.relation_id', '=', 'employees.unit_id');
                 $builder->whereIn('unitLevel.unit_level', explode(",", $request->query('unit_level')));
             });
 
-            if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
+            if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+            } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
                 if (!$unitRelationID) {
-                    $defaultUnitRelationID = $user->employee->getLastUnitID();
+                    $defaultUnitRelationID = $user->employee->unit_id;
 
                     if ($requestUnitRelationID = $this->getRequestedUnitID()) {
                         $defaultUnitRelationID = $requestUnitRelationID;
@@ -296,14 +297,12 @@ class EmployeeService extends BaseService
 
                     $unitRelationID = $defaultUnitRelationID;
                 }
-            } else if ($this->isRequestedRoleLevel(Role::RoleStaff)) {
-                if (!$lastUnitRelationID) {
-                    $employees->where('id', '=', $user->employee_id);
+            } else if ($this->isRequestedRoleLevel(Role::RoleStaffApproval)) {
+                if (!$unitID) {
+                    $unitID = $user->employee->unit_id;
                 }
-            } else if ($this->isRequestedRoleLevel(Role::RoleAdminOperatingUnit)) {
-                if (!$lastUnitRelationID) {
-                    $lastUnitRelationID = implode(",", $user->listOperatingUnitIDs());
-                }
+            } else {
+                $employees->where('employees.id', '=', $user->employee_id);
             }
 
             $employees->when($request->input('job_id'), function (Builder $builder) use ($request) {
@@ -325,9 +324,9 @@ class EmployeeService extends BaseService
                 $builder->where('employees.name', "ILIKE", "%" . $request->input('name') . "%");
             });
 
-            $employees->when($request->input('unit_id'), function (Builder $builder) use ($request) {
-                $builder->where('employees.unit_id', '=', $request->input('unit_id'));
-            });
+            if ($unitID) {
+                $employees->where('employees.unit_id', '=', $unitID);
+            }
 
             $employees->when($lastUnitRelationID, function (Builder $builder) use ($lastUnitRelationID) {
                 $builder->where('employees.unit_id', '=', $lastUnitRelationID);
@@ -335,11 +334,11 @@ class EmployeeService extends BaseService
 
             $employees->when($unitRelationID, function(Builder $builder) use ($unitRelationID) {
                 $builder->where(function(Builder $builder) use ($unitRelationID) {
-                    $builder->orWhere('outlet_id', '=', $unitRelationID)
-                        ->orWhere('cabang_id', '=', $unitRelationID)
-                        ->orWhere('area_id', '=', $unitRelationID)
-                        ->orWhere('kanwil_id', '=', $unitRelationID)
-                        ->orWhere('corporate_id', '=', $unitRelationID);
+                    $builder->orWhere('employees.outlet_id', '=', $unitRelationID)
+                        ->orWhere('employees.cabang_id', '=', $unitRelationID)
+                        ->orWhere('employees.area_id', '=', $unitRelationID)
+                        ->orWhere('employees.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('employees.corporate_id', '=', $unitRelationID);
                 });
             });
 

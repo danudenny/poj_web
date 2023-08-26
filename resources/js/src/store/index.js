@@ -26,6 +26,7 @@ export default createStore({
       permissions: [],
       adminUnits: null,
       activeAdminUnit: null,
+      currentRole: null,
       availableRole: [],
   },
   getters:{
@@ -81,6 +82,12 @@ export default createStore({
             axios.defaults.headers['X-Unit-Relation-ID'] = state.activeAdminUnit.unit_relation_id
         }
         return state.adminUnits
+    },
+    currentRole: async (state) => {
+        state.currentRole = JSON.parse(localStorage.getItem("USER_ROLES"))
+    },
+    getPermissions: (state) => {
+        state.permissions = JSON.parse(localStorage.getItem("USER_PERMISSIONS"))
     }
   },
   mutations: {
@@ -117,6 +124,10 @@ export default createStore({
 
           axios.defaults.headers['X-Unit-Relation-ID'] = data.unit_relation_id
           window.location.reload()
+      },
+      setCurrentRole(state, data) {
+          state.currentRole = data
+          localStorage.setItem("USER_ROLES", JSON.stringify(data));
       },
       clearToken(state){
         state.token = null;
