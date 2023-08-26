@@ -25,6 +25,57 @@ class LeaveRequestApproval extends Model
     const StatusApproved = "approved";
     const StatusRejected = "rejected";
 
+    public function getIsCanApproveAttribute() {
+        /**
+         * @var User $user
+         */
+        $user = request()->user();
+
+        if (!$user) {
+            return false;
+        }
+
+        /**
+         * @var LeaveRequestApproval $leaveRequestApprovals
+         */
+        $leaveRequestApprovals = $this->leaveRequest->leaveRequestApprovals()->where('employee_id', '=', $user->employee_id)
+            ->where('status', '=', LeaveRequestApproval::StatusPending)
+            ->first();
+        if (!$leaveRequestApprovals) {
+            return false;
+        }
+
+        /**
+         * @var LeaveRequestApproval $lastApproval
+         */
+        $lastApproval = $this->leaveRequest->leaveRequestApprovals()
+            ->where('status', '=', LeaveRequestApproval::StatusPending)
+            ->where('priority', '<', $leaveRequestApprovals->priority)
+            ->exists();
+        if($lastApproval) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function getRealStatusAttribute() {
+        if ($this->status == self::StatusPending) {
+            /**
+             * @var LeaveRequestApproval $lastApproval
+             */
+            $lastApproval = $this->leaveRequest->leaveRequestApprovals()
+                ->where('status', '=', LeaveRequestApproval::StatusPending)
+                ->where('priority', '<', $this->priority)
+                ->exists();
+            if($lastApproval) {
+                return "Waiting Last Approval";
+            }
+        }
+
+        return $this->status;
+    }
+
     public function leaveRequest() {
         return $this->belongsTo(LeaveRequest::class, 'leave_request_id');
     }

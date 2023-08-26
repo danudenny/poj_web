@@ -179,8 +179,15 @@ abstract class BaseService
             return $role;
         }
 
+        $userRole = $user->getHighestRole();
+        if ($userRole) {
+            return $userRole;
+        }
 
-        return $user->getHighestRole();
+        $staffRole = new Role();
+        $staffRole->name = Role::RoleStaff;
+
+        return $staffRole;
     }
 
     protected function isRequestedRoleLevel(string $name): bool {

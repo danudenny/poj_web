@@ -41,29 +41,12 @@ export default {
         }
     },
     async mounted() {
-        await this.getWorkReportings();
         await this.initializeWrTable();
     },
     methods: {
-        async getWorkReportings() {
-            this.loading = true;
-            await axios
-                .get(`/api/v1/admin/work-reporting`, {
-                    headers: {
-                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? '',
-                        "X-Selected-Role": localStorage.getItem('USER_ROLES')
-                    }
-                })
-                .then(response => {
-                    this.workReportings = response.data.data;
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-        },
         async initializeWrTable() {
             const ls = localStorage.getItem('my_app_token')
-            const roles = localStorage.getItem('USER_ROLES')
+            const roles = JSON.parse(localStorage.getItem('USER_ROLES'));
             this.table = new Tabulator(this.$refs.wrTable, {
                 ajaxURL:"/api/v1/admin/work-reporting",
                 ajaxConfig: {

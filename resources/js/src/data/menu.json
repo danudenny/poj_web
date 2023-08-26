@@ -307,12 +307,12 @@
             "permission" : "leave-request-read"
         },
         {
-            "title": "Leave Report",
+            "title": "Leave Approval",
             "icon": "file-text",
             "iconf": "file-text",
             "type": "link",
             "active": false,
-            "path": "/leave-report",
+            "path": "/leave-approval",
             "permission" : "leave-report-read"
         },
         {

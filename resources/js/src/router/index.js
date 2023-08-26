@@ -106,7 +106,7 @@ import ListApprovalOvertime from "../pages/overtime/list-approval.vue";
 // Leave
 import LeaveRequest from "../pages/leaves/leave-request.vue";
 import LeaveRequestDetail from "../pages/leaves/details/leave-request-detail.vue";
-import LeaveReport from "../pages/leaves/leave-report.vue";
+import LeaveApproval from "../pages/leaves/leave-approval.vue";
 import LeaveMaster from "../pages/leaves/leave-master.vue";
 
 // Admin Unit
@@ -870,15 +870,15 @@ const routes =[
         ]
     },
     {
-        path: '/leave-report',
+        path: '/leave-approval',
         component: Body,
         children: [
             {
                 path: '',
-                name: 'Leave Report',
-                component: LeaveReport,
+                name: 'Leave Approval',
+                component: LeaveApproval,
                 meta: {
-                    title: 'POJ - Leave Report',
+                    title: 'POJ - Leave Approval',
                     requiresAuth: true,
                     permission: 'leave-report-read',
                 },
