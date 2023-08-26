@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property integer $employee_id
  * @property string $reference_type
  * @property string $reference_id
+ * @property string $created_at
  */
 class WorkReporting extends Model
 {
@@ -34,6 +36,21 @@ class WorkReporting extends Model
         'image',
         'employee_id',
     ];
+
+    protected $appends = [
+        'created_at_client_timezone'
+    ];
+
+    public function getCreatedAtClientTimezoneAttribute() {
+        $time = Carbon::parse($this->created_at, 'UTC');
+        $userLocation = request()->header('x-client-timezone');
+
+        if ($userLocation) {
+            $time->setTimezone($userLocation);
+        }
+
+        return $time->format('Y-m-d H:i:s');
+    }
 
     public function employee(): BelongsTo
     {
