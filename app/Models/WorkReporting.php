@@ -49,7 +49,7 @@ class WorkReporting extends Model
             $time->setTimezone($userLocation);
         }
 
-        return $time;
+        return $time->format('Y-m-d\\TH:i:s.000000\\Z');
     }
 
     public function employee(): BelongsTo
