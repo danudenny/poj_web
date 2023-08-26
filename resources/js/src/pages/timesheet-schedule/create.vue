@@ -37,19 +37,20 @@
                                             >
                                             </multiselect>
                                         </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label>Target Unit :</label>
-                                            <multiselect
-                                                v-model="selectedOptions"
-                                                placeholder="Select Target Unit"
-                                                label="name"
-                                                track-by="name"
-                                                :options="units"
-                                                :multiple="false"
-                                                @select="selectedUnit"
-                                            >
-                                            </multiselect>
-                                        </div>
+	                                    <div class="col-md-4 mb-3">
+		                                    <label>Target Unit :</label>
+		                                    <multiselect
+			                                    v-model="selectedOptions"
+			                                    placeholder="Select Target Unit"
+			                                    label="name"
+			                                    track-by="name"
+			                                    :options="units"
+			                                    :multiple="false"
+			                                    @select="selectedUnit"
+			                                    @search-change="onUnitSearchName"
+		                                    >
+		                                    </multiselect>
+	                                    </div>
                                         <div class="col-md-4 mb-3">
                                             <label>Timesheet :</label>
                                             <select v-model="timesheet_id" class="form-control" >
@@ -82,6 +83,7 @@
                                                 :options="unitsEmployee"
                                                 :multiple="false"
                                                 @select="selectedUnitEmployee"
+                                                @search-change="onEmployeeUnitSearchName"
                                             >
                                             </multiselect>
                                         </div>
@@ -169,7 +171,17 @@ export default {
                     name: 'Outlet',
                     value: 7
                 },
-            ]
+            ],
+	        targetUnitPagination: {
+		        limit: 10,
+		        isOnSearch: true,
+		        name: ''
+	        },
+	        employeeUnitPagination: {
+		        limit: 10,
+		        isOnSearch: true,
+		        name: ''
+	        },
         }
     },
     async mounted() {
@@ -180,11 +192,11 @@ export default {
     methods: {
         onSelectUnitLevel(e) {
             this.selectedOptions = [];
-            this.getUnit(e.value);
+            this.getUnit();
         },
         onSelectUnitLevelEmployee(e) {
             this.selectedEmployeeOptions = [];
-            this.getEmployeeUnit(e.value);
+            this.getEmployeeUnit();
         },
         handleDate(e) {
             const date = new Date(e);
@@ -205,21 +217,31 @@ export default {
             this.initializeEmployeeTable()
             this.table.setFilter('unit_id', "=", this.selectedOptions.relation_id);
         },
-        async getUnit(value) {
-            await this.$axios.get(`api/v1/admin/unit/related-unit?unit_level=${value}`)
-                .then(response => {
-                    this.units = response.data.data;
-                }).catch(error => {
-                    console.error(error);
-                });
+        async getUnit() {
+	        if (this.selectedLevel === null) {
+		        return
+	        }
+
+	        await this.$axios.get(`api/v1/admin/unit/paginated?unit_level=${this.selectedLevel.value}&per_page=${this.targetUnitPagination.limit}&name=${this.targetUnitPagination.name}`)
+		        .then(response => {
+			        this.units = response.data.data.data;
+			        this.targetUnitPagination.isOnSearch = false
+		        }).catch(error => {
+			        console.error(error);
+		        });
         },
-        async getEmployeeUnit(value) {
-            await this.$axios.get(`api/v1/admin/unit/related-unit?unit_level=${value}`)
-                .then(response => {
-                    this.unitsEmployee = response.data.data;
-                }).catch(error => {
-                    console.error(error);
-                });
+        async getEmployeeUnit() {
+			if (this.selectedEmployeeLevel === null) {
+				return
+			}
+
+	        await this.$axios.get(`api/v1/admin/unit/paginated?unit_level=${this.selectedEmployeeLevel.value}&per_page=${this.employeeUnitPagination.limit}&name=${this.employeeUnitPagination.name}`)
+		        .then(response => {
+			        this.unitsEmployee = response.data.data.data;
+			        this.employeeUnitPagination.isOnSearch = false
+		        }).catch(error => {
+			        console.error(error);
+		        });
         },
         async getTotalDays() {
             const date = new Date();
@@ -318,13 +340,13 @@ export default {
                 ajaxURLGenerator: (url, config, params) => {
                     const filters = {
                         unit_level: this.selectedLevel?.value ?? '',
+	                    unit_id: this.selectedEmployeeOptions.relation_id
                     }
+
                     params.filter.map((item) => {
                         if (item.field === 'name') this.filterName = item.value
-                        if (item.field === 'unit_id') this.filterUnitId = item.value
-                        if (item.field === 'unit_level') filters.unit_level = item.value
                     })
-                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&unit_id=${this.filterUnitId}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&unit_id=${filters.unit_id}`
                 },
                 ajaxResponse: function (url, params, response) {
                     return {
@@ -345,6 +367,26 @@ export default {
             })
             this.loading = false;
         },
+	    onUnitSearchName(val) {
+		    this.targetUnitPagination.name = val
+
+		    if (!this.targetUnitPagination.isOnSearch) {
+			    this.targetUnitPagination.isOnSearch = true
+			    setTimeout(() => {
+				    this.getUnit()
+			    }, 1000)
+		    }
+	    },
+	    onEmployeeUnitSearchName(val) {
+		    this.employeeUnitPagination.name = val
+
+		    if (!this.employeeUnitPagination.isOnSearch) {
+			    this.employeeUnitPagination.isOnSearch = true
+			    setTimeout(() => {
+				    this.getEmployeeUnit()
+			    }, 1000)
+		    }
+	    },
         async saveSchedule() {
             const ls = JSON.parse(localStorage.getItem('selectedEmployees'));
             const queryPeriod = this.date

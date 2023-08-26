@@ -8,6 +8,7 @@ use App\Models\EmployeeTimesheet;
 use App\Models\EmployeeTimesheetDay;
 use App\Models\EmployeeTimesheetSchedule;
 use App\Models\Period;
+use App\Models\Role;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\BaseService;
@@ -743,6 +744,13 @@ class EmployeeTimesheetService extends ScheduleService {
             $currTime = Carbon::now($clientTimezone)->setHour(0)->setMinute(0)->setSecond(0);
         }
 
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
+        $unitRelationID = $request->get('unit_relation_id');
+
         $query = EmployeeTimesheetSchedule::with([
                 'employee',
                 'timesheet',
@@ -754,7 +762,28 @@ class EmployeeTimesheetService extends ScheduleService {
             ->join('employees', 'employees.id', '=', 'employee_timesheet_schedules.employee_id')
             ->join('employee_timesheet', 'employee_timesheet.id', '=', 'employee_timesheet_schedules.timesheet_id');
 
-        if ($unitRelationID = $request->query('unit_relation_id')) {
+        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+        } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
+            if (!$unitRelationID) {
+                $defaultUnitRelationID = $user->employee->unit_id;
+
+                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                    $defaultUnitRelationID = $requestUnitRelationID;
+                }
+
+                $unitRelationID = $defaultUnitRelationID;
+            }
+        } else if ($this->isRequestedRoleLevel(Role::RoleStaffApproval)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized!'
+            ], ResponseAlias::HTTP_UNAUTHORIZED);
+        } else {
+            $query->where('employees.id', '=', $user->employee_id);
+        }
+
+        if ($unitRelationID) {
             $query->where('employees.unit_id', '=', $unitRelationID);
         }
         if ($monthlyYear = $request->query('monthly_year')) {
@@ -806,9 +835,9 @@ class EmployeeTimesheetService extends ScheduleService {
                 $color = "success";
 
                 if (!$isAfterCurrTime && $assignment->check_in_time == null) {
-                    $color = "dark";
-                } else if ($isAfterCurrTime && $assignment->check_in_time == null) {
                     $color = "danger";
+                } else if ($isAfterCurrTime && $assignment->check_in_time == null) {
+                    $color = "info";
                 }
 
                 $dailyEntries[$date] = [
@@ -835,9 +864,9 @@ class EmployeeTimesheetService extends ScheduleService {
                         $color = "success";
 
                         if (!$isAfterCurrTime && $assignment->check_in_time == null) {
-                            $color = "dark";
-                        } else if ($isAfterCurrTime && $assignment->check_in_time == null) {
                             $color = "danger";
+                        } else if ($isAfterCurrTime && $assignment->check_in_time == null) {
+                            $color = "info";
                         }
 
                         $dailyEntries[$date] = [

@@ -63,7 +63,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-2" v-if="this.$store.state.permissions?.includes('timesheet-update')">
                                     <div class="d-flex justify-content-end mb-2">
                                         <button class="btn btn-success" @click="createSchedule">
                                             <i class="fa fa-plus"></i>&nbsp;Create Schedule
@@ -98,7 +98,7 @@
                                                 <span :class="'badge badge-' + timesheet[day].color">{{ timesheet[day].time }}</span>
                                                 <br/>
                                                 <span class="badge badge-warning">{{ timesheet[day].unit }}</span>
-                                                <div class="action-button" v-if="timesheet[day].is_can_change">
+                                                <div class="action-button" v-if="timesheet[day].is_can_change && this.$store.state.permissions?.includes('timesheet-update')">
                                                     <button class="button-icon button-warning" @click="onEditEmployeeTimesheet(timesheet[day].id)"><i data-action="view" class="fa fa-pencil"></i> </button>
                                                     <button class="button-icon button-danger" @click="onDeleteEmployeeTimesheet(timesheet[day].id)"><i data-action="view" class="fa fa-trash"></i> </button>
                                                 </div>
@@ -162,9 +162,22 @@ export default {
     },
     methods: {
         getCurrentUnit() {
-            let currUser = JSON.parse(localStorage.getItem("USER_STORAGE_KEY"))
-            this.selectedUnit = currUser.last_units
-            this.unitPagination.name = this.selectedUnit.name
+			if (this.$store.state.currentRole === 'admin_operating_unit') {
+				let activeAdminUnit = this.$store.state.activeAdminUnit
+				if (activeAdminUnit != null) {
+					this.selectedUnit = {
+						relation_id: activeAdminUnit.unit_relation_id,
+						name: activeAdminUnit.name.replace(" (Default)", "")
+					}
+
+					this.unitPagination.name = this.selectedUnit.name
+					return
+				}
+			}
+
+	        let currUser = JSON.parse(localStorage.getItem("USER_STORAGE_KEY"))
+	        this.selectedUnit = currUser.last_units
+	        this.unitPagination.name = this.selectedUnit.name
         },
         dateRange() {
             const lastDayOfMonth = new Date(this.selectedMonth.year, this.selectedMonth.month + 1, 0).getDate();
