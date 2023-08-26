@@ -91,6 +91,7 @@ import EventRequestList from '../pages/event/index.vue';
 import EventRequestDetail from '../pages/event/detail.vue';
 import EventRequestCreate from '../pages/event/create.vue';
 import EventEmployeeEvent from '../pages/event/employee-event.vue';
+import EventApproval from '../pages/event/event-approval.vue';
 
 //Work Reporting
 import WorkReporting from '../pages/work_reporting/index.vue';
@@ -993,6 +994,16 @@ const routes =[
                 component: EventEmployeeEvent,
                 meta: {
                     title: 'POJ - Employee Event',
+                    requiresAuth: true,
+                    permission : 'event-employee-read',
+                }
+            },
+            {
+                path: 'event-approval',
+                name: 'event_approval',
+                component: EventApproval,
+                meta: {
+                    title: 'POJ - Employee Approval',
                     requiresAuth: true,
                     permission : 'event-employee-read',
                 }

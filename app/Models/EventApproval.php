@@ -25,6 +25,28 @@ class EventApproval extends Model
     const StatusApproved = "approved";
     const StatusRejected = "rejected";
 
+    protected $appends = [
+        'real_status'
+    ];
+
+    public function getRealStatusAttribute() {
+        if ($this->status == self::StatusPending) {
+            /**
+             * @var LeaveRequestApproval $lastApproval
+             */
+            $lastApproval = self::query()
+                ->where('event_id', '=', $this->event_id)
+                ->where('status', '=', LeaveRequestApproval::StatusPending)
+                ->where('priority', '<', $this->priority)
+                ->exists();
+            if($lastApproval) {
+                return "Waiting Last Approval";
+            }
+        }
+
+        return $this->status;
+    }
+
     public function event() {
         return $this->belongsTo(Event::class, 'event_id');
     }

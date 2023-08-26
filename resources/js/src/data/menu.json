@@ -355,6 +355,15 @@
             "permission" : "event-read"
         },
         {
+            "title": "Event Approval",
+            "icon": "calendar",
+            "iconf": "calendar",
+            "type": "link",
+            "active": false,
+            "path": "/event/event-approval",
+            "permission" : "event-read"
+        },
+        {
             "title": "Employee Event",
             "icon": "calendar",
             "iconf": "calendar",

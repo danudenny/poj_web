@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs main="Detail Incident Reporting"/>
+        <Breadcrumbs main="Detail Event"/>
         <div class="col-sm-12">
             <div class="card">
                 <div class="card-body">
@@ -212,7 +212,7 @@
                     </div>
                 </div>
                 <div class="card-footer text-end">
-                    <button class="btn btn-secondary" @click="$router.push('/event')">Back</button>&nbsp
+                    <button class="btn btn-secondary" @click="$router.go(-1)">Back</button>&nbsp
                     <div
                         class="btn btn-primary button-info"
                         v-if="this.event.last_status === 'draft' && this.isEdit"
@@ -255,11 +255,11 @@
                         <div class="mt-2">
                             <label for="status">Status:</label>
                             <select id="status" name="status" class="form-select" v-model="approval.status" required>
-                                <option value="approve" :selected="approval.status === 'approve' ? 'selected' : ''">Approve</option>
-                                <option value="reject" :selected="approval.status === 'reject' ? 'selected' : ''">Reject</option>
+                                <option value="approved" :selected="approval.status === 'approved' ? 'selected' : ''">Approve</option>
+                                <option value="rejected" :selected="approval.status === 'rejected' ? 'selected' : ''">Reject</option>
                             </select>
                         </div>
-                        <div class="mt-2" v-if="approval.status === 'reject'">
+                        <div class="mt-2" v-if="approval.status === 'rejected'">
                             <label for="name">Note:</label>
                             <input type="text" class="form-control" id="reason" v-model="approval.notes" required>
                         </div>
@@ -607,7 +607,7 @@ export default {
             })
         },
         eventRequestApproval() {
-            this.$axios.post(`/api/v1/admin/event/approve/${this.$route.params.id}`, this.approval)
+            this.$axios.post(`/api/v1/admin/event/approval/${this.$route.params.id}`, this.approval)
                 .then(response => {
                     useToast().success("Success to update data", { position: 'bottom-right' });
                     this.getEvent()

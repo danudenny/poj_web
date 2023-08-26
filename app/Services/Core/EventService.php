@@ -120,6 +120,7 @@ class EventService extends BaseService
         $employee = $request->user()->employee;
 
         $query = EventApproval::query()->with(['event', 'event.requestorEmployee'])
+            ->select(['event_approvals.*'])
             ->where('employee_id', '=', $employee->id);
 
         if ($status = $request->query('status')) {
