@@ -5,6 +5,7 @@ namespace App\Services\Core;
 use App\Http\Requests\LeaveRequest\ApprovalRequest;
 use App\Models\ApprovalModule;
 use App\Models\Employee;
+use App\Models\EmployeeTimesheetSchedule;
 use App\Models\LeaveRequest;
 use App\Models\LeaveRequestApproval;
 use App\Models\LeaveRequestHistory;
@@ -261,6 +262,10 @@ class LeaveRequestService extends BaseService {
                 $leaveRequestApproval->save();
             }
 
+            if($status === LeaveRequest::StatusApproved) {
+                $this->removeSchedule($leaveRequest);
+            }
+
             DB::commit();
             return response()->json([
                 'status' => 'success',
@@ -342,6 +347,8 @@ class LeaveRequestService extends BaseService {
                     $nextApproval->status = LeaveRequestApproval::StatusRejected;
                     $nextApproval->save();
                 }
+
+                $this->removeSchedule($leaveRequest);
             } else if ($leaveRequestApproval->status == LeaveRequestApproval::StatusApproved) {
                 $isNextApprovalExist = $leaveRequest->leaveRequestApprovals()
                     ->where('priority', '>', $leaveRequestApproval->priority)
@@ -451,4 +458,16 @@ class LeaveRequestService extends BaseService {
         }
     }
 
+    public function removeSchedule(LeaveRequest $leaveRequest) {
+        /**
+         * @var EmployeeTimesheetSchedule[] $normal
+         */
+        $normal = EmployeeTimesheetSchedule::query()
+            ->where('employee_id', '=', $leaveRequest->employee->id)
+            ->get();
+
+        foreach ($normal as $item) {
+            $item->delete();
+        }
+    }
 }
