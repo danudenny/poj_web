@@ -79,4 +79,8 @@ class LeaveRequestApproval extends Model
     public function leaveRequest() {
         return $this->belongsTo(LeaveRequest::class, 'leave_request_id');
     }
+
+    public function employee() {
+        return $this->belongsTo(Employee::class, 'employee_id');
+    }
 }

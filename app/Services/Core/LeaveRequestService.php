@@ -10,10 +10,12 @@ use App\Models\LeaveRequestApproval;
 use App\Models\LeaveRequestHistory;
 use App\Models\MasterLeave;
 use App\Models\Role;
+use App\Models\User;
 use App\Services\BaseService;
 use App\Services\MinioService;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -31,62 +33,126 @@ class LeaveRequestService extends BaseService {
         $this->approvalService = new ApprovalService();
     }
 
-    public function index($request): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $auth = auth()->user();
-        $employee = $auth->employee;
-        $leaveRequest = LeaveRequest::with(['employee', 'leaveType', 'leaveHistory']);
-        $leaveRequest->when($request->employee_id, function ($query) use ($request) {
-            $query->where('employee_id', $request->employee_id);
-        });
-        $leaveRequest->when($request->leave_type_id, function ($query) use ($request) {
-            $query->where('leave_type_id', $request->leave_type_id);
-        });
-        $leaveRequest->when($request->start_date, function ($query) use ($request) {
-            $query->where('start_date', $request->start_date);
-        });
-        $leaveRequest->when($request->end_date, function ($query) use ($request) {
-            $query->where('end_date', $request->end_date);
-        });
-        $leaveRequest->when($request->last_status, function ($query) use ($request) {
-            $query->where('last_status', $request->last_status);
-        });
+        /**
+         * @var User $user
+         */
+        $user = auth()->user();
+
+        $unitRelationID = $request->get('unit_relation_id');
+        $leaveRequest = LeaveRequest::query()->with(['employee', 'leaveType', 'leaveHistory']);
+        $leaveRequest->join('employees', 'employees.id', '=', 'leave_requests.employee_id');
 
         if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
-            $leaveRequest = $leaveRequest->paginate($request->per_page ?? 10);
+
         } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
-            $leaveRequest = $leaveRequest->whereHas('employee', function ($query) use ($employee) {
-                $query->where('corporate_id', $employee->last_unit->id);
-                $query->orWhere('kanwil_id', $employee->last_unit->id);
-                $query->orWhere('area_id', $employee->last_unit->id);
-                $query->orWhere('cabang_id', $employee->last_unit->id);
-                $query->orWhere('outlet_id', $employee->last_unit->id);
-            })->paginate($request->per_page ?? 10);
-        } else if ($this->isRequestedRoleLevel(Role::RoleStaff)) {
-            $leaveRequest = $leaveRequest->where('employee_id', $auth->employee->id)->paginate($request->per_page ?? 10);;
+            if (!$unitRelationID) {
+                $defaultUnitRelationID = $user->employee->unit_id;
+
+                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                    $defaultUnitRelationID = $requestUnitRelationID;
+                }
+
+                $unitRelationID = $defaultUnitRelationID;
+            }
+        } else {
+            $leaveRequest->where('leave_requests.employee_id', '=', $user->employee_id);
         }
+
+        if ($unitRelationID) {
+            $leaveRequest->where(function(Builder $builder) use ($unitRelationID) {
+                $builder->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('employees.outlet_id', '=', $unitRelationID)
+                        ->orWhere('employees.cabang_id', '=', $unitRelationID)
+                        ->orWhere('employees.area_id', '=', $unitRelationID)
+                        ->orWhere('employees.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('employees.corporate_id', '=', $unitRelationID);
+                });
+            });
+        }
+
+        $leaveRequest->when($request->employee_id, function ($query) use ($request) {
+            $query->where('leave_requests.employee_id', $request->employee_id);
+        });
+        $leaveRequest->when($request->leave_type_id, function ($query) use ($request) {
+            $query->where('leave_requests.leave_type_id', $request->leave_type_id);
+        });
+        $leaveRequest->when($request->start_date, function ($query) use ($request) {
+            $query->where('leave_requests.start_date', $request->start_date);
+        });
+        $leaveRequest->when($request->end_date, function ($query) use ($request) {
+            $query->where('leave_requests.end_date', $request->end_date);
+        });
+        $leaveRequest->when($request->last_status, function ($query) use ($request) {
+            $query->where('leave_requests.last_status', $request->last_status);
+        });
+
+        $leaveRequest->select(['leave_requests.*'])
+            ->groupBy('leave_requests.id')
+            ->orderBy('leave_requests.id', 'DESC');
+
         return response()->json([
             'status' => 'success',
             'message' => 'Successfully get leave request data',
-            'data' => $leaveRequest
+            'data' => $this->list($leaveRequest, $request)
         ]);
     }
 
     public function listApprovals(Request $request) {
         try {
             /**
-             * @var Employee $employee
+             * @var User $user
              */
-            $employee = $request->user()->employee;
+            $user = $request->user();
 
-            $query = LeaveRequestApproval::query()->with(['leaveRequest', 'leaveRequest.employee', 'leaveRequest.leaveType'])
-                ->where('employee_id', '=', $employee->id);
+            $unitRelationID = $request->get('unit_relation_id');
+            $query = LeaveRequestApproval::query()->with(['leaveRequest', 'employee', 'leaveRequest.employee', 'leaveRequest.leaveType']);
+            $query->join('leave_requests', 'leave_requests.id', '=', 'leave_request_approvals.leave_request_id');
+            $query->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'leave_requests.employee_id');
+            $query->join('employees AS approverEmployee', 'approverEmployee.id', '=', 'leave_request_approvals.employee_id');
 
-            if ($status = $request->query('status')) {
-                $query->where('status', '=', $status);
+            if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+            } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
+                if (!$unitRelationID) {
+                    $defaultUnitRelationID = $user->employee->unit_id;
+
+                    if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                        $defaultUnitRelationID = $requestUnitRelationID;
+                    }
+
+                    $unitRelationID = $defaultUnitRelationID;
+                }
+            } else {
+                $query->where('leave_request_approvals.employee_id', '=', $user->employee_id);
             }
 
-            $query->orderBy('id', 'DESC');
+            if ($unitRelationID) {
+                $query->where(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere(function(Builder $builder) use ($unitRelationID) {
+                        $builder->orWhere('reqEmployee.outlet_id', '=', $unitRelationID)
+                            ->orWhere('reqEmployee.cabang_id', '=', $unitRelationID)
+                            ->orWhere('reqEmployee.area_id', '=', $unitRelationID)
+                            ->orWhere('reqEmployee.kanwil_id', '=', $unitRelationID)
+                            ->orWhere('reqEmployee.corporate_id', '=', $unitRelationID);
+                    })->orWhere(function(Builder $builder) use ($unitRelationID) {
+                        $builder->orWhere('approverEmployee.outlet_id', '=', $unitRelationID)
+                            ->orWhere('approverEmployee.cabang_id', '=', $unitRelationID)
+                            ->orWhere('approverEmployee.area_id', '=', $unitRelationID)
+                            ->orWhere('approverEmployee.kanwil_id', '=', $unitRelationID)
+                            ->orWhere('approverEmployee.corporate_id', '=', $unitRelationID);
+                    });
+                });
+            }
+
+            if ($status = $request->query('status')) {
+                $query->where('leave_request_approvals.status', '=', $status);
+            }
+
+            $query->select(['leave_request_approvals.*']);
+            $query->groupBy('leave_request_approvals.id');
+            $query->orderBy('leave_request_approvals.id', 'DESC');
 
             return response()->json([
                 'status' => true,
