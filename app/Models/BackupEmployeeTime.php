@@ -38,6 +38,46 @@ class BackupEmployeeTime extends Model
         'check_out_time_with_employee_timezone'
     ];
 
+    public function getCheckInTimeWithTimeZoneAttribute() {
+        $time = $this->check_in_time;
+
+        if ($time) {
+            return Carbon::parse($time, 'UTC')->setTimezone($this->check_in_timezone)->format('Y-m-d H:i:s');
+        }
+
+        return null;
+    }
+
+    public function getCheckOutTimeWithTimeZoneAttribute() {
+        $time = $this->check_out_time;
+
+        if ($time) {
+            return Carbon::parse($time, 'UTC')->setTimezone($this->check_out_timezone)->format('Y-m-d H:i:s');
+        }
+
+        return null;
+    }
+
+    public function getStartTimeWithTimeZoneAttribute() {
+        $time = $this->backupTime->start_time;
+
+        if ($time) {
+            return Carbon::parse($time, 'UTC')->setTimezone($this->backupTime->backup->timezone)->format('Y-m-d H:i:s');
+        }
+
+        return null;
+    }
+
+    public function getEndTimeWithTimeZoneAttribute() {
+        $time = $this->backupTime->end_time;
+
+        if ($time) {
+            return Carbon::parse($time, 'UTC')->setTimezone($this->backupTime->backup->timezone)->format('Y-m-d H:i:s');
+        }
+
+        return null;
+    }
+
     /**
      * @return string|null
      */

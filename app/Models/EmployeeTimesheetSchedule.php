@@ -58,30 +58,40 @@ class EmployeeTimesheetSchedule extends Model
     ];
 
     public function getCheckInTimeWithTimeZoneAttribute() {
-        $checkInTime = $this->check_in_time;
+        $time = $this->check_in_time;
 
-        if ($checkInTime) {
-            return Carbon::parse($checkInTime, 'UTC')->setTimezone($this->check_in_timezone)->format('Y-m-d H:i:s');
+        if ($time) {
+            return Carbon::parse($time, 'UTC')->setTimezone($this->check_in_timezone)->format('Y-m-d H:i:s');
         }
 
         return null;
     }
 
     public function getCheckOutTimeWithTimeZoneAttribute() {
-        $checkOutTime = $this->check_out_time;
+        $time = $this->check_out_time;
 
-        if ($checkOutTime) {
-            return Carbon::parse($checkOutTime, 'UTC')->setTimezone($this->check_out_timezone)->format('Y-m-d H:i:s');
+        if ($time) {
+            return Carbon::parse($time, 'UTC')->setTimezone($this->check_out_timezone)->format('Y-m-d H:i:s');
         }
 
         return null;
     }
 
     public function getStartTimeWithTimeZoneAttribute() {
-        $checkOutTime = $this->check_out_time;
+        $time = $this->start_time;
 
-        if ($checkOutTime) {
-            return Carbon::parse($checkOutTime, 'UTC')->setTimezone($this->check_out_timezone)->format('Y-m-d H:i:s');
+        if ($time) {
+            return Carbon::parse($time, 'UTC')->setTimezone($this->timezone)->format('Y-m-d H:i:s');
+        }
+
+        return null;
+    }
+
+    public function getEndTimeWithTimeZoneAttribute() {
+        $time = $this->end_time;
+
+        if ($time) {
+            return Carbon::parse($time, 'UTC')->setTimezone($this->timezone)->format('Y-m-d H:i:s');
         }
 
         return null;
