@@ -137,7 +137,7 @@ class BackupService extends ScheduleService
         /**
          * @var Backup $backup
          */
-        $backup = Backup::query()->with(['unit', 'job', 'backupHistory', 'backupTimes.backupEmployees', 'backupTimes.backupEmployees.employee:employees.id,name', 'backupEmployees', 'requestorEmployee:employees.id,name'])->find($id);
+        $backup = Backup::query()->with(['unit', 'job', 'backupApprovals.employee', 'backupHistory', 'backupTimes.backupEmployees', 'backupTimes.backupEmployees.employee:employees.id,name', 'backupEmployees', 'requestorEmployee:employees.id,name'])->find($id);
         if (!$backup) {
             return response()->json([
                 'status' => 'error',

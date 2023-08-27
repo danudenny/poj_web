@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * Relations:
  * @property-read Overtime $overtime
+ * @property-read Employee $employee
  */
 class OvertimeApproval extends Model
 {

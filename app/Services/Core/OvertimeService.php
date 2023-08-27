@@ -140,7 +140,7 @@ class OvertimeService extends ScheduleService
          */
         $overtime = Overtime::query()
             ->with([
-                'requestorEmployee', 'unit',
+                'requestorEmployee', 'unit', 'overtimeApprovals.employee',
                 'overtimeHistories', 'overtimeHistories.employee:employees.id,name',
                 'overtimeDates', 'overtimeDates.overtimeEmployees', 'overtimeDates.overtimeEmployees.employee:employees.id,name'
             ])->where('id', '=', $id)
