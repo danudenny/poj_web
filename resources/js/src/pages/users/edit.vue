@@ -26,7 +26,7 @@
                                 <label class="form-label">Password</label>
                                 <input class="form-control" type="password" placeholder="Password" v-model="user.password">
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-3" v-if="false">
                                 <div class="mb-2">
                                     <label class="col-form-label">Roles</label>
                                     <multiselect

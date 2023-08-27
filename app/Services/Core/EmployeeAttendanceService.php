@@ -1040,7 +1040,11 @@ class EmployeeAttendanceService extends BaseService
                     end_time AS end_time,
                     timezone AS timezone,
                     (start_time::timestamp without time zone at time zone 'UTC' at time zone timezone) AS start_time_with_timezone,
-                    (end_time::timestamp without time zone at time zone 'UTC' at time zone timezone) AS end_time_with_timezone
+                    (end_time::timestamp without time zone at time zone 'UTC' at time zone timezone) AS end_time_with_timezone,
+                    check_in_time AS check_in_time,
+                    check_out_time AS check_out_time,
+                    (check_in_time::timestamp without time zone at time zone 'UTC' at time zone timezone) AS check_in_time_with_timezone,
+                    (check_out_time::timestamp without time zone at time zone 'UTC' at time zone timezone) AS check_out_time_with_timezone
                 ")->where('employee_id', '=', $user->employee_id)
             ->unionAll(OvertimeEmployee::query()->selectRaw("
                     'overtime' AS reference_type,
@@ -1048,8 +1052,12 @@ class EmployeeAttendanceService extends BaseService
                     od.start_time AS start_time,
                     od.end_time AS end_time,
                     o.timezone AS timezone,
-                    (od.start_time::timestamp without time zone at time zone 'UTC' at time zone o.timezone) AS start_time_with_timezone,
-                    (od.end_time::timestamp without time zone at time zone 'UTC' at time zone o.timezone) AS end_time_with_timezone
+                    (od.start_time::timestamp without time zone at time zone 'UTC' at time zone o.timezone) AS check_in_time_with_timezone,
+                    (od.end_time::timestamp without time zone at time zone 'UTC' at time zone o.timezone) AS check_out_time_with_timezone,
+                    overtime_employees.check_in_time AS check_in_time,
+                    overtime_employees.check_out_time AS check_out_time,
+                    (overtime_employees.check_in_time::timestamp without time zone at time zone 'UTC' at time zone o.timezone) AS check_in_time_with_timezone,
+                    (overtime_employees.check_out_time::timestamp without time zone at time zone 'UTC' at time zone o.timezone) AS check_out_time_with_timezone
                 ")->join('overtime_dates AS od', 'overtime_employees.overtime_date_id', '=', 'od.id')
                 ->join('overtimes AS o', 'o.id', '=', 'od.overtime_id')
                 ->where('employee_id', '=', $user->employee_id)
@@ -1060,7 +1068,11 @@ class EmployeeAttendanceService extends BaseService
                     bt.end_time AS end_time,
                     b.timezone AS timezone,
                     (bt.start_time::timestamp without time zone at time zone 'UTC' at time zone b.timezone) AS start_time_with_timezone,
-                    (bt.end_time::timestamp without time zone at time zone 'UTC' at time zone b.timezone) AS end_time_with_timezone
+                    (bt.end_time::timestamp without time zone at time zone 'UTC' at time zone b.timezone) AS end_time_with_timezone,
+                    backup_employee_times.check_in_time AS check_in_time,
+                    backup_employee_times.check_out_time AS check_out_time,
+                    (backup_employee_times.check_in_time::timestamp without time zone at time zone 'UTC' at time zone b.timezone) AS check_in_time_with_timezone,
+                    (backup_employee_times.check_out_time::timestamp without time zone at time zone 'UTC' at time zone b.timezone) AS check_out_time_with_timezone
                 ")->join('backup_times AS bt', 'backup_employee_times.backup_time_id', '=', 'bt.id')
                 ->join('backups AS b', 'b.id', '=', 'bt.backup_id')
                 ->where('employee_id', '=', $user->employee_id)
@@ -1073,6 +1085,13 @@ class EmployeeAttendanceService extends BaseService
         }
         if ($reference_type = $request->query('reference_type')) {
             $query->whereRaw("reference_type = '$reference_type'");
+        }
+
+        if ($startTime = $request->query('start_time')) {
+            $query->whereRaw("start_time_with_timezone::DATE >= '$startTime'");
+        }
+        if ($endTime = $request->query('end_time')) {
+            $query->whereRaw("end_time_with_timezone <= '$endTime'");
         }
 
         return response()->json([
