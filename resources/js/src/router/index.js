@@ -1005,7 +1005,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Employee Approval',
                     requiresAuth: true,
-                    permission : 'event-employee-read',
+                    permission : 'event-approval-read',
                 }
             },
         ]

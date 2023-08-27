@@ -50,4 +50,8 @@ class EventApproval extends Model
     public function event() {
         return $this->belongsTo(Event::class, 'event_id');
     }
+
+    public function employee() {
+        return $this->belongsTo(Employee::class, 'employee_id');
+    }
 }

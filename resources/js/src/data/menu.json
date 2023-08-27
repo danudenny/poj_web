@@ -343,7 +343,7 @@
             "headTitle1": "EVENT",
             "headTitle2": "Master data management",
             "type": "headtitle",
-            "permission" : "event-read"
+            "permission" : "event-menu-read"
         },
         {
             "title": "Event Request",
@@ -361,7 +361,7 @@
             "type": "link",
             "active": false,
             "path": "/event/event-approval",
-            "permission" : "event-read"
+            "permission" : "event-approval-read"
         },
         {
             "title": "Employee Event",

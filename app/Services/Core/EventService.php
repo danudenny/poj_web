@@ -44,38 +44,48 @@ class EventService extends BaseService
          */
         $user = $request->user();
 
+        $unitRelationID = $request->get('unit_relation_id');
+
         $query = Event::query()->with(['requestorEmployee:employees.id,name']);
+        $query->join('event_attendances', 'event_attendances.event_id', '=', 'events.id');
+        $query->join('employees', 'employees.id', '=', 'event_attendances.employee_id');
+        $query->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'events.requestor_employee_id');
 
         $query->when($request->filled('status'), function(Builder $builder) use ($request) {
             $builder->where('events.last_status', '=', $request->input('status'));
         });
 
-        if ($user->isHighestRole(Role::RoleStaff)) {
-            $query->where('events.requestor_employee_id', '=', $user->employee_id);
-        } else if ($user->isHighestRole(Role::RoleAdmin)) {
-            $query->join('event_attendances', 'event_attendances.event_id', '=', 'events.id');
-            $query->join('employees', 'employees.id', '=', 'event_attendances.employee_id');
-            $query->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'events.requestor_employee_id');
+        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
 
-            $query->where(function(Builder $builder) use ($user) {
-                $lastUnitID = $user->employee->getLastUnitID();
-                if ($requestUnitID = $this->getRequestedUnitID()) {
-                    $lastUnitID = $requestUnitID;
+        } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
+            if (!$unitRelationID) {
+                $defaultUnitRelationID = $user->employee->unit_id;
+
+                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                    $defaultUnitRelationID = $requestUnitRelationID;
                 }
 
-                $builder->orWhere(function(Builder $builder) use ($lastUnitID) {
-                    $builder->orWhere('employees.outlet_id', '=', $lastUnitID)
-                        ->orWhere('employees.cabang_id', '=', $lastUnitID)
-                        ->orWhere('employees.area_id', '=', $lastUnitID)
-                        ->orWhere('employees.kanwil_id', '=', $lastUnitID)
-                        ->orWhere('employees.corporate_id', '=', $lastUnitID);
-                })->orWhere(function(Builder $builder) use ($lastUnitID) {
-                    $builder->orWhere('reqEmployee.outlet_id', '=', $lastUnitID)
-                        ->orWhere('reqEmployee.cabang_id', '=', $lastUnitID)
-                        ->orWhere('reqEmployee.area_id', '=', $lastUnitID)
-                        ->orWhere('reqEmployee.kanwil_id', '=', $lastUnitID)
-                        ->orWhere('reqEmployee.corporate_id', '=', $lastUnitID);
-                })->orWhere('events.requestor_employee_id', '=', $user->employee_id);
+                $unitRelationID = $defaultUnitRelationID;
+            }
+        } else {
+            $query->where('events.requestor_employee_id', '=', $user->employee_id);
+        }
+
+        if ($unitRelationID) {
+            $query->where(function(Builder $builder) use ($unitRelationID) {
+                $builder->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('employees.outlet_id', '=', $unitRelationID)
+                        ->orWhere('employees.cabang_id', '=', $unitRelationID)
+                        ->orWhere('employees.area_id', '=', $unitRelationID)
+                        ->orWhere('employees.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('employees.corporate_id', '=', $unitRelationID);
+                })->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('reqEmployee.outlet_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.cabang_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.area_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.corporate_id', '=', $unitRelationID);
+                });
             });
         }
 
@@ -115,19 +125,66 @@ class EventService extends BaseService
 
     public function listApproval(Request $request) {
         /**
-         * @var Employee $employee
+         * @var User $user
          */
-        $employee = $request->user()->employee;
+        $user = $request->user();
 
-        $query = EventApproval::query()->with(['event', 'event.requestorEmployee'])
-            ->select(['event_approvals.*'])
-            ->where('employee_id', '=', $employee->id);
+        $unitRelationID = $request->get('unit_relation_id');
 
-        if ($status = $request->query('status')) {
-            $query->where('status', '=', $status);
+        $query = EventApproval::query()->with(['event', 'event.requestorEmployee', 'employee']);
+        $query->join('events', 'events.id', '=', 'event_approvals.event_id');
+        $query->join('event_attendances', 'event_attendances.event_id', '=', 'events.id');
+        $query->join('employees', 'employees.id', '=', 'event_attendances.employee_id');
+        $query->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'events.requestor_employee_id');
+        $query->join('employees AS approvalEmployee', 'approvalEmployee.id', '=', 'event_approvals.employee_id');
+
+        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+        } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
+            if (!$unitRelationID) {
+                $defaultUnitRelationID = $user->employee->unit_id;
+
+                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                    $defaultUnitRelationID = $requestUnitRelationID;
+                }
+
+                $unitRelationID = $defaultUnitRelationID;
+            }
+        } else {
+            $query->where('event_approvals.employee_id', '=', $user->employee_id);
         }
 
-        $query->orderBy('id', 'DESC');
+        if ($unitRelationID) {
+            $query->where(function(Builder $builder) use ($unitRelationID) {
+                $builder->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('employees.outlet_id', '=', $unitRelationID)
+                        ->orWhere('employees.cabang_id', '=', $unitRelationID)
+                        ->orWhere('employees.area_id', '=', $unitRelationID)
+                        ->orWhere('employees.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('employees.corporate_id', '=', $unitRelationID);
+                })->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('reqEmployee.outlet_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.cabang_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.area_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.corporate_id', '=', $unitRelationID);
+                })->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('approvalEmployee.outlet_id', '=', $unitRelationID)
+                        ->orWhere('approvalEmployee.cabang_id', '=', $unitRelationID)
+                        ->orWhere('approvalEmployee.area_id', '=', $unitRelationID)
+                        ->orWhere('approvalEmployee.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('approvalEmployee.corporate_id', '=', $unitRelationID);
+                });
+            });
+        }
+
+        if ($status = $request->query('status')) {
+            $query->where('event_approvals.status', '=', $status);
+        }
+
+        $query->select(['event_approvals.*']);
+        $query->groupBy('event_approvals.id');
+        $query->orderBy('event_approvals.id', 'DESC');
 
         return response()->json([
             'status' => true,
@@ -620,8 +677,38 @@ class EventService extends BaseService
          */
         $user = $request->user();
 
-        $employeeEvents = EmployeeEvent::query()->with(['employee:employees.id,name', 'event:events.id,title,requestor_employee_id,timezone', 'event.requestorEmployee:employees.id,name'])
-            ->orderBy('employee_events.event_datetime', 'ASC');
+        $unitRelationID = $request->get('unit_relation_id');
+
+        $employeeEvents = EmployeeEvent::query()->with(['employee:employees.id,name', 'event:events.id,title,requestor_employee_id,timezone', 'event.requestorEmployee:employees.id,name']);
+        $employeeEvents->join('employees', 'employees.id', '=', 'employee_events.employee_id');
+
+        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+        } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
+            if (!$unitRelationID) {
+                $defaultUnitRelationID = $user->employee->unit_id;
+
+                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                    $defaultUnitRelationID = $requestUnitRelationID;
+                }
+
+                $unitRelationID = $defaultUnitRelationID;
+            }
+        } else {
+            $employeeEvents->where('employees.id', '=', $user->employee_id);
+        }
+
+        if ($unitRelationID) {
+            $employeeEvents->where(function(Builder $builder) use ($unitRelationID) {
+                $builder->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('employees.outlet_id', '=', $unitRelationID)
+                        ->orWhere('employees.cabang_id', '=', $unitRelationID)
+                        ->orWhere('employees.area_id', '=', $unitRelationID)
+                        ->orWhere('employees.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('employees.corporate_id', '=', $unitRelationID);
+                });
+            });
+        }
 
         if ($filter = $request->input('data_range')) {
             if($filter == 'this_month') {
@@ -629,25 +716,9 @@ class EventService extends BaseService
             }
         }
 
-        if ($user->isHighestRole(Role::RoleStaff)) {
-            $employeeEvents->where('employee_events.employee_id', '=', $user->employee_id);
-        } else if ($user->isHighestRole(Role::RoleAdmin)) {
-            $employeeEvents->join('employees', 'employees.id', '=', 'employee_events.employee_id');
-            $employeeEvents->where(function(Builder $builder) use ($user) {
-                $lastUnitID = $user->employee->getLastUnitID();
-                if ($requestUnitID = $this->getRequestedUnitID()) {
-                    $lastUnitID = $requestUnitID;
-                }
-
-                $builder->where(function(Builder $builder) use ($lastUnitID) {
-                    $builder->orWhere('employees.outlet_id', '=', $lastUnitID)
-                        ->orWhere('employees.cabang_id', '=', $lastUnitID)
-                        ->orWhere('employees.area_id', '=', $lastUnitID)
-                        ->orWhere('employees.kanwil_id', '=', $lastUnitID)
-                        ->orWhere('employees.corporate_id', '=', $lastUnitID);
-                });
-            });
-        }
+        $employeeEvents->select(['employee_events.*']);
+        $employeeEvents->groupBy('employee_events.id');
+        $employeeEvents->orderBy('employee_events.event_datetime', 'ASC');
 
         return response()->json([
             'status' => 'success',
