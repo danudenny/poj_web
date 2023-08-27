@@ -51,7 +51,6 @@ export default {
             await this.$axios.get(`/api/v1/admin/backup`)
                 .then(response => {
                     this.backups = response.data.data;
-                    console.log(this.backups)
                 })
                 .catch(error => {
                     console.error(error);

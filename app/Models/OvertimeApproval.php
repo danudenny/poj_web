@@ -50,4 +50,8 @@ class OvertimeApproval extends Model
     public function overtime(): BelongsTo {
         return $this->belongsTo(Overtime::class, 'overtime_id');
     }
+
+    public function employee() {
+        return $this->belongsTo(Employee::class, 'employee_id');
+    }
 }

@@ -51,38 +51,52 @@ class OvertimeService extends ScheduleService
          */
         $user = $request->user();
 
+        $unitRelationID = $request->get('unit_relation_id');
+
         $overtimes = Overtime::query()->with(['requestorEmployee:employees.id,name', 'unit:units.relation_id,name']);
+        $overtimes->join('overtime_dates', 'overtime_dates.overtime_id', '=', 'overtimes.id');
+        $overtimes->join('overtime_employees', 'overtime_employees.overtime_date_id', '=', 'overtime_dates.id');
+        $overtimes->join('employees', 'employees.id', '=', 'overtime_employees.employee_id');
+        $overtimes->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'overtimes.requestor_employee_id');
 
         $overtimes->when($request->filled('status'), function (Builder $builder) use ($request) {
             $builder->where('overtimes.last_status', '=', $request->input('status'));
         });
 
-        if ($this->isRequestedRoleLevel(Role::RoleStaff)) {
-            $overtimes->where('overtimes.requestor_employee_id', '=', $user->employee_id);
+        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
         } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
-            $overtimes->join('overtime_dates', 'overtime_dates.overtime_id', '=', 'overtimes.id');
-            $overtimes->join('overtime_employees', 'overtime_employees.overtime_date_id', '=', 'overtime_dates.id');
-            $overtimes->join('employees', 'employees.id', '=', 'overtime_employees.employee_id');
-            $overtimes->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'overtimes.requestor_employee_id');
-            $overtimes->where(function(Builder $builder) use ($user) {
-                $lastUnitID = $user->employee->getLastUnitID();
-                if ($requestUnitID = $this->getRequestedUnitID()) {
-                    $lastUnitID = $requestUnitID;
+            if (!$unitRelationID) {
+                $defaultUnitRelationID = $user->employee->unit_id;
+
+                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                    $defaultUnitRelationID = $requestUnitRelationID;
                 }
 
-                $builder->orWhere(function(Builder $builder) use ($lastUnitID) {
-                    $builder->orWhere('employees.outlet_id', '=', $lastUnitID)
-                        ->orWhere('employees.cabang_id', '=', $lastUnitID)
-                        ->orWhere('employees.area_id', '=', $lastUnitID)
-                        ->orWhere('employees.kanwil_id', '=', $lastUnitID)
-                        ->orWhere('employees.corporate_id', '=', $lastUnitID);
-                })->orWhere(function(Builder $builder) use ($lastUnitID) {
-                    $builder->orWhere('reqEmployee.outlet_id', '=', $lastUnitID)
-                        ->orWhere('reqEmployee.cabang_id', '=', $lastUnitID)
-                        ->orWhere('reqEmployee.area_id', '=', $lastUnitID)
-                        ->orWhere('reqEmployee.kanwil_id', '=', $lastUnitID)
-                        ->orWhere('reqEmployee.corporate_id', '=', $lastUnitID);
-                })->orWhere('overtimes.requestor_employee_id', '=', $user->employee_id);
+                $unitRelationID = $defaultUnitRelationID;
+            }
+        } else {
+            $overtimes->where(function(Builder $builder) use ($user) {
+                $builder->orWhere('overtimes.requestor_employee_id', '=', $user->employee_id)
+                    ->orWhere('overtime_employees.employee_id', '=', $user->employee_id);
+            });
+        }
+
+        if ($unitRelationID) {
+            $overtimes->where(function(Builder $builder) use ($unitRelationID) {
+                $builder->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('employees.outlet_id', '=', $unitRelationID)
+                        ->orWhere('employees.cabang_id', '=', $unitRelationID)
+                        ->orWhere('employees.area_id', '=', $unitRelationID)
+                        ->orWhere('employees.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('employees.corporate_id', '=', $unitRelationID);
+                })->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('reqEmployee.outlet_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.cabang_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.area_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.corporate_id', '=', $unitRelationID);
+                });
             });
         }
 
@@ -153,33 +167,44 @@ class OvertimeService extends ScheduleService
          */
         $user = $request->user();
 
+        $unitRelationID = $request->get('unit_relation_id');
         $query = OvertimeEmployee::query()
             ->with(['employee:employees.id,name', 'overtimeDate.overtime'])
+            ->join('employees', 'employees.id', '=', 'overtime_employees.employee_id')
             ->join('overtime_dates', 'overtime_dates.id', '=', 'overtime_employees.overtime_date_id')
             ->join('overtimes', 'overtimes.id', '=', 'overtime_dates.overtime_id')
             ->where('overtimes.last_status', '!=', OvertimeHistory::TypeRejected);
 
-        if ($user->isHighestRole(Role::RoleStaff)) {
-            $query->where('overtime_employees.employee_id', '=', $user->employee_id);
-        } else if ($user->isHighestRole(Role::RoleAdmin)) {
-            $query->join('employees', 'employees.id', '=', 'overtime_employees.employee_id');
-            $query->where(function(Builder $builder) use ($user) {
-                $lastUnitID = $user->employee->getLastUnitID();
-                if ($requestUnitID = $this->getRequestedUnitID()) {
-                    $lastUnitID = $requestUnitID;
+        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+        } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
+            if (!$unitRelationID) {
+                $defaultUnitRelationID = $user->employee->unit_id;
+
+                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                    $defaultUnitRelationID = $requestUnitRelationID;
                 }
 
-                $builder->where(function(Builder $builder) use ($lastUnitID) {
-                    $builder->orWhere('employees.outlet_id', '=', $lastUnitID)
-                        ->orWhere('employees.cabang_id', '=', $lastUnitID)
-                        ->orWhere('employees.area_id', '=', $lastUnitID)
-                        ->orWhere('employees.kanwil_id', '=', $lastUnitID)
-                        ->orWhere('employees.corporate_id', '=', $lastUnitID);
+                $unitRelationID = $defaultUnitRelationID;
+            }
+        } else {
+            $query->where('overtime_employees.employee_id', '=', $user->employee_id);
+        }
+
+        if ($unitRelationID) {
+            $query->where(function(Builder $builder) use ($unitRelationID) {
+                $builder->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('employees.outlet_id', '=', $unitRelationID)
+                        ->orWhere('employees.cabang_id', '=', $unitRelationID)
+                        ->orWhere('employees.area_id', '=', $unitRelationID)
+                        ->orWhere('employees.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('employees.corporate_id', '=', $unitRelationID);
                 });
             });
         }
 
         $query->select(['overtime_employees.*']);
+        $query->groupBy('overtime_employees.id', 'overtimes.start_date');
         $query->orderBy('overtimes.start_date', 'DESC');
 
         return response()->json([
@@ -195,13 +220,63 @@ class OvertimeService extends ScheduleService
          */
         $user = $request->user();
 
-        $query = OvertimeApproval::query()->with(['overtime', 'overtime.requestorEmployee:employees.id,name', 'overtime.unit:units.relation_id,name'])
-            ->where('employee_id', '=', $user->employee_id)
-            ->orderBy('id', 'DESC');
+        $unitRelationID = $request->get('unit_relation_id');
+
+        $query = OvertimeApproval::query()->with(['overtime', 'employee', 'overtime.requestorEmployee:employees.id,name', 'overtime.unit:units.relation_id,name'])
+            ->join('overtimes', 'overtimes.id', '=', 'overtime_approvals.overtime_id');
+        $query->join('overtime_dates', 'overtime_dates.overtime_id', '=', 'overtimes.id');
+        $query->join('overtime_employees', 'overtime_employees.overtime_date_id', '=', 'overtime_dates.id');
+        $query->join('employees', 'employees.id', '=', 'overtime_employees.employee_id');
+        $query->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'overtimes.requestor_employee_id');;
+        $query->join('employees AS approvalEmployee', 'approvalEmployee.id', '=', 'overtime_approvals.employee_id');;
+
+        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+        } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
+            if (!$unitRelationID) {
+                $defaultUnitRelationID = $user->employee->unit_id;
+
+                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                    $defaultUnitRelationID = $requestUnitRelationID;
+                }
+
+                $unitRelationID = $defaultUnitRelationID;
+            }
+        } else {
+            $query->where('overtime_approvals.employee_id', '=', $user->employee_id);
+        }
+
+        if ($unitRelationID) {
+            $query->where(function(Builder $builder) use ($unitRelationID) {
+                $builder->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('employees.outlet_id', '=', $unitRelationID)
+                        ->orWhere('employees.cabang_id', '=', $unitRelationID)
+                        ->orWhere('employees.area_id', '=', $unitRelationID)
+                        ->orWhere('employees.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('employees.corporate_id', '=', $unitRelationID);
+                })->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('reqEmployee.outlet_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.cabang_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.area_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.corporate_id', '=', $unitRelationID);
+                })->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('approvalEmployee.outlet_id', '=', $unitRelationID)
+                        ->orWhere('approvalEmployee.cabang_id', '=', $unitRelationID)
+                        ->orWhere('approvalEmployee.area_id', '=', $unitRelationID)
+                        ->orWhere('approvalEmployee.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('approvalEmployee.corporate_id', '=', $unitRelationID);
+                });
+            });
+        }
 
         if ($status = $request->query('status')) {
-            $query->where('status', '=', $status);
+            $query->where('overtime_approvals.status', '=', $status);
         }
+
+        $query->select(['overtime_approvals.*'])
+            ->groupBy('overtime_approvals.id')
+            ->orderBy('overtime_approvals.id', 'DESC');
 
         return response()->json([
             'status' => 'success',

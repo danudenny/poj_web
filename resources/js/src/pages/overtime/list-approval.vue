@@ -62,9 +62,27 @@ export default {
                         headerFilter:"input"
                     },
                     {
+                        title: 'Approver Name',
+                        field: 'employee.name',
+                        headerFilter:"input"
+                    },
+                    {
                         title: 'Status',
                         field: 'real_status',
-                        headerFilter:"input"
+                        headerFilter:"input",
+                        formatter: function (cell, formatterParams, onRendered) {
+                            let val = cell.getValue()
+
+                            if (val === 'approved') {
+                                return `<span class="badge badge-success">Approved</span>`
+                            } else if (val === 'rejected') {
+                                return `<span class="badge badge-danger">Rejected</span>`
+                            } else if (val === 'pending') {
+                                return `<span class="badge badge-info">Pending</span>`
+                            } else {
+                                return `<span class="badge badge-warning">${val}</span>`
+                            }
+                        },
                     },
                     {
                         title: 'Unit Name',
@@ -102,7 +120,8 @@ export default {
                 ajaxConfig: {
                     headers: {
                         Authorization: `Bearer ${ls}`,
-                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
+                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? '',
+                        "X-Selected-Role": this.$store.state.currentRole,
                     },
                 },
                 ajaxParams: {
