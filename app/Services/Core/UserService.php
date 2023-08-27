@@ -84,7 +84,7 @@ class UserService extends BaseService
             }
 
             $users->when(request()->filled('name'), function ($query) {
-                $query->whereRaw('LOWER("users.name") LIKE ? ', '%'.strtolower(request()->query('name')).'%');
+                $query->whereRaw('LOWER(users.name) LIKE ? ', '%'.strtolower(request()->query('name')).'%');
             });
 
             $users->when(request()->filled('job_name'), function ($query) {
