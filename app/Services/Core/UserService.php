@@ -134,7 +134,7 @@ class UserService extends BaseService
     public function view($data): Model|Builder
     {
         try {
-            $user = User::with(['roles:id,name'])->firstWhere('id', $data['id']);
+            $user = User::with(['roles:id,name', 'employee'])->firstWhere('id', $data['id']);
 
             if (!$user) {
                 throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);

@@ -128,6 +128,7 @@ export default {
             await axios
                 .get(`/api/v1/admin/user/view?id=`+ route.params.id)
                 .then(response => {
+                    console.log(response.data.data)
                    this.user = response.data.data;
                     this.user.id = response.data.data.id;
                     this.user.name = response.data.data.name;
@@ -135,6 +136,7 @@ export default {
                     this.user.employee_id = response.data.data.employee_id;
                     this.user.email = response.data.data.email;
                     this.user.roles = response.data.data.roles;
+                    this.user.employee = response.data.data.employee;
                 })
                 .catch(error => {
                     console.error(error);
