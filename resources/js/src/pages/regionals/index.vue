@@ -107,8 +107,8 @@ export default {
         viewDetailsFormatter(cell, formatterParams, onRendered) {
             return `<button class="button-icon button-success" data-id="${cell.getRow().getData().id}"><i class="fa fa-eye"></i> </button>`;
         },
-        viewData(id) {
-            this.$router.push({name: 'regional_detail', params: {id}});
+        viewData(data) {
+            this.$router.push({name: 'regional_detail', params: {id: data.id}});
         }
     }
 }

@@ -57,6 +57,36 @@ class EmployeeTimesheetSchedule extends Model
         'real_date'
     ];
 
+    public function getCheckInTimeWithTimeZoneAttribute() {
+        $checkInTime = $this->check_in_time;
+
+        if ($checkInTime) {
+            return Carbon::parse($checkInTime, 'UTC')->setTimezone($this->check_in_timezone)->format('Y-m-d H:i:s');
+        }
+
+        return null;
+    }
+
+    public function getCheckOutTimeWithTimeZoneAttribute() {
+        $checkOutTime = $this->check_out_time;
+
+        if ($checkOutTime) {
+            return Carbon::parse($checkOutTime, 'UTC')->setTimezone($this->check_out_timezone)->format('Y-m-d H:i:s');
+        }
+
+        return null;
+    }
+
+    public function getStartTimeWithTimeZoneAttribute() {
+        $checkOutTime = $this->check_out_time;
+
+        if ($checkOutTime) {
+            return Carbon::parse($checkOutTime, 'UTC')->setTimezone($this->check_out_timezone)->format('Y-m-d H:i:s');
+        }
+
+        return null;
+    }
+
     public function getRealDateAttribute() {
         return Carbon::parse($this->start_time, 'UTC')->setTimezone($this->timezone)->format('Y-m-d');
     }
