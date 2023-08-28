@@ -160,7 +160,10 @@ export default {
     components: {Timesheet, Employee, OperatingUnit, WorkReporting},
     data() {
         return {
-            item: [],
+            item: {
+	            lat: null,
+	            long: null
+            },
             childs: [],
             loading: false,
             editing: false,
@@ -204,7 +207,7 @@ export default {
             await this.$axios.get(`/api/v1/admin/unit/detail/${this.$route.params.id}`)
                 .then(response => {
                     this.item = response.data.data;
-                    this.initMap()
+                    // this.initMap()
                 })
                 .catch(error => {
                     console.error(error);
@@ -261,7 +264,6 @@ export default {
 		        .then(() => {
 			        this.editing = false;
 			        this.getKantorPerwakilan();
-			        this.initMap();
 			        useToast().success('Data successfully updated');
 		        })
 		        .catch(error => {
