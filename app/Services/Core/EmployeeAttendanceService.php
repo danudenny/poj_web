@@ -17,6 +17,8 @@ use App\Models\EmployeeTimesheetSchedule;
 use App\Models\LateCheckin;
 use App\Models\OvertimeEmployee;
 use App\Models\Role;
+use App\Models\UnitHasJob;
+use App\Models\UnitJob;
 use App\Models\User;
 use App\Models\WorkReporting;
 use App\Services\BaseService;
@@ -935,7 +937,7 @@ class EmployeeAttendanceService extends BaseService
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
-            $timezone = getTimezoneV2($metaData['latitude'], $metaData['longitude']);
+            $timezone = $this->getClientTimezone();
 
             $metaData['current_time_with_timezone'] = Carbon::now()->setTimezone($timezone)->format('Y-m-d H:i:s');
             $metaData['timezone'] = $timezone;
@@ -964,6 +966,25 @@ class EmployeeAttendanceService extends BaseService
             }
 
             if ($overtime = $employee->getActiveOvertime($timezone)) {
+                $unit = $overtime->overtimeDate->overtime->unit;
+
+                $jobs = $unit->jobs;
+                $listJobs = [];
+
+                foreach ($jobs as $job) {
+                    if ($job->odoo_job_id === $employee->job_id) {
+                        $listJobs[] = [
+                            'is_camera' => $job->pivot->is_camera,
+                            'is_upload' => $job->pivot->is_upload,
+                            'is_reporting' => $job->pivot->is_mandatory_reporting,
+                            'total_reporting' => $job->pivot->total_normal,
+                            'total_normal' => $job->pivot->total_normal,
+                            'total_backup' => $job->pivot->total_backup,
+                            'total_overtime' => $job->pivot->total_overtime,
+                        ];
+                    }
+                }
+
                 $activeSchedule['attendance']['overtime'] = [
                     'start_time' => Carbon::parse($overtime->overtimeDate->start_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'end_time' => Carbon::parse($overtime->overtimeDate->end_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
@@ -976,16 +997,37 @@ class EmployeeAttendanceService extends BaseService
                         ->where('reference_id', '=', $overtime->id)
                         ->count(),
                     'unit_target' => [
-                        'name' => $overtime->overtimeDate->overtime->unit->name,
-                        'latitude' => $overtime->overtimeDate->overtime->unit->lat,
-                        'longitude' => $overtime->overtimeDate->overtime->unit->lat
+                        'name' => $unit->name,
+                        'latitude' => $unit->lat,
+                        'longitude' => $unit->lat,
+                        'radius' => $unit->radius,
                     ],
+                    'work_reporting' => $listJobs
                 ];
 
                 $activeSchedule['current_attendance'] = $activeSchedule['attendance']['overtime'];
             }
 
             if ($backup = $employee->getActiveBackup($timezone)) {
+                $unit = $backup->backupTime->backup->unit;
+
+                $jobs = $unit->jobs;
+                $listJobs = [];
+
+                foreach ($jobs as $job) {
+                    if ($job->odoo_job_id === $employee->job_id) {
+                        $listJobs[] = [
+                            'is_camera' => $job->pivot->is_camera,
+                            'is_upload' => $job->pivot->is_upload,
+                            'is_reporting' => $job->pivot->is_mandatory_reporting,
+                            'total_reporting' => $job->pivot->total_normal,
+                            'total_normal' => $job->pivot->total_normal,
+                            'total_backup' => $job->pivot->total_backup,
+                            'total_overtime' => $job->pivot->total_overtime,
+                        ];
+                    }
+                }
+
                 $activeSchedule['attendance']['backup'] = [
                     'start_time' => Carbon::parse($backup->backupTime->start_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'end_time' => Carbon::parse($backup->backupTime->end_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
@@ -998,10 +1040,12 @@ class EmployeeAttendanceService extends BaseService
                     ->where('reference_id', '=', $backup->id)
                     ->count(),
                     'unit_target' => [
-                        'name' => $backup->backupTime->backup->unit->name,
-                        'latitude' => $backup->backupTime->backup->unit->lat,
-                        'longitude' => $backup->backupTime->backup->unit->lat
+                        'name' => $unit->name,
+                        'latitude' => $unit->lat,
+                        'longitude' => $unit->lat,
+                        'radius' => $unit->radius,
                     ],
+                    'work_reporting' => $listJobs
                 ];
 
                 if (is_null($activeSchedule['current_attendance'])) {
@@ -1019,7 +1063,25 @@ class EmployeeAttendanceService extends BaseService
                 }
             }
 
-            if ($normal = $employee->getActiveNormalSchedule()) {
+            if ($normal = $employee->getActiveNormalSchedule($timezone)) {
+                $unit = $normal->unit;
+
+                $jobs = $unit->jobs;
+                $listJobs = [];
+
+                foreach ($jobs as $job) {
+                    if ($job->odoo_job_id === $employee->job_id) {
+                        $listJobs[] = [
+                            'is_camera' => $job->pivot->is_camera,
+                            'is_upload' => $job->pivot->is_upload,
+                            'is_reporting' => $job->pivot->is_mandatory_reporting,
+                            'total_reporting' => $job->pivot->total_normal,
+                            'total_normal' => $job->pivot->total_normal,
+                            'total_backup' => $job->pivot->total_backup,
+                            'total_overtime' => $job->pivot->total_overtime,
+                        ];
+                    }
+                }
 
                 $activeSchedule['attendance']['normal'] = [
                     'minimum_start_time' => Carbon::parse($normal->start_time)->addMinutes(-$normal->early_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
@@ -1038,10 +1100,12 @@ class EmployeeAttendanceService extends BaseService
                         ->where('reference_id', '=', $normal->id)
                         ->count(),
                     'unit_target' => [
-                        'name' => $normal->unit->name,
-                        'latitude' => $normal->unit->lat,
-                        'longitude' => $normal->unit->long
+                        'name' => $unit->name,
+                        'latitude' => $unit->lat,
+                        'longitude' => $unit->long,
+                        'radius' => $unit->radius,
                     ],
+                    'work_reporting' => $listJobs
                 ];
 
                 if (is_null($activeSchedule['current_attendance'])) {
