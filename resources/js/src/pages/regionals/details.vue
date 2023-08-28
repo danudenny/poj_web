@@ -262,13 +262,12 @@ export default {
 			        radius: this.item.radius
 		        })
 		        .then(() => {
-			        this.editing = false;
-			        this.getKantorPerwakilan();
 			        useToast().success('Data successfully updated');
+			        window.location.reload();
 		        })
 		        .catch(error => {
 			        console.error(error);
-			        useToast().success('Data failed to update');
+			        useToast().error('Data failed to update');
 		        });
         },
         onCloseEdit() {

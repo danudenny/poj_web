@@ -856,6 +856,7 @@ class BackupService extends ScheduleService
              * @var User $user
              */
             $user = $request->user();
+            $clientTimezone = getClientTimezone();
 
             $query = BackupEmployeeTime::query()->with(['backupTime.backup.unit', 'employee:employees.id,name', 'employeeAttendance'])
                 ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
@@ -866,7 +867,7 @@ class BackupService extends ScheduleService
                 ->select(['backup_employee_times.*']);
 
             if ($monthly = $request->query('monthly')) {
-                $query->whereRaw("TO_CHAR(backup_times.start_time, 'YYYY-mm') = ?", [$monthly]);
+                $query->whereRaw("TO_CHAR((backup_times.start_time::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone'), 'YYYY-mm') = ?", [$monthly]);
             }
 
             return response()->json([

@@ -932,6 +932,7 @@ class OvertimeService extends ScheduleService
              * @var User $user
              */
             $user = $request->user();
+            $clientTimezone = getClientTimezone();
 
             $query = OvertimeEmployee::query()
                 ->with(['employee:employees.id,name', 'overtimeDate.overtime.unit', 'employeeAttendance'])
@@ -943,7 +944,7 @@ class OvertimeService extends ScheduleService
                 ->where('overtimes.last_status', '!=', OvertimeHistory::TypeRejected);
 
             if ($monthly = $request->query('monthly')) {
-                $query->whereRaw("TO_CHAR(overtime_dates.start_time, 'YYYY-mm') = ?", [$monthly]);
+                $query->whereRaw("TO_CHAR((overtime_dates.start_time::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone'), 'YYYY-mm') = ?", [$monthly]);
             }
 
             return response()->json([

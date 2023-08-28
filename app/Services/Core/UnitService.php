@@ -3,8 +3,11 @@
 namespace App\Services\Core;
 
 use App\Helpers\UnitHelper;
+use App\Models\Backup;
 use App\Models\Employee;
 use App\Models\EmployeeTimesheet;
+use App\Models\EmployeeTimesheetSchedule;
+use App\Models\Overtime;
 use App\Models\Role;
 use App\Models\Unit;
 use App\Models\User;
@@ -316,7 +319,14 @@ class UnitService extends BaseService
     {
         DB::beginTransaction();
         try {
+            /**
+             * @var Unit $units
+             */
             $units = Unit::where('id', $id)->first();
+
+            $beforeLat = $units->lat;
+            $beforeLong = $units->long;
+
             $units->lat = $data->lat;
             $units->long = $data->long;
             $units->radius = $data->radius;
@@ -329,6 +339,10 @@ class UnitService extends BaseService
                     'status' => 'error',
                     'message' => 'Failed to update unit'
                 ]);
+            }
+
+            if ($beforeLat != $units->lat || $beforeLong != $units->long) {
+                $this->updateScheduleLocation($units);
             }
 
             DB::commit();
@@ -390,5 +404,36 @@ class UnitService extends BaseService
                 'message' => $e->getMessage()
             ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public function updateScheduleLocation(Unit $unit) {
+        if ($unit->lat === null || $unit->long === null) {
+            return;
+        }
+
+        $timezone = getTimezoneV2($unit->lat, $unit->long);
+        EmployeeTimesheetSchedule::query()
+            ->where('unit_relation_id', '=', $unit->relation_id)
+            ->update([
+                'timezone' => $timezone,
+                'latitude' => $unit->lat,
+                'longitude' => $unit->long
+            ]);
+
+        Overtime::query()
+            ->where('unit_relation_id', '=', $unit->relation_id)
+            ->update([
+                'timezone' => $timezone,
+                'location_lat' => $unit->lat,
+                'location_long' => $unit->long
+            ]);
+
+        Backup::query()
+            ->where('unit_id', '=', $unit->relation_id)
+            ->update([
+                'timezone' => $timezone,
+                'location_lat' => $unit->lat,
+                'location_long' => $unit->long
+            ]);
     }
 }

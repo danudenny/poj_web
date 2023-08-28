@@ -42,7 +42,7 @@ class OvertimeEmployee extends Model
         $time = $this->check_in_time;
 
         if ($time) {
-            return Carbon::parse($time, 'UTC')->setTimezone($this->check_in_timezone)->format('Y-m-d H:i:s');
+            return Carbon::parse($time, 'UTC')->setTimezone(getClientTimezone())->format('Y-m-d H:i:s');
         }
 
         return null;
@@ -52,7 +52,7 @@ class OvertimeEmployee extends Model
         $time = $this->check_out_time;
 
         if ($time) {
-            return Carbon::parse($time, 'UTC')->setTimezone($this->check_out_timezone)->format('Y-m-d H:i:s');
+            return Carbon::parse($time, 'UTC')->setTimezone(getClientTimezone())->format('Y-m-d H:i:s');
         }
 
         return null;
@@ -62,7 +62,7 @@ class OvertimeEmployee extends Model
         $time = $this->overtimeDate->start_time;
 
         if ($time) {
-            return Carbon::parse($time, 'UTC')->setTimezone($this->overtimeDate->overtime->timezone)->format('Y-m-d H:i:s');
+            return Carbon::parse($time, 'UTC')->setTimezone(getClientTimezone())->format('Y-m-d H:i:s');
         }
 
         return null;
@@ -72,7 +72,7 @@ class OvertimeEmployee extends Model
         $time = $this->overtimeDate->end_time;
 
         if ($time) {
-            return Carbon::parse($time, 'UTC')->setTimezone($this->overtimeDate->overtime->timezone)->format('Y-m-d H:i:s');
+            return Carbon::parse($time, 'UTC')->setTimezone(getClientTimezone())->format('Y-m-d H:i:s');
         }
 
         return null;
