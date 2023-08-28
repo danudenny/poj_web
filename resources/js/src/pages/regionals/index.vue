@@ -67,7 +67,15 @@ export default {
                     }
                 },
                 ajaxURLGenerator: (url, config, params) => {
-                    return `${url}?page=${params.page}&per_page=${params.size}&append=total_child&unit_level=2`
+	                let localFilter = {
+		                name: ''
+	                }
+
+	                params.filter.map((item) => {
+		                if (item.field === 'name') localFilter.name = item.value
+	                })
+
+                    return `${url}?page=${params.page}&per_page=${params.size}&append=total_child&unit_level=2&name=${localFilter.name}`
                 },
                 layout: 'fitColumns',
                 columns: [
