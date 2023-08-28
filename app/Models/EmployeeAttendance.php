@@ -70,8 +70,43 @@ class EmployeeAttendance extends Model
     protected $appends = [
         'check_in_time_with_client_timezone',
         'check_out_time_with_client_timezone',
-        'last_approver'
+        'last_approver',
+        'unit_target'
     ];
+
+    public function getUnitTargetAttribute() {
+        if ($this->attendance_types == self::AttendanceTypeOvertime) {
+            /**
+             * @var OvertimeEmployee $employeeOvertime
+             */
+            $employeeOvertime = OvertimeEmployee::query()->where('employee_attendance_id', '=', $this->id)->first();
+            if ($employeeOvertime) {
+                return $employeeOvertime->overtimeDate->overtime->unit;
+            }
+
+            return null;
+        } else if ($this->attendance_types == self::AttendanceTypeNormal) {
+            /**
+             * @var EmployeeTimesheetSchedule $employeeTimesheetSchedule
+             */
+            $employeeTimesheetSchedule = EmployeeTimesheetSchedule::query()->where('employee_attendance_id', '=', $this->id)->first();
+            if ($employeeTimesheetSchedule) {
+                return $employeeTimesheetSchedule->unit;
+            }
+
+            return null;
+        } else if ($this->attendance_types == self::AttendanceTypeBackup) {
+            /**
+             * @var BackupEmployeeTime $employeeBackup
+             */
+            $employeeBackup = BackupEmployeeTime::query()->where('employee_attendance_id', '=', $this->id)->first();
+            if ($employeeBackup) {
+                return $employeeBackup->backupTime->backup->unit;
+            }
+
+            return null;
+        }
+    }
 
     public function getCheckInTimeWithClientTimezoneAttribute() {
         $time = $this->real_check_in;

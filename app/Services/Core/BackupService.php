@@ -857,7 +857,7 @@ class BackupService extends ScheduleService
              */
             $user = $request->user();
 
-            $query = BackupEmployeeTime::query()->with(['backupTime.backup', 'employee:employees.id,name', 'employeeAttendance'])
+            $query = BackupEmployeeTime::query()->with(['backupTime.backup.unit', 'employee:employees.id,name', 'employeeAttendance'])
                 ->join('backup_times', 'backup_employee_times.backup_time_id', '=', 'backup_times.id')
                 ->join('backups', 'backups.id', '=', 'backup_times.backup_id')
                 ->where('backups.status', '!=', BackupApproval::StatusRejected)

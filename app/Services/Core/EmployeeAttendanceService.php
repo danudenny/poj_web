@@ -116,7 +116,7 @@ class EmployeeAttendanceService extends BaseService
 
     public function view(Request $request, int $id)
     {
-        $attendance = EmployeeAttendance::query()->with(['employeeAttendanceHistory', 'employee', 'attendanceApprovals', 'attendanceApprovals.employee', 'attendanceApprovals.employee'])
+        $attendance = EmployeeAttendance::query()->with(['employeeAttendanceHistory', 'employee', 'employee.job', 'attendanceApprovals', 'attendanceApprovals.employee', 'attendanceApprovals.employee'])
             ->where('id', '=', $id)->first();
 
         if (!$attendance) {
@@ -974,7 +974,12 @@ class EmployeeAttendanceService extends BaseService
                     'total_reporting' => WorkReporting::query()
                         ->where('reference_type', '=', WorkReporting::TypeOvertime)
                         ->where('reference_id', '=', $overtime->id)
-                        ->count()
+                        ->count(),
+                    'unit_target' => [
+                        'name' => $overtime->overtimeDate->overtime->unit->name,
+                        'latitude' => $overtime->overtimeDate->overtime->unit->lat,
+                        'longitude' => $overtime->overtimeDate->overtime->unit->lat
+                    ],
                 ];
 
                 $activeSchedule['current_attendance'] = $activeSchedule['attendance']['overtime'];
@@ -991,7 +996,12 @@ class EmployeeAttendanceService extends BaseService
                     'total_reporting' => WorkReporting::query()
                     ->where('reference_type', '=', WorkReporting::TypeBackup)
                     ->where('reference_id', '=', $backup->id)
-                    ->count()
+                    ->count(),
+                    'unit_target' => [
+                        'name' => $backup->backupTime->backup->unit->name,
+                        'latitude' => $backup->backupTime->backup->unit->lat,
+                        'longitude' => $backup->backupTime->backup->unit->lat
+                    ],
                 ];
 
                 if (is_null($activeSchedule['current_attendance'])) {
@@ -1026,7 +1036,12 @@ class EmployeeAttendanceService extends BaseService
                     'total_reporting' => WorkReporting::query()
                         ->where('reference_type', '=', WorkReporting::TypeNormal)
                         ->where('reference_id', '=', $normal->id)
-                        ->count()
+                        ->count(),
+                    'unit_target' => [
+                        'name' => $normal->unit->name,
+                        'latitude' => $normal->unit->lat,
+                        'longitude' => $normal->unit->long
+                    ],
                 ];
 
                 if (is_null($activeSchedule['current_attendance'])) {
@@ -1064,7 +1079,7 @@ class EmployeeAttendanceService extends BaseService
              */
             $user = $request->user();
 
-            $query = EmployeeTimesheetSchedule::query()
+            $query = EmployeeTimesheetSchedule::query()->with(['unit'])
                 ->where('employee_timesheet_schedules.employee_id', '=', $user->employee_id);
 
             if ($monthly = $request->query('monthly')) {
@@ -1081,7 +1096,7 @@ class EmployeeAttendanceService extends BaseService
                         'not_check_out' => (clone $query)->whereNull('employee_timesheet_schedules.check_out_time')->count(),
                         'early_check_out' => (clone $query)->whereRaw('employee_timesheet_schedules.check_out_time < employee_timesheet_schedules.end_time')->count(),
                         'not_attendance' => (clone $query)->whereNull('employee_timesheet_schedules.check_in_time')->whereNull('employee_timesheet_schedules.check_out_time')->count(),
-                        'total_schedule' => (clone $query)->count()
+                        'total_schedule' => (clone $query)->count(),
                     ],
                     'data' => $this->list($query, $request)
                 ],
@@ -1102,7 +1117,7 @@ class EmployeeAttendanceService extends BaseService
 
         $preQuery = EmployeeTimesheetSchedule::query()->selectRaw("
                     'normal' AS reference_type,
-                    id AS reference_id,
+                    employee_timesheet_schedules.id AS reference_id,
                     start_time AS start_time,
                     end_time AS end_time,
                     timezone AS timezone,
@@ -1111,8 +1126,10 @@ class EmployeeAttendanceService extends BaseService
                     check_in_time AS check_in_time,
                     check_out_time AS check_out_time,
                     (check_in_time::timestamp without time zone at time zone 'UTC' at time zone timezone) AS check_in_time_with_timezone,
-                    (check_out_time::timestamp without time zone at time zone 'UTC' at time zone timezone) AS check_out_time_with_timezone
+                    (check_out_time::timestamp without time zone at time zone 'UTC' at time zone timezone) AS check_out_time_with_timezone,
+                    (u.name) AS unit_name
                 ")->where('employee_id', '=', $user->employee_id)
+                ->join('units AS u', 'u.relation_id', '=', 'employee_timesheet_schedules.unit_relation_id')
             ->unionAll(OvertimeEmployee::query()->selectRaw("
                     'overtime' AS reference_type,
                     overtime_employees.id AS reference_id,
@@ -1124,9 +1141,11 @@ class EmployeeAttendanceService extends BaseService
                     overtime_employees.check_in_time AS check_in_time,
                     overtime_employees.check_out_time AS check_out_time,
                     (overtime_employees.check_in_time::timestamp without time zone at time zone 'UTC' at time zone o.timezone) AS check_in_time_with_timezone,
-                    (overtime_employees.check_out_time::timestamp without time zone at time zone 'UTC' at time zone o.timezone) AS check_out_time_with_timezone
+                    (overtime_employees.check_out_time::timestamp without time zone at time zone 'UTC' at time zone o.timezone) AS check_out_time_with_timezone,
+                    (u.name) AS unit_name
                 ")->join('overtime_dates AS od', 'overtime_employees.overtime_date_id', '=', 'od.id')
                 ->join('overtimes AS o', 'o.id', '=', 'od.overtime_id')
+                ->join('units AS u', 'u.relation_id', '=', 'o.unit_relation_id')
                 ->where('employee_id', '=', $user->employee_id)
             )->unionAll(BackupEmployeeTime::query()->selectRaw("
                     'backup' AS reference_type,
@@ -1139,9 +1158,11 @@ class EmployeeAttendanceService extends BaseService
                     backup_employee_times.check_in_time AS check_in_time,
                     backup_employee_times.check_out_time AS check_out_time,
                     (backup_employee_times.check_in_time::timestamp without time zone at time zone 'UTC' at time zone b.timezone) AS check_in_time_with_timezone,
-                    (backup_employee_times.check_out_time::timestamp without time zone at time zone 'UTC' at time zone b.timezone) AS check_out_time_with_timezone
+                    (backup_employee_times.check_out_time::timestamp without time zone at time zone 'UTC' at time zone b.timezone) AS check_out_time_with_timezone,
+                    (u.name) AS unit_name
                 ")->join('backup_times AS bt', 'backup_employee_times.backup_time_id', '=', 'bt.id')
                 ->join('backups AS b', 'b.id', '=', 'bt.backup_id')
+                ->join('units AS u', 'u.relation_id', '=', 'b.unit_id')
                 ->where('employee_id', '=', $user->employee_id)
             );
 
