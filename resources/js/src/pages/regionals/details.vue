@@ -72,7 +72,7 @@
 			                            <input class="form-control" type="text" v-model="item.late_buffer" :disabled="!editing">
 		                            </div>
 	                            </div>
-	                            <div class="col-md-12" >
+	                            <div class="col-md-12" v-show="item.lat && item.long">
 		                            <div id="mapContainer" style="height: 400px; z-index: 1; width: 100%">
 		                            </div>
 	                            </div>
