@@ -999,7 +999,7 @@ class EmployeeAttendanceService extends BaseService
                     'unit_target' => [
                         'name' => $unit->name,
                         'latitude' => $unit->lat,
-                        'longitude' => $unit->lat,
+                        'longitude' => $unit->long,
                         'radius' => $unit->radius,
                     ],
                     'work_reporting' => $listJobs
@@ -1042,7 +1042,7 @@ class EmployeeAttendanceService extends BaseService
                     'unit_target' => [
                         'name' => $unit->name,
                         'latitude' => $unit->lat,
-                        'longitude' => $unit->lat,
+                        'longitude' => $unit->long,
                         'radius' => $unit->radius,
                     ],
                     'work_reporting' => $listJobs
