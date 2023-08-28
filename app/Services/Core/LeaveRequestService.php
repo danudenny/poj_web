@@ -4,12 +4,14 @@ namespace App\Services\Core;
 
 use App\Http\Requests\LeaveRequest\ApprovalRequest;
 use App\Models\ApprovalModule;
+use App\Models\BackupEmployeeTime;
 use App\Models\Employee;
 use App\Models\EmployeeTimesheetSchedule;
 use App\Models\LeaveRequest;
 use App\Models\LeaveRequestApproval;
 use App\Models\LeaveRequestHistory;
 use App\Models\MasterLeave;
+use App\Models\OvertimeEmployee;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\BaseService;
@@ -347,8 +349,6 @@ class LeaveRequestService extends BaseService {
                     $nextApproval->status = LeaveRequestApproval::StatusRejected;
                     $nextApproval->save();
                 }
-
-                $this->removeSchedule($leaveRequest);
             } else if ($leaveRequestApproval->status == LeaveRequestApproval::StatusApproved) {
                 $isNextApprovalExist = $leaveRequest->leaveRequestApprovals()
                     ->where('priority', '>', $leaveRequestApproval->priority)
@@ -356,6 +356,8 @@ class LeaveRequestService extends BaseService {
                 if (!$isNextApprovalExist) {
                     $leaveRequest->last_status = LeaveRequestApproval::StatusApproved;
                     $leaveRequest->save();
+
+                    $this->removeSchedule($leaveRequest);
                 }
             }
 
@@ -463,10 +465,45 @@ class LeaveRequestService extends BaseService {
          * @var EmployeeTimesheetSchedule[] $normal
          */
         $normal = EmployeeTimesheetSchedule::query()
-            ->where('employee_id', '=', $leaveRequest->employee->id)
+            ->join('periods', 'periods.id', '=', 'employee_timesheet_schedules.period_id')
+            ->where('employee_timesheet_schedules.employee_id', '=', $leaveRequest->employee_id)
+            ->whereRaw("(periods.year || '-' || periods.month || '-' || employee_timesheet_schedules.date)::DATE >= '$leaveRequest->start_date'::DATE")
+            ->whereRaw("(periods.year || '-' || periods.month || '-' || employee_timesheet_schedules.date)::DATE <= '$leaveRequest->end_date'::DATE")
+            ->select(['employee_timesheet_schedules.*'])
             ->get();
 
         foreach ($normal as $item) {
+            $item->employeeAttendance?->delete();
+            $item->delete();
+        }
+
+        /**
+         * @var BackupEmployeeTime[] $backup
+         */
+        $backup = BackupEmployeeTime::query()
+            ->join('backup_times', 'backup_times.id', '=', 'backup_employee_times.backup_time_id')
+            ->where('backup_employee_times.employee_id', '=', $leaveRequest->employee_id)
+            ->whereRaw("backup_times.backup_date >= '$leaveRequest->start_date'::DATE")
+            ->whereRaw("backup_times.backup_date <= '$leaveRequest->end_date'::DATE")
+            ->select(['backup_employee_times.*'])
+            ->get();
+        foreach ($backup as $item) {
+            $item->employeeAttendance?->delete();
+            $item->delete();
+        }
+
+        /**
+         * @var OvertimeEmployee[] $overtime
+         */
+        $overtime = OvertimeEmployee::query()
+            ->join('overtime_dates', 'overtime_dates.id', '=', 'overtime_employees.overtime_date_id')
+            ->where('overtime_employees.employee_id', '=', $leaveRequest->employee_id)
+            ->whereRaw("overtime_dates.date >= '$leaveRequest->start_date'::DATE")
+            ->whereRaw("overtime_dates.date <= '$leaveRequest->end_date'::DATE")
+            ->select(['overtime_employees.*'])
+            ->get();
+        foreach ($overtime as $item) {
+            $item->employeeAttendance?->delete();
             $item->delete();
         }
     }

@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs main="Detail Incident Reporting"/>
+        <Breadcrumbs main="Detail Attendance"/>
         <div class="col-sm-12">
             <div class="card">
                 <div class="card-body">
@@ -48,7 +48,7 @@
                                         <div class="col-md-6">
                                             <div class="mt-2">
                                                 <label for="name">Check In Time</label>
-                                                <input type="text" class="form-control" v-model="attendance.real_check_in" disabled>
+                                                <input type="text" class="form-control" v-model="attendance.check_in_time_with_client_timezone" disabled>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
@@ -62,7 +62,7 @@
                                         <div class="col-md-6">
                                             <div class="mt-2">
                                                 <label for="name">Check Out Time</label>
-                                                <input type="text" class="form-control" v-model="attendance.real_check_out" disabled>
+                                                <input type="text" class="form-control" v-model="attendance.check_out_time_with_client_timezone" disabled>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
@@ -89,7 +89,10 @@
 
                                     <hr/>
 
-                                    <div class="row" v-for="(item, index) in attendance.employee_attendance_history" :key="index">
+                                    <h5>Approval</h5>
+                                    <div ref="approvalAttendanceList"></div>
+
+                                    <div class="row" v-if="false" v-for="(item, index) in attendance.employee_attendance_history" :key="index">
                                         <div class="col-md-12">
                                             <div class="alert-border alert alert-primary" v-if="item.status !== 'reject'">
                                                 <table>
@@ -139,12 +142,40 @@
                 </div>
                 <div class="card-footer text-end">
                     <div class="d-flex justify-content-end">
-                        <button class="btn btn-warning" @click="this.$router.push('/attendance')">
+                        <button class="btn btn-warning" @click="$router.go(-1)">
                             <i class="fa fa-arrow-left"></i>&nbsp; Back
-                        </button>
+                        </button> &nbsp;
+                        <div
+                            class="btn btn-primary button-info"
+                            data-bs-toggle="modal"
+                            data-bs-target="#approvalModal"
+                            v-if="attendance.is_can_approve"
+                        >
+                            <i class="fa fa-check"></i> Approval
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div class="modal fade" id="approvalModal" ref="approvalModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
+            <VerticalModal title="Approval Modal" @save="attendanceApproval()">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="mt-2">
+                            <label for="status">Status:</label>
+                            <select id="status" name="status" class="form-select" v-model="approval.status" required>
+                                <option value="approved" :selected="approval.status === 'approved' ? 'selected' : ''">Approve</option>
+                                <option value="rejected" :selected="approval.status === 'rejected' ? 'selected' : ''">Reject</option>
+                            </select>
+                        </div>
+                        <div class="mt-2" v-if="approval.status === 'rejected'">
+                            <label for="name">Note:</label>
+                            <input type="text" class="form-control" id="reason" v-model="approval.notes" required>
+                        </div>
+                    </div>
+                </div>
+            </VerticalModal>
         </div>
     </div>
 </template>
@@ -152,6 +183,8 @@
 <script>
 import VerticalModal from "@components/modal/verticalModal.vue";
 import L from "leaflet";
+import {TabulatorFull as Tabulator} from "tabulator-tables";
+import {useToast} from "vue-toastification";
 
 export default {
     components: {
@@ -186,15 +219,23 @@ export default {
                 check_in_tz: null,
                 check_out_tz: null,
                 is_on_time: null,
+                check_in_time_with_client_timezone: null,
+                check_out_time_with_client_timezone: null,
+                is_can_approve: false,
                 employee: {
                     name: null
                 },
-                employee_attendance_history: []
+                employee_attendance_history: [],
+                attendance_approvals: []
             },
             checkInMap: {
                 mapContainer: null,
                 map: null,
                 marker: null,
+            },
+            approval: {
+                status: null,
+                notes: null
             }
         }
     },
@@ -206,12 +247,62 @@ export default {
             this.$axios.get(`/api/v1/admin/attendance/view/${this.$route.params.id}`)
                 .then(response => {
                     this.attendance = response.data.data
+                    this.generateApprovalAttendanceTable()
                     this.generateCheckInMap()
                     this.generateCheckOutMap()
                 })
                 .catch(error => {
                     console.error(error);
                 });
+        },
+        generateApprovalAttendanceTable() {
+            const table = new Tabulator(this.$refs.approvalAttendanceList, {
+                data: this.attendance.attendance_approvals,
+                layout: 'fitColumns',
+                columns: [
+                    {
+                        title: 'No',
+                        field: '',
+                        formatter: 'rownum',
+                        width: 20
+                    },
+                    {
+                        title: 'Name',
+                        field: 'employee.name',
+                    },
+                    {
+                        title: 'Unit',
+                        field: 'employee.last_unit.name',
+                    },
+                    {
+                        title: 'Status',
+                        field: 'status',
+                        formatter: (cell) => {
+                            let val = cell.getValue()
+
+                            if (val === 'approved') {
+                                return `<span class="badge badge-success">Approved</span>`
+                            } else if (val === 'rejected') {
+                                return `<span class="badge badge-danger">Rejected</span>`
+                            } else {
+                                return `<span class="badge badge-warning">Pending</span>`
+                            }
+                        }
+                    },
+                    {
+                        title: 'Notes',
+                        field: 'notes',
+                    },
+                ],
+                pagination: 'local',
+                paginationSize: 10,
+                paginationSizeSelector: [10, 20, 50, 100],
+                headerFilter: true,
+                paginationInitialPage:1,
+                rowFormatter: (row) => {
+                    //
+                }
+            });
         },
         generateCheckInMap() {
             if (this.attendance.checkin_lat === null || this.attendance.checkin_long === null) {
@@ -250,6 +341,29 @@ export default {
             let marker = L.marker([this.attendance.checkout_lat, this.attendance.checkout_long], {icon: L.icon({
                     iconUrl: '/marker-icon.png'
                 })}).addTo(map);
+        },
+        attendanceApproval() {
+            this.$swal({
+                icon: 'warning',
+                title:"Do you want to do approval?",
+                text:'Once you finished doing approval, you will not be able to revert the data!',
+                showCancelButton: true,
+                confirmButtonText: 'Yes!',
+                confirmButtonColor: '#126850',
+                cancelButtonText: 'Cancel',
+                cancelButtonColor: '#efefef',
+            }).then((result)=>{
+                if(result.value){
+                    this.$axios.put(`api/v1/admin/attendance/approve/${this.$route.params.id}`, this.approval)
+                        .then(() => {
+                            useToast().success("Success doing approval!");
+                            this.getDetailAttendance();
+                        })
+                        .catch(error => {
+                            useToast().error(error.response.data.message);
+                        });
+                }
+            });
         }
     }
 };
@@ -257,9 +371,11 @@ export default {
 
 <style>
 #mapCheckIn {
-    height: 300px
+    height: 300px;
+    z-index: 0 !important;
 }
 #mapCheckOut {
-    height: 300px
+    height: 300px;
+    z-index: 0 !important;
 }
 </style>

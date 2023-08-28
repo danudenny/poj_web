@@ -40,3 +40,12 @@ function getTimezoneV2($latitude,$longitude): string
     $inputCoordinates = Http::get("https://api.wheretheiss.at/v1/coordinates/" . $latitude . "," . $longitude);
     return $inputCoordinates->json()['timezone_id'];
 }
+
+function getClientTimezone(): string {
+    $clientTimezone = (string) request()->header('X-Client-Timezone');
+    if ($clientTimezone == "") {
+        return "Asia/Jakarta";
+    }
+
+    return $clientTimezone;
+}

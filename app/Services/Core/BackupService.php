@@ -9,6 +9,7 @@ use App\Http\Requests\Backup\CreateBackupRequest;
 use App\Models\Approval;
 use App\Models\ApprovalModule;
 use App\Models\ApprovalUser;
+use App\Models\AttendanceApproval;
 use App\Models\Backup;
 use App\Models\BackupApproval;
 use App\Models\BackupEmployee;
@@ -215,8 +216,7 @@ class BackupService extends ScheduleService
 
         $unitRelationID = $request->get('unit_relation_id');
 
-        $query = BackupApproval::query()->with(['backup', 'employee', 'backup.unit:units.relation_id,name', 'backup.job:jobs.odoo_job_id,name', 'backup.requestorEmployee:employees.id,name', 'backup.sourceUnit:units.relation_id,name'])
-            ->where('backup_approvals.employee_id', '=', $user->employee_id);
+        $query = BackupApproval::query()->with(['backup', 'employee', 'backup.unit:units.relation_id,name', 'backup.job:jobs.odoo_job_id,name', 'backup.requestorEmployee:employees.id,name', 'backup.sourceUnit:units.relation_id,name']);
 
         $query->join('backups', 'backups.id', '=', 'backup_approvals.backup_id');
         $query->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'backups.requestor_employee_id');
@@ -654,9 +654,25 @@ class BackupService extends ScheduleService
             $employeeTimezone = getTimezoneV2(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
             $distance = calculateDistance($backup->location_lat, $backup->location_long, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
 
+            $isNeedApproval = false;
             $checkInType = EmployeeAttendance::TypeOnSite;
             if ($distance > $backup->unit->radius) {
                 $checkInType = EmployeeAttendance::TypeOffSite;
+                $isNeedApproval = true;
+            }
+
+            $approvalEmployeeIDs = [];
+            $approvalType = null;
+            if ($isNeedApproval && $checkInType == EmployeeAttendance::TypeOffSite) {
+                $approvalType = AttendanceApproval::TypeOffsite;
+                $approvalUsers = $this->approvalService->getApprovalUser($user->employee, ApprovalModule::ApprovalOffsiteAttendance);
+                foreach ($approvalUsers as $approvalUser) {
+                    $approvalEmployeeIDs[] = $approvalUser->employee_id;
+                }
+
+                if (count($approvalEmployeeIDs) == 0) {
+                    $isNeedApproval = false;
+                }
             }
 
             DB::beginTransaction();
@@ -673,10 +689,10 @@ class BackupService extends ScheduleService
             $checkIn->checkin_type = $checkInType;
             $checkIn->checkin_lat = $employeeBackup->check_in_lat;
             $checkIn->checkin_long = $employeeBackup->check_in_long;
-            $checkIn->is_need_approval = $checkInType == EmployeeAttendance::TypeOffSite;
+            $checkIn->is_need_approval = $isNeedApproval;
             $checkIn->attendance_types = EmployeeAttendance::AttendanceTypeBackup;
             $checkIn->checkin_real_radius = $distance;
-            $checkIn->approved = !($checkInType == EmployeeAttendance::TypeOffSite);
+            $checkIn->approved = !$isNeedApproval;
             $checkIn->check_in_tz = $employeeTimezone;
             $checkIn->is_late = false;
             $checkIn->late_duration = 0;
@@ -684,6 +700,16 @@ class BackupService extends ScheduleService
 
             $employeeBackup->employee_attendance_id = $checkIn->id;
             $employeeBackup->save();
+
+            foreach ($approvalEmployeeIDs as $idx => $approvalEmployeeID) {
+                $attendanceApproval = new AttendanceApproval();
+                $attendanceApproval->priority = $idx;
+                $attendanceApproval->approval_type = $approvalType;
+                $attendanceApproval->employee_attendance_id = $checkIn->id;
+                $attendanceApproval->employee_id = $approvalEmployeeID;
+                $attendanceApproval->status = AttendanceApproval::StatusPending;
+                $attendanceApproval->save();
+            }
 
             DB::commit();
 

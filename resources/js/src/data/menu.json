@@ -191,16 +191,35 @@
             "headTitle1": "ATTENDANCE",
             "headTitle2": "Attendance management",
             "type": "headtitle",
-            "permission" : "attendance-read"
+            "permission" : "attendance-menu-read"
         },
         {
             "title": "Attendance",
             "icon": "watch",
             "iconf": "fill-watch",
-            "type": "link",
+            "type": "sub",
             "active": false,
-            "path": "/attendance",
-            "permission" : "attendance-read"
+            "permission" : "attendance-menu-read",
+            "children": [
+                {
+                    "title": "List Attendance",
+                    "icon": "copy",
+                    "iconf": "fill-copy",
+                    "type": "link",
+                    "active": false,
+                    "path": "/attendance",
+                    "permission" : "attendance-read"
+                },
+                {
+                    "title": "Attendance Approval",
+                    "icon": "copy",
+                    "iconf": "fill-copy",
+                    "type": "link",
+                    "active": false,
+                    "path": "/attendance/attendance-approval",
+                    "permission" : "attendance-approval-read"
+                }
+            ]
         },
         {
             "title": "Backup Management",

@@ -1,5 +1,5 @@
 <template>
-    <Breadcrumbs main="Attendances" />
+    <Breadcrumbs main="Attendances Approval" />
 
     <div class="container-fluid">
         <div class="email-wrap bookmark-wrap">
@@ -7,7 +7,7 @@
                 <div class="col-md-12">
                     <div class="card card-absolute">
                         <div class="card-header bg-primary">
-                            <h5>Attendances List</h5>
+                            <h5>Attendances Approval</h5>
                         </div>
                         <div class="card-body">
                             <div v-if="loading" class="text-center">
@@ -67,7 +67,7 @@ export default {
             const role = JSON.parse(localStorage.getItem('USER_ROLES'))
             this.table = new Tabulator(this.$refs.attendanceTable, {
                 paginationCounter:"rows",
-                ajaxURL: '/api/v1/admin/attendance',
+                ajaxURL: '/api/v1/admin/attendance/list-approval',
                 ajaxConfig: {
                     headers: {
                         Authorization: `Bearer ${ls}`,
@@ -109,39 +109,41 @@ export default {
                         formatter: 'rownum',
                     },
                     {
-                        title: 'Name',
-                        field: 'employee.name',
-                        headerFilter:"input"
+                        title: 'Attendee Name',
+                        field: 'employee_attendance.employee.name'
+                    },
+                    {
+                        title: 'Approver Name',
+                        field: 'employee.name'
                     },
                     {
                         title: 'Check In',
-                        field: 'check_in_time_with_client_timezone',
-                        headerFilter:"date"
+                        field: 'employee_attendance.check_in_time_with_client_timezone'
                     },
                     {
                         title: 'Check Out',
-                        field: 'check_out_time_with_client_timezone',
-                        headerFilter:"date"
+                        field: 'employee_attendance.check_out_time_with_client_timezone'
                     },
                     {
-                        title: 'Approved',
-                        field: 'approved',
-                        headerFilter:"input",
-                        formatter: function(value) {
-                            if (value.getData().is_need_approval) {
-                                return '<span class="badge badge-warning">Waiting Approval</span>'
+                        title: 'Status',
+                        field: 'real_status',
+                        formatter: function(cell) {
+                            let value = cell.getValue()
+
+                            if (value === 'pending') {
+                                return '<span class="badge badge-info">Pending</span>'
+                            } else if (value === 'approved') {
+                                return '<span class="badge badge-success">Success</span>'
+                            } else if (value === 'rejected') {
+                                return '<span class="badge badge-danger">Rejected</span>'
                             } else {
-                                if (value.getValue()) {
-                                    return '<span class="badge badge-success">Approved</span>'
-                                } else {
-                                    return '<span class="badge badge-danger">Rejected</span>'
-                                }
+                                return `<span class="badge badge-warning">${value}</span>`
                             }
                         }
                     },
                     {
                         title: 'Attendance Type',
-                        field: 'attendance_types',
+                        field: 'employee_attendance.attendance_types',
                         formatter: function(cell) {
                             let value = cell.getValue()
 
@@ -162,7 +164,7 @@ export default {
                         hozAlign: 'center',
                         sortable: false,
                         cellClick: (e, cell) => {
-                            this.viewData(cell.getRow().getData().id);
+                            this.viewData(cell.getRow().getData().employee_attendance.id);
                         }
                     },
                 ],

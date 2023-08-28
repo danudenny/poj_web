@@ -87,6 +87,16 @@ class EmployeeAttendanceService extends BaseService
                 });
             });
 
+            $clientTimezone = $this->getClientTimezone();
+
+            if ($checkInDate = $request->get('check_in_date')) {
+                $attendances->whereRaw("(employee_attendances.real_check_in::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone')::DATE = '$checkInDate'::DATE");
+            }
+
+            if ($checkOutDate = $request->get('check_out_date')) {
+                $attendances->whereRaw("(employee_attendances.real_check_out::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone')::DATE = '$checkOutDate'::DATE");
+            }
+
             $attendances->groupBy('employee_attendances.id')
                 ->select(['employee_attendances.*'])
                 ->orderBy('employee_attendances.id', 'DESC');
@@ -106,7 +116,7 @@ class EmployeeAttendanceService extends BaseService
 
     public function view(Request $request, int $id)
     {
-        $attendance = EmployeeAttendance::query()->with(['employeeAttendanceHistory', 'employee', 'attendanceApprovals', 'attendanceApprovals.employee'])
+        $attendance = EmployeeAttendance::query()->with(['employeeAttendanceHistory', 'employee', 'attendanceApprovals', 'attendanceApprovals.employee', 'attendanceApprovals.employee'])
             ->where('id', '=', $id)->first();
 
         if (!$attendance) {
@@ -131,22 +141,62 @@ class EmployeeAttendanceService extends BaseService
          */
         $user = $request->user();
 
-        $query = AttendanceApproval::query()
-            ->with(['employeeAttendance', 'employeeAttendance.employee'])
-            ->where('employee_id', '=', $user->employee_id)
-            ->orderBy('id', 'DESC');
+        $unitRelationID = $request->get('unit_relation_id');
+
+        $query = AttendanceApproval::query()->with(['employeeAttendance', 'employeeAttendance.employee', 'employee']);
+        $query->join('employee_attendances', 'employee_attendances.id', '=', 'attendance_approvals.employee_attendance_id');
+        $query->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'attendance_approvals.employee_id');
+        $query->join('employees AS approvalEmployee', 'approvalEmployee.id', '=', 'employee_attendances.employee_id');
+
+        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+        } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
+            if (!$unitRelationID) {
+                $defaultUnitRelationID = $user->employee->unit_id;
+
+                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                    $defaultUnitRelationID = $requestUnitRelationID;
+                }
+
+                $unitRelationID = $defaultUnitRelationID;
+            }
+        } else {
+            $query->where('attendance_approvals.employee_id', '=', $user->employee_id);
+        }
+
+        if ($unitRelationID) {
+            $query->where(function (Builder $builder) use ($unitRelationID) {
+                $builder->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('reqEmployee.outlet_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.cabang_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.area_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('reqEmployee.corporate_id', '=', $unitRelationID);
+                })->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('approvalEmployee.outlet_id', '=', $unitRelationID)
+                        ->orWhere('approvalEmployee.cabang_id', '=', $unitRelationID)
+                        ->orWhere('approvalEmployee.area_id', '=', $unitRelationID)
+                        ->orWhere('approvalEmployee.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('approvalEmployee.corporate_id', '=', $unitRelationID);
+                });
+            });
+        }
 
         if ($status = $request->query('status')) {
-            $query->where('status', '=', $status);
+            $query->where('attendance_approvals.status', '=', $status);
         }
 
         if ($startTime = $request->query('start_time')) {
-            $query->where('created_at', '>=', $startTime);
+            $query->where('attendance_approvals.created_at', '>=', $startTime);
         }
 
         if ($endTime = $request->query('end_time')) {
-            $query->where('created_at', '<=', $endTime);
+            $query->where('attendance_approvals.created_at', '<=', $endTime);
         }
+
+        $query->select(['attendance_approvals.*']);
+        $query->groupBy('attendance_approvals.id');
+        $query->orderBy('attendance_approvals.id', 'DESC');
 
         return response()->json([
             'status' => 'success',
@@ -470,6 +520,10 @@ class EmployeeAttendanceService extends BaseService
                 $approvalUsers = $this->approvalService->getApprovalUser($user->employee, ApprovalModule::ApprovalOffsiteAttendance);
                 foreach ($approvalUsers as $approvalUser) {
                     $approvalEmployeeIDs[] = $approvalUser->employee_id;
+                }
+
+                if (count($approvalEmployeeIDs) == 0) {
+                    $isNeedApproval = false;
                 }
             }
 
@@ -825,6 +879,19 @@ class EmployeeAttendanceService extends BaseService
                     $nextApproval->save();
                 }
 
+                $employeeAttendance->real_check_in = null;
+                $employeeAttendance->real_check_out = null;
+                $employeeAttendance->checkin_lat = null;
+                $employeeAttendance->checkin_long = null;
+                $employeeAttendance->checkout_lat = null;
+                $employeeAttendance->checkout_long = null;
+                $employeeAttendance->checkin_type = null;
+                $employeeAttendance->checkout_type = null;
+                $employeeAttendance->checkin_real_radius = null;
+                $employeeAttendance->checkout_real_radius = null;
+                $employeeAttendance->check_in_tz = null;
+                $employeeAttendance->check_out_tz = null;
+
                 $employeeAttendance->is_need_approval = false;
                 $employeeAttendance->save();
             }
@@ -1093,6 +1160,8 @@ class EmployeeAttendanceService extends BaseService
         if ($endTime = $request->query('end_time')) {
             $query->whereRaw("end_time_with_timezone <= '$endTime'");
         }
+
+        $query->orderBy('start_time_with_timezone', 'ASC');
 
         return response()->json([
             'status' => true,

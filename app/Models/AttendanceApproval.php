@@ -32,6 +32,25 @@ class AttendanceApproval extends Model
 
     protected $table = 'attendance_approvals';
 
+    protected $appends = [
+        'real_status'
+    ];
+
+    public function getRealStatusAttribute() {
+        if ($this->priority > 0) {
+            $lastStatus = $this->employeeAttendance->attendanceApprovals()
+                ->where('priority', '<', $this->priority)
+                ->where('status', '=', self::StatusPending)
+                ->exists();
+
+            if ($lastStatus) {
+                return "Waiting Last Approval";
+            }
+        }
+
+        return $this->status;
+    }
+
     public function employeeAttendance() {
         return $this->belongsTo(EmployeeAttendance::class, 'employee_attendance_id');
     }

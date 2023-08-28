@@ -51,6 +51,10 @@ class Backup extends Model
 
     protected $table = 'backups';
 
+    protected $appends = [
+        'last_approver'
+    ];
+
     public function getIsCanApproveAttribute() {
         /**
          * @var User $user
@@ -85,6 +89,31 @@ class Backup extends Model
         return true;
     }
 
+    public function getLastApproverAttribute() {
+        $approver =  $this->backupApprovals()->get();
+
+        if ($this->status != self::StatusAssigned && count($approver) == 0) {
+            return [
+                "name" => "Auto Approve",
+            ];
+        }
+
+        /**
+         * @var BackupApproval[] $items
+         */
+        $items = $approver->reverse();
+
+        foreach ($items as $item) {
+            if (($item->status == BackupApproval::StatusApproved) || ($item->status == BackupApproval::StatusRejected && ($item->notes != null || ($item == null && $item != "")))) {
+                return [
+                    "name" => $item->employee->name,
+                ];
+            }
+        }
+
+        return null;
+    }
+
     public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class, 'unit_id', 'relation_id');
@@ -116,7 +145,7 @@ class Backup extends Model
     }
 
     public function backupApprovals(): HasMany {
-        return $this->hasMany(BackupApproval::class, 'backup_id');
+        return $this->hasMany(BackupApproval::class, 'backup_id')->orderBy('priority', 'ASC');
     }
 
     public function sourceUnit(): BelongsTo {

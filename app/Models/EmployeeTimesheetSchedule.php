@@ -38,6 +38,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read EmployeeAttendance|null $employeeAttendance
  * @property-read Employee $employee
  * @property-read Unit $unit
+ * @property-read Period $period
  * @method static where(string $string, mixed $employeeId)
  */
 class EmployeeTimesheetSchedule extends Model

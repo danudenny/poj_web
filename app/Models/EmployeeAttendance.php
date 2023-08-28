@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -64,6 +67,32 @@ class EmployeeAttendance extends Model
         'early_duration'
     ];
 
+    protected $appends = [
+        'check_in_time_with_client_timezone',
+        'check_out_time_with_client_timezone',
+        'last_approver'
+    ];
+
+    public function getCheckInTimeWithClientTimezoneAttribute() {
+        $time = $this->real_check_in;
+
+        if ($time) {
+            return Carbon::parse($time, 'UTC')->setTimezone(getClientTimezone())->format('Y-m-d H:i:s');
+        }
+
+        return null;
+    }
+
+    public function getCheckOutTimeWithClientTimezoneAttribute() {
+        $time = $this->real_check_out;
+
+        if ($time) {
+            return Carbon::parse($time, 'UTC')->setTimezone(getClientTimezone())->format('Y-m-d H:i:s');
+        }
+
+        return null;
+    }
+
     public function getIsCanApproveAttribute() {
         /**
          * @var User $user
@@ -87,7 +116,7 @@ class EmployeeAttendance extends Model
         /**
          * @var BackupApproval $lastApproval
          */
-        $lastApproval = $this->backupApprovals()
+        $lastApproval = $this->attendanceApprovals()
             ->where('status', '=', BackupApproval::StatusPending)
             ->where('priority', '<', $backupApproval->priority)
             ->exists();
@@ -96,6 +125,31 @@ class EmployeeAttendance extends Model
         }
 
         return true;
+    }
+
+    public function getLastApproverAttribute() {
+        $approver = $this->attendanceApprovals()->get();
+
+        if ($this->approved && count($approver) == 0) {
+            return [
+                "name" => "Auto Approve",
+            ];
+        }
+
+        /**
+         * @var AttendanceApproval[] $items
+         */
+        $items = $approver->reverse();
+
+        foreach ($items as $item) {
+            if (($item->status == AttendanceApproval::StatusApproved) || ($item->status == AttendanceApproval::StatusRejected && ($item->notes != null || ($item == null && $item != "")))) {
+                return [
+                    "name" => $item->employee->name,
+                ];
+            }
+        }
+
+        return null;
     }
 
     public function employee(): BelongsTo
@@ -109,6 +163,6 @@ class EmployeeAttendance extends Model
     }
 
     public function attendanceApprovals() {
-        return $this->hasMany(AttendanceApproval::class, 'employee_attendance_id');
+        return $this->hasMany(AttendanceApproval::class, 'employee_attendance_id')->orderBy('priority', 'ASC');
     }
 }

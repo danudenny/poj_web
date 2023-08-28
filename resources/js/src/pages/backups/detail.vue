@@ -40,6 +40,11 @@
                             >
                                 Buka Berkas
                             </a>
+
+                            <hr/>
+
+                            <p>Approval</p>
+                            <div ref="approvalBackupList"></div>
                         </div>
                         <div class="col-md-6">
                             <div class="row" v-for="(item, index) in backup.backup_times" :key="index">
@@ -190,7 +195,8 @@ export default {
                 backup_history: [],
                 requestor_employee: {
                     name: null
-                }
+                },
+                backup_approvals: [],
             },
             approval: {
                 status: null,
@@ -208,10 +214,60 @@ export default {
             this.$axios.get(`/api/v1/admin/backup/view/${this.$route.params.id}`)
                 .then(response => {
                     this.backup = response.data.data
+                    this.generateApprovalBackupTable()
                 })
                 .catch(error => {
                     console.error(error);
                 });
+        },
+        generateApprovalBackupTable() {
+            const table = new Tabulator(this.$refs.approvalBackupList, {
+                data: this.backup.backup_approvals,
+                layout: 'fitColumns',
+                columns: [
+                    {
+                        title: 'No',
+                        field: '',
+                        formatter: 'rownum',
+                        width: 20
+                    },
+                    {
+                        title: 'Name',
+                        field: 'employee.name',
+                    },
+                    {
+                        title: 'Unit',
+                        field: 'employee.last_unit.name',
+                    },
+                    {
+                        title: 'Status',
+                        field: 'status',
+                        formatter: (cell) => {
+                            let val = cell.getValue()
+
+                            if (val === 'approved') {
+                                return `<span class="badge badge-success">Approved</span>`
+                            } else if (val === 'rejected') {
+                                return `<span class="badge badge-danger">Rejected</span>`
+                            } else {
+                                return `<span class="badge badge-warning">Pending</span>`
+                            }
+                        }
+                    },
+                    {
+                        title: 'Notes',
+                        field: 'notes',
+                    },
+                ],
+                pagination: 'local',
+                paginationSize: 10,
+                paginationSizeSelector: [10, 20, 50, 100],
+                headerFilter: true,
+                paginationInitialPage:1,
+                rowFormatter: (row) => {
+                    //
+                }
+            });
         },
         generateEmployeeTable() {
             const table = new Tabulator(this.$refs.employeeTable, {

@@ -195,11 +195,6 @@ abstract class BaseService
     }
 
     protected function getClientTimezone(): string|null {
-        $clientTimezone = (string) request()->header('X-Client-Timezone');
-        if ($clientTimezone == "") {
-            return null;
-        }
-
-        return $clientTimezone;
+        return getClientTimezone();
     }
 }

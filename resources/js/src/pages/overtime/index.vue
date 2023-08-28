@@ -91,10 +91,6 @@ export default {
                         }
                     },
                     {
-                        title: 'Created At',
-                        field: 'created_at',
-                    },
-                    {
                         title: '',
                         formatter: this.viewDetailsFormatter,
                         width: 120,

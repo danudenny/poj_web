@@ -57,6 +57,7 @@ import RegionalDetail from '../pages/regionals/details.vue';
 //  Attendances
 import Attendances from '../pages/attendances/index.vue';
 import DetailAttendance from '../pages/attendances/detail.vue';
+import AttendanceApproval from '../pages/attendances/list-approval.vue';
 import Backup from '../pages/backups/index.vue';
 import CreateBackup from '../pages/backups/create.vue';
 import DetailBackup from '../pages/backups/detail.vue';
@@ -570,13 +571,23 @@ const routes =[
                 },
             },
             {
+                path: 'attendance-approval',
+                name: 'Attendance Approval',
+                component: AttendanceApproval,
+                meta: {
+                    title: 'POJ - Attendances Approval',
+                    requiresAuth: true,
+                    permission: 'attendance-approval-read',
+                },
+            },
+            {
                 path: 'detail-attendance/:id',
                 name: 'Detail Attendance',
                 component: DetailAttendance,
                 meta: {
                     title: 'POJ - Detail Attendance',
                     requiresAuth: true,
-                    permission: 'attendance-read',
+                    permission: 'attendance-detail-read',
                 },
             },
             {
@@ -606,7 +617,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Detail Backup',
                     requiresAuth: true,
-                    permission: 'backup-read',
+                    permission: 'backup-detail-read',
                 },
             },
             {
@@ -656,7 +667,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Detail Overtime',
                     requiresAuth: true,
-                    permission: 'overtime-request-read',
+                    permission: 'overtime-detail-read',
                 },
             },
             {
@@ -975,7 +986,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Event Request',
                     requiresAuth: true,
-                    permission : 'event-read',
+                    permission : 'event-detail-read',
                 }
             },
             {

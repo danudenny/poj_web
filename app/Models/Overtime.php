@@ -45,6 +45,7 @@ class Overtime extends Model
     ];
 
     protected $appends = [
+        'last_approver'
     ];
 
     protected $casts = [
@@ -81,6 +82,31 @@ class Overtime extends Model
         }
 
         return true;
+    }
+
+    public function getLastApproverAttribute() {
+        $approver =  $this->overtimeApprovals()->get();
+
+        if ($this->last_status != OvertimeHistory::TypePending && count($approver) == 0) {
+            return [
+                "name" => "Auto Approve",
+            ];
+        }
+
+        /**
+         * @var OvertimeApproval[] $items
+         */
+        $items = $approver->reverse();
+
+        foreach ($items as $item) {
+            if (($item->status == OvertimeApproval::StatusApproved) || ($item->status == OvertimeApproval::StatusRejected && ($item->notes != null || ($item == null && $item != "")))) {
+                return [
+                    "name" => $item->employee->name,
+                ];
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -121,6 +147,6 @@ class Overtime extends Model
      */
     public function overtimeApprovals(): HasMany
     {
-        return $this->hasMany(OvertimeApproval::class, 'overtime_id');
+        return $this->hasMany(OvertimeApproval::class, 'overtime_id')->orderBy('priority', 'ASC');
     }
 }

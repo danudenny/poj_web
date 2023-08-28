@@ -8,7 +8,7 @@
                     <div class="col-md-12">
                         <div class="card card-absolute">
                             <div class="card-header bg-primary">
-                                <h5>Employee Overtime Request</h5>
+                                <h5>Employee Overtime Approval</h5>
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-2">
@@ -59,17 +59,14 @@ export default {
                     {
                         title: 'Requestor Name',
                         field: 'overtime.requestor_employee.name',
-                        headerFilter:"input"
                     },
                     {
                         title: 'Approver Name',
                         field: 'employee.name',
-                        headerFilter:"input"
                     },
                     {
                         title: 'Status',
                         field: 'real_status',
-                        headerFilter:"input",
                         formatter: function (cell, formatterParams, onRendered) {
                             let val = cell.getValue()
 
@@ -87,7 +84,6 @@ export default {
                     {
                         title: 'Unit Name',
                         field: 'overtime.unit.name',
-                        headerFilter:"input"
                     },
                     {
                         title: 'Start Time',
@@ -96,10 +92,6 @@ export default {
                     {
                         title: 'End Time',
                         field: 'overtime.end_date',
-                    },
-                    {
-                        title: 'Created At',
-                        field: 'overtime.created_at',
                     },
                     {
                         title: '',

@@ -10,7 +10,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * Attributes:
  * @property-read int $id
+ * @property int $employee_id
  * @property string $last_status
+ * @property string $start_date
+ * @property string $end_date
  *
  * Relations:
  * @property-read LeaveRequestApproval[] $leaveRequestApprovals

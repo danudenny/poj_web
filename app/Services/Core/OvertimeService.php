@@ -8,6 +8,7 @@ use App\Http\Requests\Overtime\OvertimeApprovalRequest;
 use App\Http\Requests\Overtime\OvertimeCheckOutRequest;
 use App\Models\ApprovalModule;
 use App\Models\ApprovalUser;
+use App\Models\AttendanceApproval;
 use App\Models\Backup;
 use App\Models\BackupEmployeeTime;
 use App\Models\Employee;
@@ -107,10 +108,10 @@ class OvertimeService extends ScheduleService
         $overtimes->when($request->filled('last_status'), function(Builder $builder) use ($request) {
             $builder->whereRaw('LOWER(overtimes.last_status) LIKE ?', ['%'.strtolower($request->query('last_status')).'%']);
         });
-        $overtimes->when($request->filled('requestor_name'), function(Builder $builder) use ($request) {
-            $builder->join('employees', 'employees.id', '=', 'overtimes.requestor_employee_id')
-                ->whereRaw('LOWER(employees.name) LIKE ?', ['%'.strtolower($request->query('requestor_name')).'%']);
-        });
+
+        if ($requestorName = $request->get('requestor_name')) {
+            $overtimes->where("reqEmployee.name", 'ILIKE', "%$requestorName%");
+        }
         $overtimes->when($request->filled('requestor_employee_id'), function(Builder $builder) use ($request) {
             $builder->where('overtimes.requestor_employee_id', '=', $request->input('requestor_employee_id'));
         });
@@ -692,9 +693,25 @@ class OvertimeService extends ScheduleService
             $overtimeRequest = $employeeOvertime->overtimeDate->overtime;
             $distance = calculateDistance($overtimeRequest->location_lat, $overtimeRequest->location_long, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
 
+            $isNeedApproval = false;
             $checkInType = EmployeeAttendance::TypeOnSite;
             if ($distance > $workLocation->radius) {
                 $checkInType = EmployeeAttendance::TypeOffSite;
+                $isNeedApproval = true;
+            }
+
+            $approvalEmployeeIDs = [];
+            $approvalType = null;
+            if ($isNeedApproval && $checkInType == EmployeeAttendance::TypeOffSite) {
+                $approvalType = AttendanceApproval::TypeOffsite;
+                $approvalUsers = $this->approvalService->getApprovalUser($user->employee, ApprovalModule::ApprovalOffsiteAttendance);
+                foreach ($approvalUsers as $approvalUser) {
+                    $approvalEmployeeIDs[] = $approvalUser->employee_id;
+                }
+
+                if (count($approvalEmployeeIDs) == 0) {
+                    $isNeedApproval = false;
+                }
             }
 
             DB::beginTransaction();
@@ -717,10 +734,10 @@ class OvertimeService extends ScheduleService
             $checkIn->checkin_type = $checkInType;
             $checkIn->checkin_lat = $employeeOvertime->check_in_lat;
             $checkIn->checkin_long = $employeeOvertime->check_in_long;
-            $checkIn->is_need_approval = $checkInType == EmployeeAttendance::TypeOffSite;
+            $checkIn->is_need_approval = $isNeedApproval;
             $checkIn->attendance_types = EmployeeAttendance::AttendanceTypeOvertime;
             $checkIn->checkin_real_radius = $distance;
-            $checkIn->approved = !($checkInType == EmployeeAttendance::TypeOffSite);
+            $checkIn->approved = !$isNeedApproval;
             $checkIn->check_in_tz = $employeeTimezone;
             $checkIn->is_late = false;
             $checkIn->late_duration = 0;
@@ -728,6 +745,16 @@ class OvertimeService extends ScheduleService
 
             $employeeOvertime->employee_attendance_id = $checkIn->id;
             $employeeOvertime->save();
+
+            foreach ($approvalEmployeeIDs as $idx => $approvalEmployeeID) {
+                $attendanceApproval = new AttendanceApproval();
+                $attendanceApproval->priority = $idx;
+                $attendanceApproval->approval_type = $approvalType;
+                $attendanceApproval->employee_attendance_id = $checkIn->id;
+                $attendanceApproval->employee_id = $approvalEmployeeID;
+                $attendanceApproval->status = AttendanceApproval::StatusPending;
+                $attendanceApproval->save();
+            }
 
             DB::commit();
 
