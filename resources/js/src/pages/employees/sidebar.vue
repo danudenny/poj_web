@@ -29,7 +29,7 @@
                                             </span>
                                         </a>
                                     </li>
-                                    <li>
+                                    <li v-if="isWorkInformation">
                                         <a class="pills-link" id="pills-company-tab" data-bs-toggle="pill" href="#pills-company" role="tab"
                                            aria-controls="pills-company" aria-selected="true">
                                             <span class="title" @click="active('pills-company-tab')">
@@ -76,6 +76,7 @@ export default {
             filtered: false,
             employeeData: {},
             isLoading: true,
+	        isWorkInformation: false,
         }
     },
     created() {

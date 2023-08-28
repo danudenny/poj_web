@@ -28,10 +28,10 @@
                         <hr>
                         <div class="tab-pane fade show active" id="pills-iconhome" role="tabpanel" aria-labelledby="pills-iconhome-tab">
                             <div>
-                                <button type="button" v-if="!editing" class="btn btn-warning" @click="onEditData">
+                                <button type="button" v-if="!editing && this.$store.state.permissions?.includes('unit-update')" class="btn btn-warning" @click="onEditData">
                                     <i class="fa fa-pencil-square"></i> Edit Data
                                 </button>
-                                <div v-else class="d-flex justify-content-end column-gap-2">
+                                <div v-else-if="editing && this.$store.state.permissions?.includes('unit-update')" class="d-flex justify-content-end column-gap-2">
                                     <button type="button" class="btn btn-success" @click="onSaveData">
                                         <i class="fa fa-save"></i> Save Data
                                     </button>
@@ -45,9 +45,37 @@
                                 <div class="col-md-12">
                                     <div class="mb-3">
                                         <label class="form-label">Name</label>
-                                        <input class="form-control" type="text" v-model="item.name" :disabled="!editing">
+                                        <input class="form-control" type="text" v-model="item.name" disabled="disabled">
                                     </div>
                                 </div>
+	                            <div class="col-md-6">
+		                            <div class="mb-3">
+			                            <label class="form-label">Latitude</label>
+			                            <input class="form-control" type="text" v-model="item.lat" :disabled="!editing">
+		                            </div>
+		                            <div class="mb-3">
+			                            <label class="form-label">Early Tolerance (minutes)</label>
+			                            <input class="form-control" type="text" v-model="item.early_buffer" :disabled="!editing">
+		                            </div>
+		                            <div class="mb-3">
+			                            <label class="form-label">Radius Buffer (meters)</label>
+			                            <input class="form-control" type="text" v-model="item.radius" :disabled="!editing">
+		                            </div>
+	                            </div>
+	                            <div class="col-md-6">
+		                            <div class="mb-3">
+			                            <label class="form-label">Longitude</label>
+			                            <input class="form-control" type="text" v-model="item.long" :disabled="!editing">
+		                            </div>
+		                            <div class="mb-3">
+			                            <label class="form-label">Late Tolerance (minutes)</label>
+			                            <input class="form-control" type="text" v-model="item.late_buffer" :disabled="!editing">
+		                            </div>
+	                            </div>
+	                            <div class="col-md-12" >
+		                            <div id="mapContainer" style="height: 400px; z-index: 1; width: 100%">
+		                            </div>
+	                            </div>
                             </div>
                         </div>
                         <div class="tab-pane fade show" id="pills-operating-unit" role="tabpanel" aria-labelledby="pills-operating-unit">
@@ -125,6 +153,8 @@ import axios from "axios";
 import {useToast} from "vue-toastification";
 import Timesheet from "./timesheet.vue";
 import WorkReporting from "@components/work_reporting.vue";
+import L from "leaflet";
+import {buffer, point} from "@turf/turf";
 
 export default {
     components: {Timesheet, Employee, OperatingUnit, WorkReporting},
@@ -137,6 +167,7 @@ export default {
             hideJob: true,
             assignJob: [],
             selectedJobs: [],
+	        maps: null,
         }
     },
     async mounted() {
@@ -145,12 +176,35 @@ export default {
         this.getAllJobs()
     },
     methods: {
+	    initMap() {
+		    document.getElementById('mapContainer').innerHTML = '';
+
+		    console.log(this.item.lat, this.item.long, this.item.radius)
+		    const centerLatLng = [this.item.lat, this.item.long];
+		    this.map = L.map('mapContainer').setView(centerLatLng, 18);
+
+		    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
+		    L.marker(centerLatLng).addTo(this.map);
+
+		    const centerPoint = point([parseFloat(this.item.long), parseFloat(this.item.lat)]);
+		    const buffered = buffer(centerPoint, parseInt(this.item.radius), { units: 'meters' });
+
+		    if (buffered.geometry && buffered.geometry.type === 'Polygon') {
+			    const bufferPolygon = L.geoJSON(buffered);
+			    bufferPolygon.setStyle({ fillColor: 'blue', fillOpacity: 0.3 }).addTo(this.map);
+
+			    const bufferBounds = bufferPolygon.getBounds();
+			    this.map.fitBounds(bufferBounds);
+		    } else {
+			    console.warn('Buffer geometry is not valid or empty.');
+		    }
+	    },
         async getKantorPerwakilan() {
             this.loading = true;
             await this.$axios.get(`/api/v1/admin/unit/detail/${this.$route.params.id}`)
                 .then(response => {
                     this.item = response.data.data;
-                    console.log(this.item)
+                    this.initMap()
                 })
                 .catch(error => {
                     console.error(error);
@@ -196,7 +250,24 @@ export default {
             this.editing = !this.editing
         },
         onSaveData() {
-            this.onEditData()
+	        axios
+		        .put(`/api/v1/admin/unit/update/${this.$route.params.id}`, {
+			        lat: this.item.lat,
+			        long: this.item.long,
+			        early_buffer: this.item.early_buffer,
+			        late_buffer: this.item.late_buffer,
+			        radius: this.item.radius
+		        })
+		        .then(() => {
+			        this.editing = false;
+			        this.getKantorPerwakilan();
+			        this.initMap();
+			        useToast().success('Data successfully updated');
+		        })
+		        .catch(error => {
+			        console.error(error);
+			        useToast().success('Data failed to update');
+		        });
         },
         onCloseEdit() {
             this.onEditData()
