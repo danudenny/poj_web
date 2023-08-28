@@ -924,7 +924,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Incident Reporting',
                     requiresAuth: true,
-                    permission: 'incident_reporting',
+                    permission: 'incident-reporting-read',
                 },
             },
             {
