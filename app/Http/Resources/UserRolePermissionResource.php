@@ -39,7 +39,11 @@ class UserRolePermissionResource extends JsonResource
          * @var Employee $employee
          */
         $employee = $this->employee;
+        $activeSchedule = $employee->getActiveNormalSchedule();
         $lastUnit = $this->employee->last_unit;
+        if ($activeSchedule) {
+            $lastUnit = $activeSchedule->unit;
+        }
 	    $jobs = $lastUnit->jobs;
         $listJobs = [];
 
