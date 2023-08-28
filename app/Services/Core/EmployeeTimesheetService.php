@@ -356,6 +356,8 @@ class EmployeeTimesheetService extends ScheduleService {
                     $schedule->latitude = $unit->lat;
                     $schedule->longitude = $unit->long;
                     $schedule->unit_relation_id = $unit->relation_id;
+                    $schedule->start_time_timesheet = $timesheetExists->start_time;
+                    $schedule->end_time_timesheet = $timesheetExists->end_time;
                 } else {
                     $year = Carbon::now($timezone)->year;
                     $month = Carbon::now($timezone)->month;
@@ -399,6 +401,8 @@ class EmployeeTimesheetService extends ScheduleService {
                                 $schedule->latitude = $unit->lat;
                                 $schedule->longitude = $unit->long;
                                 $schedule->unit_relation_id = $unit->relation_id;
+                                $schedule->start_time_timesheet = $timesheet->start_time;
+                                $schedule->end_time_timesheet = $timesheet->end_time;
 
                                 $schedule->save();
                                 $currentDate->addWeek();
@@ -830,7 +834,7 @@ class EmployeeTimesheetService extends ScheduleService {
             $dailyEntries = $transformedData[$employeeName];
 
             if ($assignment->timesheet->shift_type === 'shift') {
-                $shiftEntry = $assignment->timesheet->start_time . '-' . $assignment->timesheet->end_time;
+                $shiftEntry = $assignment->start_time_timesheet . '-' . $assignment->end_time_timesheet;
                 $isAfterCurrTime = Carbon::parse($assignment->start_time)->isAfter($currTime);
                 $color = "success";
 
@@ -859,7 +863,7 @@ class EmployeeTimesheetService extends ScheduleService {
                         }
                     }
                     if ($timesheetDay) {
-                        $shiftEntry = $timesheetDay->start_time . '-' . $timesheetDay->end_time;
+                        $shiftEntry = $assignment->start_time_timesheet . '-' . $assignment->end_time_timesheet;
                         $isAfterCurrTime = Carbon::parse($assignment->start_time)->isAfter($currTime);
                         $color = "success";
 

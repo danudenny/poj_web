@@ -32,6 +32,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property string $check_out_timezone
  * @property int $employee_attendance_id
  * @property string $unit_relation_id
+ * @property string $start_time_timesheet
+ * @property string $end_time_timesheet
  *
  * Relations:
  * @property-read EmployeeTimesheet $timesheet
