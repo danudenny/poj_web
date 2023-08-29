@@ -338,15 +338,28 @@ methods: {
     checkUnitLevel(title) {
         let levelUnit = this.activeUser?.last_units?.unit_level
         let availableMenu = ['Operating Unit', 'Corporate', 'Kantor Wilayah', 'Area', 'Cabang', 'Outlet']
-        let unitLevelRole = ['staff']
+        let unitLevelMatchRole = ['staff', 'staff_approvals']
+	    let unitLevelRole = ["admin_operating_unit"]
 
-        if (levelUnit && availableMenu.includes(title) && unitLevelRole.includes(this.$store.state.currentRole)) {
+        if (levelUnit && availableMenu.includes(title) && unitLevelMatchRole.includes(this.$store.state.currentRole)) {
             let validationData ={
                 'title': title,
                 'titleLevel': this.listUnitLevel[title],
                 'levelUnit': levelUnit,
             }
-            return validationData.titleLevel >= validationData.levelUnit
+            return validationData.titleLevel === validationData.levelUnit
+        } else if (levelUnit && availableMenu.includes(title) && unitLevelRole.includes(this.$store.state.currentRole))  {
+			let activeUnit = this.$store.state.activeAdminUnit?.unit_relation_id ?? '';
+
+			if (activeUnit) {
+				let levelUnitAdmin = activeUnit.split("-")
+				let validationData ={
+					'title': title,
+					'titleLevel': this.listUnitLevel[title],
+					'levelUnit': levelUnitAdmin[1],
+				}
+				return validationData.titleLevel >= validationData.levelUnit
+			}
         }
 
         return true
