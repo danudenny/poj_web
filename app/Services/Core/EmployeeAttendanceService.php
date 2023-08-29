@@ -638,6 +638,7 @@ class EmployeeAttendanceService extends BaseService
             $employeeAttendance->checkout_long = $dataLocation['longitude'];
             $employeeAttendance->checkout_real_radius = $distance;
             $employeeAttendance->check_out_tz = $employeeTimezone;
+            $employeeAttendance->checkout_type = $attendanceType;
             $employeeAttendance->save();
 
             $attHistory = new EmployeeAttendanceHistory();

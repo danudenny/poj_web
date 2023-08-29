@@ -90,6 +90,13 @@
                                                 @select="onSelectedJob"
                                             ></multiselect>
                                         </div>
+                                        <div class="col-md-4 mb-3">
+                                            <div class="mt-4">
+                                                <button class="btn btn-warning" @click="resetFilter">
+                                                    <i class="fa fa-rotate-left"></i>&nbsp;Reset Filter
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-2" v-if="this.$store.state.permissions?.includes('timesheet-update')">
@@ -391,6 +398,27 @@ export default {
             }
         },
         onSelectedJob() {
+            this.fetchTimesheetData()
+        },
+        resetFilter() {
+            this.selectedUnit = null;
+            this.isEmployeeUnitSpecific = true;
+            this.selectedWorkingUnit = null;
+            this.isWorkingUnitSpecific = true;
+            this.shiftType = '';
+            this.employeeName = '';
+            this.selectedJob = null
+
+            if (this.$store.state.currentRole === 'admin_operating_unit') {
+                let activeAdminUnit = this.$store.state.activeAdminUnit
+                if (activeAdminUnit != null) {
+                    this.selectedUnit = {
+                        relation_id: activeAdminUnit.unit_relation_id,
+                        name: activeAdminUnit.name.replace(" (Default)", "")
+                    }
+                }
+            }
+
             this.fetchTimesheetData()
         }
     }
