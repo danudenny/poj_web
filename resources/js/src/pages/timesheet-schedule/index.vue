@@ -34,7 +34,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-4 mb-3">
+                                        <div class="col-md-4 mb-3" v-if="this.$store.state.currentRole != 'staff'">
                                             <label>Working Unit</label>
                                             <multiselect
                                                 v-model="selectedWorkingUnit"
@@ -47,7 +47,7 @@
                                                 @select="onSelectedWorkingUnit"
                                             ></multiselect>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-2" v-if="this.$store.state.currentRole != 'staff'">
                                             <div class="form-group mt-4">
                                                 <div class="checkbox p-0">
                                                     <input id="is_working_unit_specific" type="checkbox" @change="fetchTimesheetData" v-model="isWorkingUnitSpecific">
@@ -371,9 +371,6 @@ export default {
             }
         },
         onSelectedWorkingUnit(val) {
-            this.selectedJob = null
-            this.jobs = []
-
             this.fetchTimesheetData()
         },
         onMonthSelected(val) {
