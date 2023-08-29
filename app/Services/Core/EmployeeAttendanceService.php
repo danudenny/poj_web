@@ -626,6 +626,11 @@ class EmployeeAttendanceService extends BaseService
             $currentTime = Carbon::now();
             $distance = calculateDistance($employeeTimesheetSchedule->latitude, $employeeTimesheetSchedule->longitude, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
 
+            $attendanceType = EmployeeAttendance::TypeOnSite;
+            if ($distance > intval($employeeTimesheetSchedule->timesheet->unit->radius)) {
+                $attendanceType = EmployeeAttendance::TypeOffSite;
+            }
+
             DB::beginTransaction();
 
             $employeeAttendance->real_check_out = $currentTime;

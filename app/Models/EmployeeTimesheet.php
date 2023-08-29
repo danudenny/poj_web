@@ -26,6 +26,9 @@ class EmployeeTimesheet extends Model
 {
     use HasFactory;
 
+    public const TypeShift = "shift";
+    public const TypeNonShift = "non_shift";
+
     protected $table = 'employee_timesheet';
     protected $hidden = ['created_at', 'updated_at'];
     protected $fillable = [

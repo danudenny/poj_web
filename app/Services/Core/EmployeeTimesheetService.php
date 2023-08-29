@@ -3,6 +3,7 @@
 namespace App\Services\Core;
 
 use App\Http\Requests\EmployeeTimesheet\UpdateEmployeeTimesheetScheduleRequest;
+use App\Http\Requests\Timesheet\CreateTimesheetRequest;
 use App\Models\Employee;
 use App\Models\EmployeeTimesheet;
 use App\Models\EmployeeTimesheetDay;
@@ -72,7 +73,7 @@ class EmployeeTimesheetService extends ScheduleService {
     /**
      * @throws Exception
      */
-    public function save($request, $id): JsonResponse
+    public function save(CreateTimesheetRequest $request, $id): JsonResponse
     {
         DB::beginTransaction();
         try {

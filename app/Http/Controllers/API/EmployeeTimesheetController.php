@@ -6,6 +6,7 @@ use App\Http\Controllers\BaseController;
 use App\Http\Requests\EmployeeTimesheet\CreateEmployeeTimesheetRequest;
 use App\Http\Requests\EmployeeTimesheet\UpdateEmployeeTimesheetRequest;
 use App\Http\Requests\EmployeeTimesheet\UpdateEmployeeTimesheetScheduleRequest;
+use App\Http\Requests\Timesheet\CreateTimesheetRequest;
 use App\Services\Core\EmployeeTimesheetService;
 use App\Services\Core\PeriodService;
 use Exception;
@@ -36,7 +37,7 @@ class EmployeeTimesheetController extends BaseController
     /**
      * @throws Exception
      */
-    public function save(CreateEmployeeTimesheetRequest $request, $id): JsonResponse
+    public function save(CreateTimesheetRequest $request, $id): JsonResponse
     {
         try {
             return $this->employeeTimesheetService->save($request, $id);
