@@ -326,6 +326,8 @@ class UnitService extends BaseService
 
             $beforeLat = $units->lat;
             $beforeLong = $units->long;
+            $beforeEarlyBuffer = $units->early_buffer;
+            $beforeLateBuffer = $units->late_buffer;
 
             $units->lat = $data->lat;
             $units->long = $data->long;
@@ -343,6 +345,10 @@ class UnitService extends BaseService
 
             if ($beforeLat != $units->lat || $beforeLong != $units->long) {
                 $this->updateScheduleLocation($units);
+            }
+
+            if ($beforeEarlyBuffer != $units->early_buffer || $beforeLateBuffer != $units->late_buffer) {
+                $this->updateScheduleBuffer($units);
             }
 
             DB::commit();
@@ -434,6 +440,20 @@ class UnitService extends BaseService
                 'timezone' => $timezone,
                 'location_lat' => $unit->lat,
                 'location_long' => $unit->long
+            ]);
+    }
+
+    public function updateScheduleBuffer(Unit $unit) {
+        if ($unit->late_buffer == null && $unit->early_buffer == null) {
+            return;
+        }
+
+        EmployeeTimesheetSchedule::query()
+            ->where('unit_relation_id', '=', $unit->relation_id)
+            ->whereNull('check_in_time')
+            ->update([
+                'early_buffer' => $unit->late_buffer,
+                'late_buffer' => $unit->early_buffer,
             ]);
     }
 }

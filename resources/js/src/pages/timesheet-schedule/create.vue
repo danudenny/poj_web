@@ -96,7 +96,10 @@
                             </div>
                         </div>
                         <div class="card-footer text-start">
-                            <button class="btn btn-primary m-r-10" @click="saveSchedule">Save</button>
+                            <button class="btn btn-primary m-r-10" v-if="!isProcess" @click="saveSchedule">Save</button>
+                            <div class="btn btn-primary m-r-10 disabled" v-else>
+                                ...
+                            </div>
                             <button class="btn btn-secondary" @click="$router.push('/timesheet-assignment')">Back</button>
                         </div>
                     </div>
@@ -142,6 +145,7 @@ export default {
             selectedEmployeeIds: [],
             selectedLevel: null,
             selectedEmployeeLevel: null,
+            isProcess: false,
             unitLevels: [
                 {
                     name: 'Head Office',
@@ -410,6 +414,9 @@ export default {
             })
 
             const period = this.periods.find(item => item.id === this.period_id);
+
+            this.isProcess = true
+
             await this.$axios.post(`/api/v1/admin/employee-timesheet/assign-schedule`, {
                 employee_ids: ls,
                 period_id: this.period_id,
@@ -418,9 +425,11 @@ export default {
             }).then(response => {
                 localStorage.removeItem('selectedEmployees');
                 useToast().success(response.data.message , { position: 'bottom-right' });
+                this.isProcess = false
                 this.$router.push('/timesheet-assignment');
             }).catch(error => {
                 useToast().error(error.response.data.message , { position: 'bottom-right' });
+                this.isProcess = false
             });
         }
     }

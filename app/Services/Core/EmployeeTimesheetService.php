@@ -361,8 +361,8 @@ class EmployeeTimesheetService extends ScheduleService {
                     $schedule->start_time_timesheet = $timesheetExists->start_time;
                     $schedule->end_time_timesheet = $timesheetExists->end_time;
                 } else {
-                    $year = Carbon::now($timezone)->year;
-                    $month = Carbon::now($timezone)->month;
+                    $year = $periodsExists->year;
+                    $month = $periodsExists->month;
                     $requestedDay = $request->date;
 
                     $startDate = Carbon::create($year, $month, $requestedDay, 0, 0, 0, $timezone);
@@ -891,34 +891,25 @@ class EmployeeTimesheetService extends ScheduleService {
                 ];
             } else {
                 if ($date >= 1 && $date <= count($daysOfMonth)) {
-                    $timesheetDay = null;
-                    foreach ($assignment->timesheet->timesheetDays as $day) {
-                        if ($day->day === now()->setDay($date)->englishDayOfWeek) {
-                            $timesheetDay = $day;
-                            break;
-                        }
-                    }
-                    if ($timesheetDay) {
-                        $shiftEntry = $assignment->start_time_timesheet . '-' . $assignment->end_time_timesheet;
-                        $isAfterCurrTime = Carbon::parse($assignment->start_time)->isAfter($currTime);
-                        $color = "success";
+                    $shiftEntry = $assignment->start_time_timesheet . '-' . $assignment->end_time_timesheet;
+                    $isAfterCurrTime = Carbon::parse($assignment->start_time)->isAfter($currTime);
+                    $color = "success";
 
-                        if (!$isAfterCurrTime && $assignment->check_in_time == null) {
-                            $color = "danger";
-                        } else if ($isAfterCurrTime && $assignment->check_in_time == null) {
-                            $color = "info";
-                        }
-
-                        $dailyEntries[$date] = [
-                            'time' => $shiftEntry,
-                            'id' => $assignment->id,
-                            'check_in_time' => $assignment->check_in_time,
-                            'check_out_time' => $assignment->check_out_time,
-                            'unit' => $assignment->unit->name,
-                            'is_can_change' => $isAfterCurrTime && $assignment->check_in_time == null,
-                            'color' => $color
-                        ];
+                    if (!$isAfterCurrTime && $assignment->check_in_time == null) {
+                        $color = "danger";
+                    } else if ($isAfterCurrTime && $assignment->check_in_time == null) {
+                        $color = "info";
                     }
+
+                    $dailyEntries[$date] = [
+                        'time' => $shiftEntry,
+                        'id' => $assignment->id,
+                        'check_in_time' => $assignment->check_in_time,
+                        'check_out_time' => $assignment->check_out_time,
+                        'unit' => $assignment->unit->name,
+                        'is_can_change' => $isAfterCurrTime && $assignment->check_in_time == null,
+                        'color' => $color
+                    ];
                 }
 
             }
@@ -938,18 +929,18 @@ class EmployeeTimesheetService extends ScheduleService {
 
         $transformedData = array_values($transformedData);
 
-        $startDate = Carbon::now()->startOfMonth();
-        $endDate = Carbon::now()->endOfMonth();
+        $startDate = (clone $now)->startOfMonth();
+        $endDate = (clone $now)->endOfMonth();
 
         $dayAbbreviations = [];
-        $daysOfMonth = [];
+        $daysOfMonthArr = [];
 
         for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
-            $dayAbbreviations[] = $date->locale('id')->dayName;
-            $daysOfMonth[] = $date->day;
+            $dayAbbreviations[] = $date->dayName;
+            $daysOfMonthArr[] = $date->day;
         }
 
-        $header = array_merge(['No', 'Employee Name', 'Unit', 'Job Title'], $daysOfMonth, ['Total Hours']);
+        $header = array_merge(['No', 'Employee Name', 'Unit', 'Job Title'], $daysOfMonthArr, ['Total Hours']);
 
         return response()->json([
             'status' => 'success',
