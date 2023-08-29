@@ -240,7 +240,9 @@ export default {
       this.map.scrollWheelZoom.disable();
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
-      L.marker(centerLatLng).addTo(this.map);
+      L.marker(centerLatLng, {icon: L.icon({
+		      iconUrl: '/marker-icon.png'
+	      })}).addTo(this.map);
 
       const centerPoint = point([parseFloat(this.item.long), parseFloat(this.item.lat)]);
       const buffered = buffer(centerPoint, parseInt(this.item.radius), { units: 'meters' });
