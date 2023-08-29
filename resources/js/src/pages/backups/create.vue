@@ -50,6 +50,13 @@
                                             </select>
                                         </div>
                                         <div class="mt-2">
+                                            <label for="status">Jenis Request:</label>
+                                            <select id="status" name="request-type" class="form-select" v-model="backup.request_type" required>
+                                                <option value="assignment" v-if="this.$store.state.currentRole != 'staff'" :selected="backup.request_type === 'assignment' ? 'selected' : ''">Assignment</option>
+                                                <option value="request" :selected="backup.request_type === 'request' ? 'selected' : ''">Request</option>
+                                            </select>
+                                        </div>
+                                        <div class="mt-2">
                                             <label for="name">Tanggal Mulai</label>
                                             <input type="date" class="form-control" v-model="backup.start_date" :min="today" @change="onDateChanged" required>
                                         </div>
@@ -177,7 +184,7 @@ export default {
                 dates: {},
                 employee_ids: [],
                 file_url: null,
-                request_type: 'assignment',
+                request_type: 'request',
                 requestor_unit_id: 0
             },
             selectedDateTimesheet: null,
@@ -560,23 +567,35 @@ export default {
                 });
         },
         onSubmitForm() {
-            this.isOnProcess = true
-            this.$axios.post(`/api/v1/admin/backup/create`, this.backup)
-                .then(response => {
-                    useToast().success("Success to create data", { position: 'bottom-right' });
-                    this.isOnProcess = false;
-                    this.$router.push({name: 'Backup', params: {}});
-                })
-                .catch(error => {
-                    this.isOnProcess = false;
-                    if(error.response.data.message instanceof Object) {
-                        for (const key in error.response.data.message) {
-                            useToast().error(error.response.data.message[key][0], { position: 'bottom-right' });
-                        }
-                    } else {
-                        useToast().error(error.response.data.message , { position: 'bottom-right' });
-                    }
-                });
+            this.$swal({
+                icon: 'warning',
+                title:"Do you want to create backup?",
+                showCancelButton: true,
+                confirmButtonText: 'Yes!',
+                confirmButtonColor: '#126850',
+                cancelButtonText: 'Cancel',
+                cancelButtonColor: '#f64545',
+            }).then((result)=>{
+                if(result.isConfirmed){
+                    this.isOnProcess = true
+                    this.$axios.post(`/api/v1/admin/backup/create`, this.backup)
+                        .then(response => {
+                            useToast().success("Success to create data", { position: 'bottom-right' });
+                            this.isOnProcess = false;
+                            this.$router.push({name: 'Backup', params: {}});
+                        })
+                        .catch(error => {
+                            this.isOnProcess = false;
+                            if(error.response.data.message instanceof Object) {
+                                for (const key in error.response.data.message) {
+                                    useToast().error(error.response.data.message[key][0], { position: 'bottom-right' });
+                                }
+                            } else {
+                                useToast().error(error.response.data.message , { position: 'bottom-right' });
+                            }
+                        });
+                }
+            });
         }
     }
 };

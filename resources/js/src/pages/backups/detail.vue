@@ -312,20 +312,34 @@ export default {
         onSubmitForm() {
         },
         backupApproval() {
-            this.$axios.post(`/api/v1/admin/backup/approval/${this.$route.params.id}`, this.approval)
-                .then(response => {
-                    useToast().success("Success to update data", { position: 'bottom-right' });
-                    this.getDetailBackup()
-                })
-                .catch(error => {
-                    if(error.response.data.message instanceof Object) {
-                        for (const key in error.response.data.message) {
-                            useToast().error(error.response.data.message[key][0], { position: 'bottom-right' });
-                        }
-                    } else {
-                        useToast().error(error.response.data.message , { position: 'bottom-right' });
-                    }
-                });
+            this.$swal({
+                icon: 'warning',
+                title:"Do you want to do approval?",
+                text:'Once you finished doing approval, you will not be able to revert the data!',
+                showCancelButton: true,
+                confirmButtonText: 'Yes!',
+                confirmButtonColor: '#126850',
+                cancelButtonText: 'Cancel',
+                cancelButtonColor: '#efefef',
+            }).then((result)=>{
+                console.log("prep", result)
+                if(result.isConfirmed){
+                    this.$axios.post(`/api/v1/admin/backup/approval/${this.$route.params.id}`, this.approval)
+                        .then(response => {
+                            useToast().success("Success to update data", { position: 'bottom-right' });
+                            this.getDetailBackup()
+                        })
+                        .catch(error => {
+                            if(error.response.data.message instanceof Object) {
+                                for (const key in error.response.data.message) {
+                                    useToast().error(error.response.data.message[key][0], { position: 'bottom-right' });
+                                }
+                            } else {
+                                useToast().error(error.response.data.message , { position: 'bottom-right' });
+                            }
+                        });
+                }
+            });
         }
     }
 };
