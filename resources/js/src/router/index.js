@@ -876,7 +876,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Leave Request Detail',
                     requiresAuth: true,
-                    permission: 'leave-request-read',
+                    permission: 'leave-request-detail-read',
                 },
             },
         ]
