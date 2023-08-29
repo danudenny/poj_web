@@ -35,7 +35,9 @@ class BackupEmployeeTime extends Model
         'check_in_time_with_unit_timezone',
         'check_out_time_with_unit_timezone',
         'check_in_time_with_employee_timezone',
-        'check_out_time_with_employee_timezone'
+        'check_out_time_with_employee_timezone',
+        'check_in_time_with_timezone',
+        'check_out_time_with_timezone'
     ];
 
     public function getCheckInTimeWithTimeZoneAttribute() {
