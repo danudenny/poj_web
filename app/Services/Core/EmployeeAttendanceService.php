@@ -887,19 +887,6 @@ class EmployeeAttendanceService extends BaseService
                     $nextApproval->save();
                 }
 
-                $employeeAttendance->real_check_in = null;
-                $employeeAttendance->real_check_out = null;
-                $employeeAttendance->checkin_lat = null;
-                $employeeAttendance->checkin_long = null;
-                $employeeAttendance->checkout_lat = null;
-                $employeeAttendance->checkout_long = null;
-                $employeeAttendance->checkin_type = null;
-                $employeeAttendance->checkout_type = null;
-                $employeeAttendance->checkin_real_radius = null;
-                $employeeAttendance->checkout_real_radius = null;
-                $employeeAttendance->check_in_tz = null;
-                $employeeAttendance->check_out_tz = null;
-
                 $employeeAttendance->is_need_approval = false;
                 $employeeAttendance->save();
             }
