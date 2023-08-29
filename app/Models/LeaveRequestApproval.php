@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  *
  * Relations:
  * @property-read LeaveRequest $leaveRequest
+ * @property-read Employee $employee
  */
 class LeaveRequestApproval extends Model
 {

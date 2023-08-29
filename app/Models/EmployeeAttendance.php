@@ -168,6 +168,7 @@ class EmployeeAttendance extends Model
         if ($this->approved && count($approver) == 0) {
             return [
                 "name" => "Auto Approve",
+                "notes" => ""
             ];
         }
 
@@ -180,6 +181,7 @@ class EmployeeAttendance extends Model
             if (($item->status == AttendanceApproval::StatusApproved) || ($item->status == AttendanceApproval::StatusRejected && ($item->notes != null || ($item == null && $item != "")))) {
                 return [
                     "name" => $item->employee->name,
+                    "notes" => $item->notes
                 ];
             }
         }

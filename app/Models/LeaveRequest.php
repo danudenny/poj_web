@@ -38,6 +38,10 @@ class LeaveRequest extends Model
         'file_url'
     ];
 
+    protected $appends = [
+        'last_approver',
+    ];
+
     public function getIsCanApproveAttribute() {
         /**
          * @var User $user
@@ -70,6 +74,33 @@ class LeaveRequest extends Model
         }
 
         return true;
+    }
+
+    public function getLastApproverAttribute() {
+        $approver =  $this->leaveRequestApprovals()->get();
+
+        if ($this->status != self::StatusOnProcess && count($approver) == 0) {
+            return [
+                "name" => "Auto Approve",
+                "notes" => ""
+            ];
+        }
+
+        /**
+         * @var LeaveRequestApproval[] $items
+         */
+        $items = $approver->reverse();
+
+        foreach ($items as $item) {
+            if (($item->status == LeaveRequestApproval::StatusApproved) || ($item->status == LeaveRequestApproval::StatusRejected && ($item->notes != null || ($item == null && $item != "")))) {
+                return [
+                    "name" => $item->employee->name,
+                    "notes" => $item->notes
+                ];
+            }
+        }
+
+        return null;
     }
 
     public function employee(): BelongsTo

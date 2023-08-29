@@ -90,6 +90,7 @@ class Overtime extends Model
         if ($this->last_status != OvertimeHistory::TypePending && count($approver) == 0) {
             return [
                 "name" => "Auto Approve",
+                "notes" => ""
             ];
         }
 
@@ -102,6 +103,7 @@ class Overtime extends Model
             if (($item->status == OvertimeApproval::StatusApproved) || ($item->status == OvertimeApproval::StatusRejected && ($item->notes != null || ($item == null && $item != "")))) {
                 return [
                     "name" => $item->employee->name,
+                    "notes" => $item->notes
                 ];
             }
         }

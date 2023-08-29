@@ -95,6 +95,7 @@ class Backup extends Model
         if ($this->status != self::StatusAssigned && count($approver) == 0) {
             return [
                 "name" => "Auto Approve",
+                "notes" => ""
             ];
         }
 
@@ -107,6 +108,7 @@ class Backup extends Model
             if (($item->status == BackupApproval::StatusApproved) || ($item->status == BackupApproval::StatusRejected && ($item->notes != null || ($item == null && $item != "")))) {
                 return [
                     "name" => $item->employee->name,
+                    "notes" => $item->notes
                 ];
             }
         }
