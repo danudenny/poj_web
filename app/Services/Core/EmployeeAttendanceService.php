@@ -1144,7 +1144,7 @@ class EmployeeAttendanceService extends BaseService
             $user = $request->user();
             $clientTimezone = getClientTimezone();
 
-            $query = EmployeeTimesheetSchedule::query()->with(['unit'])
+            $query = EmployeeTimesheetSchedule::query()->with(['unit', 'employeeAttendance'])
                 ->where('employee_timesheet_schedules.employee_id', '=', $user->employee_id);
 
             if ($monthly = $request->query('monthly')) {
