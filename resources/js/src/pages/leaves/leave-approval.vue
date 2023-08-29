@@ -121,14 +121,7 @@ export default {
                         formatter: function (cell) {
                             return `<span class="text-success" title="Go To Details"><b>${cell.getValue()}</b></span>`
                         },
-                        cellClick: (e, cell) => {
-                            this.$router.push({
-                                name: 'leave-request-details',
-                                params: {
-                                    id: cell.getRow().getData().id
-                                }
-                            })
-                        }
+                        cellClick: (e, cell) => {}
                     },
                     {
                         title: 'Approver Name',
@@ -196,6 +189,28 @@ export default {
                                 return '<span class="badge badge-warning">Cuti</span>'
                             } else if (cell.getValue() === 'permit') {
                                 return '<span class="badge badge-danger">Izin</span>'
+                            }
+                        }
+                    },
+                    {
+                        title: 'Reason',
+                        field: 'leave_request.reason',
+                        hozAlign: 'center',
+                        headerHozAlign: 'center',
+                        headerSort: false,
+                    },
+                    {
+                        title: 'File',
+                        field: 'leave_request.file_url',
+                        hozAlign: 'center',
+                        headerHozAlign: 'center',
+                        headerSort: false,
+                        formatter: function (cell) {
+                            let value = cell.getValue()
+                            if (value) {
+                                return `<a target="_blank" class="button-icon button-success p-2 mt-3" href="${value}"><i class="fa fa-file"></i> </a>`;
+                            } else {
+                                return "-"
                             }
                         }
                     },

@@ -91,14 +91,7 @@ export default {
                         formatter: function (cell) {
                             return `<span class="text-success" title="Go To Details"><b>${cell.getValue()}</b></span>`
                         },
-                        cellClick: (e, cell) => {
-                            this.$router.push({
-                                name: 'leave-request-details',
-                                params: {
-                                    id: cell.getRow().getData().id
-                                }
-                            })
-                        }
+                        cellClick: (e, cell) => {}
                     },
                     {
                         title: 'Unit',
@@ -176,12 +169,25 @@ export default {
                         }
                     },
                     {
-                        title: 'Created At',
-                        field: 'created_at',
+                        title: 'Reason',
+                        field: 'reason',
+                        hozAlign: 'center',
+                        headerHozAlign: 'center',
+                        headerSort: false,
+                    },
+                    {
+                        title: 'File',
+                        field: 'file_url',
+                        hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerSort: false,
                         formatter: function (cell) {
-                            return moment(cell.getValue()).format('DD MMMM YYYY')
+                            let value = cell.getValue()
+                            if (value) {
+                                return `<a target="_blank" class="button-icon button-success p-2 mt-3" href="${value}"><i class="fa fa-file"></i> </a>`;
+                            } else {
+                                return "-"
+                            }
                         }
                     },
                 ],
