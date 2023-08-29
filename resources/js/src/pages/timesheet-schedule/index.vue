@@ -13,8 +13,8 @@
                             <div class="row">
                                 <div class="col-md-10">
                                     <div class="row">
-                                        <div class="col-md-3 mb-3">
-                                            <label>Unit</label>
+                                        <div class="col-md-4 mb-3">
+                                            <label>Employee Unit</label>
                                             <multiselect
                                                 v-model="selectedUnit"
                                                 :options="units"
@@ -26,7 +26,36 @@
                                                 @select="onSelectedUnit"
                                             ></multiselect>
                                         </div>
-                                        <div class="col-md-2 mb-3">
+                                        <div class="col-md-2">
+                                            <div class="form-group mt-4">
+                                                <div class="checkbox p-0">
+                                                    <input id="is_employee_unit_specific" type="checkbox" @change="fetchTimesheetData" v-model="isEmployeeUnitSpecific">
+                                                    <label class="text-muted" for="is_employee_unit_specific">Is Spesific?</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>Working Unit</label>
+                                            <multiselect
+                                                v-model="selectedWorkingUnit"
+                                                :options="workingUnits"
+                                                :multiple="false"
+                                                label="name"
+                                                track-by="relation_id"
+                                                placeholder="Select Unit"
+                                                @search-change="onWorkingUnitSearchName"
+                                                @select="onSelectedWorkingUnit"
+                                            ></multiselect>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="form-group mt-4">
+                                                <div class="checkbox p-0">
+                                                    <input id="is_working_unit_specific" type="checkbox" @change="fetchTimesheetData" v-model="isWorkingUnitSpecific">
+                                                    <label class="text-muted" for="is_working_unit_specific">Is Spesific?</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
                                             <label>Month - Year :</label>
                                             <Datepicker
                                                 :model-value="selectedMonth"
@@ -37,7 +66,7 @@
                                             >
                                             </Datepicker>
                                         </div>
-                                        <div class="col-md-2 mb-3">
+                                        <div class="col-md-4 mb-3">
                                             <label>Shift Type :</label>
                                             <select class="form-select digits" v-model="shiftType" @change="onChangeShiftType">
                                                 <option value=""> - </option>
@@ -45,11 +74,11 @@
                                                 <option value="non_shift">Non Shift</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-2 mb-3">
+                                        <div class="col-md-4 mb-3">
                                             <label>Employee Name</label>
                                             <input type="text" placeholder="Search Name" class="form-control" v-model="employeeName" @keyup="onChangeEmployeeName">
                                         </div>
-                                        <div class="col-md-3 mb-3">
+                                        <div class="col-md-4 mb-3">
                                             <label>Job</label>
                                             <multiselect
                                                 v-model="selectedJob"
@@ -72,7 +101,7 @@
                                 </div>
                             </div>
 
-                            <table class="table table-striped table-bordered table-condensed wrapable-table table-sticky">
+                            <table v-if="!isOnSearch" class="table table-striped table-bordered table-condensed wrapable-table table-sticky">
                                 <thead class="table-header-sticky">
                                     <tr>
                                         <th v-for="(header, index) in headers" :key="index" :rowspan="index < 4 ? 2 : 1" :class="header === 'Employee Name' ? 'column-sticky-table' : ''">
@@ -108,6 +137,13 @@
                                     </tr>
                                 </tbody>
                             </table>
+                            <div v-else>
+                                <p align="center">
+                                    <div class="spinner-border text-primary">
+                                        <span class="sr-only">Loading...</span>
+                                    </div>
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -135,10 +171,19 @@ export default {
             daysOfMonth: [],
             timesheetSplit: '',
             selectedUnit: null,
+            isEmployeeUnitSpecific: true,
             units: [],
             unitPagination: {
                 name: '',
-                pageSize: 20,
+                pageSize: 50,
+                isOnSearch: false
+            },
+            selectedWorkingUnit: null,
+            isWorkingUnitSpecific: true,
+            workingUnits: [],
+            workingUnitPagination: {
+                name: '',
+                pageSize: 50,
                 isOnSearch: false
             },
             selectedJob: null,
@@ -156,6 +201,7 @@ export default {
     async mounted() {
         this.getCurrentUnit()
         this.getUnitsData()
+        this.getWorkingUnitsData()
         this.getJobsData()
         await this.fetchTimesheetData();
         this.dateRange()
@@ -169,25 +215,15 @@ export default {
 						relation_id: activeAdminUnit.unit_relation_id,
 						name: activeAdminUnit.name.replace(" (Default)", "")
 					}
-
-					this.unitPagination.name = this.selectedUnit.name
 					return
 				}
 			}
-
-	        let currUser = JSON.parse(localStorage.getItem("USER_STORAGE_KEY"))
-	        this.selectedUnit = currUser.last_units
-	        this.unitPagination.name = this.selectedUnit.name
         },
         dateRange() {
             const lastDayOfMonth = new Date(this.selectedMonth.year, this.selectedMonth.month + 1, 0).getDate();
             this.dateRanges = Array.from({ length: lastDayOfMonth }, (_, index) => (index + 1).toString());
         },
         async fetchTimesheetData() {
-            if (this.selectedUnit === null) {
-                useToast().error("Need to select unit", { position: 'bottom-right' })
-                return
-            }
             if (this.selectedMonth === null) {
                 useToast().error("Need to select month - year", { position: 'bottom-right' })
                 return
@@ -197,14 +233,16 @@ export default {
 
             try {
                 let localFilter = {
-                    unit_relation_id: this.selectedUnit.relation_id,
+                    unit_relation_id: this.selectedUnit?.relation_id ?? '',
                     monthly_year: this.selectedMonth.year + "-" + ("0" + (this.selectedMonth.month + 1)).slice(-2),
                     shift_type: this.shiftType,
                     employee_name: this.employeeName,
-                    odoo_job_id: this.selectedJob?.odoo_job_id ?? ''
-
+                    odoo_job_id: this.selectedJob?.odoo_job_id ?? '',
+                    is_specific_unit_relation_id: this.isEmployeeUnitSpecific ? 1 : 0,
+                    working_unit_relation_id: this.selectedWorkingUnit?.relation_id ?? '',
+                    is_specific_working_unit_relation_id: this.isWorkingUnitSpecific ? 1 : 0
                 }
-                await this.$axios.get(`/api/v1/admin/timesheet-schedule/schedules?unit_relation_id=${localFilter.unit_relation_id}&monthly_year=${localFilter.monthly_year}&shift_type=${localFilter.shift_type}&employee_name=${localFilter.employee_name}&employee_job_id=${localFilter.odoo_job_id}`,
+                await this.$axios.get(`/api/v1/admin/timesheet-schedule/schedules?working_unit_relation_id=${localFilter.working_unit_relation_id}&is_specific_working_unit=${localFilter.is_specific_working_unit_relation_id}&unit_relation_id=${localFilter.unit_relation_id}&is_specific_unit_relation_id=${localFilter.is_specific_unit_relation_id}&monthly_year=${localFilter.monthly_year}&shift_type=${localFilter.shift_type}&employee_name=${localFilter.employee_name}&employee_job_id=${localFilter.odoo_job_id}`,
                     {
                         headers: {
                             'X-Client-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -232,6 +270,21 @@ export default {
                 .then(response => {
                     this.units = response.data.data.data
                     this.unitPagination.isOnSearch = false
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        },
+        getWorkingUnitsData() {
+            const ls = localStorage.getItem('USER_ROLES')
+            this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.workingUnitPagination.pageSize}&page=1&name=${this.workingUnitPagination.name}`, {
+                headers: {
+                    'X-Selected-Role': ls
+                }
+            })
+                .then(response => {
+                    this.workingUnits = response.data.data.data
+                    this.workingUnitPagination.isOnSearch = false
                 })
                 .catch(error => {
                     console.error(error);
@@ -306,6 +359,22 @@ export default {
 
             this.fetchTimesheetData()
             this.getJobsData()
+        },
+        onWorkingUnitSearchName(val) {
+            this.workingUnitPagination.name = val
+
+            if (!this.workingUnitPagination.isOnSearch) {
+                this.workingUnitPagination.isOnSearch = true
+                setTimeout(() => {
+                    this.getWorkingUnitsData()
+                }, 1000)
+            }
+        },
+        onSelectedWorkingUnit(val) {
+            this.selectedJob = null
+            this.jobs = []
+
+            this.fetchTimesheetData()
         },
         onMonthSelected(val) {
             this.selectedMonth = val
@@ -395,9 +464,6 @@ table {
 .past .offset2 .span1 .cv-item {
     background-color: #218838 !important;
 }
-.card-absolute .card-body {
-    height: 550px !important;
-}
 
 .action-button {
     display: none;
@@ -412,7 +478,7 @@ table {
 }
 
 .wrapable-table {
-  height: 90%;
+  height: 600px;
   overflow-y: auto;
 }
 

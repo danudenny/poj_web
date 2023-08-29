@@ -88,7 +88,11 @@ export default createStore({
     },
     getPermissions: (state) => {
         state.permissions = JSON.parse(localStorage.getItem("USER_PERMISSIONS"))
-    }
+    },
+      getActiveUser: (state) => {
+          let activeUser = JSON.parse(localStorage.getItem('USER_STORAGE_KEY'));
+          state.user = activeUser
+      }
   },
   mutations: {
       change(state){
@@ -190,6 +194,8 @@ export default createStore({
               localStorage.removeItem(TOKEN_STORAGE_KEY);
               localStorage.removeItem('USER_STORAGE_KEY');
               localStorage.removeItem('USER_AVATAR');
+              localStorage.removeItem("AVAILABLE_USER_ROLES")
+              localStorage.removeItem("selectedPermission")
               console.log('Logout successfully');
           } catch (e) {
               console.log('Logout error:', e);

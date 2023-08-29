@@ -109,7 +109,7 @@
                 </a>
 
                 <router-link class="lan-4" :class="{ 'active': childrenItem.active }" :to="childrenItem.path"
-                             v-if="childrenItem.type === 'link' && (!Array.isArray(permissions) || permissions.includes(childrenItem.permission))" @click="setNavActive(childrenItem, index)"
+                             v-if="childrenItem.type === 'link' && (!Array.isArray(permissions) || permissions.includes(childrenItem.permission)) && this.checkUnitLevel(childrenItem.title)" @click="setNavActive(childrenItem, index)"
                              v-on:click="hidesecondmenu()">
                     {{ (childrenItem.title) }}
                     <label :class="'badge badge-' + childrenItem.badgeType + ' pull-right'"
@@ -168,8 +168,8 @@
     </div>
 </template>
 <script>
-import { mapState } from 'vuex';
-import { layoutClasses } from '@/constants/layout';
+import {mapState} from 'vuex';
+import {layoutClasses} from '@/constants/layout';
 
 export default {
 name: 'Navmenu',
@@ -180,6 +180,15 @@ data() {
     text: '',
     active: false,
     permissions: [],
+      activeUser: null,
+      listUnitLevel: {
+          'Operating Unit': 2,
+          'Corporate': 3,
+          'Kantor Wilayah': 4,
+          'Area': 5,
+          'Cabang': 6,
+          'Outlet': 7
+      }
   };
 },
 computed: {
@@ -193,6 +202,7 @@ computed: {
     height: (state) => state.menu.height,
     margin: (state) => state.menu.margin,
     menuWidth: (state) => state.menu.menuWidth,
+    activeUser: (state) => state.user
   }),
   layoutobject: {
     get: function () {
@@ -248,7 +258,8 @@ destroyed() {
 },
 mounted() {
     this.hasPermission();
-    this.getPermission()
+    this.getPermission();
+    this.getActiveUser();
     this.menuItems.filter(items => {
     if (items.path === this.$route.path)
       this.$store.dispatch('menu/setActiveRoute', items);
@@ -263,6 +274,7 @@ mounted() {
       });
     });
   });
+    this.checkUnitLevel()
 },
 methods: {
     hasPermission(menuItem) {
@@ -287,6 +299,9 @@ methods: {
         const getPermission = localStorage.getItem('USER_PERMISSIONS');
         this.permissions = JSON.parse(getPermission);
         return this.permissions
+    },
+    getActiveUser() {
+        this.activeUser = JSON.parse(localStorage.getItem('USER_STORAGE_KEY'));
     },
   handleScroll() {
     if(window.scrollY > 400){
@@ -320,6 +335,22 @@ methods: {
   handleResize() {
     this.$store.state.menu.width = window.innerWidth - 450;
   },
+    checkUnitLevel(title) {
+        let levelUnit = this.activeUser?.last_units?.unit_level
+        let availableMenu = ['Operating Unit', 'Corporate', 'Kantor Wilayah', 'Area', 'Cabang', 'Outlet']
+        let unitLevelRole = ['staff']
+
+        if (levelUnit && availableMenu.includes(title) && unitLevelRole.includes(this.$store.state.currentRole)) {
+            let validationData ={
+                'title': title,
+                'titleLevel': this.listUnitLevel[title],
+                'levelUnit': levelUnit,
+            }
+            return validationData.titleLevel >= validationData.levelUnit
+        }
+
+        return true
+    }
 }
 };
 </script>

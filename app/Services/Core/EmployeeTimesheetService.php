@@ -17,6 +17,8 @@ use Carbon\Carbon;
 use DateTime;
 use Exception;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -788,8 +790,42 @@ class EmployeeTimesheetService extends ScheduleService {
         }
 
         if ($unitRelationID) {
-            $query->where('employees.unit_id', '=', $unitRelationID);
+            $isSpecific = $request->get('is_specific_unit_relation_id');
+            if ($isSpecific == '1') {
+                $query->where('employees.unit_id', '=', $unitRelationID);
+            } else {
+                $query->where(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('employees.outlet_id', '=', $unitRelationID)
+                        ->orWhere('employees.cabang_id', '=', $unitRelationID)
+                        ->orWhere('employees.area_id', '=', $unitRelationID)
+                        ->orWhere('employees.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('employees.corporate_id', '=', $unitRelationID);
+                });
+            }
         }
+
+        if ($workingUnit = $request->get('working_unit_relation_id')) {
+            $isSpecific = $request->get('is_specific_working_unit');
+            if ($isSpecific == '1') {
+                $query->where('employee_timesheet_schedules.unit_relation_id', '=', $workingUnit);
+            } else {
+                /**
+                 * @var Builder $unitQuery
+                 */
+                $unitQuery = Unit::query()->from('unit_data')
+                    ->withRecursiveExpression('unit_data', Unit::query()->whereRaw("relation_id = '$workingUnit'")->unionAll(
+                        Unit::query()->select(['units.*'])
+                            ->join('unit_data', function (JoinClause $query) {
+                                $query->on('units.parent_unit_id', '=', 'unit_data.relation_id')
+                                    ->whereRaw('units.unit_level = unit_data.unit_level + 1');
+                            })
+                    ));
+
+                $query->joinSub($unitQuery, 'unitData', 'unitData.relation_id', '=', 'employee_timesheet_schedules.unit_relation_id');
+            }
+
+        }
+
         if ($monthlyYear = $request->query('monthly_year')) {
             $now = Carbon::parse(sprintf("%s-01", $monthlyYear));
             $query->whereRaw("TO_CHAR(employee_timesheet_schedules.start_time::DATE, 'YYYY-mm')::TEXT = '${monthlyYear}'");
