@@ -62,6 +62,7 @@ class BackupService extends ScheduleService
         $employeeID = $request->get('employee_id');
 
         $backups = Backup::query();
+        $backups->join('backup_times', 'backup_times.backup_id', '=', 'backups.id');
         $backups->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'backups.requestor_employee_id');
         $backups->join('backup_employees', 'backup_employees.backup_id', '=', 'backups.id');
         $backups->join('employees AS backupEmployee', 'backupEmployee.id', '=', 'backup_employees.employee_id');
@@ -107,8 +108,17 @@ class BackupService extends ScheduleService
         }
 
         $backups->when($request->filled('status'), function (Builder $builder) use ($request) {
-            $builder->where('backups.status', '=', $request->input('status'));
+            $builder->whereIn('backups.status', explode(",",  $request->input('status')));
         });
+
+        if ($startDate = $request->get('start_date')) {
+            $backups->where('backup_times.backup_date', ">=", $startDate);
+        }
+
+        if ($endDate = $request->get('end_date')) {
+            $backups->where('backup_times.backup_date', "<=", $endDate);
+        }
+
         $backups->when($request->filled('requestor_employee_id'), function (Builder $builder) use ($request) {
             $builder->where('backups.requestor_employee_id', '=', $request->input('requestor_employee_id'));
         });

@@ -109,6 +109,18 @@ class OvertimeService extends ScheduleService
             $builder->whereRaw('LOWER(overtimes.last_status) LIKE ?', ['%'.strtolower($request->query('last_status')).'%']);
         });
 
+        if ($status = $request->get('status')) {
+            $overtimes->whereIn('overtimes.last_status', explode(",", $status));
+        }
+
+        if ($startDate = $request->get('start_date')) {
+            $overtimes->where('overtime_dates.date', ">=", $startDate);
+        }
+
+        if ($endDate = $request->get('end_date')) {
+            $overtimes->where('overtime_dates.date', "<=", $endDate);
+        }
+
         if ($requestorName = $request->get('requestor_name')) {
             $overtimes->where("reqEmployee.name", 'ILIKE', "%$requestorName%");
         }
