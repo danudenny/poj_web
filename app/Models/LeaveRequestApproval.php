@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $employee_id
  * @property string $status
  * @property string $notes
+ * @property string $updated_at
  *
  * Relations:
  * @property-read LeaveRequest $leaveRequest

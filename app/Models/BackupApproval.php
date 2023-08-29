@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $backup_id
  * @property int $employee_id
  * @property string|null $notes
+ * @property string $updated_at
  *
  * Relations:
  * @property-read Backup $backup

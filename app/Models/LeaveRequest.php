@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $last_status
  * @property string $start_date
  * @property string $end_date
+ * @property string $updated_at
  *
  * Relations:
  * @property-read LeaveRequestApproval[] $leaveRequestApprovals
@@ -82,7 +84,8 @@ class LeaveRequest extends Model
         if ($this->status != self::StatusOnProcess && count($approver) == 0) {
             return [
                 "name" => "Auto Approve",
-                "notes" => ""
+                "notes" => "",
+                "updated_at" => Carbon::parse($this->updated_at, 'UTC')->setTimezone(getClientTimezone())->format('Y-m-d H:i:s')
             ];
         }
 
@@ -95,7 +98,8 @@ class LeaveRequest extends Model
             if (($item->status == LeaveRequestApproval::StatusApproved) || ($item->status == LeaveRequestApproval::StatusRejected && ($item->notes != null || ($item == null && $item != "")))) {
                 return [
                     "name" => $item->employee->name,
-                    "notes" => $item->notes
+                    "notes" => $item->notes,
+                    "updated_at" => Carbon::parse($item->updated_at, 'UTC')->setTimezone(getClientTimezone())->format('Y-m-d H:i:s')
                 ];
             }
         }

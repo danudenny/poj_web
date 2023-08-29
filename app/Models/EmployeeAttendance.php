@@ -33,6 +33,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $checkout_type
  * @property string $check_out_tz
  * @property string $notes
+ * @property string $updated_at
  *
  * Relations:
  * @property-read Employee $employee
@@ -168,7 +169,8 @@ class EmployeeAttendance extends Model
         if ($this->approved && count($approver) == 0) {
             return [
                 "name" => "Auto Approve",
-                "notes" => ""
+                "notes" => "",
+                "updated_at" => Carbon::parse($this->updated_at, 'UTC')->setTimezone(getClientTimezone())->format('Y-m-d H:i:s')
             ];
         }
 
@@ -181,7 +183,8 @@ class EmployeeAttendance extends Model
             if (($item->status == AttendanceApproval::StatusApproved) || ($item->status == AttendanceApproval::StatusRejected && ($item->notes != null || ($item == null && $item != "")))) {
                 return [
                     "name" => $item->employee->name,
-                    "notes" => $item->notes
+                    "notes" => $item->notes,
+                    "updated_at" => Carbon::parse($item->updated_at, 'UTC')->setTimezone(getClientTimezone())->format('Y-m-d H:i:s')
                 ];
             }
         }

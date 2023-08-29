@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $employee_id
  * @property string $status
  * @property string $notes
+ * @property string $updated_at
  *
  * Relations:
  * @property-read Overtime $overtime

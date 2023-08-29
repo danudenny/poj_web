@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property float $location_lat
  * @property float $location_long
  * @property string $request_type
+ * @property string $updated_at
  *
  * Relations:
  * @property-read Employee $requestorEmployee
@@ -90,7 +91,8 @@ class Overtime extends Model
         if ($this->last_status != OvertimeHistory::TypePending && count($approver) == 0) {
             return [
                 "name" => "Auto Approve",
-                "notes" => ""
+                "notes" => "",
+                "updated_at" => Carbon::parse($this->updated_at, 'UTC')->setTimezone(getClientTimezone())->format('Y-m-d H:i:s')
             ];
         }
 
@@ -103,7 +105,8 @@ class Overtime extends Model
             if (($item->status == OvertimeApproval::StatusApproved) || ($item->status == OvertimeApproval::StatusRejected && ($item->notes != null || ($item == null && $item != "")))) {
                 return [
                     "name" => $item->employee->name,
-                    "notes" => $item->notes
+                    "notes" => $item->notes,
+                    "updated_at" => Carbon::parse($item->updated_at, 'UTC')->setTimezone(getClientTimezone())->format('Y-m-d H:i:s')
                 ];
             }
         }

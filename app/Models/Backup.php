@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $timezone
  * @property string $file_url
  * @property int $source_unit_relation_id
+ * @property string $updated_at
  *
  * Relations:
  * @property-read Employee $requestorEmployee
@@ -95,7 +97,8 @@ class Backup extends Model
         if ($this->status != self::StatusAssigned && count($approver) == 0) {
             return [
                 "name" => "Auto Approve",
-                "notes" => ""
+                "notes" => "",
+                "updated_at" => Carbon::parse($this->updated_at, 'UTC')->setTimezone(getClientTimezone())->format('Y-m-d H:i:s')
             ];
         }
 
@@ -108,7 +111,8 @@ class Backup extends Model
             if (($item->status == BackupApproval::StatusApproved) || ($item->status == BackupApproval::StatusRejected && ($item->notes != null || ($item == null && $item != "")))) {
                 return [
                     "name" => $item->employee->name,
-                    "notes" => $item->notes
+                    "notes" => $item->notes,
+                    "updated_at" => Carbon::parse($item->updated_at, 'UTC')->setTimezone(getClientTimezone())->format('Y-m-d H:i:s')
                 ];
             }
         }
