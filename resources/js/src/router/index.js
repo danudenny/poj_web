@@ -124,6 +124,9 @@ import Team from "../pages/teams/index.vue";
 import TeamEdit from "../pages/teams/update.vue";
 import TeamDetail from "../pages/teams/details.vue";
 
+// Public Holiday
+import PublicHoliday from "../pages/public-holiday/index.vue";
+
 //Error page
 import Error from  '../components/error.vue';
 import UnitJob from "../pages/jobs/unit-job.vue";
@@ -362,6 +365,16 @@ const routes =[
                   title: 'POJ - Job List',
                   requiresAuth: true,
                   permission : 'job-read',
+              }
+          },
+          {
+              path: '/management/public-holiday',
+              name: 'public-holiday-list',
+              component: PublicHoliday,
+              meta: {
+                  title: 'POJ - Public Holiday',
+                  requiresAuth: true,
+                  permission : 'public-holiday-read',
               }
           },
           {

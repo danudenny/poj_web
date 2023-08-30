@@ -25,6 +25,7 @@ use App\Http\Controllers\API\OutletController;
 use App\Http\Controllers\API\OvertimeController;
 use App\Http\Controllers\API\PeriodController;
 use App\Http\Controllers\API\PermissionController;
+use App\Http\Controllers\API\PublicHolidayController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\SettingController;
 use App\Http\Controllers\API\TeamController;
@@ -413,9 +414,17 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
 
     Route::group(['prefix' => 'attendance-correction'], function() {
         Route::get('index', [AttendanceCorrectionController::class, 'index']);
-        Route::get('view/{od}', [AttendanceCorrectionController::class, 'view']);
+        Route::get('view/{id}', [AttendanceCorrectionController::class, 'view']);
         Route::get('list-approval', [AttendanceCorrectionController::class, 'listApproval']);
         Route::post('create', [AttendanceCorrectionController::class, 'create']);
         Route::post('approval/{id}', [AttendanceCorrectionController::class, 'approval']);
+    });
+
+    Route::group(['prefix' => 'public_holiday'], function() {
+        Route::get('', [PublicHolidayController::class, 'index']);
+        Route::get('view/{id}', [PublicHolidayController::class, 'view']);
+        Route::post('create', [PublicHolidayController::class, 'create']);
+        Route::post('update/{id}', [PublicHolidayController::class, 'update']);
+        Route::delete('delete/{id}', [PublicHolidayController::class, 'delete']);
     });
 });

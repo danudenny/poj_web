@@ -94,6 +94,15 @@
             "permission" : "job-read"
         },
         {
+            "title": "Public Holiday",
+            "icon": "calendar",
+            "iconf": "fill-calendar",
+            "type": "link",
+            "active": false,
+            "path": "/management/public-holiday",
+            "permission" : "public-holiday-read"
+        },
+        {
             "title": "Struktur Jabatan",
             "icon": "tool",
             "iconf": "fill-tool",

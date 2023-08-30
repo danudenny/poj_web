@@ -9,6 +9,7 @@ use App\Models\EmployeeTimesheet;
 use App\Models\EmployeeTimesheetDay;
 use App\Models\EmployeeTimesheetSchedule;
 use App\Models\Period;
+use App\Models\PublicHoliday;
 use App\Models\Role;
 use App\Models\Unit;
 use App\Models\User;
@@ -757,6 +758,7 @@ class EmployeeTimesheetService extends ScheduleService {
         $user = $request->user();
 
         $unitRelationID = $request->get('unit_relation_id');
+        $monthlyYear = $request->query('monthly_year');
 
         $query = EmployeeTimesheetSchedule::with([
                 'employee',
@@ -827,7 +829,7 @@ class EmployeeTimesheetService extends ScheduleService {
 
         }
 
-        if ($monthlyYear = $request->query('monthly_year')) {
+        if ($monthlyYear) {
             $now = Carbon::parse(sprintf("%s-01", $monthlyYear));
             $query->whereRaw("TO_CHAR(employee_timesheet_schedules.start_time::DATE, 'YYYY-mm')::TEXT = '${monthlyYear}'");
         }
@@ -848,8 +850,24 @@ class EmployeeTimesheetService extends ScheduleService {
 
         $daysOfMonth = range(1, $now->daysInMonth);
 
+        $queryPublicHoliday = PublicHoliday::query();
+        if ($monthlyYear) {
+            $queryPublicHoliday->whereRaw("TO_CHAR(public_holidays.holiday_date::DATE, 'YYYY-mm')::TEXT = '${monthlyYear}'");
+        }
+
+        /**
+         * @var PublicHoliday[] $publicHolidays
+         */
+        $publicHolidays = $queryPublicHoliday->get();
+
         $transformedData = [];
+        $holidaysDateList = [];
         $rowNumber = 1;
+
+        foreach ($publicHolidays as $publicHoliday) {
+            $dateHoliday = explode("-", $publicHoliday->holiday_date);
+            $holidaysDateList[$dateHoliday[2]] = $publicHoliday;
+        }
 
         foreach ($timesheetAssignments as $assignment) {
             $employeeName = $assignment->employee->name;
@@ -937,7 +955,15 @@ class EmployeeTimesheetService extends ScheduleService {
         $daysOfMonthArr = [];
 
         for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
-            $dayAbbreviations[] = $date->dayName;
+            $publicHolidayExist = null;
+
+            if (isset($holidaysDateList[$date->day])) {
+                $publicHolidayExist = $holidaysDateList[$date->day];
+            }
+            $dayAbbreviations[] = [
+                'name' => $date->dayName,
+                'public_holiday' => $publicHolidayExist,
+            ];
             $daysOfMonthArr[] = $date->day;
         }
 

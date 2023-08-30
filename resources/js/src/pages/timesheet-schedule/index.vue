@@ -117,7 +117,10 @@
                                     </tr>
                                     <tr>
                                         <th v-for="(header, index) in headerAbbrvs" :key="index" style="font-size:10px">
-                                            {{ header.substring(0, 3) }}
+                                            {{ header.name.substring(0, 3) }}
+                                            <div v-if="header.public_holiday">
+                                                <span class="badge badge-success">{{ header.public_holiday.name }}</span>
+                                            </div>
                                         </th>
                                         <th></th>
                                     </tr>
@@ -128,7 +131,7 @@
                                         <td class="column-sticky-table">{{ timesheet.employee_name }}</td>
                                         <td>{{ timesheet.unit }}</td>
                                         <td>{{ timesheet.job }}</td>
-                                        <td v-for="day in dateRanges">
+                                        <td v-for="day in dateRanges" :class="headerAbbrvs[day - 1].public_holiday ? 'background-public-holiday' : ''">
                                             <span v-if="timesheet[day] === null" class="text-danger"><i class="fa fa-times"></i></span>
                                             <div class="schedule-section" v-else>
                                                 <span :class="'badge badge-' + timesheet[day].color">{{ timesheet[day].time }}</span>
@@ -521,5 +524,9 @@ table {
     position: sticky;
     left: 0;
     z-index: 0;
+}
+
+.background-public-holiday {
+    background-color: #ff00006e !important;
 }
 </style>
