@@ -100,8 +100,14 @@ export default {
                         headerHozAlign: 'center'
                     },
                     {
-                        title: 'Job Type',
+                        title: 'Job Position',
                         field: 'job_type',
+                        headerFilter:"input",
+                        headerHozAlign: 'center',
+                    },
+                    {
+                        title: 'Description',
+                        field: 'job_description',
                         headerFilter:"input",
                         headerHozAlign: 'center',
                     },

@@ -52,9 +52,19 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="mt-2">
-                                                <label for="name">Check In Type</label>
-                                                <input type="text" class="form-control" v-model="attendance.checkin_type" disabled>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mt-2">
+                                                        <label for="name">Type</label>
+                                                        <input type="text" class="form-control" v-model="attendance.checkin_type" disabled>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mt-2">
+                                                        <label for="name">Radius (Meter)</label>
+                                                        <input type="text" class="form-control" v-model="attendance.checkin_real_radius" disabled>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -66,9 +76,19 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="mt-2">
-                                                <label for="name">Check Out Type</label>
-                                                <input type="text" class="form-control" v-model="attendance.checkout_type" disabled>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="mt-2">
+                                                        <label for="name">Status</label>
+                                                        <input type="text" class="form-control" v-model="attendance.checkout_type" disabled>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="mt-2">
+                                                        <label for="name">Radius (Meter)</label>
+                                                        <input type="text" class="form-control" v-model="attendance.checkout_real_radius" disabled>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
