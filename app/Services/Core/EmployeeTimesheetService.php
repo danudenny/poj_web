@@ -1084,6 +1084,9 @@ class EmployeeTimesheetService extends ScheduleService {
                 $endTime->addDays(1);
             }
 
+            $startTimeArr = explode(":", $data['timesheet']['start_time']);
+            $endTimeArr = explode(":", $data['timesheet']['end_time']);
+
             DB::beginTransaction();
 
             $employeeTimesheetSchedule->timesheet_id = $timesheet->id;
@@ -1095,6 +1098,8 @@ class EmployeeTimesheetService extends ScheduleService {
             $employeeTimesheetSchedule->latitude = $unit->lat;
             $employeeTimesheetSchedule->longitude = $unit->long;
             $employeeTimesheetSchedule->unit_relation_id = $unit->relation_id;
+            $employeeTimesheetSchedule->start_time_timesheet = $startTimeArr[0] . ":" . $startTimeArr[1];
+            $employeeTimesheetSchedule->end_time_timesheet = $endTimeArr[0] . ":" . $endTimeArr[1];
             $employeeTimesheetSchedule->save();
 
             DB::commit();
