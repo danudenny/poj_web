@@ -117,8 +117,8 @@
                                     </tr>
                                     <tr>
                                         <th v-for="(header, index) in headerAbbrvs" :key="index" style="font-size:10px">
-                                            {{ header.name.substring(0, 3) }}
-                                            <div v-if="header.public_holiday">
+                                            {{ header.name }}
+                                            <div v-if="header.public_holiday?.name != null">
                                                 <span class="badge badge-success">{{ header.public_holiday.name }}</span>
                                             </div>
                                         </th>

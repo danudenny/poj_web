@@ -953,6 +953,7 @@ class EmployeeTimesheetService extends ScheduleService {
 
         $dayAbbreviations = [];
         $daysOfMonthArr = [];
+        $normalDayOff = ['Saturday', 'Sunday'];
 
         for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
             $publicHolidayExist = null;
@@ -960,6 +961,13 @@ class EmployeeTimesheetService extends ScheduleService {
             if (isset($holidaysDateList[$date->day])) {
                 $publicHolidayExist = $holidaysDateList[$date->day];
             }
+
+            if ($publicHolidayExist == null && in_array($date->dayName, $normalDayOff)) {
+                $publicHolidayExist = [
+                    'name' => null
+                ];
+            }
+
             $dayAbbreviations[] = [
                 'name' => $date->dayName,
                 'public_holiday' => $publicHolidayExist,
