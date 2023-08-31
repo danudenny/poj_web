@@ -92,19 +92,31 @@
                                             @select="filterEmployeeTypeName"
                                         ></multiselect>
                                     </div>
-                                  <div class="col-md-4 mt-3">
-                                    <label>Employee Unit</label>
-                                    <multiselect
-                                        v-model="filterUnit"
-                                        :options="units"
-                                        :multiple="false"
-                                        label="name"
-                                        track-by="relation_id"
-                                        placeholder="Select Employee Unit"
-                                        @search-change="onUnitSearchName"
-                                        @select="filterEmployeeUnit"
-                                    ></multiselect>
-                                  </div>
+                                      <div class="col-md-4 mt-3">
+                                        <label>Employee Unit</label>
+                                        <multiselect
+                                            v-model="filterUnit"
+                                            :options="units"
+                                            :multiple="false"
+                                            label="name"
+                                            track-by="relation_id"
+                                            placeholder="Select Employee Unit"
+                                            @search-change="onUnitSearchName"
+                                            @select="filterEmployeeUnit"
+                                        ></multiselect>
+                                      </div>
+                                    <div class="col-md-4 mt-3">
+                                        <label>Operating Unit</label>
+                                        <multiselect
+                                            v-model="filterOperatingUnits"
+                                            :options="operatingUnits"
+                                            :multiple="false"
+                                            label="name"
+                                            track-by="relation_id"
+                                            placeholder="Select Operating Unit"
+                                            @select="filterOperatingUnit"
+                                        ></multiselect>
+                                    </div>
                                 </div>
                                 <hr>
                                 <div v-if="loading" class="text-center">
@@ -150,11 +162,13 @@ export default {
             filterEmployeeCategory: '',
             filterEmployeeType: '',
             filterUnit: '',
+            filterOperatingUnits: '',
             showFilter: false,
             jobs: [],
             departments: [],
             partners: [],
             units: [],
+            operatingUnits: [],
             jobPagination: {
                 name: '',
                 onSearch: false
@@ -184,6 +198,7 @@ export default {
         await this.getPartner();
         await this.getTeam();
         this.getUnitsData();
+        this.getOperatingUnit();
     },
     computed() {
         this.initializeEmployeesTable()
@@ -203,6 +218,20 @@ export default {
               .catch(error => {
                   console.error(error);
               });
+        },
+        getOperatingUnit() {
+            const ls = localStorage.getItem('USER_ROLES')
+            this.$axios.get(`/api/v1/admin/unit/operating-unit`, {
+                headers: {
+                    'X-Selected-Role': ls
+                }
+            })
+                .then(response => {
+                    this.operatingUnits = response.data.data
+                })
+                .catch(error => {
+                    console.error(error);
+                });
         },
         exportExcel() {
             this.table.download("xlsx", "employees.xlsx", {
@@ -312,8 +341,8 @@ export default {
                         outletName: '',
                         customerName: '',
                         last_unit_relation_id: '',
+                        default_operating_unit_id: ''
                     }
-
 
                     params.filter.map((item) => {
                         if (item.field === 'corporate.name') this.filterCorporate = item.value
@@ -325,9 +354,10 @@ export default {
                         if (item.field === 'department_id') localFilter.department_id = item.value
                         if (item.field === 'team.name') localFilter.team_id = item.value
                         if (item.field === 'unit.relation_id') localFilter.last_unit_relation_id = item.value
+                        if (item.field === 'operating_unit_relation_id') localFilter.default_operating_unit_id = item.value
                     })
 
-                    return `${url}?page=${params.page}&per_page=${params.size}&last_unit_relation_id=${localFilter.last_unit_relation_id}&customer_name=${localFilter.customerName}&name=${localFilter.employeeName}&odoo_department_id=${localFilter.department_id}&team_id=${localFilter.team_id}&employee_category=${localFilter.employee_category}&employee_type=${localFilter.employee_type}&kanwil_name=${localFilter.kanwilName}&area_name=${localFilter.areaName}&cabang_name=${localFilter.cabangName}&outlet_name=${localFilter.outletName}&odoo_job_id=${localFilter.job_id}&corporate=${this.filterCorporate
+                    return `${url}?page=${params.page}&per_page=${params.size}&default_operating_unit_id=${localFilter.default_operating_unit_id}&last_unit_relation_id=${localFilter.last_unit_relation_id}&customer_name=${localFilter.customerName}&name=${localFilter.employeeName}&odoo_department_id=${localFilter.department_id}&team_id=${localFilter.team_id}&employee_category=${localFilter.employee_category}&employee_type=${localFilter.employee_type}&kanwil_name=${localFilter.kanwilName}&area_name=${localFilter.areaName}&cabang_name=${localFilter.cabangName}&outlet_name=${localFilter.outletName}&odoo_job_id=${localFilter.job_id}&corporate=${this.filterCorporate
                     }`
                 },
                 layout: 'fitData',
@@ -416,6 +446,16 @@ export default {
                                 arr[i] = arr[i].charAt(0).toUpperCase() + arr[i].slice(1);
                             }
                             return cell.getValue() ? arr.join(" ") : '<i class="fa fa-times text-danger"></i>'
+                        },
+                    },
+                    {
+                        title: 'Default Operating Unit',
+                        field: 'operating_unit.name',
+                        hozAlign: 'center',
+                        headerHozAlign: 'center',
+                        headerFilterPlaceholder:"Select Corporate",
+                        formatter: function (cell) {
+                            return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
                         },
                     },
                     {
@@ -524,6 +564,13 @@ export default {
                 return;
             }
             this.table.setFilter('unit.relation_id', "=", this.filterUnit.relation_id);
+        },
+        filterOperatingUnit() {
+            if (this.filterOperatingUnits === "") {
+                this.table.clearFilter();
+                return;
+            }
+            this.table.setFilter('operating_unit_relation_id', "=", this.filterOperatingUnits.relation_id);
         },
         filtering() {
             this.showFilter = !this.showFilter;

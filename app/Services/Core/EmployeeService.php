@@ -279,6 +279,7 @@ class EmployeeService extends BaseService
             $lastUnitRelationID = $request->get('last_unit_relation_id');
             $unitRelationID = $request->get('unit_relation_id');
             $unitID = $request->get('unit_id');
+            $defaultOperatingUnit = $request->get('default_operating_unit_id', '');
 
             $employees->when($request->filled('unit_level'), function(Builder $builder) use ($request) {
                 $builder->join('units AS unitLevel', 'unitLevel.relation_id', '=', 'employees.unit_id');
@@ -297,12 +298,11 @@ class EmployeeService extends BaseService
 
                     $unitRelationID = $defaultUnitRelationID;
                 }
-            } else if ($this->isRequestedRoleLevel(Role::RoleStaffApproval)) {
-                if (!$unitID) {
-                    $unitID = $user->employee->unit_id;
-                }
             } else {
-                $employees->where('employees.id', '=', $user->employee_id);
+                if ($defaultOperatingUnit == '') {
+                    $employees->join('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
+                    $employees->where('user_operating_units.user_id', '=', $user->id);
+                }
             }
 
             $employees->when($request->input('job_id'), function (Builder $builder) use ($request) {
@@ -314,6 +314,10 @@ class EmployeeService extends BaseService
                 if ($isOperatingUnitUser == '1') {
                     $employees->where('employees.default_operating_unit_id', '>', 0);
                 }
+            }
+
+            if ($defaultOperatingUnit) {
+                $employees->whereIn('employees.default_operating_unit_id', explode(",", $defaultOperatingUnit));
             }
 
             $employees->when($request->filled('odoo_job_id'), function(Builder $builder) use ($request) {

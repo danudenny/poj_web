@@ -21,6 +21,7 @@ use Watson\Rememberable\Rememberable;
  *
  * Relations:
  * @property-read Employee $employee
+ * @property-read Unit[] $allowedOperatingUnits
  * @method static firstWhere(string $string, $id)
  * @method static whereIn(string $string, Collection $pluck)
  * @method static where(string $string, mixed $email)
@@ -179,5 +180,9 @@ class User extends Authenticatable
 
     public function getJobRole() {
         return $this->employee->job->roles();
+    }
+
+    public function allowedOperatingUnits() {
+        return $this->belongsToMany(Unit::class, 'user_operating_units', 'user_id', 'unit_relation_id', 'id', 'relation_id');
     }
 }

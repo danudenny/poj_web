@@ -26,7 +26,7 @@
                                 <label class="form-label">Password</label>
                                 <input class="form-control" type="password" placeholder="Password" v-model="user.password">
                             </div>
-                            <div class="mb-3" v-if="false">
+                            <div class="mb-3">
                                 <div class="mb-2">
                                     <label class="col-form-label">Roles</label>
                                     <multiselect
@@ -40,8 +40,22 @@
                                     </multiselect>
                                 </div>
                             </div>
+                            <div class="mb-3">
+                                <div class="mb-2">
+                                    <label class="col-form-label">Allowed Operating Unit</label>
+                                    <multiselect
+                                        v-model="user.allowed_operating_units"
+                                        placeholder="Select Allowed Operating Units"
+                                        label="name"
+                                        track-by="id"
+                                        :options="operatingUnits"
+                                        :multiple="true"
+                                        :taggable="false">
+                                    </multiselect>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-6" v-if="false">
                             <div class="mb-3" v-if="user.employee.department">
                                 <label class="form-label">Department</label>
                                 <input disabled class="form-control" type="text" placeholder="-" v-model="user.employee.department.name">
@@ -63,8 +77,9 @@
                     </div>
                 </div>
                 <div class="card-footer text-start">
-                    <button class="btn btn-primary m-r-10" type="submit">Update</button>
-                    <button class="btn btn-secondary" @click="$router.push('/management/users')">Cancel</button>
+                    <div class="btn btn-secondary" @click="$router.go(-1)"><i class="fa fa-close"></i> Cancel</div> &nbsp;
+                    <button v-if="!isProcess" class="btn btn-primary m-r-10" type="submit"><i class="fa fa-save"></i> Update</button>
+                    <button v-if="isProcess" class="btn btn-primary m-r-10 disabled" disabled>...</button>
                 </div>
             </form>
         </div>
@@ -95,29 +110,43 @@ export default {
                     },
                     team: {}
                 },
-                roles: []
+                roles: [],
+                allowed_operating_units: []
             },
             roles: [],
+            operatingUnits: [],
             users: {},
             department: {
                 teams: []
             },
-            selectedTeam: null
+            selectedTeam: null,
+            isProcess: false
         }
     },
     async mounted() {
         await this.getUser();
         await this.getRoles();
         await this.getTeams();
+        this.getOperatingUnits()
     },
     methods: {
         onSelectTeam(e) {
             this.selectedTeam = this.department.teams.find(team => team.id === e.id);
         },
         async getTeams() {
+            return
             await this.$axios.get(`/api/v1/admin/department/view/${this.$route.query.dept_id}/${this.$route.query.unit_id}`)
                 .then(res => {
                     this.department = res.data.data;
+                })
+                .catch(e => {
+                    console.log(e);
+                });
+        },
+        async getOperatingUnits() {
+            await this.$axios.get(`/api/v1/admin/unit/operating-unit`)
+                .then(res => {
+                    this.operatingUnits = res.data.data;
                 })
                 .catch(e => {
                     console.log(e);
@@ -128,7 +157,6 @@ export default {
             await axios
                 .get(`/api/v1/admin/user/view?id=`+ route.params.id)
                 .then(response => {
-                    console.log(response.data.data)
                    this.user = response.data.data;
                     this.user.id = response.data.data.id;
                     this.user.name = response.data.data.name;
@@ -160,6 +188,9 @@ export default {
             let roles = this.user.roles.map(value => value.id);
             let team = this.selectedTeam;
             let employee_id = this.user.employee_id;
+            let allowedOperatingUnits = this.user.allowed_operating_units.map(value => value.relation_id)
+
+            this.isProcess = true
 
             await this.$axios.post(`/api/v1/admin/user/update`, {
                 id: id,
@@ -168,16 +199,18 @@ export default {
                 email: email,
                 password: password,
                 roles: roles,
-                team_id: team.id,
-                employee_id: employee_id
+                team_id: team?.id,
+                employee_id: employee_id,
+                allowed_operating_units: allowedOperatingUnits
             })
                 .then(res => {
+                    this.isProcess = false
                     useToast().success(res.data.message );
-                    this.$router.push('/management/users');
+                    this.$router.go(-1);
                 })
                 .catch(e => {
+                    this.isProcess = false
                     useToast().error(e.response.data.message);
-                    console.log(e);
                 });
         },
 

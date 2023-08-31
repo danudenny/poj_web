@@ -63,6 +63,14 @@
                                             </ul>
                                         </div>
                                     </div>
+                                    <div class="mb-3">
+                                        <div class="mb-2">
+                                            <label class="col-form-label">Allowed Operating Unit</label>
+                                            <ul>
+                                                <li v-for="operatingUnit in item.allowed_operating_units" class="badge badge-primary">{{ operatingUnit.name }}</li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -75,7 +83,13 @@
                     </div>
                 </div>
                 <div class="card-footer text-end">
-                    <button class="btn btn-secondary" @click="$router.push('/management/users')">Back</button>
+                    <button class="btn btn-secondary" @click="$router.push('/management/users')"><i class="fa fa-arrow-left"></i> Back</button> &nbsp;
+                    <button class="btn btn-primary" @click="this.$router.push({
+                        name: 'user-edit',
+                        params: {
+                            id: this.$route.params.id
+                        },
+                    })"><i class="fa fa-pencil"></i> Edit</button>
                 </div>
             </div>
         </div>

@@ -46,7 +46,7 @@ class UserService extends BaseService
 
         try {
             $users = User::query();
-            $users->with(['employee', 'employee.job', 'employee.job.roles', 'employee.department']);
+            $users->with(['employee', 'employee.job', 'employee.job.roles', 'employee.department', 'allowedOperatingUnits']);
             $users->join('employees', 'employees.id', '=', 'users.employee_id');
             $users->select(['users.*']);
 
@@ -134,7 +134,7 @@ class UserService extends BaseService
     public function view($data): Model|Builder
     {
         try {
-            $user = User::with(['roles:id,name', 'employee'])->firstWhere('id', $data['id']);
+            $user = User::with(['roles:id,name', 'employee', 'allowedOperatingUnits'])->firstWhere('id', $data['id']);
 
             if (!$user) {
                 throw new InvalidArgumentException(self::DATA_NOTFOUND, 400);
@@ -249,6 +249,19 @@ class UserService extends BaseService
                 if (!$user->roles()->sync($request->roles)) {
                     throw new InvalidArgumentException("Failed to sync roles!", 500);
                 }
+            }
+
+            $allowedOperatingUnits = $request->input('allowed_operating_units', []);
+
+            UserOperatingUnit::query()
+                ->where('user_id', '=', $user->id)
+                ->delete();
+
+            foreach ($allowedOperatingUnits as $allowedOperatingUnit) {
+                $userOperatingUnit = new UserOperatingUnit();
+                $userOperatingUnit->user_id = $user->id;
+                $userOperatingUnit->unit_relation_id = $allowedOperatingUnit;
+                $userOperatingUnit->save();
             }
 
             DB::commit();

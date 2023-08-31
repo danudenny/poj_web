@@ -263,6 +263,22 @@ export default {
                         }
                     },
                     {
+                        title: 'Allowed Operating Unit',
+                        field: 'allowed_operating_units',
+                        hozAlign: 'center',
+                        headerHozAlign: 'center',
+                        headerFilter:"input",
+                        width: 600,
+                        formatter: function(cell) {
+                            let values = cell.getValue()
+                            let html = ''
+                            values.forEach((value) => {
+                                html += `<span class="badge badge-primary">${value.name}</span> `
+                            })
+                            return `<div>${html}</div>`
+                        }
+                    },
+                    {
                         title: '',
                         formatter: this.viewDetailsFormatter,
                         width: 100,

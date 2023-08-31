@@ -74,4 +74,8 @@ class UnitController extends BaseController
     {
         return $this->unitService->detailUnit($request, $id);
     }
+
+    public function operatingUnits(Request $request) {
+        return $this->unitService->listOperatingUnit($request);
+    }
 }

@@ -456,4 +456,34 @@ class UnitService extends BaseService
                 'late_buffer' => $unit->early_buffer,
             ]);
     }
+
+    public function listOperatingUnit(Request $request) {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
+        $query = Unit::query()
+            ->where('units.unit_level', '=', Unit::UnitLevelOperatingUnit);
+
+        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+        } else {
+            $query->join('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'units.relation_id');
+            $query->where('user_operating_units.user_id', '=', $user->id);
+        }
+
+        if ($name = $request->get('name')) {
+            $query->where('units.name', 'ILIKE', "%$name%");
+        }
+
+        $query->select(['units.*']);
+        $query->groupBy(['units.id']);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Success',
+            'data' => $this->list($query, $request)
+        ]);
+    }
 }
