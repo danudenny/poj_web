@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
 
 /**
  * Attributes:
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class UnitHasJob extends Model
 {
     use HasFactory;
+    use QueriesExpressions;
 
     protected $appends = [
         'job_name'

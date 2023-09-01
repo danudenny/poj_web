@@ -5,10 +5,13 @@ namespace App\Services\Core;
 use App\Models\Employee;
 use App\Models\Job;
 use App\Models\JobHasUnit;
+use App\Models\Role;
 use App\Models\Unit;
 use App\Models\UnitHasJob;
+use App\Models\User;
 use App\Services\BaseService;
 use Exception;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -435,6 +438,55 @@ class JobService extends BaseService
             ], 500);
         }
 
+    }
+
+    public function structuredJob(Request $request) {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
+        $unitRelationIDTopBottom = $request->get('unit_relation_id_top_bottom');
+        $odooJobIDTopBottom = $request->get('odoo_job_id_top_bottom');
+
+        $query = Job::query();
+        $query->select(['jobs.*']);
+        $query->groupBy('jobs.id');
+
+        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+        } else {
+            if (!$unitRelationIDTopBottom && !$odooJobIDTopBottom) {
+                $unitRelationIDTopBottom = $user->employee->unit_id;
+                $odooJobIDTopBottom = $user->employee->job_id;
+            }
+        }
+
+        if ($odooJobIDTopBottom && $unitRelationIDTopBottom) {
+            $subQuery = "(
+                            WITH RECURSIVE job_data AS (
+                                SELECT * FROM unit_has_jobs
+                                WHERE unit_relation_id = '$unitRelationIDTopBottom' AND odoo_job_id = $odooJobIDTopBottom
+                                UNION ALL
+                                SELECT uj.* FROM unit_has_jobs uj
+                                INNER JOIN job_data jd ON jd.id = uj.parent_unit_job_id
+                            )
+                            SELECT * FROM job_data
+                        ) relatedJob";
+            $query->join(DB::raw($subQuery), function (JoinClause $joinClause) {
+                $joinClause->on(DB::raw("relatedJob.odoo_job_id"), '=', DB::raw('jobs.odoo_job_id'));
+            });
+        }
+
+        if ($name = $request->get('name')) {
+            $query->where('jobs.name', 'ILIKE', "%$name%");
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Success',
+            'data' => $this->list($query, $request)
+        ]);
     }
 
     public function deleteAssignedJob($id) {

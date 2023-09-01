@@ -12,6 +12,7 @@ use App\Services\BaseService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -62,7 +63,26 @@ class WorkReportingService extends BaseService
                     $unitRelationID = $defaultUnitRelationID;
                 }
             } else if ($this->isRequestedRoleLevel(Role::RoleStaff)) {
-                $workReporting->where('employee_id', $user->employee_id);
+                $subQuery = "(
+                            WITH RECURSIVE job_data AS (
+                                SELECT * FROM unit_has_jobs
+                                WHERE unit_relation_id = '{$user->employee->unit_id}' AND odoo_job_id = {$user->employee->job_id}
+                                UNION ALL
+                                SELECT uj.* FROM unit_has_jobs uj
+                                INNER JOIN job_data jd ON jd.id = uj.parent_unit_job_id
+                            )
+                            SELECT * FROM job_data
+                        ) relatedJob";
+                $workReporting->join(DB::raw($subQuery), function (JoinClause $joinClause) {
+                    $joinClause->on(DB::raw("relatedJob.odoo_job_id"), '=', 'employees.job_id')
+                        ->where(DB::raw("relatedJob.unit_relation_id"), '=', DB::raw('"employees"."unit_id"'));
+                });
+
+                $workReporting->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
+                $workReporting->where(function (Builder $builder) use ($user) {
+                    $builder->orWhere('user_operating_units.user_id', '=', $user->id)
+                        ->orWhere('work_reportings.employee_id', '=', $user->employee_id);
+                });
             }
 
             if ($unitRelationID) {

@@ -34,7 +34,7 @@
                                         <multiselect
                                             v-model="filterJob"
                                             :options="jobs"
-                                            label="job_name"
+                                            label="name"
                                             track-by="id"
                                             placeholder="Select Jobs"
                                             @select="filterJobName"
@@ -283,7 +283,7 @@ export default {
         },
         async getJobs() {
             await this.$axios
-                .get(`/api/v1/admin/job?name=${this.jobPagination.name}`)
+                .get(`/api/v1/admin/job/structured-job/data?per_page=20&page=1&name=${this.jobPagination.name}`)
                 .then(response => {
                     this.jobs = response.data.data.data;
                     this.jobPagination.onSearch = false

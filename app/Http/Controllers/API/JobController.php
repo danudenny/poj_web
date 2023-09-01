@@ -73,4 +73,7 @@ class JobController extends Controller
         return $this->jobService->deleteAssignedJob($id);
     }
 
+    public function structuredJob(Request $request) {
+        return $this->jobService->structuredJob($request);
+    }
 }

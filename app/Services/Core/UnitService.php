@@ -173,10 +173,10 @@ class UnitService extends BaseService
 
                     $unitRelationIDTopButtom = $defaultUnitRelationID;
                 }
-            } else if ($this->isRequestedRoleLevel(Role::RoleStaffApproval)) {
-                $query->where('units.relation_id', '=', $user->employee->unit_id);
             } else {
-                $query->where('units.relation_id', '=', $user->employee->unit_id);
+                if (!$unitRelationIDTopButtom) {
+                    $unitRelationIDTopButtom = $user->employee->unit_id;
+                }
             }
 
             if ($unitRelationIDTopButtom) {

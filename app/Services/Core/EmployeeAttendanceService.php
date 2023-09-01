@@ -26,6 +26,7 @@ use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -68,7 +69,26 @@ class EmployeeAttendanceService extends BaseService
                     $unitRelationID = $defaultUnitRelationID;
                 }
             } else {
-                $attendances->where('employee_id', '=', $user->employee_id);
+                $subQuery = "(
+                            WITH RECURSIVE job_data AS (
+                                SELECT * FROM unit_has_jobs
+                                WHERE unit_relation_id = '{$user->employee->unit_id}' AND odoo_job_id = {$user->employee->job_id}
+                                UNION ALL
+                                SELECT uj.* FROM unit_has_jobs uj
+                                INNER JOIN job_data jd ON jd.id = uj.parent_unit_job_id
+                            )
+                            SELECT * FROM job_data
+                        ) relatedJob";
+                $attendances->join(DB::raw($subQuery), function (JoinClause $joinClause) {
+                    $joinClause->on(DB::raw("relatedJob.odoo_job_id"), '=', DB::raw('employees.job_id'))
+                        ->where(DB::raw("relatedJob.unit_relation_id"), '=', DB::raw('employees.unit_id'));
+                });
+
+                $attendances->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
+                $attendances->where(function (Builder $builder) use ($user) {
+                    $builder->orWhere('user_operating_units.user_id', '=', $user->id)
+                        ->orWhere('employees.id', '=', $user->employee_id);
+                });
             }
 
             if ($unitRelationID) {

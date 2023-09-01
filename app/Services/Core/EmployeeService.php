@@ -280,6 +280,7 @@ class EmployeeService extends BaseService
             $unitRelationID = $request->get('unit_relation_id');
             $unitID = $request->get('unit_id');
             $defaultOperatingUnit = $request->get('default_operating_unit_id', '');
+            $odooJobID = $request->get('odoo_job_id');
 
             $employees->when($request->filled('unit_level'), function(Builder $builder) use ($request) {
                 $builder->join('units AS unitLevel', 'unitLevel.relation_id', '=', 'employees.unit_id');
@@ -299,10 +300,26 @@ class EmployeeService extends BaseService
                     $unitRelationID = $defaultUnitRelationID;
                 }
             } else {
-                if ($defaultOperatingUnit == '') {
-                    $employees->join('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
-                    $employees->where('user_operating_units.user_id', '=', $user->id);
-                }
+                $subQuery = "(
+                            WITH RECURSIVE job_data AS (
+                                SELECT * FROM unit_has_jobs
+                                WHERE unit_relation_id = '{$user->employee->unit_id}' AND odoo_job_id = {$user->employee->job_id}
+                                UNION ALL
+                                SELECT uj.* FROM unit_has_jobs uj
+                                INNER JOIN job_data jd ON jd.id = uj.parent_unit_job_id
+                            )
+                            SELECT * FROM job_data
+                        ) relatedJob";
+                $employees->join(DB::raw($subQuery), function (JoinClause $joinClause) {
+                    $joinClause->on(DB::raw("relatedJob.odoo_job_id"), '=', DB::raw('employees.job_id'))
+                        ->where(DB::raw("relatedJob.unit_relation_id"), '=', DB::raw('employees.unit_id'));
+                });
+
+                $employees->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
+                $employees->where(function (Builder $builder) use ($user) {
+                    $builder->orWhere('user_operating_units.user_id', '=', $user->id)
+                        ->orWhere('employees.id', '=', $user->employee_id);
+                });
             }
 
             $employees->when($request->input('job_id'), function (Builder $builder) use ($request) {
@@ -320,9 +337,9 @@ class EmployeeService extends BaseService
                 $employees->whereIn('employees.default_operating_unit_id', explode(",", $defaultOperatingUnit));
             }
 
-            $employees->when($request->filled('odoo_job_id'), function(Builder $builder) use ($request) {
-                $builder->where('employees.job_id', '=', $request->query('odoo_job_id'));
-            });
+            if ($odooJobID) {
+                $employees->where('employees.job_id', '=', $odooJobID);
+            }
 
             $employees->when($request->input('name'), function (Builder $builder) use ($request) {
                 $builder->where('employees.name', "ILIKE", "%" . $request->input('name') . "%");

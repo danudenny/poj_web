@@ -34,7 +34,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-4 mb-3" v-if="this.$store.state.currentRole != 'staff'">
+                                        <div class="col-md-4 mb-3">
                                             <label>Working Unit</label>
                                             <multiselect
                                                 v-model="selectedWorkingUnit"
@@ -47,7 +47,7 @@
                                                 @select="onSelectedWorkingUnit"
                                             ></multiselect>
                                         </div>
-                                        <div class="col-md-2" v-if="this.$store.state.currentRole != 'staff'">
+                                        <div class="col-md-2">
                                             <div class="form-group mt-4">
                                                 <div class="checkbox p-0">
                                                     <input id="is_working_unit_specific" type="checkbox" @change="fetchTimesheetData" v-model="isWorkingUnitSpecific">
@@ -84,10 +84,22 @@
                                                 v-model="selectedJob"
                                                 :options="jobs"
                                                 :multiple="false"
-                                                label="job_name"
+                                                label="name"
                                                 track-by="id"
                                                 placeholder="Select Job"
                                                 @select="onSelectedJob"
+                                            ></multiselect>
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label>Operating Unit</label>
+                                            <multiselect
+                                                v-model="selectedOperatingUnit"
+                                                :options="operatingUnits"
+                                                :multiple="false"
+                                                label="name"
+                                                track-by="id"
+                                                placeholder="Select Operating Unit"
+                                                @select="onSelectOperatingUnit"
                                             ></multiselect>
                                         </div>
                                         <div class="col-md-4 mb-3">
@@ -198,6 +210,8 @@ export default {
             },
             selectedJob: null,
             jobs: [],
+            selectedOperatingUnit: null,
+            operatingUnits: [],
             selectedMonth: {
                 month: new Date().getMonth(),
                 year: new Date().getFullYear()
@@ -209,11 +223,12 @@ export default {
         }
     },
     async mounted() {
+        await this.fetchTimesheetData();
         this.getCurrentUnit()
         this.getUnitsData()
         this.getWorkingUnitsData()
         this.getJobsData()
-        await this.fetchTimesheetData();
+        this.getOperatingUnit()
         this.dateRange()
     },
     methods: {
@@ -250,9 +265,10 @@ export default {
                     odoo_job_id: this.selectedJob?.odoo_job_id ?? '',
                     is_specific_unit_relation_id: this.isEmployeeUnitSpecific ? 1 : 0,
                     working_unit_relation_id: this.selectedWorkingUnit?.relation_id ?? '',
-                    is_specific_working_unit_relation_id: this.isWorkingUnitSpecific ? 1 : 0
+                    is_specific_working_unit_relation_id: this.isWorkingUnitSpecific ? 1 : 0,
+                    default_operating_unit_id: this.selectedOperatingUnit?.relation_id ?? ''
                 }
-                await this.$axios.get(`/api/v1/admin/timesheet-schedule/schedules?working_unit_relation_id=${localFilter.working_unit_relation_id}&is_specific_working_unit=${localFilter.is_specific_working_unit_relation_id}&unit_relation_id=${localFilter.unit_relation_id}&is_specific_unit_relation_id=${localFilter.is_specific_unit_relation_id}&monthly_year=${localFilter.monthly_year}&shift_type=${localFilter.shift_type}&employee_name=${localFilter.employee_name}&employee_job_id=${localFilter.odoo_job_id}`,
+                await this.$axios.get(`/api/v1/admin/timesheet-schedule/schedules?default_operating_unit_id=${localFilter.default_operating_unit_id}&working_unit_relation_id=${localFilter.working_unit_relation_id}&is_specific_working_unit=${localFilter.is_specific_working_unit_relation_id}&unit_relation_id=${localFilter.unit_relation_id}&is_specific_unit_relation_id=${localFilter.is_specific_unit_relation_id}&monthly_year=${localFilter.monthly_year}&shift_type=${localFilter.shift_type}&employee_name=${localFilter.employee_name}&employee_job_id=${localFilter.odoo_job_id}`,
                     {
                         headers: {
                             'X-Client-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -301,18 +317,28 @@ export default {
                 });
         },
         getJobsData() {
-            if (this.selectedUnit === null) {
-                return
-            }
-
             const ls = localStorage.getItem('USER_ROLES')
-            this.$axios.get(`/api/v1/admin/unit-job?unit_relation_id=${this.selectedUnit.relation_id}&append=job_name`, {
+            this.$axios.get(`/api/v1/admin/job/structured-job/data`, {
                 headers: {
                     'X-Selected-Role': ls
                 }
             })
                 .then(response => {
                     this.jobs = response.data.data
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        },
+        getOperatingUnit() {
+            const ls = localStorage.getItem('USER_ROLES')
+            this.$axios.get(`/api/v1/admin/unit/operating-unit`, {
+                headers: {
+                    'X-Selected-Role': ls
+                }
+            })
+                .then(response => {
+                    this.operatingUnits = response.data.data
                 })
                 .catch(error => {
                     console.error(error);
@@ -368,7 +394,6 @@ export default {
             this.jobs = []
 
             this.fetchTimesheetData()
-            this.getJobsData()
         },
         onWorkingUnitSearchName(val) {
             this.workingUnitPagination.name = val
@@ -403,6 +428,9 @@ export default {
         onSelectedJob() {
             this.fetchTimesheetData()
         },
+        onSelectOperatingUnit() {
+            this.fetchTimesheetData()
+        },
         resetFilter() {
             this.selectedUnit = null;
             this.isEmployeeUnitSpecific = true;
@@ -411,6 +439,7 @@ export default {
             this.shiftType = '';
             this.employeeName = '';
             this.selectedJob = null
+            this.selectedOperatingUnit = null;
 
             if (this.$store.state.currentRole === 'admin_operating_unit') {
                 let activeAdminUnit = this.$store.state.activeAdminUnit

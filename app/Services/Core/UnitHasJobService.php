@@ -4,10 +4,14 @@ namespace App\Services\Core;
 
 use App\Http\Requests\CreateUnitJobRequest;
 use App\Http\Requests\Job\AssignParentJobRequest;
+use App\Models\Job;
 use App\Models\Permission;
+use App\Models\Role;
+use App\Models\Unit;
 use App\Models\UnitHasJob;
 use App\Models\User;
 use App\Services\BaseService;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,16 +21,50 @@ class UnitHasJobService extends BaseService
 {
     public function index(Request $request) {
         try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
             $query = UnitHasJob::query()->with(['parent']);
             $query->select(['unit_has_jobs.*']);
             $query->orderBy('unit_has_jobs.id', 'ASC');
+
+            $unitRelationIDTopBottom = $request->get('unit_relation_id_top_bottom');
+            $odooJobIDTopBottom = $request->get('odoo_job_id_top_bottom');
+
+            if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+            } else {
+                if (!$unitRelationIDTopBottom && !$odooJobIDTopBottom) {
+                    $unitRelationIDTopBottom = $user->employee->unit_id;
+                    $odooJobIDTopBottom = $user->employee->job_id;
+                }
+            }
+
+            if ($odooJobIDTopBottom && $unitRelationIDTopBottom) {
+                $subQuery = UnitHasJob::query()->from('job_data', 'unit_has_jobs')
+                    ->withRecursiveExpression('job_data', UnitHasJob::query()
+                        ->whereRaw("unit_relation_id = '$unitRelationIDTopBottom'")
+                        ->whereRaw("odoo_job_id = '$odooJobIDTopBottom'")
+                        ->unionAll(
+                            UnitHasJob::query()->select(['unit_has_jobs.*'])
+                                ->join('job_data', 'job_data.id', '=', 'unit_has_jobs.parent_unit_job_id')
+                        )
+                    );
+                $jobs = DB::table(DB::raw("({$subQuery->toSql()}) as d"))->select('*')->mergeBindings($subQuery->getQuery());
+                dd($jobs->toSql());
+
+                $query->orderBy('units.unit_level', 'ASC');
+            }
+
+            $query->join('units', 'units.relation_id', '=', 'unit_has_jobs.unit_relation_id');
 
             if ($unit_relation_id = $request->query('unit_relation_id')) {
                 $query->where('unit_relation_id', '=', $unit_relation_id);
             }
 
             if ($unitName = $request->query('unit_name')) {
-                $query->join('units', 'units.relation_id', '=', 'unit_has_jobs.unit_relation_id');
                 $query->whereRaw('units.name ILIKE ?', ["%" . $unitName . "%"]);
             }
 
@@ -61,6 +99,12 @@ class UnitHasJobService extends BaseService
                 'message' => $exception->getMessage(),
             ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public function listJob(Request $request) {
+        $user = $request->user();
+
+        $query = Job::query();
     }
 
     public function assignParent(AssignParentJobRequest $request) {
