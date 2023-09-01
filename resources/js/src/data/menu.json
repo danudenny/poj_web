@@ -120,13 +120,6 @@
             "permission" : "unit-read",
             "children": [
                 {
-                    "path": "/operating-unit",
-                    "title": "Operating Unit",
-                    "type": "link",
-                    "active": false,
-                    "permission" : "unit-read"
-                },
-                {
                     "path": "/corporates",
                     "title": "Corporate",
                     "type": "link",
@@ -162,6 +155,15 @@
                     "permission" : "unit-read"
                 }
             ]
+        },
+        {
+            "title": "Operating Unit",
+            "icon": "pocket",
+            "iconf": "fill-pocket",
+            "type": "link",
+            "active": false,
+            "path": "/operating-unit",
+            "permission" : "operating-unit-read"
         },
         {
             "title": "Timesheet",

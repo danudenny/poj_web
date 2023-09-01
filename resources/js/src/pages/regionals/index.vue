@@ -116,7 +116,15 @@ export default {
             return `<button class="button-icon button-success" data-id="${cell.getRow().getData().id}"><i class="fa fa-eye"></i> </button>`;
         },
         viewData(data) {
-            this.$router.push({name: 'regional_detail', params: {id: data.id}});
+            this.$router.push({
+                name: 'regional_detail',
+                params: {
+                    id: data.id
+                },
+                query: {
+                    unit_id: data.relation_id
+                }
+            });
         }
     }
 }

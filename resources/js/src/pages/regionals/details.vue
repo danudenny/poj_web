@@ -16,11 +16,7 @@
                         <div>
                             <ul class="nav nav-pills nav-primary" id="pills-icontab" role="tablist">
                                 <li class="nav-item"><a class="nav-link active" id="pills-iconhome-tab" data-bs-toggle="pill" href="#pills-iconhome" role="tab" aria-controls="pills-iconhome" aria-selected="true"><i class="icofont icofont-info"></i>Basic Information</a></li>
-                                <li class="nav-item"><a class="nav-link" id="pills-operating-unit-tab" data-bs-toggle="pill" href="#pills-operating-unit" role="tab" aria-controls="pills-operating-unit" aria-selected="false"><i class="icofont icofont-tools"></i>Operating Unit</a></li>
-                                <li class="nav-item"><a class="nav-link" id="pills-job-tab" data-bs-toggle="pill" href="#pills-job" role="tab" aria-controls="pills-job" aria-selected="false"><i class="icofont icofont-file-document"></i>Jobs</a></li>
-                                <li class="nav-item"><a class="nav-link" id="pills-timesheet-tab" data-bs-toggle="pill" href="#pills-timesheet" role="tab" aria-controls="pills-timesheet" aria-selected="false"><i class="icofont icofont-clock-time"></i>Timesheet</a></li>
-                                <li class="nav-item"><a class="nav-link" id="pills-reporting-tab" data-bs-toggle="pill" href="#pills-reporting" role="tab" aria-controls="pills-reporting" aria-selected="false"><i class="icofont icofont-calendar"></i>Reporting</a></li>
-                              <li class="nav-item"><a class="nav-link" id="pills-employee-tab" data-bs-toggle="pill" href="#pills-employee" role="tab" aria-controls="pills-employee" aria-selected="false"><i class="icofont icofont-users"></i>Employee</a></li>
+                                <li class="nav-item"><a class="nav-link" id="pills-employee-tab" data-bs-toggle="pill" href="#pills-employee" role="tab" aria-controls="pills-employee" aria-selected="false"><i class="icofont icofont-users"></i>Employee</a></li>
                             </ul>
                         </div>
                     </div>
@@ -48,95 +44,10 @@
                                         <input class="form-control" type="text" v-model="item.name" disabled="disabled">
                                     </div>
                                 </div>
-	                            <div class="col-md-6">
-		                            <div class="mb-3">
-			                            <label class="form-label">Latitude</label>
-			                            <input class="form-control" type="text" v-model="item.lat" :disabled="!editing">
-		                            </div>
-		                            <div class="mb-3">
-			                            <label class="form-label">Early Tolerance (minutes)</label>
-			                            <input class="form-control" type="text" v-model="item.early_buffer" :disabled="!editing">
-		                            </div>
-		                            <div class="mb-3">
-			                            <label class="form-label">Radius Buffer (meters)</label>
-			                            <input class="form-control" type="text" v-model="item.radius" :disabled="!editing">
-		                            </div>
-	                            </div>
-	                            <div class="col-md-6">
-		                            <div class="mb-3">
-			                            <label class="form-label">Longitude</label>
-			                            <input class="form-control" type="text" v-model="item.long" :disabled="!editing">
-		                            </div>
-		                            <div class="mb-3">
-			                            <label class="form-label">Late Tolerance (minutes)</label>
-			                            <input class="form-control" type="text" v-model="item.late_buffer" :disabled="!editing">
-		                            </div>
-	                            </div>
-	                            <div class="col-md-12" v-show="item.lat && item.long">
-		                            <div id="mapContainer" style="height: 400px; z-index: 1; width: 100%">
-		                            </div>
-	                            </div>
                             </div>
-                        </div>
-                        <div class="tab-pane fade show" id="pills-operating-unit" role="tabpanel" aria-labelledby="pills-operating-unit">
-                            <OperatingUnit :id="this.$route.params.id"/>
-                        </div>
-                        <div class="tab-pane fade" id="pills-job" role="tabpanel" aria-labelledby="pills-job-tab">
-                            <div v-show="hideJob">
-                                <div v-if="loading" className="text-center">
-                                    <img src="../../assets/loader.gif" alt="loading" width="100">
-                                </div>
-                                <div class="d-flex justify-content-end mb-2" v-if="this.$store.state.permissions?.includes('unit-update')">
-                                    <button class="btn btn-success" @click.prevent="hideTableJob">
-                                        <i class="icofont icofont-briefcase"></i> &nbsp; Assign Jobs
-                                    </button>
-                                </div>
-                                <div ref="jobTable"></div>
-                            </div>
-                            <div v-show="!hideJob">
-                                <div class="d-flex justify-content-end mb-2 column-gap-2">
-                                    <button class="btn btn-success" @click.prevent="showTableJob">
-                                        <i class="icofont icofont-arrow-left"></i> &nbsp; Back
-                                    </button>
-                                    <button class="btn btn-outline-warning" @click.prevent="saveAssignJob">
-                                        <i class="icofont icofont-save"></i> &nbsp; Save
-                                    </button>
-                                </div>
-                                <table class="table table-striped">
-                                    <thead>
-                                    <tr>
-                                        <th></th>
-                                        <th>Job Title</th>
-                                        <th>Need Camera</th>
-                                        <th>Need Upload</th>
-                                        <th>Need Reporting</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <tr class="text-center" v-for="job in assignJob" :key="job.id" v-if="assignJob.length > 0">
-                                        <td><input type="checkbox" v-model="selectedJobs" :value="job.job_id"></td>
-                                        <td>{{ job.job_name }}</td>
-                                        <td><input type="checkbox" v-model="job.is_camera"></td>
-                                        <td><input type="checkbox" v-model="job.is_upload"></td>
-                                        <td><input type="checkbox" v-model="job.is_mandatory_reporting"></td>
-                                    </tr>
-                                    <tr v-else>
-                                        <td colspan="5">
-                                            <span> No Data Available </span>
-                                        </td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="tab-pane fade" id="pills-timesheet" role="tabpanel" aria-labelledby="pills-timesheet-tab">
-                            <Timesheet :id="paramsId"/>
-                        </div>
-                        <div class="tab-pane fade" id="pills-reporting" role="tabpanel" aria-labelledby="pills-reporting-tab">
-                            <WorkReporting :unit_id="queryUnitId"/>
                         </div>
                         <div class="tab-pane fade" id="pills-employee" role="tabpanel" aria-labelledby="pills-employee-tab">
-                            <Employee :id="this.$route.params.id"/>
+                            <Employee :id="this.$route.query.unit_id"/>
                         </div>
                     </div>
                 </div>
