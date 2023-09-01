@@ -40,8 +40,6 @@
                                                 <label>Unit Level :</label>
                                                 <select class="form-select digits" v-model="approval.unit_level" disabled>
                                                     <option value="0">-- Select Unit Level --</option>
-                                                    <option value="1">Head Office</option>
-                                                    <option value="2">Regional</option>
                                                     <option value="3">Corporate</option>
                                                     <option value="4">Kanwil</option>
                                                     <option value="5">Area</option>
@@ -123,8 +121,6 @@
                                                 <label>Unit Level</label>
                                                 <select class="form-select digits" v-model="approval.approval_users[index].unit_level" disabled>
                                                     <option value="0">-- Select Unit Level --</option>
-                                                    <option value="1">Head Office</option>
-                                                    <option value="2">Regional</option>
                                                     <option value="3">Corporate</option>
                                                     <option value="4">Kanwil</option>
                                                     <option value="5">Area</option>

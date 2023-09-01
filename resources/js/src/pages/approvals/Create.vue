@@ -39,8 +39,6 @@
                                                 <label>Unit Level :</label>
                                                 <select class="form-select digits" v-model="selectedUnitLevel" @change="onLoadUnit">
                                                     <option value="0">-- Select Unit Level --</option>
-                                                    <option value="1">Head Office</option>
-                                                    <option value="2">Regional</option>
                                                     <option value="3">Corporate</option>
                                                     <option value="4">Kanwil</option>
                                                     <option value="5">Area</option>
@@ -126,8 +124,6 @@
                                                 <label>Unit Level</label>
                                                 <select class="form-select digits" v-model="approval.approvers[index].unit_level" @change="getApproverUnit(index)">
                                                     <option value="0">-- Select Unit Level --</option>
-                                                    <option value="1">Head Office</option>
-                                                    <option value="2">Regional</option>
                                                     <option value="3">Corporate</option>
                                                     <option value="4">Kanwil</option>
                                                     <option value="5">Area</option>

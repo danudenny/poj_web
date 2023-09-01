@@ -167,14 +167,6 @@ export default {
       },
       unitLevels: [
         {
-          name: 'Head Office',
-          value: 1
-        },
-        {
-          name: 'Operating Unit',
-          value: 2
-        },
-        {
           name: 'Corporate',
           value: 3
         },
