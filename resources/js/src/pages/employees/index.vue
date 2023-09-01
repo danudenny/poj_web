@@ -206,7 +206,7 @@ export default {
     methods: {
         getUnitsData() {
               const ls = localStorage.getItem('USER_ROLES')
-              this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.unitPagination.pageSize}&page=1&name=${this.unitPagination.name}`, {
+              this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.unitPagination.pageSize}&page=1&name=${this.unitPagination.name}&unit_level=7,6,4,3`, {
                   headers: {
                     'X-Selected-Role': ls
                   }
@@ -252,6 +252,8 @@ export default {
             this.filterEmployeeCategory = '';
             this.filterEmployeeType = '';
             this.filterTeam = '';
+            this.filterUnit = '';
+            this.filterOperatingUnits = '';
             this.table.clearFilter();
         },
         filterTeamName() {
@@ -340,8 +342,8 @@ export default {
                         cabangName: '',
                         outletName: '',
                         customerName: '',
-                        last_unit_relation_id: '',
-                        default_operating_unit_id: ''
+                        last_unit_relation_id: this.filterUnit?.relation_id ?? '',
+                        default_operating_unit_id: this.filterOperatingUnits?.relation_id ?? ''
                     }
 
                     params.filter.map((item) => {
