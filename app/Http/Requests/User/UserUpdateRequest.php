@@ -27,7 +27,6 @@ class UserUpdateRequest extends BaseRequest
             'id' => 'required',
             'name' => 'required',
             'email' => 'required|email',
-            'roles' => 'required',
         ];
     }
 
@@ -38,7 +37,6 @@ class UserUpdateRequest extends BaseRequest
             'name.required' => 'name '.self::REQUIRED,
             'email.required' => 'email '.self::REQUIRED,
             'email.email' => 'email '.self::NOT_VALID,
-            'roles.required' => 'roles '.self::REQUIRED,
         ];
     }
 }
