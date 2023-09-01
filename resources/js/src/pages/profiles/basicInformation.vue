@@ -73,6 +73,13 @@
                                 <input class="form-control" :value="employee.marital" readonly type="text">
                             </div>
                         </div>
+                        <div class="mb-3">
+                            <div class="mb-2">
+                                <label class="col-form-label">Allowed Operating Unit</label>
+                                <br/>
+                                <span class="badge badge-primary" v-for="(item, index) in profile.allowed_operating_units">{{item.name}}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -84,6 +91,10 @@
 export default {
     props: {
         employee: {
+            type: Object,
+            required: true
+        },
+        profile: {
             type: Object,
             required: true
         }

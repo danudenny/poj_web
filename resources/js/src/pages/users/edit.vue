@@ -19,14 +19,14 @@
                                 <label class="form-label">Working Unit</label>
                                 <input disabled class="form-control" type="text" placeholder="-" v-model="user.employee.last_unit.name">
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-3" v-if="false">
                                 <div role="alert" class="text-danger">
                                     <strong><i class="fa fa-warning"></i> Kosongkan Password Jika Tidak Ingin Mengganti! </strong>
                                 </div>
                                 <label class="form-label">Password</label>
                                 <input class="form-control" type="password" placeholder="Password" v-model="user.password">
                             </div>
-                            <div class="mb-3">
+                            <div class="mb-3" v-if="false">
                                 <div class="mb-2">
                                     <label class="col-form-label">Roles</label>
                                     <multiselect
@@ -49,6 +49,7 @@
                                         label="name"
                                         track-by="id"
                                         :options="operatingUnits"
+                                        :disabled="this.$store.state.currentRole === 'staff'"
                                         :multiple="true"
                                         :taggable="false">
                                     </multiselect>

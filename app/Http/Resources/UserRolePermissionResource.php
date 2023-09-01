@@ -108,7 +108,8 @@ class UserRolePermissionResource extends JsonResource
             'corporate' => $this->employee->corporate,
             'job' => $this->employee->job,
             'misc' => $listJobs,
-            'active_units' => $activeAdminUnit
+            'active_units' => $activeAdminUnit,
+            'allowed_operating_units' => $this->allowedOperatingUnits
         ];
     }
 }
