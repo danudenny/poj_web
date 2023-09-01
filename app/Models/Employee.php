@@ -38,6 +38,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read Unit $operatingUnit
  * @property-read Job $job
  * @property-read Department $department
+ * @property-read Unit $defaultOperatingUnit
  * @method static find($id)
  * @method static leftJoin(string $string, string $string1, string $string2, string $string3)
  * @method static chunk(int $chunkSize, \Closure $param)
@@ -308,6 +309,10 @@ class Employee extends Model
     public function backup(): HasMany
     {
         return $this->hasMany(BackupEmployee::class, 'employee_id')->with(['employee', 'backup']);
+    }
+
+    public function defaultOperatingUnit() {
+        return $this->belongsTo(Unit::class, 'default_operating_unit_id', 'relation_id');
     }
 
     /**

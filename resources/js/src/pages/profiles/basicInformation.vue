@@ -73,7 +73,13 @@
                                 <input class="form-control" :value="employee.marital" readonly type="text">
                             </div>
                         </div>
-                        <div class="mb-3">
+                        <div class="col-md-12 col-sm-12">
+                            <div class="mb-3">
+                                <label>Default Operating Unit</label>
+                                <input class="form-control" :value="profile.default_operating_unit?.name ?? ''" readonly type="text">
+                            </div>
+                        </div>
+                        <div class="col-md-12 col-sm-12">
                             <div class="mb-2">
                                 <label class="col-form-label">Allowed Operating Unit</label>
                                 <br/>
