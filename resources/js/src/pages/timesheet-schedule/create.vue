@@ -148,10 +148,6 @@ export default {
             isProcess: false,
             unitLevels: [
                 {
-                    name: 'Corporate',
-                    value: 3
-                },
-                {
                     name: 'Kanwil',
                     value: 4
                 },
