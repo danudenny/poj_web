@@ -1,41 +1,39 @@
 <?php
 
-namespace App\Jobs;
+namespace App\Console\Commands;
 
 use App\Models\Employee;
-use App\Models\ExtendRole;
 use App\Models\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Console\Command;
 
-class SyncEmployeesJob implements ShouldQueue
+class SyncUser extends Command
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'command:name';
 
     /**
-     * Create a new job instance.
+     * The console command description.
      *
-     * @return void
+     * @var string
      */
-    public function __construct()
+    protected $description = 'Command description';
+
+    /**
+     * Execute the console command.
+     *
+     * @return int
+     */
+    public function handle()
     {
-        //
-    }
-
-
-    public function handle(): void
-    {
-
         $employees = Employee::query()->chunk(1000, function ($employeesChunk) {
             foreach ($employeesChunk as $employee) {
                 $user = User::query()->where('employee_id', '=', $employee->id)->first();
                 if (!$user) {
+                    $this->info('Sync : ' . $employee->work_email);
                     $user = User::create([
                         'name' => $employee->name,
                         'email' => $employee->work_email,
@@ -46,9 +44,16 @@ class SyncEmployeesJob implements ShouldQueue
                         'is_new' => true,
                     ]);
                 }
+
+                if ($user->email == 'fahmi@koinworks.com') {
+                    $user->assignRole('superadmin');
+                } else {
+                    $user->assignRole('staff');
+                }
             }
         });
 
+        $this->info('Employee data synced successfully!');
+        return Command::SUCCESS;
     }
-
 }
