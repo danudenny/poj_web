@@ -190,22 +190,24 @@ class EmployeeService extends BaseService
                         continue;
                     }
 
-                    $userInsertData[] = [
-                        'name' => $employee->name,
-                        'email' => $employee->work_email,
-                        'employee_id' => $employee->id,
-                        'email_verified_at' => now(),
-                        'password' => '$2y$10$m54GoOajOHJ4AYs2VnfP7e3hPBf3pJw.Omimsct0m6gDcHCt8hTHi',
-                        'is_active' => true,
-                        'is_new' => true,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
+                    $user = User::query()
+                        ->where('employee_id', '=', $employee->id)
+                        ->first();
 
-                    $userIdsToUpdate[] = $employee->id;
+                    if (!$user) {
+                        $user = new User();
+                        $user->name = $employee->name;
+                        $user->email = trim($employee->work_email);
+                        $user->employee_id = $employee->id;
+                        $user->email_verified_at = now();
+                        $user->password = '$2y$10$m54GoOajOHJ4AYs2VnfP7e3hPBf3pJw.Omimsct0m6gDcHCt8hTHi';
+                        $user->is_active = true;
+                        $user->is_new = true;
+                        $user->save();
+
+                        $user->assignRole('superadmin');
+                    }
                 }
-
-                User::upsert($userInsertData, ['id'], ['name', 'email', 'employee_id', 'email_verified_at', 'password', 'is_active', 'is_new', 'created_at', 'updated_at']);
             });
         } catch (Exception $e) {
             return response()->json([

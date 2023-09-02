@@ -71,6 +71,37 @@ class TimesheetReportService extends BaseService
         ]);
     }
 
+    public function sendTimesheetToERP(Request $request, int $id) {
+        try {
+            $timesheetReport = TimesheetReport::query()
+                ->where('id', '=', $id)
+                ->where('status', '=', TimesheetReport::StatusPending)
+                ->first();
+
+            if (!$timesheetReport) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Timesheet Report not found'
+                ]);
+            }
+
+            DB::beginTransaction();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success!'
+            ]);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     public function createTimesheetReport(CreateTimesheetReport $request) {
         try {
             /**
