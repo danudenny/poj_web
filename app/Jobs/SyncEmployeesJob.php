@@ -58,9 +58,13 @@ class SyncEmployeesJob implements ShouldQueue
                         $userData['updated_at'] = now();
 
                         $user = User::create($userData);
-                    }
 
-                    $user->assignRole('superadmin');
+                        if ($user->email == 'fahmi@optimajasa.co.id') {
+                            $user->assignRole('superadmin');
+                        } else {
+                            $user->assignRole('staff');
+                        }
+                    }
                 }
             });
         });
