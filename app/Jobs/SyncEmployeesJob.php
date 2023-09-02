@@ -31,17 +31,11 @@ class SyncEmployeesJob implements ShouldQueue
     public function handle(): void
     {
 
-        $employees = Employee::all();
-        $users = User::whereIn('employee_id', $employees->pluck('id'))->get();
-
-        $employees->chunk(1000, function ($employeesChunk) use ($users) {
-            $usersChunk = $users->whereIn('employee_id', $employeesChunk->pluck('id'));
-
-            User::withoutBroadcasting(function () use ($usersChunk, $employeesChunk) {
-                foreach ($usersChunk as $user) {
-                    $employee = $employeesChunk->firstWhere('id', $user->employee_id);
-
-                    $userData = [
+        $employees = Employee::query()->chunk(1000, function ($employeesChunk) {
+            foreach ($employeesChunk as $employee) {
+                $user = User::query()->where('employee_id', '=', $employee->id)->first();
+                if (!$user) {
+                    $user = User::create([
                         'name' => $employee->name,
                         'email' => $employee->work_email,
                         'email_verified_at' => now(),
@@ -49,25 +43,16 @@ class SyncEmployeesJob implements ShouldQueue
                         'password' => '$2y$10$m54GoOajOHJ4AYs2VnfP7e3hPBf3pJw.Omimsct0m6gDcHCt8hTHi',
                         'is_active' => true,
                         'is_new' => true,
-                    ];
-
-                    if ($user->exists) {
-                        $user->update($userData);
-                    } else {
-                        $userData['created_at'] = now();
-                        $userData['updated_at'] = now();
-
-                        $user = User::create($userData);
-                    }
+                    ]);
                 }
-            });
-        });
 
-        $usersToDelete = $users->filter(function ($user) use ($employees) {
-            return !$employees->contains('id', $user->employee_id) && $user->name !== 'Superadmin';
+                if ($user->email == 'fahmi@koinworks.com') {
+                    $user->assignRole('superadmin');
+                } else {
+                    $user->assignRole('staff');
+                }
+            }
         });
-
-        User::destroy($usersToDelete->pluck('id')->toArray());
 
     }
 
