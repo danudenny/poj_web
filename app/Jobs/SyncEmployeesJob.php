@@ -60,7 +60,7 @@ class SyncEmployeesJob implements ShouldQueue
                         $user = User::create($userData);
                     }
 
-                    $user->assignRole('staff');
+                    $user->assignRole('superadmin');
                 }
             });
         });

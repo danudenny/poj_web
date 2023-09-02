@@ -178,48 +178,8 @@ class EmployeeService extends BaseService
 
     public function syncToUser(): JsonResponse
     {
-        try {
-            Employee::chunk(1000, function ($employees) {
-                $userInsertData = [];
-                $userIdsToUpdate = [];
-                $employeeIds = $employees->pluck('id')->toArray();
-                $existingEmails = User::whereIn('employee_id', $employeeIds)->pluck('email')->toArray();
-
-                foreach ($employees as $employee) {
-                    if (!filter_var($employee->work_email, FILTER_VALIDATE_EMAIL) || in_array($employee->work_email, $existingEmails)) {
-                        continue;
-                    }
-
-                    $user = User::query()
-                        ->where('employee_id', '=', $employee->id)
-                        ->first();
-
-                    if (!$user) {
-                        $user = new User();
-                        $user->name = $employee->name;
-                        $user->email = trim($employee->work_email);
-                        $user->employee_id = $employee->id;
-                        $user->email_verified_at = now();
-                        $user->password = '$2y$10$m54GoOajOHJ4AYs2VnfP7e3hPBf3pJw.Omimsct0m6gDcHCt8hTHi';
-                        $user->is_active = true;
-                        $user->is_new = true;
-                        $user->save();
-
-                        $user->assignRole('superadmin');
-                    }
-                }
-            });
-        } catch (Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to sync users',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Users synced successfully',
-        ], 201);
+        dispatch(new SyncEmployeesJob());
+        return response()->json(['message' => 'Your Synchronization is running on background. Refresh after 5 minutes to see the result.']);
     }
 
     public function update($request, $id): JsonResponse
