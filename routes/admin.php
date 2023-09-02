@@ -29,6 +29,7 @@ use App\Http\Controllers\API\PublicHolidayController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\SettingController;
 use App\Http\Controllers\API\TeamController;
+use App\Http\Controllers\API\TimesheetReportController;
 use App\Http\Controllers\API\UnitController;
 use App\Http\Controllers\API\UnitJobController;
 use App\Http\Controllers\API\UserController;
@@ -428,5 +429,13 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::post('create', [PublicHolidayController::class, 'create']);
         Route::post('update/{id}', [PublicHolidayController::class, 'update']);
         Route::delete('delete/{id}', [PublicHolidayController::class, 'delete']);
+    });
+
+    Route::group(['prefix' => 'timesheet-report'], function () {
+        Route::get('', [TimesheetReportController::class, 'index']);
+        Route::get('view/{id}', [TimesheetReportController::class, 'view']);
+        Route::get('list-timesheet-detail', [TimesheetReportController::class, 'listTimesheetDetail']);
+        Route::post('', [TimesheetReportController::class, 'create']);
+        Route::post('sync/{id}', [TimesheetReportController::class, 'sync']);
     });
 });

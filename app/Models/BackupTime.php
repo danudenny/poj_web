@@ -28,7 +28,8 @@ class BackupTime extends Model
         'start_time_with_timezone',
         'end_time_with_timezone',
         'unit_start_time',
-        'unit_end_time'
+        'unit_end_time',
+        'total_backup_string'
     ];
 
     /**
@@ -57,6 +58,20 @@ class BackupTime extends Model
      */
     public function getUnitEndTimeAttribute(): string|null {
         return Carbon::parse($this->end_time)->setTimezone($this->backup->timezone)->format('Y-m-d H:i:s');
+    }
+
+    public function getTotalBackupStringAttribute(): string|null {
+        $parsedTime = Carbon::parse($this->end_time)->diff(Carbon::parse($this->start_time));
+
+        $stringify = [];
+        if($parsedTime->h > 0) {
+            $stringify[] = $parsedTime->h . " Jam";
+        }
+        if ($parsedTime->i > 0) {
+            $stringify[] = $parsedTime->i . " Menit";
+        }
+
+        return implode(" ", $stringify);
     }
 
     public function backup(): BelongsTo {

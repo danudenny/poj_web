@@ -34,6 +34,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $check_out_tz
  * @property string $notes
  * @property string $updated_at
+ * @property int $early_check_out
  *
  * Relations:
  * @property-read Employee $employee

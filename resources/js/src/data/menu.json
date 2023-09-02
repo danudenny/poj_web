@@ -352,6 +352,15 @@
             "permission" : "report-read"
         },
         {
+            "title": "Timesheet Reporting",
+            "icon": "shopping-bag",
+            "iconf": "shopping-bag",
+            "type": "link",
+            "active": false,
+            "path": "/timesheet-reporting",
+            "permission" : "timesheet-reporting-read"
+        },
+        {
             "title": "Incident Reporting",
             "icon": "file-text",
             "iconf": "file-text",

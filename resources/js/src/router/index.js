@@ -127,6 +127,10 @@ import TeamDetail from "../pages/teams/details.vue";
 // Public Holiday
 import PublicHoliday from "../pages/public-holiday/index.vue";
 
+// Timesheet Reporting
+import TimesheetReportingIndex from "../pages/timesheet-reporting/index.vue";
+import TimesheetReportingDetail from "../pages/timesheet-reporting/detail.vue";
+
 //Error page
 import Error from  '../components/error.vue';
 import UnitJob from "../pages/jobs/unit-job.vue";
@@ -976,6 +980,33 @@ const routes =[
                     permission : 'work-reporting-read',
                 }
             },
+        ]
+    },
+    {
+        path: '/timesheet-reporting',
+        component: Body,
+        children: [
+            {
+                path: '',
+                name: 'Timesheet Reporting',
+                component: TimesheetReportingIndex,
+                meta: {
+                    title: 'POJ - Timesheet Reporting',
+                    requiresAuth: true,
+                    permission: 'timesheet-reporting-read',
+                },
+            },
+            {
+                path: 'detail/:id',
+                name: 'Detail Timesheet Reporting',
+                component: TimesheetReportingDetail,
+                meta: {
+                    title: 'POJ - Detail Timesheet Reporting',
+                    requiresAuth: true,
+                    permission: 'timesheet-reporting-read',
+                },
+            },
+
         ]
     },
     {

@@ -162,6 +162,10 @@ export default {
                         field: 'backup_time.end_time_with_timezone',
                     },
                     {
+                        title: 'Total Backup',
+                        field: 'backup_time.total_backup_string',
+                    },
+                    {
                         title: 'Check In Time',
                         field: 'check_in_time_with_unit_timezone',
                     },

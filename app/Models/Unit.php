@@ -67,6 +67,10 @@ class Unit extends Model
         return Unit::query()->where('parent_unit_id', '=', $this->relation_id)->count();
     }
 
+    public function getNameWithCorporateAttribute() {
+        return $this->name;
+    }
+
     public function level(): BelongsTo
     {
         return $this->belongsTo(UnitLevel::class, 'unit_level', 'value');

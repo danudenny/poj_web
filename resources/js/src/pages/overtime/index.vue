@@ -153,7 +153,6 @@ export default {
         },
         handleActionButtonClick(e, cell) {
             const action = e.target.dataset.action
-            console.log(action)
             const rowData = cell.getRow().getData();
 
             if (action === 'view') {

@@ -266,31 +266,31 @@ export default {
                                     }
                                 }
                             },
-                            {
-                                title: 'Action',
-                                hozAlign: 'center',
-                                headerHozAlign: 'center',
-                                headerSort: false,
-                                formatter: (cell, formatterParams, onRendered) => {
-                                    return `
+                        ]
+                    },
+                    {
+                        title: 'Action',
+                        hozAlign: 'center',
+                        headerHozAlign: 'center',
+                        headerSort: false,
+                        formatter: (cell, formatterParams, onRendered) => {
+                            return `
                                         <button class="button-icon button-warning" data-bs-toggle="modal" data-bs-target="#updatePublicHolidayModal" data-action="update"><i data-action="update" class="fa fa-pencil"></i> </button>
                                         <button class="button-icon button-danger" data-action="delete"><i data-action="delete" class="fa fa-trash"></i> </button>
                                      `;
-                                },
-                                width: 150,
-                                sortable: false,
-                                cellClick: (e, cell) => {
-                                    const action = e.target.dataset.action
-                                    const data = cell.getData()
+                        },
+                        width: 150,
+                        sortable: false,
+                        cellClick: (e, cell) => {
+                            const action = e.target.dataset.action
+                            const data = cell.getData()
 
-                                    if (action === 'delete') {
-                                        this.onDelete(data.id)
-                                    } else {
-                                        this.selectedPublicHoliday = data
-                                    }
-                                }
-                            },
-                        ]
+                            if (action === 'delete') {
+                                this.onDelete(data.id)
+                            } else {
+                                this.selectedPublicHoliday = data
+                            }
+                        }
                     },
                 ],
                 placeholder: 'No Data Available',
