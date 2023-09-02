@@ -20,7 +20,7 @@ class UserMobileResource extends JsonResource
      */
     public function toArray($request): array
     {
-        $role = $this->employee->job->roles;
+        $role = $this->roles;
         $availableRole = $role->map(function ($role) {
             return $role->name;
         });

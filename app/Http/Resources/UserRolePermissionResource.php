@@ -22,7 +22,7 @@ class UserRolePermissionResource extends JsonResource
     {
         $roleHeader = $request->header('X-Selected-Role');
         $timesheet = [];
-        $role = $this->employee->job->roles;
+        $role = $this->roles;
         $availableRole = $role->map(function ($role) {
             return $role->name;
         });

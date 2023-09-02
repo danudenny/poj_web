@@ -113,7 +113,7 @@ class User extends Authenticatable
         /**
          * @var Role[] $roles
          */
-        $roles = $this->employee->job->roles;
+        $roles = $this->roles;
 
         /**
          * @var Role|null $highestPriorityRole

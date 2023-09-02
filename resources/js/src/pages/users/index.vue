@@ -248,13 +248,13 @@ export default {
                     },
                     {
                         title: 'Role',
-                        field: 'employee.job.roles',
+                        field: 'roles',
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilter:"input",
                         width: 300,
                         formatter: function(row) {
-                            let roles = row.getData().employee.job.roles
+                            let roles = row.getValue()
                             let html = ''
                             roles.forEach((role) => {
                                 html += `<span class="badge badge-primary">${role.name}</span> `

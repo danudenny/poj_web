@@ -22,10 +22,6 @@ class SwitchRole
     public function handle(Request $request, Closure $next): JsonResponse
     {
         $user = Auth::user();
-        $job = null;
-        if (isset($user->employee)) {
-            $job = $user->employee->job;
-        }
 
         if (!$user) {
             return response()->json(['message' => 'Unauthenticated'], 401);
@@ -33,7 +29,7 @@ class SwitchRole
 
         $selectedRole = $request->header('X-Selected-Role') ?? $request->query('selected_role');
 
-        if (!$selectedRole || !in_array($selectedRole,$job->roles)) {
+        if (!$selectedRole || !in_array($selectedRole,$user->roles)) {
             return response()->json(['message' => 'Invalid selected role'], 403);
         }
 

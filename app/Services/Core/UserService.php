@@ -46,7 +46,7 @@ class UserService extends BaseService
 
         try {
             $users = User::query();
-            $users->with(['employee', 'employee.job', 'employee.job.roles', 'employee.department', 'allowedOperatingUnits']);
+            $users->with(['employee', 'employee.job', 'roles', 'employee.department', 'allowedOperatingUnits']);
             $users->join('employees', 'employees.id', '=', 'users.employee_id');
             $users->select(['users.*']);
 
