@@ -252,15 +252,10 @@ class EmployeeService extends BaseService
             if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
 
             } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
-                if (!$unitRelationID) {
-                    $defaultUnitRelationID = $user->employee->unit_id;
-
-                    if ($requestUnitRelationID = $this->getRequestedUnitID()) {
-                        $defaultUnitRelationID = $requestUnitRelationID;
-                    }
-
-                    $unitRelationID = $defaultUnitRelationID;
-                }
+                $employees->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
+                $employees->where(function (Builder $builder) use ($user) {
+                    $builder->orWhere('user_operating_units.user_id', '=', $user->id);
+                });
             } else {
                 $subQuery = "(
                             WITH RECURSIVE job_data AS (
@@ -272,15 +267,20 @@ class EmployeeService extends BaseService
                             )
                             SELECT * FROM job_data
                         ) relatedJob";
-                $employees->leftJoin(DB::raw($subQuery), function (JoinClause $joinClause) {
+                $employees->join(DB::raw($subQuery), function (JoinClause $joinClause) {
                     $joinClause->on(DB::raw("relatedJob.odoo_job_id"), '=', DB::raw('employees.job_id'))
                         ->where(DB::raw("relatedJob.unit_relation_id"), '=', DB::raw('employees.unit_id'));
                 });
 
-                $employees->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
                 $employees->where(function (Builder $builder) use ($user) {
-                    $builder->orWhere('user_operating_units.user_id', '=', $user->id)
-                        ->orWhere('employees.id', '=', $user->employee_id);
+                    $builder->orWhere(function(Builder $builder) use ($user) {
+                        $builder->where('employees.job_id', '=', $user->employee->job_id)
+                            ->where('employees.unit_id', '=', $user->employee->unit_id)
+                            ->where('employees.id', '=', $user->employee_id);
+                    })->orWhere(function (Builder $builder) use ($user) {
+                        $builder->orWhere('employees.job_id', '!=', $user->employee->job_id)
+                            ->orWhere('employees.unit_id', '!=', $user->employee->unit_id);
+                    });
                 });
             }
 
