@@ -68,15 +68,10 @@ class OvertimeService extends ScheduleService
         if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
 
         } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
-            if (!$unitRelationID) {
-                $defaultUnitRelationID = $user->employee->unit_id;
-
-                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
-                    $defaultUnitRelationID = $requestUnitRelationID;
-                }
-
-                $unitRelationID = $defaultUnitRelationID;
-            }
+            $overtimes->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
+            $overtimes->where(function (Builder $builder) use ($user) {
+                $builder->orWhere('user_operating_units.user_id', '=', $user->id);
+            });
         } else {
             $subQuery = "(
                             WITH RECURSIVE job_data AS (
@@ -93,11 +88,15 @@ class OvertimeService extends ScheduleService
                     ->where(DB::raw("relatedJob.unit_relation_id"), '=', DB::raw('"employees"."unit_id"'));
             });
 
-            $overtimes->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
             $overtimes->where(function (Builder $builder) use ($user) {
-                $builder->orWhere('user_operating_units.user_id', '=', $user->id)
-                    ->orWhere('overtime_employees.employee_id', '=', $user->employee_id)
-                    ->orWhere('reqEmployee.id', '=', $user->employee_id);
+                $builder->orWhere(function(Builder $builder) use ($user) {
+                    $builder->where(DB::raw('"employees"."job_id"'), '=', $user->employee->job_id)
+                        ->where(DB::raw('"employees"."unit_id"'), '=', $user->employee->unit_id)
+                        ->where(DB::raw('"employees"."id"'), '=', $user->employee_id);
+                })->orWhere(function (Builder $builder) use ($user) {
+                    $builder->orWhere(DB::raw('"employees"."job_id"'), '!=', $user->employee->job_id)
+                        ->orWhere(DB::raw('"employees"."unit_id"'), '!=', $user->employee->unit_id);
+                });
             });
         }
 
@@ -209,15 +208,10 @@ class OvertimeService extends ScheduleService
         if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
 
         } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
-            if (!$unitRelationID) {
-                $defaultUnitRelationID = $user->employee->unit_id;
-
-                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
-                    $defaultUnitRelationID = $requestUnitRelationID;
-                }
-
-                $unitRelationID = $defaultUnitRelationID;
-            }
+            $query->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
+            $query->where(function (Builder $builder) use ($user) {
+                $builder->orWhere('user_operating_units.user_id', '=', $user->id);
+            });
         } else {
             $subQuery = "(
                             WITH RECURSIVE job_data AS (
@@ -234,10 +228,15 @@ class OvertimeService extends ScheduleService
                     ->where(DB::raw("relatedJob.unit_relation_id"), '=', DB::raw('"employees"."unit_id"'));
             });
 
-            $query->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
             $query->where(function (Builder $builder) use ($user) {
-                $builder->orWhere('user_operating_units.user_id', '=', $user->id)
-                    ->orWhere('overtime_employees.employee_id', '=', $user->employee_id);
+                $builder->orWhere(function(Builder $builder) use ($user) {
+                    $builder->where(DB::raw('"employees"."job_id"'), '=', $user->employee->job_id)
+                        ->where(DB::raw('"employees"."unit_id"'), '=', $user->employee->unit_id)
+                        ->where(DB::raw('"employees"."id"'), '=', $user->employee_id);
+                })->orWhere(function (Builder $builder) use ($user) {
+                    $builder->orWhere(DB::raw('"employees"."job_id"'), '!=', $user->employee->job_id)
+                        ->orWhere(DB::raw('"employees"."unit_id"'), '!=', $user->employee->unit_id);
+                });
             });
         }
 

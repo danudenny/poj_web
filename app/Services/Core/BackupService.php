@@ -71,15 +71,10 @@ class BackupService extends ScheduleService
         if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
 
         } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
-            if (!$unitRelationID) {
-                $defaultUnitRelationID = $user->employee->unit_id;
-
-                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
-                    $defaultUnitRelationID = $requestUnitRelationID;
-                }
-
-                $unitRelationID = $defaultUnitRelationID;
-            }
+            $backups->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'backupEmployee.default_operating_unit_id');
+            $backups->where(function (Builder $builder) use ($user) {
+                $builder->orWhere('user_operating_units.user_id', '=', $user->id);
+            });
         } else {
             $subQuery = "(
                             WITH RECURSIVE job_data AS (
@@ -96,11 +91,21 @@ class BackupService extends ScheduleService
                     ->where(DB::raw("relatedJob.unit_relation_id"), '=', DB::raw('"backupEmployee"."unit_id"'));
             });
 
-            $backups->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'backupEmployee.default_operating_unit_id');
             $backups->where(function (Builder $builder) use ($user) {
-                $builder->orWhere('user_operating_units.user_id', '=', $user->id)
-                    ->orWhere('backup_employees.employee_id', '=', $user->employee_id)
-                    ->orWhere('reqEmployee.id', '=', $user->employee_id);
+                $builder->orWhere(function(Builder $builder) use ($user) {
+                    $builder->orWhere(function(Builder $builder) use ($user) {
+                        $builder->where(DB::raw('"backupEmployee"."job_id"'), '=', $user->employee->job_id)
+                            ->where(DB::raw('"backupEmployee"."unit_id"'), '=', $user->employee->unit_id)
+                            ->where(DB::raw('"backupEmployee"."id"'), '=', $user->employee_id);
+                    })->orWhere(function(Builder $builder) use ($user) {
+                        $builder->where(DB::raw('"reqEmployee"."job_id"'), '=', $user->employee->job_id)
+                            ->where(DB::raw('"reqEmployee"."unit_id"'), '=', $user->employee->unit_id)
+                            ->where(DB::raw('"reqEmployee"."id"'), '=', $user->employee_id);
+                    });
+                })->orWhere(function (Builder $builder) use ($user) {
+                    $builder->orWhere(DB::raw('"backupEmployee"."job_id"'), '!=', $user->employee->job_id)
+                        ->orWhere(DB::raw('"backupEmployee"."unit_id"'), '!=', $user->employee->unit_id);
+                });
             });
         }
 
@@ -198,15 +203,10 @@ class BackupService extends ScheduleService
         if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
 
         } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
-            if (!$unitRelationID) {
-                $defaultUnitRelationID = $user->employee->unit_id;
-
-                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
-                    $defaultUnitRelationID = $requestUnitRelationID;
-                }
-
-                $unitRelationID = $defaultUnitRelationID;
-            }
+            $query->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
+            $query->where(function (Builder $builder) use ($user) {
+                $builder->orWhere('user_operating_units.user_id', '=', $user->id);
+            });
         } else {
             $subQuery = "(
                             WITH RECURSIVE job_data AS (
@@ -223,10 +223,15 @@ class BackupService extends ScheduleService
                     ->where(DB::raw("relatedJob.unit_relation_id"), '=', DB::raw('"employees"."unit_id"'));
             });
 
-            $query->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
             $query->where(function (Builder $builder) use ($user) {
-                $builder->orWhere('user_operating_units.user_id', '=', $user->id)
-                    ->orWhere('backup_employee_times.employee_id', '=', $user->employee_id);
+                $builder->orWhere(function(Builder $builder) use ($user) {
+                    $builder->where(DB::raw('"employees"."job_id"'), '=', $user->employee->job_id)
+                        ->where(DB::raw('"employees"."unit_id"'), '=', $user->employee->unit_id)
+                        ->where(DB::raw('"employees"."id"'), '=', $user->employee_id);
+                })->orWhere(function (Builder $builder) use ($user) {
+                    $builder->orWhere(DB::raw('"employees"."job_id"'), '!=', $user->employee->job_id)
+                        ->orWhere(DB::raw('"employees"."unit_id"'), '!=', $user->employee->unit_id);
+                });
             });
         }
 

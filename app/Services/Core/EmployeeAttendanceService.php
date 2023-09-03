@@ -59,15 +59,10 @@ class EmployeeAttendanceService extends BaseService
             if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
 
             } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
-                if (!$unitRelationID) {
-                    $defaultUnitRelationID = $user->employee->unit_id;
-
-                    if ($requestUnitRelationID = $this->getRequestedUnitID()) {
-                        $defaultUnitRelationID = $requestUnitRelationID;
-                    }
-
-                    $unitRelationID = $defaultUnitRelationID;
-                }
+                $attendances->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
+                $attendances->where(function (Builder $builder) use ($user) {
+                    $builder->orWhere('user_operating_units.user_id', '=', $user->id);
+                });
             } else {
                 $subQuery = "(
                             WITH RECURSIVE job_data AS (
@@ -84,10 +79,15 @@ class EmployeeAttendanceService extends BaseService
                         ->where(DB::raw("relatedJob.unit_relation_id"), '=', DB::raw('employees.unit_id'));
                 });
 
-                $attendances->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
                 $attendances->where(function (Builder $builder) use ($user) {
-                    $builder->orWhere('user_operating_units.user_id', '=', $user->id)
-                        ->orWhere('employees.id', '=', $user->employee_id);
+                    $builder->orWhere(function(Builder $builder) use ($user) {
+                        $builder->where('employees.job_id', '=', $user->employee->job_id)
+                            ->where('employees.unit_id', '=', $user->employee->unit_id)
+                            ->where('employees.id', '=', $user->employee_id);
+                    })->orWhere(function (Builder $builder) use ($user) {
+                        $builder->orWhere('employees.job_id', '!=', $user->employee->job_id)
+                            ->orWhere('employees.unit_id', '!=', $user->employee->unit_id);
+                    });
                 });
             }
 
