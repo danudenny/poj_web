@@ -14,6 +14,11 @@
                                 <div v-if="loading" class="text-center">
                                     <img src="../../assets/loader.gif" alt="loading" width="100">
                                 </div>
+	                            <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#jobUnitAssignment">
+		                            <i class="fa fa-recycle" /> &nbsp; Assign Job to Unit
+	                            </button>
+                                <br/>
+                                <br/>
                                 <div ref="jobTable"></div>
                             </div>
                         </div>
@@ -73,6 +78,43 @@
             </div>
         </VerticalModal>
     </div>
+
+    <div class="modal fade" id="jobUnitAssignment" ref="jobUnitAssignment" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
+        <VerticalModal title="Assign Job to Unit" @save="onAssignJobUnit()">
+            <div class="row">
+                <div class="col-md-12">
+                    <label for="name">Select Unit</label>
+                    <multiselect
+                        v-model="selectedJobUnit"
+                        placeholder="Select Unit"
+                        label="name"
+                        track-by="relation_id"
+                        :options="jobUnits"
+                        :multiple="false"
+                        :required="true"
+                        @select="onJobUnitSelected"
+                        @search-change="onJobUnitSearchName"
+                    >
+                    </multiselect>
+
+                    <br/>
+
+                    <label for="name">Job</label>
+                    <multiselect
+                        v-model="selectedJob"
+                        placeholder="Select Job"
+                        label="name"
+                        track-by="id"
+                        :options="jobs"
+                        :multiple="false"
+                        :required="true"
+                        @search-change="onJobSearchName"
+                    >
+                    </multiselect>
+                </div>
+            </div>
+        </VerticalModal>
+    </div>
 </template>
 
 <script>
@@ -118,11 +160,29 @@ export default {
                 relation_id: null,
             },
             units: [],
-            parentJobs: []
+            parentJobs: [],
+            jobUnitPagination: {
+                currentPage: 1,
+                pageSize: 20,
+                onSearch: true,
+                name: ''
+            },
+            selectedJobUnit: null,
+            jobUnits: [],
+            jobMasterPagination: {
+                currentPage: 1,
+                pageSize: 20,
+                onSearch: true,
+                name: ''
+            },
+            selectedJob: null,
+            jobs: []
         }
     },
     async mounted() {
         this.initializeUnitJob();
+        this.getJobUnitsData()
+        this.getMasterJobData()
     },
     methods: {
         getUnitsData() {
@@ -139,7 +199,7 @@ export default {
                     console.error(error);
                 });
         },
-        getParentJobData() {
+        async getParentJobData() {
             if (this.selectedParentJobUnit.relation_id === null) {
                 return
             }
@@ -148,6 +208,26 @@ export default {
                 .then(response => {
                     this.parentJobs = response.data.data.data
                     this.parentJobPagination.onSearch = false
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        },
+        async getJobUnitsData() {
+            this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.jobUnitPagination.pageSize}&page=${this.jobUnitPagination.currentPage}&name=${this.jobUnitPagination.name}`)
+                .then(response => {
+                    this.jobUnits = response.data.data.data
+                    this.jobUnitPagination.onSearch = false
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        },
+        async getMasterJobData() {
+            this.$axios.get(`/api/v1/admin/job/list/master-job?per_page=${this.jobMasterPagination.pageSize}&page=${this.jobMasterPagination.currentPage}&name=${this.jobMasterPagination.name}`)
+                .then(response => {
+                    this.jobs = response.data.data.data
+                    this.jobMasterPagination.onSearch = false
                 })
                 .catch(error => {
                     console.error(error);
@@ -307,6 +387,7 @@ export default {
                 this.selectedParentJobUnit = {
                     relation_id: null
                 }
+                this.initializeUnitJob()
             }).catch(error => {
                 if(error.response.data.message instanceof Object) {
                     for (const key in error.response.data.message) {
@@ -340,6 +421,50 @@ export default {
                 }, 1000)
             }
         },
+        onJobUnitSelected(val) {
+
+        },
+        onJobUnitSearchName(val) {
+            this.jobUnitPagination.name = val
+
+            if (!this.jobUnitPagination.onSearch) {
+                this.jobUnitPagination.onSearch = true
+                setTimeout(() => {
+                    this.getJobUnitsData()
+                }, 1000)
+            }
+        },
+        onJobSearchName(val) {
+            this.jobMasterPagination.name = val
+
+            if (!this.jobMasterPagination.onSearch) {
+                this.jobMasterPagination.onSearch = true
+                setTimeout(() => {
+                    this.getMasterJobData()
+                }, 1000)
+            }
+        },
+        onAssignJobUnit() {
+            if (this.selectedJobUnit === null || this.selectedJob === null) {
+                useToast().error("Field is required", { position: 'bottom-right' });
+            }
+
+            this.$axios.post(`/api/v1/admin/unit-job/create`, {
+                unit_relation_id: this.selectedJobUnit.relation_id,
+                odoo_job_id: this.selectedJob.odoo_job_id
+            }).then(response => {
+                useToast().success("Success to create data", { position: 'bottom-right' });
+                this.initializeUnitJob()
+            }).catch(error => {
+                if(error.response.data.message instanceof Object) {
+                    for (const key in error.response.data.message) {
+                        useToast().error(error.response.data.message[key][0], { position: 'bottom-right' });
+                    }
+                } else {
+                    useToast().error(error.response.data.message , { position: 'bottom-right' });
+                }
+            });
+        }
     },
 }
 </script>

@@ -76,4 +76,8 @@ class JobController extends Controller
     public function structuredJob(Request $request) {
         return $this->jobService->structuredJob($request);
     }
+
+    public function getListMasterJob(Request $request) {
+        return $this->jobService->getListMasterJob($request);
+    }
 }

@@ -516,4 +516,19 @@ class JobService extends BaseService
             ], 500);
         }
     }
+
+    public function getListMasterJob(Request $request) {
+        $query = Job::query()
+            ->orderBy('id', 'DESC');
+
+        if ($name = $request->get('name')) {
+            $query->where('name', 'ILIKE', "%$name%");
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Success',
+            'data' => $this->list($query, $request)
+        ]);
+    }
 }

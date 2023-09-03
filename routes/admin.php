@@ -315,6 +315,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::get('{id}', [JobController::class, 'index']);
         Route::get('', [JobController::class, 'allJobs']);
         Route::get('structured-job/data', [JobController::class, 'structuredJob']);
+        Route::get('list/master-job', [JobController::class, 'getListMasterJob']);
         Route::get('show/{id}', [JobController::class, 'show']);
         Route::get('view/{id}', [JobController::class, 'view']);
         Route::post('save/{id}', [JobController::class, 'store']);
