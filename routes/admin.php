@@ -437,5 +437,6 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::get('list-timesheet-detail', [TimesheetReportController::class, 'listTimesheetDetail']);
         Route::post('', [TimesheetReportController::class, 'create']);
         Route::post('sync/{id}', [TimesheetReportController::class, 'sync']);
+        Route::post('send-to-erp/{id}', [TimesheetReportController::class, 'sendToERP']);
     });
 });

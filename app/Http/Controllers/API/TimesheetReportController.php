@@ -35,4 +35,8 @@ class TimesheetReportController extends Controller
     public function sync(Request $request, int $id) {
         return $this->service->syncTimesheetReport($request, $id);
     }
+
+    public function sendToERP(Request $request, int $id) {
+        return $this->service->sendTimesheetToERP($request, $id);
+    }
 }

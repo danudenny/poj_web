@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 /**
  * Attributes:
  * @property-read int $id
+ * @property int $odoo_employee_id
  * @property string $name
  * @property int $outlet_id
  * @property int $cabang_id

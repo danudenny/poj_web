@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class TimesheetReportService extends BaseService
@@ -73,6 +74,9 @@ class TimesheetReportService extends BaseService
 
     public function sendTimesheetToERP(Request $request, int $id) {
         try {
+            /**
+             * @var TimesheetReport $timesheetReport
+             */
             $timesheetReport = TimesheetReport::query()
                 ->where('id', '=', $id)
                 ->where('status', '=', TimesheetReport::StatusPending)
@@ -87,11 +91,21 @@ class TimesheetReportService extends BaseService
 
             DB::beginTransaction();
 
+            foreach ($timesheetReport->timesheetReportDetails as $detail) {
+                $payslipID = $this->getERPPayslip($detail->employee->odoo_employee_id);
+                if ($payslipID) {
+                    $this->setERPPayslip($payslipID, $detail->generateERPAttribute());
+
+                    $detail->odoo_payslip_id = $payslipID;
+                    $detail->save();
+                }
+            }
+
             DB::commit();
 
             return response()->json([
                 'status' => true,
-                'message' => 'Success!'
+                'message' => 'Success!',
             ]);
         } catch (\Throwable $exception) {
             DB::rollBack();
@@ -100,6 +114,44 @@ class TimesheetReportService extends BaseService
                 'message' => $exception->getMessage()
             ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private function getERPPayslip(int $odooEmployeeID) {
+        $url = 'https://satria.optimajasa.co.id/api/v1/search/hr.payslip?limit=1&domain=["[\"employee_id\", \"=\", ' . $odooEmployeeID . ']","[\"state\", \"in\", [\"draft\", \"verify\"]]"]';
+
+        $response = Http::withBasicAuth('admin', 'a')
+            ->accept('application/json')
+            ->withHeaders([
+                'DATABASE' => 'DB_TRIAL',
+            ])
+            ->get($url);
+
+        $result = $response->json();
+
+        if (count($result) == 0) {
+            return null;
+        }
+
+        return $result[0];
+    }
+
+    private function setERPPayslip(int $payslipID, array $attributes) {
+        $values = urlencode(json_encode($attributes));
+        $url = 'https://satria.optimajasa.co.id/api/v1/write/hr.payslip?ids=["' . $payslipID . '"]&values=' . $values;
+
+        $response = Http::withBasicAuth('admin', 'a')
+            ->accept('application/json')
+            ->withHeaders([
+                'DATABASE' => 'DB_TRIAL',
+            ])
+            ->put($url);
+
+        $result = $response->json();
+        if (count($result) == 0) {
+            return false;
+        }
+
+        return true;
     }
 
     public function createTimesheetReport(CreateTimesheetReport $request) {

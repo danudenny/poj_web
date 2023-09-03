@@ -272,7 +272,7 @@ class EmployeeService extends BaseService
                             )
                             SELECT * FROM job_data
                         ) relatedJob";
-                $employees->join(DB::raw($subQuery), function (JoinClause $joinClause) {
+                $employees->leftJoin(DB::raw($subQuery), function (JoinClause $joinClause) {
                     $joinClause->on(DB::raw("relatedJob.odoo_job_id"), '=', DB::raw('employees.job_id'))
                         ->where(DB::raw("relatedJob.unit_relation_id"), '=', DB::raw('employees.unit_id'));
                 });

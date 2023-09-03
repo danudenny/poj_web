@@ -243,7 +243,7 @@ export default {
     },
     methods: {
         getUnitsData() {
-            this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.unitPagination.pageSize}&page=${this.unitPagination.currentPage}&name=${this.unitPagination.name}&unit_level=4.5.6.7`)
+            this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.unitPagination.pageSize}&page=${this.unitPagination.currentPage}&name=${this.unitPagination.name}&unit_level=4,5,6,7`)
                 .then(response => {
                     this.units = response.data.data.data
                     this.unitPagination.onSearch = false

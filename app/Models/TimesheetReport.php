@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  *
  * Relations:
  * @property-read Unit  $unit
+ * @property-read TimesheetReportDetail[] $timesheetReportDetails
  */
 class TimesheetReport extends Model
 {
@@ -43,5 +44,9 @@ class TimesheetReport extends Model
 
     public function unit() {
         return $this->belongsTo(Unit::class, 'unit_relation_id', 'relation_id');
+    }
+
+    public function timesheetReportDetails() {
+        return $this->hasMany(TimesheetReportDetail::class, 'timesheet_report_id');
     }
 }
