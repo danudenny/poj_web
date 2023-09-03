@@ -12,7 +12,11 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-2">
-                                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createTimesheetReporting">
+                                    <button class="btn btn-success" @click="() => {
+                                        this.$router.push({
+                                            name: 'Create Timesheet Reporting',
+                                        })
+                                    }">
                                         <i class="fa fa-plus-circle" /> &nbsp; Create Timesheet Reporting
                                     </button>
                                 </div>
@@ -84,7 +88,9 @@ export default {
                 name: ''
             },
             selectedUnit: null,
-            units: []
+            units: [],
+            countdown: 0,
+            timerInterval: null
         }
     },
     mounted() {

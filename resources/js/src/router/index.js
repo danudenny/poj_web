@@ -130,6 +130,7 @@ import PublicHoliday from "../pages/public-holiday/index.vue";
 // Timesheet Reporting
 import TimesheetReportingIndex from "../pages/timesheet-reporting/index.vue";
 import TimesheetReportingDetail from "../pages/timesheet-reporting/detail.vue";
+import TimesheetReportingCreate from "../pages/timesheet-reporting/create.vue";
 
 //Error page
 import Error from  '../components/error.vue';
@@ -997,6 +998,7 @@ const routes =[
                 },
             },
             {
+
                 path: 'detail/:id',
                 name: 'Detail Timesheet Reporting',
                 component: TimesheetReportingDetail,
@@ -1006,7 +1008,16 @@ const routes =[
                     permission: 'timesheet-reporting-read',
                 },
             },
-
+            {
+                path: 'create',
+                name: 'Create Timesheet Reporting',
+                component: TimesheetReportingCreate,
+                meta: {
+                    title: 'POJ - Create Timesheet Reporting',
+                    requiresAuth: true,
+                    permission: 'timesheet-reporting-read',
+                },
+            },
         ]
     },
     {
