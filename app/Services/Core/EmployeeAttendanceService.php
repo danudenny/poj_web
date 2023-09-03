@@ -1031,12 +1031,13 @@ class EmployeeAttendanceService extends BaseService
 
             if ($backup = $employee->getActiveBackup($timezone)) {
                 $unit = $backup->backupTime->backup->unit;
+                $backupJob = $backup->backupTime->backup->job;
 
                 $jobs = $unit->jobs;
                 $listJobs = [];
 
                 foreach ($jobs as $job) {
-                    if ($job->odoo_job_id === $employee->job_id) {
+                    if ($job->odoo_job_id === $backupJob->odoo_job_id) {
                         $listJobs[] = [
                             'is_camera' => $job->pivot->is_camera,
                             'is_upload' => $job->pivot->is_upload,

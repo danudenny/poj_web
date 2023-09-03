@@ -1,5 +1,5 @@
 <template>
-    <li class="onhover-dropdown" v-if="this.$store.state.currentRole === 'admin_operating_unit'">
+    <li class="onhover-dropdown" v-if="this.$store.state.currentRole === 'admin_unit'">
         <div>
             <vue-feather type="database" @click="listUnitOpen()"></vue-feather>
             <span class="badge rounded-pill badge-secondary"></span>

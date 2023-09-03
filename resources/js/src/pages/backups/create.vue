@@ -28,7 +28,7 @@
                                         <multiselect
                                             v-model="selectedJob"
                                             placeholder="Select Job"
-                                            label="name"
+                                            label="job_name"
                                             track-by="id"
                                             :options="jobs"
                                             :multiple="false"
@@ -267,7 +267,7 @@ export default {
                 return
             }
 
-            this.$axios.get(`/api/v1/admin/job/${this.selectedUnit.id}`)
+            this.$axios.get(`/api/v1/admin/unit-job?unit_relation_id=${this.selectedUnit.relation_id}&append=job_name`)
                 .then(response => {
                     this.jobs = response.data.data
                 })
@@ -305,7 +305,7 @@ export default {
             this.generateEmployeesTable()
         },
         onJobSelected() {
-            this.backup.job_id = this.selectedJob.id
+            this.backup.job_id = this.selectedJob.job.id
         },
         generateTimeSheetTable() {
             const ls = localStorage.getItem('my_app_token')
