@@ -52,7 +52,7 @@
                                         <div class="mt-2">
                                             <label for="status">Jenis Request:</label>
                                             <select id="status" name="request-type" class="form-select" v-model="backup.request_type" required>
-                                                <option value="assignment" v-if="this.$store.state.currentRole != 'staff'" :selected="backup.request_type === 'assignment' ? 'selected' : ''">Assignment</option>
+                                                <option value="assignment" :selected="backup.request_type === 'assignment' ? 'selected' : ''">Assignment</option>
                                                 <option value="request" :selected="backup.request_type === 'request' ? 'selected' : ''">Request</option>
                                             </select>
                                         </div>
