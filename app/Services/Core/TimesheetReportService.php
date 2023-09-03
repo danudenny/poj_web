@@ -84,7 +84,6 @@ class TimesheetReportService extends BaseService
              */
             $timesheetReport = TimesheetReport::query()
                 ->where('id', '=', $id)
-                ->where('status', '=', TimesheetReport::StatusPending)
                 ->first();
 
             if (!$timesheetReport) {
