@@ -21,6 +21,7 @@ class Role extends SpatieRole
     const RoleAdmin = "admin_operating_unit";
     const RoleStaff = "staff";
     const RoleStaffApproval = "staff_approvals";
+    const RoleAdminUnit = "admin_unit";
 
     protected $appends = ['status'];
     protected $dates = ['deleted_at'];

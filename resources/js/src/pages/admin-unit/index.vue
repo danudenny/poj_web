@@ -45,7 +45,6 @@
                             <div>
                                 <ul class="nav nav-pills nav-primary" id="pills-icontab" role="tablist">
                                     <li class="nav-item"><a class="nav-link active" id="pills-iconhome-tab" data-bs-toggle="pill" href="#pills-iconhome" role="tab" aria-controls="pills-iconhome" aria-selected="true" @click="onFormTypeSelected('general')"><i class="icofont icofont-info"></i>General</a></li>
-                                    <li class="nav-item"><a class="nav-link" id="pills-operating-unit-tab" data-bs-toggle="pill" href="#pills-operating-unit" role="tab" aria-controls="pills-operating-unit" aria-selected="false" @click="onFormTypeSelected('operating-unit')"><i class="icofont icofont-tools"></i>Operating Unit</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -86,58 +85,6 @@
                                         </multiselect>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="tab-pane fade show" id="pills-operating-unit" role="tabpanel" aria-labelledby="pills-operating-unit">
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <label for="name">Select Operating Unit</label>
-                                        <multiselect
-                                            v-model="selectedOperatingUnit"
-                                            placeholder="Select Operating Unit"
-                                            label="name"
-                                            track-by="id"
-                                            :options="operatingUnits"
-                                            :multiple="false"
-                                            :required="true"
-                                            @select="onOperatingUnitSelected"
-                                        >
-                                        </multiselect>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <label for="name">Select Corporates</label>
-                                        <multiselect
-                                            v-model="selectedOperatingUnitCorporate"
-                                            placeholder="Select Corporate"
-                                            label="corporate_name"
-                                            track-by="id"
-                                            :options="operatingUnitCorporates"
-                                            :multiple="false"
-                                            :required="true"
-                                            @select="onOperatingUnitCorporateSelected"
-                                        >
-                                        </multiselect>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        <label for="name">Select Employee</label>
-                                        <multiselect
-                                            v-model="selectedEmployeeOperatingUnit"
-                                            placeholder="Select Employee"
-                                            label="name"
-                                            track-by="id"
-                                            :options="employeesOperatingUnit"
-                                            :multiple="false"
-                                            :required="true"
-                                            @search-change="onEmployeeOperatingUnitSearchName"
-                                        >
-                                        </multiselect>
-                                    </div>
-                                </div>
-                                <br/>
-                                <div ref="operatingUnitDetailTable"></div>
                             </div>
                         </div>
                     </div>
@@ -363,7 +310,7 @@ export default {
             return `<button class="button-icon button-danger" data-bs-toggle="modal" data-bs-target="#deleteAdminUnit"><i class="fa fa-trash"></i></button>`;
         },
         getUnitsData() {
-            this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.unitPagination.pageSize}&page=${this.unitPagination.currentPage}&name=${this.unitPagination.name}`)
+            this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.unitPagination.pageSize}&page=${this.unitPagination.currentPage}&name=${this.unitPagination.name}&unit_level=4,5,6,7`)
                 .then(response => {
                     this.units = response.data.data.data
                     this.unitPagination.onSearch = false

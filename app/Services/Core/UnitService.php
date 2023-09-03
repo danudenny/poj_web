@@ -163,6 +163,16 @@ class UnitService extends BaseService
 
             if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
 
+            } else if ($this->isRequestedRoleLevel(Role::RoleAdminUnit)) {
+                if (!$unitRelationIDTopButtom) {
+                    $defaultUnitRelationID = $user->employee->unit_id;
+
+                    if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                        $defaultUnitRelationID = $requestUnitRelationID;
+                    }
+
+                    $unitRelationIDTopButtom = $defaultUnitRelationID;
+                }
             } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
                 if (!$unitRelationIDTopButtom) {
                     $defaultUnitRelationID = $user->employee->unit_id;

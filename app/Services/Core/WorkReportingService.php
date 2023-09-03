@@ -52,7 +52,17 @@ class WorkReportingService extends BaseService
 
             if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
 
-            } elseif ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
+            } else if ($this->isRequestedRoleLevel(Role::RoleAdminUnit)) {
+                if (!$unitRelationID) {
+                    $defaultUnitRelationID = $user->employee->unit_id;
+
+                    if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                        $defaultUnitRelationID = $requestUnitRelationID;
+                    }
+
+                    $unitRelationID = $defaultUnitRelationID;
+                }
+            } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
                 $workReporting->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
                 $workReporting->where(function (Builder $builder) use ($user) {
                     $builder->orWhere('user_operating_units.user_id', '=', $user->id);
