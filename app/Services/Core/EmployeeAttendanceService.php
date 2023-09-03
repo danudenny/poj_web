@@ -651,6 +651,13 @@ class EmployeeAttendanceService extends BaseService
                 $attendanceType = EmployeeAttendance::TypeOffSite;
             }
 
+            $checkOutTime = Carbon::parse($employeeTimesheetSchedule->end_time, 'UTC');
+
+            $earlyDuration = 0;
+            if ($currentTime->lessThan($checkOutTime)) {
+                $earlyDuration = $checkOutTime->diffInMinutes($currentTime);
+            }
+
             DB::beginTransaction();
 
             $employeeAttendance->real_check_out = $currentTime;
@@ -659,6 +666,7 @@ class EmployeeAttendanceService extends BaseService
             $employeeAttendance->checkout_real_radius = $distance;
             $employeeAttendance->check_out_tz = $employeeTimezone;
             $employeeAttendance->checkout_type = $attendanceType;
+            $employeeAttendance->early_check_out = $earlyDuration;
             $employeeAttendance->save();
 
             $attHistory = new EmployeeAttendanceHistory();
