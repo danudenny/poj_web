@@ -75,6 +75,11 @@ class TimesheetReportService extends BaseService
     public function sendTimesheetToERP(Request $request, int $id) {
         try {
             /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            /**
              * @var TimesheetReport $timesheetReport
              */
             $timesheetReport = TimesheetReport::query()
@@ -100,6 +105,11 @@ class TimesheetReportService extends BaseService
                     $detail->save();
                 }
             }
+
+            $timesheetReport->last_sent_at = Carbon::now();
+            $timesheetReport->last_sent_by = $user->email;
+            $timesheetReport->status = TimesheetReport::StatusSuccess;
+            $timesheetReport->save();
 
             DB::commit();
 

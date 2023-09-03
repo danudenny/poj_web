@@ -59,7 +59,7 @@ class TimesheetReportDetail extends Model
         ];
 
         $response = [];
-        $skipValue = ['id', 'employee_id', 'timesheet_report_id', 'created_at', 'updated_at'];
+        $skipValue = ['id', 'employee_id', 'timesheet_report_id', 'created_at', 'updated_at', 'odoo_payslip_id'];
         $valueArr = $this->attributesToArray();
 
         foreach ($valueArr as $key => $value) {

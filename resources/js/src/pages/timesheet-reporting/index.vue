@@ -206,6 +206,27 @@ export default {
                         ]
                     },
                     {
+                        title: 'Last Send',
+                        headerHozAlign: 'center',
+                        headerSort: false,
+                        columns: [
+                            {
+                                title: 'Last Send At',
+                                field: 'last_sent_with_client_timezone',
+                                headerHozAlign: 'center',
+                                hozAlign: 'center',
+                                headerSort: false,
+                            },
+                            {
+                                title: 'Last Send By',
+                                field: 'last_sent_by',
+                                headerHozAlign: 'center',
+                                hozAlign: 'center',
+                                headerSort: false,
+                            },
+                        ]
+                    },
+                    {
                         title: 'Action',
                         hozAlign: 'center',
                         headerHozAlign: 'center',

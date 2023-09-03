@@ -12,29 +12,37 @@
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-4 mt-4">
+                                    <div class="col-md-3 mt-4">
                                         <label for="name">Unit</label>
                                         <input type="text" class="form-control" v-model="timesheetReport.unit.name" disabled>
                                     </div>
-                                    <div class="col-md-4 mt-4">
+                                    <div class="col-md-3 mt-4">
                                         <label for="name">Tanggal Report Awal</label>
                                         <input type="date" class="form-control" v-model="timesheetReport.start_date" disabled>
                                     </div>
-                                    <div class="col-md-4 mt-4">
+                                    <div class="col-md-3 mt-4">
                                         <label for="name">Tanggal Report Akhir</label>
                                         <input type="date" class="form-control" v-model="timesheetReport.end_date" disabled>
                                     </div>
-                                    <div class="col-md-4 mt-4">
+                                    <div class="col-md-3 mt-4">
                                         <label for="name">Status</label>
                                         <input type="text" class="form-control" v-model="timesheetReport.status" disabled>
                                     </div>
-                                    <div class="col-md-4 mt-4">
+                                    <div class="col-md-3 mt-4">
                                         <label for="name">Last Sync At</label>
                                         <input type="text" class="form-control" v-model="timesheetReport.last_sync_with_client_timezone" disabled>
                                     </div>
-                                    <div class="col-md-4 mt-4">
+                                    <div class="col-md-3 mt-4">
                                         <label for="name">Last Sync By</label>
                                         <input type="text" class="form-control" v-model="timesheetReport.last_sync_by" disabled>
+                                    </div>
+                                    <div class="col-md-3 mt-4">
+                                        <label for="name">Last Send At</label>
+                                        <input type="text" class="form-control" v-model="timesheetReport.last_sent_with_client_timezone" disabled>
+                                    </div>
+                                    <div class="col-md-3 mt-4">
+                                        <label for="name">Last Send By</label>
+                                        <input type="text" class="form-control" v-model="timesheetReport.last_sent_by" disabled>
                                     </div>
                                 </div>
 
@@ -42,7 +50,15 @@
 
                                 <button class="btn btn-outline-success" v-if="!isLoadingReportingDetails" @click="exportExcel">
                                     <i class="fa fa-file-excel-o"></i>&nbsp; Export to Excel
-                                </button>
+                                </button> &nbsp;
+                                <button class="btn btn-outline-success" v-if="!isLoadingReportingDetails" :disabled="isOnProcessRefreshData" @click="onRefreshReport">
+                                    <span v-if="!this.isOnProcessRefreshData"><i class="fa fa-refresh"></i> Refresh Data</span>
+                                    <span v-else>Collecting Data ({{ this.countdown }}s)</span>
+                                </button> &nbsp;
+                                <button class="btn btn-outline-success" v-if="!isLoadingReportingDetails" :disabled="isOnprocessSendingData" @click="onSendDataToERP">
+                                    <span v-if="!this.isOnprocessSendingData"><i class="fa fa-cloud"></i> Send to ERP</span>
+                                    <span v-else>Sending Data ({{ this.countdown }}s)</span>
+                                </button> &nbsp;
                                 <br/><br/>
                                 <div v-if="isLoadingReportingDetails">
                                     <p align="center">
@@ -52,6 +68,9 @@
                                     </p>
                                 </div>
                                 <div ref="listTimesheetReporting"></div>
+                            </div>
+                            <div class="card-footer text-start">
+                                <button class="btn btn-secondary" @click="$router.go(-1)">Back</button>
                             </div>
                         </div>
                     </div>
@@ -77,6 +96,8 @@ export default {
                 end_date: null,
                 last_sync_with_client_timezone: null,
                 last_sync_by: null,
+                last_sent_with_client_timezone: null,
+                last_sent_by: null,
                 status: null,
                 unit: {
                     name: null
@@ -88,7 +109,11 @@ export default {
             },
             reportingDetails: [],
             isLoadingReportingDetails: true,
-            table: null
+            table: null,
+            isOnProcessRefreshData: false,
+            isOnprocessSendingData: false,
+            countdown: 0,
+            timerInterval: null
         }
     },
     mounted() {
@@ -106,6 +131,7 @@ export default {
                 });
         },
         getTimesheetReportingDetails() {
+            this.isLoadingReportingDetails = true
             this.$axios.get(`/api/v1/admin/timesheet-report/list-timesheet-detail?timesheet_report_id=${this.$route.params.id}`)
                 .then(response => {
                     this.isLoadingReportingDetails = false
@@ -691,12 +717,54 @@ export default {
                 paginationInitialPage: 1,
             })
         },
+        onStartTimer() {
+            this.countdown = 0
+            this.timerInterval = this.timerId = setInterval(() => {
+                this.countdown++;
+            }, 1000);
+        },
+        onKillTimer() {
+            clearInterval(this.timerInterval)
+            this.timerInterval = null;
+            this.countdown = null;
+        },
         exportExcel() {
             this.table.download("xlsx", "timesheet-reporting.xlsx", {
                 sheetName: "Employees",
                 columnGroups: false,
                 columnCalcs: false,
             });
+        },
+        onRefreshReport() {
+            this.isOnProcessRefreshData = true
+            this.onStartTimer()
+            this.$axios.post(`api/v1/admin/timesheet-report/sync/${this.$route.params.id}`)
+                .then(() => {
+                    this.isOnProcessRefreshData = false
+                    useToast().success("Success to refresh timesheet!");
+                    this.onKillTimer()
+                    this.getTimesheetReportingDetail()
+                })
+                .catch(error => {
+                    this.isOnProcessRefreshData = false
+                    this.onKillTimer()
+                    useToast().error(error.response.data.message);
+                });
+        },
+        onSendDataToERP() {
+            this.isOnprocessSendingData = true
+            this.onStartTimer()
+            this.$axios.post(`api/v1/admin/timesheet-report/send-to-erp/${this.$route.params.id}`)
+                .then(() => {
+                    this.isOnprocessSendingData = false
+                    useToast().success("Success to send data!");
+                    this.onKillTimer()
+                })
+                .catch(error => {
+                    this.isOnprocessSendingData = false
+                    this.onKillTimer()
+                    useToast().error(error.response.data.message);
+                });
         }
     }
 }

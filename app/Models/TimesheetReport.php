@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $unit_relation_id
  * @property string $last_sync
  * @property string $last_sync_by
+ * @property string $last_sent_at
+ * @property string $last_sent_by
  * @property string $status
  * @property string $created_by
  *
@@ -26,20 +28,31 @@ class TimesheetReport extends Model
     use HasFactory;
 
     const StatusPending = "pending";
-    const StatusSuccess = "success";
+    const StatusSuccess = "sent";
 
     protected $with = [
         'unit'
     ];
 
     protected $appends = [
-        'last_sync_with_client_timezone'
+        'last_sync_with_client_timezone',
+        'last_sent_with_client_timezone'
     ];
 
     public function getLastSyncWithClientTimezoneAttribute() {
         $lastSync = Carbon::parse($this->last_sync, 'UTC');
 
         return $lastSync->setTimezone(getClientTimezone())->format('Y-m-d H:i:s');
+    }
+
+    public function getLastSentWithClientTimezoneAttribute() {
+        if ($this->last_sent_at) {
+            $lastSync = Carbon::parse($this->last_sync, 'UTC');
+
+            return $lastSync->setTimezone(getClientTimezone())->format('Y-m-d H:i:s');
+        }
+
+         return null;
     }
 
     public function unit() {
