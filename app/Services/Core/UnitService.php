@@ -452,8 +452,8 @@ class UnitService extends BaseService
             ->where('unit_relation_id', '=', $unit->relation_id)
             ->whereNull('check_in_time')
             ->update([
-                'early_buffer' => $unit->late_buffer,
-                'late_buffer' => $unit->early_buffer,
+                'early_buffer' => $unit->early_buffer,
+                'late_buffer' => $unit->late_buffer,
             ]);
     }
 
