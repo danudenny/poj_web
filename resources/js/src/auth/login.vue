@@ -100,7 +100,10 @@ export default {
                 email: this.email,
                 password: this.password
             });
-            this.$router.push('/');
+            let exist = localStorage.getItem("my_app_token")
+            if (exist != null) {
+                window.location.href = "/"
+            }
         } catch (error) {
             console.log(error);
         }

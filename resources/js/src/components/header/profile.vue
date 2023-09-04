@@ -53,6 +53,7 @@
             try {
                 await this.logout();
                 this.$router.push('/auth/login');
+                window.location.reload()
             } catch (error) {
                 console.log('Logout error:', error);
             }
