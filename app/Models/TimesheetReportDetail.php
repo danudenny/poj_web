@@ -7,7 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Attributes:
+ * @property int $timesheet_report_id
  * @property string $odoo_payslip_id
+ * @property string $response_message
+ * @property string $status
  *
  * Relations:
  * @property-read Employee $employee
@@ -15,6 +18,10 @@ use Illuminate\Database\Eloquent\Model;
 class TimesheetReportDetail extends Model
 {
     use HasFactory;
+
+    const StatusSuccess = "success";
+    const StatusPending = "pending";
+    const StatusFailed = "failed";
 
     public function employee() {
         return $this->belongsTo(Employee::class, 'employee_id');
@@ -59,7 +66,7 @@ class TimesheetReportDetail extends Model
         ];
 
         $response = [];
-        $skipValue = ['id', 'employee_id', 'timesheet_report_id', 'created_at', 'updated_at', 'odoo_payslip_id'];
+        $skipValue = ['id', 'employee_id', 'timesheet_report_id', 'created_at', 'updated_at', 'odoo_payslip_id', 'response_message', 'status'];
         $valueArr = $this->attributesToArray();
 
         foreach ($valueArr as $key => $value) {

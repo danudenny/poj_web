@@ -164,6 +164,63 @@ export default {
                         frozen: true
                     },
                     {
+                        title: 'Payslip',
+                        headerHozAlign: 'center',
+                        headerSort: false,
+                        columns: [
+                            {
+                                title: 'Payslip ID',
+                                field: 'odoo_payslip_id',
+                                hozAlign: 'center',
+                                headerHozAlign: 'center',
+                                headerSort: false,
+                                formatter: function (cell) {
+                                    let value = cell.getValue()
+
+                                    if (value === null) {
+                                        return `<span class="text-danger"><i class="fa fa-times"></i></span>`
+                                    } else {
+                                        return `<span class="badge badge-success">${value}</span>`
+                                    }
+                                }
+                            },
+                            {
+                                title: 'Status',
+                                field: 'status',
+                                hozAlign: 'center',
+                                headerHozAlign: 'center',
+                                headerSort: false,
+                                formatter: function (cell) {
+                                    let value = cell.getValue()
+
+                                    if (value === 'pending') {
+                                        return `<span class="badge badge-warning">Pending</span>`
+                                    } else if (value === 'success') {
+                                        return `<span class="badge badge-success">Success</span>`
+                                    } else {
+                                        return `<span class="badge badge-danger">Failed</span>`
+                                    }
+                                }
+                            },
+                            {
+                                title: 'Message',
+                                field: 'response_message',
+                                hozAlign: 'center',
+                                headerHozAlign: 'center',
+                                headerSort: false,
+                                formatter: function (cell) {
+                                    let value = cell.getValue()
+
+                                    if (value === null) {
+                                        return `<span class="text-danger"><i class="fa fa-times"></i></span>`
+                                    } else {
+                                        return value
+                                    }
+                                }
+                            },
+                        ]
+                    },
+                    {
                         title: 'Workday',
                         field: 'total_work_day',
                         headerHozAlign: 'center',
@@ -759,6 +816,7 @@ export default {
                     this.isOnprocessSendingData = false
                     useToast().success("Success to send data!");
                     this.onKillTimer()
+                    this.getTimesheetReportingDetail()
                 })
                 .catch(error => {
                     this.isOnprocessSendingData = false

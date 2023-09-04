@@ -96,13 +96,22 @@ class TimesheetReportService extends BaseService
             DB::beginTransaction();
 
             foreach ($timesheetReport->timesheetReportDetails as $detail) {
-                $payslipID = $this->getERPPayslip($detail->employee->odoo_employee_id);
-                if ($payslipID) {
-                    $this->setERPPayslip($payslipID, $detail->generateERPAttribute());
+                $payslipID = $this->getERPPayslip($detail->employee->odoo_employee_id, $timesheetReport->start_date, $timesheetReport->end_date);
+                if (count($payslipID) === 1) {
+                    $this->setERPPayslip($payslipID[0], $detail->generateERPAttribute());
 
-                    $detail->odoo_payslip_id = $payslipID;
-                    $detail->save();
+                    $detail->response_message = null;
+                    $detail->odoo_payslip_id = $payslipID[0];
+                    $detail->status = TimesheetReportDetail::StatusSuccess;
+                } else if (count($payslipID) > 1)  {
+                    $detail->response_message = "Employee has more than one payslip on ERP, please delete one Payslip on ERP";
+                    $detail->status = TimesheetReportDetail::StatusFailed;
+                } else {
+                    $detail->response_message = "Employee don't have payslip, please create payslip on ERP";
+                    $detail->status = TimesheetReportDetail::StatusFailed;
                 }
+
+                $detail->save();
             }
 
             $timesheetReport->last_sent_at = Carbon::now();
@@ -125,8 +134,8 @@ class TimesheetReportService extends BaseService
         }
     }
 
-    private function getERPPayslip(int $odooEmployeeID) {
-        $url = 'https://satria.optimajasa.co.id/api/v1/search/hr.payslip?limit=1&domain=["[\"employee_id\", \"=\", ' . $odooEmployeeID . ']","[\"state\", \"in\", [\"draft\", \"verify\"]]"]';
+    private function getERPPayslip(int $odooEmployeeID, string $startDate, string $endDate) {
+        $url = 'https://satria.optimajasa.co.id/api/v1/search/hr.payslip?limit=1&domain=["[\"employee_id\", \"=\", '.$odooEmployeeID.']","[\"state\", \"in\", [\"draft\", \"verify\"]]","[\"date_from\", \"=\", \"'.$startDate.'\"]", "[\"date_to\", \"=\", \"'.$endDate.'\"]"]';
 
         $response = Http::withBasicAuth('admin', 'a')
             ->accept('application/json')
@@ -136,12 +145,7 @@ class TimesheetReportService extends BaseService
             ->get($url);
 
         $result = $response->json();
-
-        if (count($result) == 0) {
-            return null;
-        }
-
-        return $result[0];
+        return $result;
     }
 
     private function setERPPayslip(int $payslipID, array $attributes) {
@@ -291,9 +295,15 @@ class TimesheetReportService extends BaseService
             $timesheetReport->last_sync_by = $user->email;
             $timesheetReport->save();
 
+            $resp = [];
+
+            $availableEmployeeID = [];
             foreach ($employees as $employee) {
+                $availableEmployeeID[] = $employee->id;
                 $data = $this->generateDataReport($employee, $timesheetReport->start_date, $timesheetReport->end_date);
                 $data['timesheet_report_id'] = $timesheetReport->id;
+
+                $resp[] = $data;
 
                 TimesheetReportDetail::query()
                     ->updateOrInsert([
@@ -302,11 +312,17 @@ class TimesheetReportService extends BaseService
                     ],$data);
             }
 
+            TimesheetReportDetail::query()
+                ->whereNotIn('employee_id', $availableEmployeeID)
+                ->where('timesheet_report_id', '=', $timesheetReport->id)
+                ->delete();
+
             DB::commit();
 
             return response()->json([
                 'status' => true,
-                'message' => 'Success'
+                'message' => 'Success',
+                'data' => $resp
             ]);
         } catch (\Throwable $exception) {
             DB::rollBack();
@@ -376,8 +392,8 @@ class TimesheetReportService extends BaseService
         return EmployeeTimesheetSchedule::query()
             ->where('employee_id', '=', $employee->id)
             ->where(function(Builder $builder) use ($start_date, $end_date) {
-                $builder->orWhereRaw("(employee_timesheet_schedules.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'")
-                    ->orWhereRaw("(employee_timesheet_schedules.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'");
+                $builder->whereRaw(DB::raw("(employee_timesheet_schedules.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '$start_date'"))
+                    ->whereRaw(DB::raw("(employee_timesheet_schedules.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'"));
             })->count();
     }
 
@@ -385,8 +401,8 @@ class TimesheetReportService extends BaseService
         return EmployeeTimesheetSchedule::query()
             ->where('employee_id', '=', $employee->id)
             ->where(function(Builder $builder) use ($start_date, $end_date) {
-                $builder->orWhereRaw("(employee_timesheet_schedules.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'")
-                    ->orWhereRaw("(employee_timesheet_schedules.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'");
+                $builder->whereRaw(DB::raw("(employee_timesheet_schedules.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'"))
+                    ->whereRaw(DB::raw("(employee_timesheet_schedules.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'"));
             })
             ->whereNotNull('employee_timesheet_schedules.check_in_time')
             ->whereNotNull('employee_timesheet_schedules.check_out_time')
@@ -398,8 +414,8 @@ class TimesheetReportService extends BaseService
             ->leftJoin('public_holidays', 'public_holidays.holiday_date', '=', DB::raw("(employee_timesheet_schedules.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE"))
             ->where('employee_id', '=', $employee->id)
             ->where(function(Builder $builder) use ($start_date, $end_date) {
-                $builder->orWhereRaw("(employee_timesheet_schedules.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'")
-                    ->orWhereRaw("(employee_timesheet_schedules.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'");
+                $builder->whereRaw(DB::raw("(employee_timesheet_schedules.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'"))
+                    ->whereRaw(DB::raw("(employee_timesheet_schedules.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'"));
             })
             ->whereNotNull('employee_timesheet_schedules.check_in_time')
             ->whereNotNull('employee_timesheet_schedules.check_out_time')
@@ -412,8 +428,8 @@ class TimesheetReportService extends BaseService
             ->join('public_holidays', 'public_holidays.holiday_date', '=', DB::raw("(employee_timesheet_schedules.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE"))
             ->where('employee_id', '=', $employee->id)
             ->where(function(Builder $builder) use ($start_date, $end_date) {
-                $builder->orWhereRaw("(employee_timesheet_schedules.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'")
-                    ->orWhereRaw("(employee_timesheet_schedules.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'");
+                $builder->whereRaw(DB::raw("(employee_timesheet_schedules.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'"))
+                    ->whereRaw(DB::raw("(employee_timesheet_schedules.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'"));
             })
             ->whereNotNull('employee_timesheet_schedules.check_in_time')
             ->whereNotNull('employee_timesheet_schedules.check_out_time')
@@ -442,8 +458,8 @@ class TimesheetReportService extends BaseService
         $totalNotAttend = EmployeeTimesheetSchedule::query()
             ->where('employee_id', '=', $employee->id)
             ->where(function(Builder $builder) use ($start_date, $end_date) {
-                $builder->orWhereRaw("(employee_timesheet_schedules.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'")
-                    ->orWhereRaw("(employee_timesheet_schedules.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'");
+                $builder->whereRaw(DB::raw("(employee_timesheet_schedules.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'"))
+                    ->whereRaw(DB::raw("(employee_timesheet_schedules.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'"));
             })
             ->where('employee_timesheet_schedules.end_time', '<', DB::raw('NOW()'))
             ->whereNull('employee_timesheet_schedules.check_in_time')
@@ -465,8 +481,8 @@ class TimesheetReportService extends BaseService
             ->whereNotNull('backup_employee_times.check_out_time')
             ->where('backup_employee_times.employee_id', '=', $employee->id)
             ->where(function(Builder $builder) use ($start_date, $end_date) {
-                $builder->orWhereRaw("(backup_times.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'")
-                    ->orWhereRaw("(backup_times.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'");
+                $builder->whereRaw(DB::raw("(backup_times.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'"))
+                    ->whereRaw(DB::raw("(backup_times.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'"));
             })
             ->select(['backup_employee_times.*'])
             ->get();
@@ -502,8 +518,8 @@ class TimesheetReportService extends BaseService
             ->leftJoin('public_holidays', 'public_holidays.holiday_date', '=', DB::raw("(overtime_dates.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE"))
             ->where('overtime_employees.employee_id', '=', $employee->id)
             ->where(function(Builder $builder) use ($start_date, $end_date) {
-                $builder->orWhereRaw("(overtime_dates.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'")
-                    ->orWhereRaw("(overtime_dates.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'");
+                $builder->whereRaw(DB::raw("(overtime_dates.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'"))
+                    ->whereRaw(DB::raw("(overtime_dates.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'"));
             })
             ->whereNull('public_holidays.id')
             ->whereNotNull('overtime_employees.check_in_time')
@@ -556,8 +572,8 @@ class TimesheetReportService extends BaseService
             ->join('public_holidays', 'public_holidays.holiday_date', '=', DB::raw("(overtime_dates.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE"))
             ->where('overtime_employees.employee_id', '=', $employee->id)
             ->where(function(Builder $builder) use ($start_date, $end_date) {
-                $builder->orWhereRaw("(overtime_dates.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'")
-                    ->orWhereRaw("(overtime_dates.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'");
+                $builder->whereRaw(DB::raw("(overtime_dates.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'"))
+                    ->whereRaw(DB::raw("(overtime_dates.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'"));
             })
             ->whereNotNull('overtime_employees.check_in_time')
             ->whereNotNull('overtime_employees.check_out_time')
@@ -633,8 +649,8 @@ class TimesheetReportService extends BaseService
             ->where('employee_attendances.employee_id', '=', $employee->id)
             ->where('employee_attendances.attendance_types', '=', EmployeeAttendance::AttendanceTypeNormal)
             ->where(function(Builder $builder) use ($start_date, $end_date) {
-                $builder->orWhereRaw("(employee_timesheet_schedules.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'")
-                    ->orWhereRaw("(employee_timesheet_schedules.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'");
+                $builder->whereRaw(DB::raw("(employee_timesheet_schedules.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'"))
+                    ->whereRaw(DB::raw("(employee_timesheet_schedules.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'"));
             })
             ->whereNotNull('employee_attendances.real_check_in')
             ->whereNotNull('employee_attendances.real_check_out')
@@ -687,8 +703,8 @@ class TimesheetReportService extends BaseService
             ->where('employee_attendances.employee_id', '=', $employee->id)
             ->where('employee_attendances.attendance_types', '=', EmployeeAttendance::AttendanceTypeNormal)
             ->where(function(Builder $builder) use ($start_date, $end_date) {
-                $builder->orWhereRaw("(employee_timesheet_schedules.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'")
-                    ->orWhereRaw("(employee_timesheet_schedules.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'");
+                $builder->whereRaw(DB::raw("(employee_timesheet_schedules.start_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE >= '{$start_date}'"))
+                    ->whereRaw(DB::raw("(employee_timesheet_schedules.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'"));
             })
             ->whereNotNull('employee_attendances.real_check_in')
             ->whereNotNull('employee_attendances.real_check_out')
