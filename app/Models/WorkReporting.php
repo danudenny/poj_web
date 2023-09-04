@@ -43,7 +43,7 @@ class WorkReporting extends Model
 
     public function getCreatedAtClientTimezoneAttribute() {
         $time = Carbon::parse($this->created_at, 'UTC');
-        $userLocation = request()->header('x-client-timezone');
+        $userLocation = getClientTimezone();
 
         if ($userLocation) {
             $time->setTimezone($userLocation);
