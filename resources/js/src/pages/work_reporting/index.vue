@@ -113,8 +113,7 @@ export default {
                     },
                     {
                         title: 'Date',
-                        field: 'date',
-                        headerFilter:"date",
+                        field: 'created_at_client_timezone',
                         headerHozAlign: 'center',
                         hozAlign: 'center'
                     },
