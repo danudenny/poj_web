@@ -14,7 +14,7 @@
                                 <div class="row mb-3">
                                     <div class="col-md-3">
                                         <label for="name">Date Time</label>
-                                        <input type="text" class="form-control" id="name" v-model="workReporting.date" disabled>
+                                        <input type="text" class="form-control" id="name" v-model="workReporting.created_at_client_timezone" disabled>
                                     </div>
                                 </div>
                                 <div class="row mb-3">
