@@ -84,7 +84,7 @@
                                 <div class="col-md-3">
                                     <div class="mt-2">
                                         <label for="name">Jam Akhir</label>
-                                        <input type="time" class="form-control" v-model="overtime.dates[index].end_time" :min="overtime.dates[index].start_time" :disabled="overtime.shift_type === 'Shift'" required>
+                                        <input type="time" class="form-control" v-model="overtime.dates[index].end_time" :disabled="overtime.shift_type === 'Shift'" required>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
@@ -107,8 +107,15 @@
                     <br/>
                     <div ref="employeeTable"></div>
                     <br/>
-                    <button class="btn btn-primary">Simpan</button> &nbsp
-                    <button class="btn btn-secondary" @click="$router.go(-1)">Back</button>&nbsp;
+                    <button class="btn btn-primary" :disabled="this.isOnProcess">
+                        <span v-if="this.isOnProcess">
+                            ...
+                        </span>
+                        <span v-else>
+                            <i data-action="view" class="fa fa-save"></i> Simpan
+                        </span>
+                    </button> &nbsp;
+                    <button class="btn btn-secondary" @click="$router.go(-1)"><i data-action="view" class="fa fa-arrow-left"></i> Back</button>&nbsp;
                 </div>
             </form>
         </div>
@@ -183,7 +190,8 @@ export default {
             },
             today: '',
             units: [],
-            jobs: []
+            jobs: [],
+            isOnProcess: false,
         }
     },
     mounted() {
@@ -256,6 +264,7 @@ export default {
                         field: 'job.name'
                     }
                 ],
+                selectable: 1,
                 pagination: true,
                 paginationMode: 'remote',
                 responsiveLayout: true,
@@ -297,7 +306,7 @@ export default {
             });
             table.on("rowSelectionChanged", (data, rows, selected, deselected) => {
                 if(selected.length > 0) {
-                    this.overtime.employee_ids.push(selected[0].getData().id)
+                    this.overtime.employee_ids = [selected[0].getData().id]
                 }
                 if (deselected.length > 0) {
                     let deselectedID = deselected[0].getData().id
@@ -464,12 +473,15 @@ export default {
                 });
         },
         onSubmitForm() {
+            this.isOnProcess = true
             this.$axios.post(`/api/v1/admin/overtime`, this.overtime)
                 .then(response => {
                     useToast().success("Success to create data", { position: 'bottom-right' });
+                    this.isOnProcess = false
                     this.$router.push({name: 'Overtime', params: {}});
                 })
                 .catch(error => {
+                    this.isOnProcess = false
                     if(error.response.data.message instanceof Object) {
                         for (const key in error.response.data.message) {
                             useToast().error(error.response.data.message[key][0], { position: 'bottom-right' });

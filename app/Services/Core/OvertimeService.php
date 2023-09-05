@@ -438,6 +438,12 @@ class OvertimeService extends ScheduleService
             $unitTimeZone = getTimezoneV2($lat, $long);
 
             $employeeIDs = $request->input('employee_ids', []);
+            if(count($employeeIDs) > 1) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Maximum selected employee is one'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
             $overtimeDates = $this->generateOvertimeDateData($request->input('dates'), $employeeIDs, $unitTimeZone);
             if (count($overtimeDates) == 0) {
                 return response()->json([
@@ -446,7 +452,6 @@ class OvertimeService extends ScheduleService
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
-            $approvalUserIDs = [];
             $requestType = $request->input('request_type');
 
             if ($requestType == Overtime::RequestTypeAssignment) {
@@ -455,12 +460,6 @@ class OvertimeService extends ScheduleService
                         'status' => false,
                         'message' => 'You don\'t have access to do assignment',
                     ], ResponseAlias::HTTP_BAD_REQUEST);
-                }
-            } else {
-                $approvalUsers = $this->approvalService->getApprovalUser($requestorEmployee, ApprovalModule::ApprovalOvertime);
-
-                foreach ($approvalUsers as $approvalUser) {
-                    $approvalUserIDs[] = $approvalUser->employee_id;
                 }
             }
 
@@ -497,22 +496,7 @@ class OvertimeService extends ScheduleService
             $overtime->image_url = $request->input('image_url');
             $overtime->request_type = $requestType;
 
-            if ($overtime->request_type == Overtime::RequestTypeAssignment || count($approvalUserIDs) <= 0) {
-                $overtime->last_status = OvertimeHistory::TypeApproved;
-            }
-
             $overtime->save();
-
-            if ($overtime->last_status == OvertimeHistory::TypePending) {
-                foreach ($approvalUserIDs as $idx => $approvalUserID) {
-                    $overtimeApproval = new OvertimeApproval();
-                    $overtimeApproval->priority = $idx;
-                    $overtimeApproval->employee_id = $approvalUserID;
-                    $overtimeApproval->overtime_id = $overtime->id;
-                    $overtimeApproval->status = OvertimeApproval::StatusPending;
-                    $overtimeApproval->save();
-                }
-            }
 
             foreach ($overtimeDates as $overtimeDateData) {
                 $overtimeDate = new OvertimeDate();
@@ -536,18 +520,6 @@ class OvertimeService extends ScheduleService
             $overtimeHistory->employee_id = $user->employee_id;
             $overtimeHistory->history_type = $overtime->last_status;
             $overtimeHistory->save();
-
-            if ($user->inRoleLevel([Role::RoleSuperAdministrator, Role::RoleAdmin])) {
-                $overtime->last_status = OvertimeHistory::TypeApproved;
-                $overtime->last_status_at = Carbon::now();
-                $overtime->save();
-
-                $overtimeHistory = new OvertimeHistory();
-                $overtimeHistory->overtime_id = $overtime->id;
-                $overtimeHistory->employee_id = $user->employee_id;
-                $overtimeHistory->history_type = $overtime->last_status;
-                $overtimeHistory->save();
-            }
 
             foreach ($employeeIDs as $employeeID) {
                 $this->getNotificationService()->createNotification(
@@ -912,6 +884,8 @@ class OvertimeService extends ScheduleService
                 $checkInData->save();
             }
 
+            $this->assignApproval($employeeOvertime->overtimeDate->overtime);
+
             DB::commit();
 
             $this->getNotificationService()->createNotification(
@@ -930,6 +904,52 @@ class OvertimeService extends ScheduleService
                 'status' => false,
                 'message' => $exception->getMessage()
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private function assignApproval(Overtime $overtime) {
+        $isPendingCheckExist = OvertimeEmployee::query()
+            ->join('overtime_dates', 'overtime_dates.id', '=', 'overtime_employees.overtime_date_id')
+            ->where('overtime_dates.overtime_id', '=', $overtime->id)
+            ->where(function(Builder $builder) {
+                $builder->orWhereNull('overtime_employees.check_in_time')
+                    ->orWhereNull('overtime_employees.check_out_time');
+            })->exists();
+        if ($isPendingCheckExist) {
+            return;
+        }
+
+        $overtimeDates = $overtime->overtimeDates;
+        if (count($overtimeDates) == 0) {
+            return;
+        }
+
+        $overtimeEmployee = $overtimeDates[0]->overtimeEmployees;
+        if (count($overtimeEmployee) == 0) {
+            return;
+        }
+
+        $employee = $overtimeEmployee[0]->employee;
+        $approvalUsers = $this->approvalService->getApprovalUser($employee, ApprovalModule::ApprovalOvertime);
+
+        $approvalUserIDs = [];
+        foreach ($approvalUsers as $approvalUser) {
+            $approvalUserIDs[] = $approvalUser->employee_id;
+        }
+
+        foreach ($approvalUserIDs as $idx => $approvalUserID) {
+            $overtimeApproval = new OvertimeApproval();
+            $overtimeApproval->priority = $idx;
+            $overtimeApproval->employee_id = $approvalUserID;
+            $overtimeApproval->overtime_id = $overtime->id;
+            $overtimeApproval->status = OvertimeApproval::StatusPending;
+            $overtimeApproval->save();
+        }
+
+        if (count($approvalUserIDs) == 0) {
+            $overtime->last_status = OvertimeHistory::TypeApproved;
+            $overtime->last_status_at = Carbon::now();
+            $overtime->save();
         }
     }
 

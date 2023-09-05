@@ -162,7 +162,7 @@ export default {
                         field: 'overtime_date.end_time_with_timezone',
                     },
                     {
-                        title: 'Total Overtime',
+                        title: 'Total Approved Overtime',
                         field: 'overtime_date.total_overtime_string',
                     },
                     {
