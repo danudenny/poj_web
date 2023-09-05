@@ -322,6 +322,7 @@ export default {
                 ajaxConfig: {
                     headers: {
                         Authorization: `Bearer ${ls}`,
+                        "X-Selected-Role": this.$store.state.currentRole,
                         "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? ''
                     },
                 },

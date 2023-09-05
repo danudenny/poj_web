@@ -439,5 +439,6 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::post('', [TimesheetReportController::class, 'create']);
         Route::post('sync/{id}', [TimesheetReportController::class, 'sync']);
         Route::post('send-to-erp/{id}', [TimesheetReportController::class, 'sendToERP']);
+        Route::delete('delete/{id}', [TimesheetReportController::class, 'delete']);
     });
 });

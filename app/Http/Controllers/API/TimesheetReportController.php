@@ -39,4 +39,8 @@ class TimesheetReportController extends Controller
     public function sendToERP(Request $request, int $id) {
         return $this->service->sendTimesheetToERP($request, $id);
     }
+
+    public function delete(Request $request, int $id) {
+        return $this->service->deleteTimesheetReport($request, $id);
+    }
 }

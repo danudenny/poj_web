@@ -11,6 +11,7 @@ use App\Models\EmployeeTimesheetSchedule;
 use App\Models\LeaveRequest;
 use App\Models\MasterLeave;
 use App\Models\OvertimeEmployee;
+use App\Models\Role;
 use App\Models\TimesheetReport;
 use App\Models\TimesheetReportDetail;
 use App\Models\Unit;
@@ -18,6 +19,7 @@ use App\Models\User;
 use App\Services\BaseService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
@@ -27,9 +29,44 @@ use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 class TimesheetReportService extends BaseService
 {
     public function index(Request $request) {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
         $query = TimesheetReport::query();
+        $query->join('timesheet_report_details', 'timesheet_report_details.timesheet_report_id', '=', 'timesheet_reports.id');
+        $query->join('employees', 'employees.id', '=', 'timesheet_report_details.employee_id');
 
-        $query->orderBy('id', 'DESC');
+        $unitRelationID = $request->get('unit_relation_id');
+        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator) || $this->isRequestedRoleLevel(Role::RoleAdmin)) {
+
+        } else {
+            if (!$unitRelationID) {
+                $defaultUnitRelationID = $user->employee->unit_id;
+
+                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                    $defaultUnitRelationID = $requestUnitRelationID;
+                }
+
+                $unitRelationID = $defaultUnitRelationID;
+            }
+        }
+
+        if ($unitRelationID) {
+            $query->where(function (Builder $builder) use ($unitRelationID) {
+                $builder->orWhere(function(Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('employees.outlet_id', '=', $unitRelationID)
+                        ->orWhere('employees.cabang_id', '=', $unitRelationID)
+                        ->orWhere('employees.area_id', '=', $unitRelationID)
+                        ->orWhere('employees.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('employees.corporate_id', '=', $unitRelationID);
+                });
+            });
+        }
+
+        $query->select(['timesheet_reports.*']);
+        $query->groupBy(['timesheet_reports.id']);
+        $query->orderBy('timesheet_reports.id', 'DESC');
 
         return response()->json([
             'status' => true,
@@ -55,6 +92,46 @@ class TimesheetReportService extends BaseService
             'message' => 'Success',
             'data' => $timesheetReport
         ]);
+    }
+
+    public function deleteTimesheetReport(Request $request, int $id) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            /**
+             * @var TimesheetReport $timesheetReporting
+             */
+            $timesheetReporting = TimesheetReport::query()
+                ->where('id', '=', $id)
+                ->first();
+            if (!$timesheetReporting) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Timesheet report not found'
+                ]);
+            }
+
+            DB::beginTransaction();
+            TimesheetReportDetail::query()
+                ->where('timesheet_report_id', '=', $timesheetReporting->id)
+                ->delete();
+            $timesheetReporting->delete();
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success'
+            ]);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     public function listTimesheetDetail(Request $request) {

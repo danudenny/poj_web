@@ -12,7 +12,7 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-2">
-                                    <button class="btn btn-success" @click="() => {
+                                    <button v-if="this.$store.state.permissions?.includes('timesheet-reporting-create')" class="btn btn-success" @click="() => {
                                         this.$router.push({
                                             name: 'Create Timesheet Reporting',
                                         })
@@ -263,9 +263,17 @@ export default {
                         headerSort: false,
                         formatter: (cell, formatterParams, onRendered) => {
                             const rowData = cell.getRow().getData();
-                            return `
+
+                            if (this.$store.state.permissions?.includes('timesheet-reporting-delete')) {
+                                return `
+                                    <button class="button-icon button-success" data-action="view" data-row-id="${rowData.id}"><i data-action="view" class="fa fa-eye"></i> </button>
+                                    <button class="button-icon button-danger" data-action="delete" data-row-id="${rowData.id}"><i data-action="delete" class="fa fa-trash"></i> </button>
+                                 `;
+                            } else {
+                                return `
                                     <button class="button-icon button-success" data-action="view" data-row-id="${rowData.id}"><i data-action="view" class="fa fa-eye"></i> </button>
                                  `;
+                            }
                         },
                         width: 150,
                         sortable: false,
@@ -278,6 +286,8 @@ export default {
                                     name: 'Detail Timesheet Reporting',
                                     params: { id: rowData.id },
                                 })
+                            } else if (action === 'delete') {
+                                this.onDelete(rowData.id)
                             }
                         }
                     },
@@ -324,6 +334,29 @@ export default {
                         })
                         .catch(error => {
                             useToast().error(error.response.data.message);
+                        });
+                }
+            });
+        },
+        onDelete:function(id){
+            this.$swal({
+                icon: 'warning',
+                title:"Delete Data?",
+                text:'Once deleted, you will not be able to recover the data!',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                confirmButtonColor: '#e64942',
+                cancelButtonText: 'Cancel',
+                cancelButtonColor: '#efefef',
+            }).then((result)=>{
+                if(result.value){
+                    this.$axios.delete(`api/v1/admin/timesheet-report/delete/${id}`)
+                        .then(() => {
+                            this.generateTimesheetReportingTable()
+                            useToast().success("Data successfully deleted!", { position: 'bottom-right' });
+                        })
+                        .catch(error => {
+                            useToast().error(error.response.data.message, { position: 'bottom-right' });
                         });
                 }
             });

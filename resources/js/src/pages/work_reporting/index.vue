@@ -28,6 +28,7 @@
 import axios from "axios";
 import {TabulatorFull as Tabulator} from 'tabulator-tables';
 import {useToast} from "vue-toastification";
+import moment from "moment";
 
 export default {
     data() {
@@ -115,7 +116,11 @@ export default {
                         title: 'Date',
                         field: 'created_at_client_timezone',
                         headerHozAlign: 'center',
-                        hozAlign: 'center'
+                        hozAlign: 'center',
+                        formatter: function (cell) {
+                            let val = cell.getValue()
+                            return moment(val).format('DD MMMM YYYY')
+                        }
                     },
                     {
                         title: '',

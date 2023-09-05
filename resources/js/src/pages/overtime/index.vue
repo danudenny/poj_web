@@ -12,7 +12,7 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-2">
-                                    <button class="btn btn-primary" type="button" @click="$router.push('/attendance/overtime/create')">
+                                    <button v-if="this.$store.state.permissions?.includes('overtime-request-create')" class="btn btn-primary" type="button" @click="$router.push('/attendance/overtime/create')">
                                         <i class="fa fa-plus" /> &nbsp;Assign Overtime
                                     </button>
                                 </div>
@@ -146,10 +146,16 @@ export default {
         },
         viewDetailsFormatter(cell, formatterParams, onRendered) {
             const rowData = cell.getRow().getData();
-            return `
-                <button class="button-icon button-success" data-action="view" data-row-id="${rowData.id}"><i data-action="view" class="fa fa-eye"></i> </button>
-                <button class="button-icon button-danger" data-action="delete" data-row-id="${rowData.id}"><i data-action="delete" class="fa fa-trash"></i> </button>
-             `;
+            if (this.$store.state.permissions?.includes('overtime-request-delete')) {
+                return `
+                    <button class="button-icon button-success" data-action="view" data-row-id="${rowData.id}"><i data-action="view" class="fa fa-eye"></i> </button>
+                    <button class="button-icon button-danger" data-action="delete" data-row-id="${rowData.id}"><i data-action="delete" class="fa fa-trash"></i> </button>
+                 `;
+            } else {
+                return `
+                    <button class="button-icon button-success" data-action="view" data-row-id="${rowData.id}"><i data-action="view" class="fa fa-eye"></i> </button>
+                 `;
+            }
         },
         handleActionButtonClick(e, cell) {
             const action = e.target.dataset.action

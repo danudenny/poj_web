@@ -233,7 +233,7 @@ export default {
     },
     methods: {
         getCurrentUnit() {
-			if (this.$store.state.currentRole === 'admin_operating_unit') {
+			if (this.$store.state.currentRole === 'admin_unit') {
 				let activeAdminUnit = this.$store.state.activeAdminUnit
 				if (activeAdminUnit != null) {
 					this.selectedUnit = {

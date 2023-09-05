@@ -12,7 +12,7 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-2">
-                                    <button class="btn btn-warning" type="button" @click="$router.push('/attendance/create-backup')">
+                                    <button v-if="this.$store.state.permissions?.includes('backup-request-create')" class="btn btn-warning" type="button" @click="$router.push('/attendance/create-backup')">
                                         <i class="fa fa-recycle" /> &nbsp; Assign Backup
                                     </button>
                                 </div>
@@ -241,10 +241,16 @@ export default {
         },
         viewDetailsFormatter(cell, formatterParams, onRendered) {
             const rowData = cell.getRow().getData();
-            return `
-                <button class="button-icon button-success" data-action="view" data-row-id="${rowData.id}"><i data-action="view" class="fa fa-eye"></i> </button>
-                <button class="button-icon button-danger" data-action="delete" data-row-id="${rowData.id}"><i data-action="delete" class="fa fa-trash"></i> </button>
-             `;
+            if (this.$store.state.permissions?.includes('backup-request-delete')) {
+                return `
+                    <button class="button-icon button-success" data-action="view" data-row-id="${rowData.id}"><i data-action="view" class="fa fa-eye"></i> </button>
+                    <button class="button-icon button-danger" data-action="delete" data-row-id="${rowData.id}"><i data-action="delete" class="fa fa-trash"></i> </button>
+                 `;
+            } else {
+                return `
+                    <button class="button-icon button-success" data-action="view" data-row-id="${rowData.id}"><i data-action="view" class="fa fa-eye"></i> </button>
+                 `;
+            }
         },
         handleActionButtonClick(e, cell) {
             const action = e.target.dataset.action

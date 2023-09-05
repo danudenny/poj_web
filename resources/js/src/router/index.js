@@ -1015,7 +1015,7 @@ const routes =[
                 meta: {
                     title: 'POJ - Create Timesheet Reporting',
                     requiresAuth: true,
-                    permission: 'timesheet-reporting-read',
+                    permission: 'timesheet-reporting-create',
                 },
             },
         ]

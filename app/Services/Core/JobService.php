@@ -453,7 +453,7 @@ class JobService extends BaseService
         $query->select(['jobs.*']);
         $query->groupBy('jobs.id');
 
-        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator) || $this->isRequestedRoleLevel(Role::RoleAdminUnit) || $this->isRequestedRoleLevel(Role::RoleAdmin)) {
 
         } else {
             if (!$unitRelationIDTopBottom && !$odooJobIDTopBottom) {

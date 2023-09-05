@@ -53,7 +53,6 @@ class UnitHasJobService extends BaseService
                         )
                     );
                 $jobs = DB::table(DB::raw("({$subQuery->toSql()}) as d"))->select('*')->mergeBindings($subQuery->getQuery());
-                dd($jobs->toSql());
 
                 $query->orderBy('units.unit_level', 'ASC');
             }

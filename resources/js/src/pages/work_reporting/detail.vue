@@ -61,6 +61,8 @@
 </template>
 
 <script>
+import moment from "moment/moment";
+
 export default {
     data() {
         return {
@@ -79,6 +81,7 @@ export default {
                 .then(response => {
                     this.loading = false;
                     this.workReporting = response.data.data;
+                    this.workReporting.created_at_client_timezone = moment(this.workReporting.created_at_client_timezone).format('DD MMMM YYYY')
                 })
                 .catch(error => {
                     console.error(error);
