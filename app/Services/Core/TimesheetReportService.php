@@ -104,10 +104,10 @@ class TimesheetReportService extends BaseService
                     $detail->odoo_payslip_id = $payslipID[0];
                     $detail->status = TimesheetReportDetail::StatusSuccess;
                 } else if (count($payslipID) > 1)  {
-                    $detail->response_message = "Employee has more than one payslip on ERP, please delete one Payslip on ERP";
+                    $detail->response_message = "Employee has more than one payslip on this period, please delete another Payslip on ERP";
                     $detail->status = TimesheetReportDetail::StatusFailed;
                 } else {
-                    $detail->response_message = "Employee don't have payslip, please create payslip on ERP";
+                    $detail->response_message = "Employee don't have payslip on this period, please create payslip on ERP";
                     $detail->status = TimesheetReportDetail::StatusFailed;
                 }
 
@@ -470,10 +470,7 @@ class TimesheetReportService extends BaseService
     }
 
     private function totalBackup(Employee $employee, string $start_date, string $end_date) {
-        /**
-         * @var BackupEmployeeTime[] $backupEmployees
-         */
-        $backupEmployees = BackupEmployeeTime::query()
+        return BackupEmployeeTime::query()
             ->join('backup_times', 'backup_times.id', '=', 'backup_employee_times.backup_time_id')
             ->join('backups', 'backup_times.backup_id', '=', 'backups.id')
             ->where('backups.status', '!=', Backup::StatusRejected)
@@ -485,22 +482,7 @@ class TimesheetReportService extends BaseService
                     ->whereRaw(DB::raw("(backup_times.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'"));
             })
             ->select(['backup_employee_times.*'])
-            ->get();
-
-        $totalHours = 0;
-        foreach ($backupEmployees as $backupEmployee) {
-            $startTime = Carbon::parse($backupEmployee->backupTime->start_time);
-            $endTime = Carbon::parse($backupEmployee->backupTime->end_time);
-
-            $parsedTotal = $endTime->diff($startTime);
-
-            $totalHours += $parsedTotal->h;
-            if ($parsedTotal->i >= 45) {
-                $totalHours += 1;
-            }
-        }
-
-        return $totalHours;
+            ->count();
     }
 
     private function totalOvertime(Employee $employee, string $start_date, string $end_date) {

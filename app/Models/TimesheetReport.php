@@ -36,7 +36,10 @@ class TimesheetReport extends Model
 
     protected $appends = [
         'last_sync_with_client_timezone',
-        'last_sent_with_client_timezone'
+        'last_sent_with_client_timezone',
+        'total_success',
+        'total_failed',
+        'total_pending'
     ];
 
     public function getLastSyncWithClientTimezoneAttribute() {
@@ -53,6 +56,18 @@ class TimesheetReport extends Model
         }
 
          return null;
+    }
+
+    public function getTotalSuccessAttribute() {
+        return $this->timesheetReportDetails()->where('status', '=', TimesheetReportDetail::StatusSuccess)->count();
+    }
+
+    public function getTotalFailedAttribute() {
+        return $this->timesheetReportDetails()->where('status', '=', TimesheetReportDetail::StatusFailed)->count();
+    }
+
+    public function getTotalPendingAttribute() {
+        return $this->timesheetReportDetails()->where('status', '=', TimesheetReportDetail::StatusPending)->count();
     }
 
     public function unit() {

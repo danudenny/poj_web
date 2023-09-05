@@ -155,19 +155,43 @@ export default {
                     },
                     {
                         title: 'Status',
-                        field: 'status',
                         headerHozAlign: 'center',
-                        hozAlign: 'center',
                         headerSort: false,
-                        formatter: function (cell) {
-                            let value = cell.getValue()
-
-                            if (value === 'pending') {
-                                return `<span class="badge badge-warning">Pending</span>`
-                            } else {
-                                return `<span class="badge badge-success">Synced to ERP</span>`
+                        columns: [
+                            {
+                                title: 'Pending',
+                                field: 'total_pending',
+                                hozAlign: 'center',
+                                headerHozAlign: 'center',
+                                headerSort: false,
+                                formatter: function(cell) {
+                                    let value = cell.getValue()
+                                    return `<span class="badge badge-warning">${value}</span>`
+                                }
+                            },
+                            {
+                                title: 'Success',
+                                field: 'total_success',
+                                hozAlign: 'center',
+                                headerHozAlign: 'center',
+                                headerSort: false,
+                                formatter: function(cell) {
+                                    let value = cell.getValue()
+                                    return `<span class="badge badge-success">${value}</span>`
+                                }
+                            },
+                            {
+                                title: 'Failed',
+                                field: 'total_failed',
+                                hozAlign: 'center',
+                                headerHozAlign: 'center',
+                                headerSort: false,
+                                formatter: function(cell) {
+                                    let value = cell.getValue()
+                                    return `<span class="badge badge-danger">${value}</span>`
+                                }
                             }
-                        }
+                        ]
                     },
                     {
                         title: 'Period',

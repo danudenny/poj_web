@@ -486,9 +486,9 @@ export default {
                             let value = cell.getValue()
 
                             if (value > 0) {
-                                return `<span class="badge badge-success">${value} Jam</span>`
+                                return `<span class="badge badge-success">${value} Hari</span>`
                             } else {
-                                return `<span class="badge badge-warning">${value} Jam</span>`
+                                return `<span class="badge badge-warning">${value} Hari</span>`
                             }
                         }
                     },
