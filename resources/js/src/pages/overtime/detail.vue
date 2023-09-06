@@ -39,19 +39,23 @@
                         </div>
                         <div class="col-md-6">
                             <div class="row" v-for="(item, index) in overtime.overtime_dates" :key="index">
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="mt-2">
                                         <label for="name">Waktu Mulai</label>
                                         <input type="datetime-local" class="form-control" v-model="item.start_time_with_timezone" disabled required>
                                     </div>
+	                                <div class="mt-2">
+		                                <label for="name">Waktu Selesai</label>
+		                                <input type="datetime-local" class="form-control" v-model="item.end_time_with_timezone" disabled required>
+	                                </div>
                                 </div>
                                 <div class="col-md-4">
-                                    <div class="mt-2">
-                                        <label for="name">Waktu Selesai</label>
-                                        <input type="datetime-local" class="form-control" v-model="item.end_time_with_timezone" disabled required>
-                                    </div>
+	                                <div class="mt-2">
+		                                <label for="name">Total Approved</label>
+		                                <input type="text" class="form-control" v-model="item.total_overtime" disabled required>
+	                                </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-2">
                                     <div class="mt-4">
                                         <div
                                             :class="'btn btn-primary mt-3'"
@@ -59,7 +63,7 @@
                                             data-bs-target="#detailOvertimeDate"
                                             @click="onSelectOvertimeDate(item)"
                                         >
-                                            Daftar Karyawan
+                                            Attendee
                                         </div>
                                     </div>
                                 </div>

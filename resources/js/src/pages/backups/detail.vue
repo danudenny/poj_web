@@ -48,17 +48,15 @@
                         </div>
                         <div class="col-md-6">
                             <div class="row" v-for="(item, index) in backup.backup_times" :key="index">
-                                <div class="col-md-4">
+                                <div class="col-md-8">
                                     <div class="mt-2">
                                         <label for="name">Waktu Mulai</label>
                                         <input type="text" class="form-control" v-model="item.start_time_with_timezone" disabled required>
                                     </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="mt-2">
-                                        <label for="name">Waktu Selesai</label>
-                                        <input type="text" class="form-control" v-model="item.end_time_with_timezone" disabled required>
-                                    </div>
+	                                <div class="mt-2">
+		                                <label for="name">Waktu Selesai</label>
+		                                <input type="text" class="form-control" v-model="item.end_time_with_timezone" disabled required>
+	                                </div>
                                 </div>
                                 <div class="col-md-4">
                                     <div class="mt-4">
