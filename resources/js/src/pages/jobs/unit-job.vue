@@ -190,7 +190,7 @@ export default {
                 return
             }
 
-            this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.unitPagination.pageSize}&page=${this.unitPagination.currentPage}&name=${this.unitPagination.name}&unit_relation_id_structured=${this.selectedAssignedJob.unit.relation_id}`)
+            this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.unitPagination.pageSize}&page=${this.unitPagination.currentPage}&name=${this.unitPagination.name}`)
                 .then(response => {
                     this.units = response.data.data.data
                     this.unitPagination.onSearch = false
