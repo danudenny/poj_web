@@ -594,12 +594,6 @@ export default {
             return (dateSelected.isSameOrAfter(today)) && this.$store.state.permissions?.includes('timesheet-update')
         },
         onTriggerAdd(day, timesheet) {
-            let dateSelected = moment(this.selectedMonth.year + "-" + ("0" + (this.selectedMonth.month + 1)).slice(-2) + '-' + day)
-            if (dateSelected.isBefore(moment.today)) {
-                useToast().error("Cannot add schedule before than today!");
-                return
-            }
-
             this.payloadCreateTimesheet.date = dateSelected.format('YYYY-MM-DD')
             this.selectedEmployeeTimesheet = timesheet
         },
