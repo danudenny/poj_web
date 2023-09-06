@@ -322,7 +322,7 @@ export default {
                 unit_relation_id_restructured: this.approval.unit_relation_id
             }
 
-            this.$axios.get(`/api/v1/admin/unit/paginated?unit_level=${unitFilter.unit_level}&unit_relation_id_structured=${unitFilter.unit_relation_id_restructured}`)
+            this.$axios.get(`/api/v1/admin/unit/paginated?unit_level=${unitFilter.unit_level}`)
                 .then(response => {
                     this.approval.approvers[index].units = response.data.data
                     this.approval.approvers[index].jobs = []
