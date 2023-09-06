@@ -220,8 +220,7 @@ class AttendanceCorrectionService extends BaseService
              * @var EmployeeAttendance $employeeAttendance
              */
             $employeeAttendance = EmployeeAttendance::query()
-                ->where('id', '=', $request->input('employee_attendance_id'))
-                ->where('employee_id', '=', $data['employee_attendance_id'])
+                ->where('id', '=', $data['employee_attendance_id'])
                 ->first();
             if (!$employeeAttendance) {
                 $checkInTime = Carbon::parse($data['correction_date'] . " " . $data['check_in_time'], $data['timezone'])->setTimezone('UTC');
@@ -242,14 +241,14 @@ class AttendanceCorrectionService extends BaseService
                 $employeeAttendance->checkout_long = $data['longitude'];
                 $employeeAttendance->check_in_tz = $data['timezone'];
                 $employeeAttendance->check_out_tz = $data['timezone'];
-                $employeeAttendance->is_need_approval = true;
                 $employeeAttendance->attendance_types = $data['reference_type'];
                 $employeeAttendance->checkin_real_radius = 0;
-                $employeeAttendance->approved = false;
                 $employeeAttendance->is_late = false;
                 $employeeAttendance->late_duration = 0;
             }
 
+            $employeeAttendance->is_need_approval = true;
+            $employeeAttendance->approved = false;
             $employeeAttendance->notes = "waiting_attendance_correction";
             $employeeAttendance->save();
 

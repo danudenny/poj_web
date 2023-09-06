@@ -93,16 +93,16 @@
                                         </div>
                                     </div>
                                     <div class="row">
+	                                    <div class="col-md-6">
+		                                    <div class="mt-2">
+			                                    <label for="name">Late Checkin (in minutes)</label>
+			                                    <input type="text" class="form-control" v-model="attendance.late_duration" disabled>
+		                                    </div>
+	                                    </div>
                                         <div class="col-md-6">
                                             <div class="mt-2">
-                                                <label for="name">Early Duration (in minutes)</label>
-                                                <input type="text" class="form-control" v-model="attendance.early_duration" disabled>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="mt-2">
-                                                <label for="name">Late Duration (in minutes)</label>
-                                                <input type="text" class="form-control" v-model="attendance.late_duration" disabled>
+                                                <label for="name">Early Checkout (in minutes)</label>
+                                                <input type="text" class="form-control" v-model="attendance.early_check_out" disabled>
                                             </div>
                                         </div>
                                     </div>
@@ -236,6 +236,7 @@ export default {
                 approved: false,
                 late_duration: "0",
                 early_duration: null,
+	            early_check_out: null,
                 check_in_tz: null,
                 check_out_tz: null,
                 is_on_time: null,
