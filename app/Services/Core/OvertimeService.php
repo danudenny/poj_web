@@ -61,10 +61,6 @@ class OvertimeService extends ScheduleService
         $overtimes->join('employees', 'employees.id', '=', 'overtime_employees.employee_id');
         $overtimes->join('employees AS reqEmployee', 'reqEmployee.id', '=', 'overtimes.requestor_employee_id');
 
-        $overtimes->when($request->filled('status'), function (Builder $builder) use ($request) {
-            $builder->where('overtimes.last_status', '=', $request->input('status'));
-        });
-
         if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
 
         } else if ($this->isRequestedRoleLevel(Role::RoleAdminUnit)) {
