@@ -831,6 +831,7 @@ class EmployeeTimesheetService extends ScheduleService {
             $query->where('employees.job_id', '=', $employeeJobID);
         }
 
+        $query->orderBy('employees.name', 'ASC');
         return $query->paginate(10);
     }
 
