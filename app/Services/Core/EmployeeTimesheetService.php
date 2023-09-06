@@ -867,8 +867,8 @@ class EmployeeTimesheetService extends ScheduleService {
                 $transformedData[$employeeName] = [
                     'no' => ($startRowNumber + $rowNumber) + 1,
                     'employee_name' => $employeeName,
-                    'unit' => $employee->unit->name,
-                    'job' => $employee->job->name,
+                    'unit' => $employee->unit->name ?? '-',
+                    'job' => $employee->job?->name ?? '-',
                     'employee_id' => $employee->id,
                     'total_hours' => 0
                 ];

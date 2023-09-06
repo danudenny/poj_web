@@ -675,6 +675,10 @@ export default {
                         name: activeAdminUnit.name.replace(" (Default)", "")
                     }
                 }
+            } else {
+	            let currUser = JSON.parse(localStorage.getItem("USER_STORAGE_KEY"))
+	            this.selectedUnit = currUser.last_units
+	            this.unitPagination.name = this.selectedUnit.name
             }
 
             this.fetchTimesheetData()
