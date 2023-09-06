@@ -144,7 +144,22 @@
                                         <td>{{ timesheet.unit }}</td>
                                         <td>{{ timesheet.job }}</td>
                                         <td v-for="day in dateRanges" :class="headerAbbrvs[day - 1].public_holiday ? 'background-public-holiday' : ''">
-                                            <span v-if="timesheet[day] === null" class="text-danger"><i class="fa fa-times"></i></span>
+                                            <div class="empty-schedule-section" v-if="timesheet[day] === null">
+                                                <span class="text-danger info-button"><i class="fa fa-times"></i></span>
+                                                <div class="action-button">
+                                                    <button
+                                                        class="button-icon button-success"
+                                                        v-if="isAllowToAdd(day)"
+                                                        @click="() => {
+                                                            onTriggerAdd(day, timesheet)
+                                                        }"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#createTimesheet"
+                                                    >
+                                                        <i data-action="view" class="fa fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
                                             <div class="schedule-section" v-else>
                                                 <span :class="'badge badge-' + timesheet[day].color">{{ timesheet[day].time }}</span>
                                                 <br/>
@@ -172,16 +187,73 @@
             </div>
         </div>
 
+        <div class="modal fade" id="createTimesheet" ref="createTimesheet" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
+            <VerticalModal title="Create Timesheet" @save="onCreate()">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="mt-2">
+                            <label for="date">Employee Name</label>
+                            <input type="date" name="date" id="date" class="form-control" v-model="this.payloadCreateTimesheet.date" required disabled>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="mt-2">
+                            <label for="name">Employee Name</label>
+                            <input type="text" name="name" id="name" class="form-control" v-model="selectedEmployeeTimesheet.employee_name" required disabled>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <label>Target Unit Level:</label>
+                        <multiselect
+                                v-model="selectedLevel"
+                                placeholder="Select Target Unit Level"
+                                label="name"
+                                track-by="name"
+                                :options="unitLevels"
+                                :multiple="false"
+                                @select="onSelectUnitLevel"
+                        >
+                        </multiselect>
+                    </div>
+                    <div class="col-md-12">
+                        <label>Target Unit :</label>
+                        <multiselect
+                                v-model="selectedUnitTarget"
+                                placeholder="Select Target Unit"
+                                label="name"
+                                track-by="name"
+                                :options="unitTargets"
+                                :multiple="false"
+                                @select="onSelectedUnitTarget"
+                                @search-change="onSearchNameUnitTarget"
+                        >
+                        </multiselect>
+                    </div>
+                    <div class="col-md-12">
+                        <label>Timesheet :</label>
+                        <select v-model="timesheet_id" class="form-control" >
+                            <option value="null">Select Timesheet</option>
+                            <option :value="item.id" v-for="item in timesheets">{{item.name}}
+                                ( {{item.start_time}} - {{item.end_time || 'Non Shift'}} )
+                            </option>
+                        </select>
+                    </div>
+                </div>
+            </VerticalModal>
+        </div>
     </div>
 </template>
 
 <script>
 import {useToast} from "vue-toastification";
 import Datepicker from '@vuepic/vue-datepicker';
+import VerticalModal from "@components/modal/verticalModal.vue";
+import moment from "moment/moment";
 
 export default {
     components: {
-        Datepicker
+        Datepicker,
+        VerticalModal
     },
     data() {
         return {
@@ -196,6 +268,10 @@ export default {
             timesheetPage: 1,
             isEmployeeUnitSpecific: true,
             units: [],
+            selectedEmployeeTimesheet: {
+                employee_id: null,
+                employee_name: null
+            },
             unitPagination: {
                 name: '',
                 pageSize: 50,
@@ -220,12 +296,45 @@ export default {
             shiftType: "",
             employeeName: "",
             isOnSearch: true,
-            showFilter: true
+            showFilter: true,
+            selectedLevel: null,
+            unitLevels: [
+                {
+                    name: 'Kanwil',
+                    value: 4
+                },
+                {
+                    name: 'Area',
+                    value: 5
+                },
+                {
+                    name: 'Cabang',
+                    value: 6
+                },
+                {
+                    name: 'Outlet',
+                    value: 7
+                },
+            ],
+            selectedUnitTarget: null,
+            unitTargets: [],
+            targetUnitPagination: {
+                limit: 20,
+                name: '',
+                isOnSearch:false
+            },
+            timesheet_id: null,
+            timesheets: [],
+            payloadCreateTimesheet: {
+                employee_ids: [],
+                date: null,
+                timesheet_id: null
+            }
         }
     },
     async mounted() {
-        this.fetchTimesheetData();
         this.getCurrentUnit()
+        this.fetchTimesheetData();
         this.getUnitsData()
         this.getWorkingUnitsData()
         this.getJobsData()
@@ -234,16 +343,19 @@ export default {
     },
     methods: {
         getCurrentUnit() {
-			if (this.$store.state.currentRole === 'admin_unit') {
-				let activeAdminUnit = this.$store.state.activeAdminUnit
-				if (activeAdminUnit != null) {
-					this.selectedUnit = {
-						relation_id: activeAdminUnit.unit_relation_id,
-						name: activeAdminUnit.name.replace(" (Default)", "")
-					}
-					return
-				}
-			}
+          if (this.$store.state.currentRole === 'admin_unit') {
+            let activeAdminUnit = this.$store.state.activeAdminUnit
+            if (activeAdminUnit != null) {
+              this.selectedUnit = {
+                relation_id: activeAdminUnit.unit_relation_id,
+                name: activeAdminUnit.name.replace(" (Default)", "")
+              }
+            }
+          } else {
+              let currUser = JSON.parse(localStorage.getItem("USER_STORAGE_KEY"))
+              this.selectedUnit = currUser.last_units
+              this.unitPagination.name = this.selectedUnit.name
+          }
         },
         dateRange() {
             const lastDayOfMonth = new Date(this.selectedMonth.year, this.selectedMonth.month + 1, 0).getDate();
@@ -362,6 +474,31 @@ export default {
                     console.error(error);
                 });
         },
+        async getUnitTargets() {
+            if (this.selectedLevel === null) {
+                return
+            }
+
+            await this.$axios.get(`api/v1/admin/unit/paginated?unit_level=${this.selectedLevel.value}&per_page=${this.targetUnitPagination.limit}&name=${this.targetUnitPagination.name}`)
+                .then(response => {
+                    this.unitTargets = response.data.data.data;
+                    this.targetUnitPagination.isOnSearch = false
+                }).catch(error => {
+                    console.error(error);
+                });
+        },
+        async getTimesheet(id) {
+            try {
+                await this.$axios.get(`api/v1/admin/employee-timesheet/${id}`)
+                    .then(response => {
+                        this.timesheets = response.data.data.data;
+                    }).catch(error => {
+                        console.error(error);
+                    });
+            } catch (error) {
+                console.log(error);
+            }
+        },
         onDeleteEmployeeTimesheet:function(id){
             this.$swal({
                 icon: 'warning',
@@ -448,6 +585,77 @@ export default {
         },
         onSelectOperatingUnit() {
             this.fetchTimesheetData()
+        },
+        isAllowToAdd(day) {
+            let dateSelected = moment(this.selectedMonth.year + "-" + ("0" + (this.selectedMonth.month + 1)).slice(-2) + '-' + day)
+            return !(dateSelected.isBefore(moment.today)) && this.$store.state.permissions?.includes('timesheet-update')
+        },
+        onTriggerAdd(day, timesheet) {
+            let dateSelected = moment(this.selectedMonth.year + "-" + ("0" + (this.selectedMonth.month + 1)).slice(-2) + '-' + day)
+            if (dateSelected.isBefore(moment.today)) {
+                useToast().error("Cannot add schedule before than today!");
+                return
+            }
+
+            this.payloadCreateTimesheet.date = dateSelected.format('YYYY-MM-DD')
+            this.selectedEmployeeTimesheet = timesheet
+        },
+        onCreate() {
+            if (this.selectedEmployeeTimesheet === null) {
+                return
+            }
+
+            let payload = {
+                employee_ids: [this.selectedEmployeeTimesheet.employee_id],
+                date_format: this.payloadCreateTimesheet.date,
+                timesheet_id: this.timesheet_id,
+                date: moment(this.payloadCreateTimesheet.date).format('DD')
+            }
+
+            this.$swal({
+                icon: 'warning',
+                title:"Do you want to add schedule to this employee?",
+                text:'Please check the data before submit!',
+                showCancelButton: true,
+                confirmButtonText: 'Yes!',
+                confirmButtonColor: '#126850',
+                cancelButtonText: 'Cancel',
+                cancelButtonColor: '#efefef',
+            }).then((result)=>{
+                if(result.value){
+                    console.log(payload)
+
+                    this.$axios.post(`/api/v1/admin/employee-timesheet/assign-schedule`, payload).then(response => {
+                        useToast().success(response.data.message , { position: 'bottom-right' });
+                        this.fetchTimesheetData()
+                        this.selectedLevel = null
+                        this.selectedUnitTarget = null
+                        this.unitTargets = []
+                        this.timesheet_id = null
+                        this.timesheets = []
+                    }).catch(error => {
+                        useToast().error(error.response.data.message , { position: 'bottom-right' });
+                    });
+                }
+            });
+        },
+        onSelectUnitLevel() {
+            this.selectedUnitTarget = null
+            this.unitTargets = []
+            this.getUnitTargets()
+        },
+        onSelectedUnitTarget() {
+            this.getTimesheet(this.selectedUnitTarget.id)
+        },
+        onSearchNameUnitTarget(val) {
+            this.targetUnitPagination.name = val
+
+            if (!this.targetUnitPagination.isOnSearch) {
+                this.targetUnitPagination.isOnSearch = true
+                setTimeout(() => {
+                    this.getUnitTargets()
+                }, 1000)
+            }
         },
         resetFilter() {
             this.selectedUnit = null;
@@ -571,6 +779,18 @@ table {
     position: sticky;
     left: 0;
     z-index: 0;
+}
+
+.empty-schedule-section {
+
+}
+
+.empty-schedule-section:hover .action-button {
+    display: block;
+}
+
+.empty-schedule-section:hover .info-button {
+    display: none;
 }
 
 .background-public-holiday {

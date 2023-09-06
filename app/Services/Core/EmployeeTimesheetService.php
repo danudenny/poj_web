@@ -289,7 +289,17 @@ class EmployeeTimesheetService extends ScheduleService {
         /**
          * @var Period $periodsExists
          */
-        $periodsExists = Period::where('id', $request->period_id)->first();
+        $periodsExists = null;
+        if ($request->period_id) {
+            $periodsExists = Period::where('id', $request->period_id)->first();
+        } else {
+            $parsedDate = Carbon::parse($request->date_format);
+            $periodsExists = Period::query()
+                ->where('year', '=', $parsedDate->year)
+                ->where('month', '=', $parsedDate->month)
+                ->first();
+        }
+
         if (!$periodsExists) {
             return response()->json([
                 'status' => 'error',
@@ -297,7 +307,6 @@ class EmployeeTimesheetService extends ScheduleService {
                 'data' => ''
             ], 404);
         }
-
 
         $parsedStartTime = '';
         $parsedEndTime = '';
@@ -350,7 +359,7 @@ class EmployeeTimesheetService extends ScheduleService {
                     $schedule = new EmployeeTimesheetSchedule();
                     $schedule->employee_id = $employeeId;
                     $schedule->timesheet_id = $request->timesheet_id;
-                    $schedule->period_id = $request->period_id;
+                    $schedule->period_id = $periodsExists->id;
                     $schedule->date = $request->date;
                     $schedule->start_time = $parsedUTCStartTime;
                     $schedule->end_time = $parsedUTCEndTime;
@@ -395,7 +404,7 @@ class EmployeeTimesheetService extends ScheduleService {
                                 $schedule = new EmployeeTimesheetSchedule();
                                 $schedule->employee_id = $employeeId;
                                 $schedule->timesheet_id = $request->timesheet_id;
-                                $schedule->period_id = $request->period_id;
+                                $schedule->period_id = $periodsExists->id;
                                 $schedule->date = $currentDate->format('d');
                                 $schedule->start_time = $parsedStartTime;
                                 $schedule->end_time = $parsedEndTime;
@@ -859,6 +868,7 @@ class EmployeeTimesheetService extends ScheduleService {
                     'employee_name' => $employeeName,
                     'unit' => $employee->unit->name,
                     'job' => $employee->job->name,
+                    'employee_id' => $employee->id,
                     'total_hours' => 0
                 ];
 
