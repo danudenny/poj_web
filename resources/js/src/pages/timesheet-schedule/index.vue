@@ -587,8 +587,11 @@ export default {
             this.fetchTimesheetData()
         },
         isAllowToAdd(day) {
+	        let d = new Date();
+	        let today = moment(d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + (d.getDate())).slice(-2))
             let dateSelected = moment(this.selectedMonth.year + "-" + ("0" + (this.selectedMonth.month + 1)).slice(-2) + '-' + day)
-            return !(dateSelected.isBefore(moment.today)) && this.$store.state.permissions?.includes('timesheet-update')
+
+            return (dateSelected.isSameOrAfter(today)) && this.$store.state.permissions?.includes('timesheet-update')
         },
         onTriggerAdd(day, timesheet) {
             let dateSelected = moment(this.selectedMonth.year + "-" + ("0" + (this.selectedMonth.month + 1)).slice(-2) + '-' + day)
