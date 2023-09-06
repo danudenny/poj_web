@@ -742,34 +742,14 @@ class EmployeeTimesheetService extends ScheduleService {
         }
     }
 
-    public function indexSchedule(Request $request): JsonResponse
-    {
-        $now = Carbon::now();
-        $currTime = Carbon::today();
-
-        if ($clientTimezone = $this->getClientTimezone()) {
-            $now->setTimezone($clientTimezone);
-            $currTime = Carbon::now($clientTimezone)->setHour(0)->setMinute(0)->setSecond(0);
-        }
-
+    private function getEmployee(Request $request) {
         /**
          * @var User $user
          */
         $user = $request->user();
+        $query = Employee::query();
 
         $unitRelationID = $request->get('unit_relation_id');
-        $monthlyYear = $request->query('monthly_year');
-
-        $query = EmployeeTimesheetSchedule::with([
-                'employee',
-                'timesheet',
-                'period',
-                'timesheet.timesheetDays'
-            ])
-            ->select(['employee_timesheet_schedules.*'])
-            ->groupBy('employees.id', 'employee_timesheet_schedules.id', 'employee_timesheet.id')
-            ->join('employees', 'employees.id', '=', 'employee_timesheet_schedules.employee_id')
-            ->join('employee_timesheet', 'employee_timesheet.id', '=', 'employee_timesheet_schedules.timesheet_id');
 
         if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
 
@@ -783,7 +763,6 @@ class EmployeeTimesheetService extends ScheduleService {
 
                 $unitRelationID = $defaultUnitRelationID;
             }
-
         } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
             $query->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
             $query->where(function (Builder $builder) use ($user) {
@@ -836,6 +815,69 @@ class EmployeeTimesheetService extends ScheduleService {
             }
         }
 
+        if ($employeeName = $request->query('employee_name')) {
+            $query->whereRaw("employees.name ILIKE '%{$employeeName}%'");
+        }
+        if ($employeeJobID = $request->query('employee_job_id')) {
+            $query->where('employees.job_id', '=', $employeeJobID);
+        }
+
+        return $query->paginate(10);
+    }
+
+    public function indexSchedule(Request $request): JsonResponse
+    {
+        $now = Carbon::now();
+        $currTime = Carbon::today();
+
+        if ($clientTimezone = $this->getClientTimezone()) {
+            $now->setTimezone($clientTimezone);
+            $currTime = Carbon::now($clientTimezone)->setHour(0)->setMinute(0)->setSecond(0);
+        }
+
+        $monthlyYear = $request->query('monthly_year');
+        if ($monthlyYear) {
+            $now = Carbon::parse(sprintf("%s-01", $monthlyYear));
+        }
+
+        /**
+         * @var Employee[] $employees
+         */
+        $employees = $this->getEmployee($request)->items();
+        $employeeIDs = [];
+        $transformedData = [];
+        $daysOfMonth = range(1, $now->daysInMonth);
+        $startRowNumber = ($request->get('page') * 10) - 10;
+
+        foreach ($employees as $rowNumber => $employee) {
+            $employeeIDs[] = $employee->id;
+            $employeeName = $employee->name;
+
+            if (!isset($transformedData[$employeeName])) {
+                $transformedData[$employeeName] = [
+                    'no' => ($startRowNumber + $rowNumber) + 1,
+                    'employee_name' => $employeeName,
+                    'unit' => $employee->unit->name,
+                    'job' => $employee->job->name,
+                    'total_hours' => 0
+                ];
+
+                foreach ($daysOfMonth as $day) {
+                    $transformedData[$employeeName][$day] = null;
+                }
+            }
+        }
+
+        $query = EmployeeTimesheetSchedule::with([
+                'timesheet',
+                'period',
+                'timesheet.timesheetDays'
+            ])
+            ->select(['employee_timesheet_schedules.*'])
+            ->groupBy('employee_timesheet_schedules.id', 'employee_timesheet.id')
+            ->join('employee_timesheet', 'employee_timesheet.id', '=', 'employee_timesheet_schedules.timesheet_id');
+        $query->whereIn('employee_timesheet_schedules.employee_id', $employeeIDs);
+
         if ($workingUnit = $request->get('working_unit_relation_id')) {
             $isSpecific = $request->get('is_specific_working_unit');
             if ($isSpecific == '1') {
@@ -859,25 +901,16 @@ class EmployeeTimesheetService extends ScheduleService {
         }
 
         if ($monthlyYear) {
-            $now = Carbon::parse(sprintf("%s-01", $monthlyYear));
             $query->whereRaw("TO_CHAR(employee_timesheet_schedules.start_time::DATE, 'YYYY-mm')::TEXT = '${monthlyYear}'");
         }
         if ($shiftType = $request->query('shift_type')) {
             $query->where('employee_timesheet.shift_type', '=', $shiftType);
-        }
-        if ($employeeName = $request->query('employee_name')) {
-            $query->whereRaw("employees.name ILIKE '%{$employeeName}%'");
-        }
-        if ($employeeJobID = $request->query('employee_job_id')) {
-            $query->where('employees.job_id', '=', $employeeJobID);
         }
 
         /**
          * @var EmployeeTimesheetSchedule[] $timesheetAssignments
          */
         $timesheetAssignments = $query->get();
-
-        $daysOfMonth = range(1, $now->daysInMonth);
 
         $queryPublicHoliday = PublicHoliday::query();
         if ($monthlyYear) {
@@ -889,7 +922,6 @@ class EmployeeTimesheetService extends ScheduleService {
          */
         $publicHolidays = $queryPublicHoliday->get();
 
-        $transformedData = [];
         $holidaysDateList = [];
         $rowNumber = 1;
 
@@ -901,19 +933,6 @@ class EmployeeTimesheetService extends ScheduleService {
         foreach ($timesheetAssignments as $assignment) {
             $employeeName = $assignment->employee->name;
             $date = $assignment->date;
-
-            if (!isset($transformedData[$employeeName])) {
-                $transformedData[$employeeName] = [
-                    'no' => $rowNumber,
-                    'employee_name' => $employeeName,
-                    'unit' => $assignment->employee->last_unit->name,
-                    'job' => $assignment->employee->job->name,
-                ];
-
-                foreach ($daysOfMonth as $day) {
-                    $transformedData[$employeeName][$day] = null;
-                }
-            }
 
             $dailyEntries = $transformedData[$employeeName];
 

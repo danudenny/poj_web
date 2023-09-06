@@ -193,6 +193,7 @@ export default {
             daysOfMonth: [],
             timesheetSplit: '',
             selectedUnit: null,
+            timesheetPage: 1,
             isEmployeeUnitSpecific: true,
             units: [],
             unitPagination: {
@@ -223,7 +224,7 @@ export default {
         }
     },
     async mounted() {
-        await this.fetchTimesheetData();
+        this.fetchTimesheetData();
         this.getCurrentUnit()
         this.getUnitsData()
         this.getWorkingUnitsData()
@@ -248,14 +249,21 @@ export default {
             const lastDayOfMonth = new Date(this.selectedMonth.year, this.selectedMonth.month + 1, 0).getDate();
             this.dateRanges = Array.from({ length: lastDayOfMonth }, (_, index) => (index + 1).toString());
         },
-        async fetchTimesheetData() {
+        fetchTimesheetData() {
             if (this.selectedMonth === null) {
                 useToast().error("Need to select month - year", { position: 'bottom-right' })
                 return
             }
 
             this.isOnSearch = true
+            this.timesheetData = [];
+            this.headers = [];
+            this.headerAbbrvs = [];
+            this.timesheetPage = 1;
+            this.processFetchingData()
 
+        },
+        processFetchingData() {
             try {
                 let localFilter = {
                     unit_relation_id: this.selectedUnit?.relation_id ?? '',
@@ -266,20 +274,30 @@ export default {
                     is_specific_unit_relation_id: this.isEmployeeUnitSpecific ? 1 : 0,
                     working_unit_relation_id: this.selectedWorkingUnit?.relation_id ?? '',
                     is_specific_working_unit_relation_id: this.isWorkingUnitSpecific ? 1 : 0,
-                    default_operating_unit_id: this.selectedOperatingUnit?.relation_id ?? ''
+                    default_operating_unit_id: this.selectedOperatingUnit?.relation_id ?? '',
+                    page: this.timesheetPage
                 }
-                await this.$axios.get(`/api/v1/admin/timesheet-schedule/schedules?default_operating_unit_id=${localFilter.default_operating_unit_id}&working_unit_relation_id=${localFilter.working_unit_relation_id}&is_specific_working_unit=${localFilter.is_specific_working_unit_relation_id}&unit_relation_id=${localFilter.unit_relation_id}&is_specific_unit_relation_id=${localFilter.is_specific_unit_relation_id}&monthly_year=${localFilter.monthly_year}&shift_type=${localFilter.shift_type}&employee_name=${localFilter.employee_name}&employee_job_id=${localFilter.odoo_job_id}`,
+                this.$axios.get(`/api/v1/admin/timesheet-schedule/schedules?page=${localFilter.page}&default_operating_unit_id=${localFilter.default_operating_unit_id}&working_unit_relation_id=${localFilter.working_unit_relation_id}&is_specific_working_unit=${localFilter.is_specific_working_unit_relation_id}&unit_relation_id=${localFilter.unit_relation_id}&is_specific_unit_relation_id=${localFilter.is_specific_unit_relation_id}&monthly_year=${localFilter.monthly_year}&shift_type=${localFilter.shift_type}&employee_name=${localFilter.employee_name}&employee_job_id=${localFilter.odoo_job_id}`,
                     {
                         headers: {
                             'X-Client-Timezone': Intl.DateTimeFormat().resolvedOptions().timeZone
                         }
                     })
                     .then(response => {
+                        if (localFilter.page != this.timesheetPage) {
+                            return
+                        }
+
                         this.dateRange()
 
-                        this.timesheetData = response.data.data;
+                        this.timesheetData.push(...response.data.data);
                         this.headers = response.data.header;
                         this.headerAbbrvs = response.data.header_abbrv;
+
+                        if (response.data.data.length > 0) {
+                            this.timesheetPage += 1
+                            this.processFetchingData()
+                        }
                         this.isOnSearch = false
                     })
             } catch (error) {

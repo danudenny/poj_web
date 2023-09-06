@@ -386,6 +386,7 @@ class EmployeeService extends BaseService
             });
 
             $employees->select(['employees.*']);
+            $employees->groupBy(['employees.id']);
 
             return response()->json([
                 'status' => 'success',
