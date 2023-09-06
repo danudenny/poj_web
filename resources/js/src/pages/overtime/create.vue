@@ -107,6 +107,7 @@
                     <br/>
                     <div ref="employeeTable"></div>
                     <br/>
+	                <div class="btn btn-secondary" @click="$router.go(-1)"><i data-action="view" class="fa fa-arrow-left"></i> Back</div>&nbsp;
                     <button class="btn btn-primary" :disabled="this.isOnProcess">
                         <span v-if="this.isOnProcess">
                             ...
@@ -115,7 +116,6 @@
                             <i data-action="view" class="fa fa-save"></i> Simpan
                         </span>
                     </button> &nbsp;
-                    <button class="btn btn-secondary" @click="$router.go(-1)"><i data-action="view" class="fa fa-arrow-left"></i> Back</button>&nbsp;
                 </div>
             </form>
         </div>
