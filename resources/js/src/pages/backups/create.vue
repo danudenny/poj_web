@@ -311,12 +311,12 @@ export default {
             const ls = localStorage.getItem('my_app_token')
             const table = new Tabulator(this.$refs.timesheetTable, {
                 ajaxURL: `/api/v1/admin/employee-timesheet/${this.selectedUnit.id}`,
-                layout: 'fitColumns',
+                layout: 'fitData',
                 columns: [
-                    {
-                        title: 'Timtesheet Name',
-                        field: 'timesheet_name',
-                    },
+	                {
+		                title: 'Timesheet',
+		                field: 'formatted_name',
+	                },
                     {
                         title: 'From',
                         field: 'start_time',
@@ -372,7 +372,7 @@ export default {
                     params.filter.map((item) => {
                         if (item.field === 'name') localFilter.name = item.value
                     })
-                    return `${url}?page=${params.page}&per_page=${params.size}&size=${params.size}&name=${localFilter.name}&shift_type=${localFilter.shift_type}`
+                    return `${url}?page=${params.page}&per_page=${params.size}&size=${params.size}&is_with_corporate=1&name=${localFilter.name}&shift_type=${localFilter.shift_type}`
                 },
                 ajaxResponse: (url, params, response) => {
                     return {
@@ -421,7 +421,8 @@ export default {
                             respondedData.push({
                                 timesheet_name: value.name,
                                 start_time: day.start_time,
-                                end_time: day.end_time
+                                end_time: day.end_time,
+	                            formatted_name: value.formatted_name
                             })
                         }
                     })
@@ -429,7 +430,8 @@ export default {
                     respondedData.push({
                         timesheet_name: value.name,
                         start_time: value.start_time,
-                        end_time: value.end_time
+                        end_time: value.end_time,
+	                    formatted_name: value.formatted_name
                     })
                 }
             })

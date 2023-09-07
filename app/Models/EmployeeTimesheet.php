@@ -44,6 +44,18 @@ class EmployeeTimesheet extends Model
         'days' => 'array',
     ];
 
+    protected $appends = [
+        'formatted_name'
+    ];
+
+    public function getFormattedNameAttribute() {
+        if ($this->shift_type == self::TypeNonShift) {
+            return sprintf("[%s] Non Shift | -", $this->unit->name);
+        } else {
+            return sprintf("[%s] Shift | %s - %s", $this->unit->name, $this->start_time, $this->end_time);
+        }
+    }
+
     public function employeeDetails(): HasMany
     {
         return $this->hasMany(EmployeeDetail::class);

@@ -233,9 +233,7 @@
                         <label>Timesheet :</label>
                         <select v-model="timesheet_id" class="form-control" >
                             <option value="null">Select Timesheet</option>
-                            <option :value="item.id" v-for="item in timesheets">{{item.name}}
-                                ( {{item.start_time}} - {{item.end_time || 'Non Shift'}} )
-                            </option>
+                            <option :value="item.id" v-for="item in timesheets">{{item.formatted_name}}</option>
                         </select>
                     </div>
                 </div>
@@ -345,16 +343,18 @@ export default {
         getCurrentUnit() {
           if (this.$store.state.currentRole === 'admin_unit') {
             let activeAdminUnit = this.$store.state.activeAdminUnit
+	          console.log(activeAdminUnit)
             if (activeAdminUnit != null) {
               this.selectedUnit = {
                 relation_id: activeAdminUnit.unit_relation_id,
-                name: activeAdminUnit.name.replace(" (Default)", "")
+                name: activeAdminUnit.name.replace(" (Default)", ""),
+	            formatted_name: activeAdminUnit.formatted_name
               }
             }
           } else {
               let currUser = JSON.parse(localStorage.getItem("USER_STORAGE_KEY"))
               this.selectedUnit = currUser.last_units
-              this.unitPagination.name = this.selectedUnit.name
+              this.unitPagination.name = this.selectedUnit.formatted_name
           }
         },
         dateRange() {
@@ -489,7 +489,7 @@ export default {
         },
         async getTimesheet(id) {
             try {
-                await this.$axios.get(`api/v1/admin/employee-timesheet/${id}`)
+                await this.$axios.get(`api/v1/admin/employee-timesheet/${id}?is_with_corporate=1`)
                     .then(response => {
                         this.timesheets = response.data.data.data;
                     }).catch(error => {
@@ -608,7 +608,8 @@ export default {
                 employee_ids: [this.selectedEmployeeTimesheet.employee_id],
                 date_format: this.payloadCreateTimesheet.date,
                 timesheet_id: this.timesheet_id,
-                date: moment(this.payloadCreateTimesheet.date).format('DD')
+                date: moment(this.payloadCreateTimesheet.date).format('DD'),
+	            unit_relation_id: this.selectedUnitTarget.relation_id
             }
 
             this.$swal({
@@ -622,8 +623,6 @@ export default {
                 cancelButtonColor: '#efefef',
             }).then((result)=>{
                 if(result.value){
-                    console.log(payload)
-
                     this.$axios.post(`/api/v1/admin/employee-timesheet/assign-schedule`, payload).then(response => {
                         useToast().success(response.data.message , { position: 'bottom-right' });
                         this.fetchTimesheetData()

@@ -42,22 +42,46 @@ class EmployeeTimesheetService extends ScheduleService {
         try {
             $data = EmployeeTimesheet::query()->with('timesheetDays');
             $data->when(request()->has('name'), function ($query) {
-                $query->where('name', 'like', '%' . request()->get('name') . '%');
+                $query->where('employee_timesheet.name', 'like', '%' . request()->get('name') . '%');
             });
             $data->when(request()->has('start_time'), function ($query) {
-                $query->where('start_time', 'like', '%' . request()->get('start_time') . '%');
+                $query->where('employee_timesheet.start_time', 'like', '%' . request()->get('start_time') . '%');
             });
             $data->when(request()->has('end_time'), function ($query) {
-                $query->where('end_time', 'like', '%' . request()->get('end_time') . '%');
+                $query->where('employee_timesheet.end_time', 'like', '%' . request()->get('end_time') . '%');
             });
             $data->when(request()->has('sort'), function ($query) {
                 $query->orderBy(request()->get('sort'), request()->get('order'));
             });
             $data->when(request()->has('shift_type'), function ($query) {
-                $query->where('shift_type', '=', request()->get('shift_type'));
+                $query->where('employee_timesheet.shift_type', '=', request()->get('shift_type'));
             });
-            $data->where('unit_id', $id);
-            $data->orderBy('id');
+
+            $unitIDs = [$id];
+            $isWithCorporate = $request->get('is_with_corporate');
+            if ($isWithCorporate === '1') {
+                /**
+                 * @var Builder $unitQuery
+                 */
+                $unitQuery = Unit::query()->from('unit_data')
+                    ->withRecursiveExpression('unit_data', Unit::query()->whereRaw("id = '$id'")->unionAll(
+                        Unit::query()->select(['units.*'])
+                            ->join('unit_data', function (JoinClause $query) {
+                                $query->on('units.relation_id', '=', 'unit_data.parent_unit_id');
+                            })
+                    ));
+                /**
+                 * @var Unit $corporateUnit
+                 */
+                $corporateUnit = $unitQuery->where('unit_level', '=', Unit::UnitLevelCorporate)->first();
+                if ($corporateUnit) {
+                    $unitIDs[] = $corporateUnit->id;
+                }
+            }
+
+            $data->whereIn('employee_timesheet.unit_id', $unitIDs);
+
+            $data->orderBy('employee_timesheet.id');
 
             return response()->json([
                 'status' => 'success',
@@ -275,7 +299,10 @@ class EmployeeTimesheetService extends ScheduleService {
             ], 404);
         }
 
-        $unit = $timesheetExists->unit;
+        /**
+         * @var Unit $unit
+         */
+        $unit = Unit::query()->where('relation_id', '=', $request->unit_relation_id)->first();
         if ($unit->lat == null || $unit->long == null) {
             return response()->json([
                 'status' => 'error',
