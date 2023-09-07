@@ -38,8 +38,49 @@ class WorkReporting extends Model
     ];
 
     protected $appends = [
-        'created_at_client_timezone'
+        'created_at_client_timezone',
+        'target_unit'
     ];
+
+    public function getTargetUnitAttribute() {
+        switch ($this->reference_type) {
+            case self::TypeOvertime:
+                /**
+                 * @var OvertimeEmployee $overtimeEmployee
+                 */
+                $overtimeEmployee = OvertimeEmployee::query()
+                    ->where('id', '=', $this->reference_id)
+                    ->first();
+                if ($overtimeEmployee) {
+                    return $overtimeEmployee->overtimeDate->overtime->unit;
+                }
+                break;
+            case self::TypeBackup:
+                /**
+                 * @var BackupEmployeeTime $backupEmployeeTime
+                 */
+                $backupEmployeeTime = BackupEmployeeTime::query()
+                    ->where('id', '=', $this->reference_id)
+                    ->first();
+                if ($backupEmployeeTime) {
+                    return $backupEmployeeTime->backupTime->backup->unit;
+                }
+                break;
+            case self::TypeNormal:
+                /**
+                 * @var EmployeeTimesheetSchedule $employeeTimesheetSchedule
+                 */
+                $employeeTimesheetSchedule = EmployeeTimesheetSchedule::query()
+                    ->where('id', '=', $this->reference_id)
+                    ->first();
+                if ($employeeTimesheetSchedule) {
+                    return $employeeTimesheetSchedule->unit;
+                }
+                break;
+        }
+
+        return null;
+    }
 
     public function getCreatedAtClientTimezoneAttribute() {
         $time = Carbon::parse($this->created_at, 'UTC');

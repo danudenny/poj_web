@@ -89,11 +89,17 @@ export default {
                         headerHozAlign: 'center'
                     },
                     {
-                        title: 'Unit Name',
-                        field: 'employee.last_unit.name',
+                        title: 'Unit Employee',
+                        field: 'employee.last_unit.formatted_name',
                         headerFilter:"input",
                         headerHozAlign: 'center'
                     },
+	                {
+		                title: 'Work Unit',
+		                field: 'target_unit.formatted_name',
+		                headerFilter:"input",
+		                headerHozAlign: 'center',
+	                },
                     {
                         title: 'Title',
                         field: 'title',
