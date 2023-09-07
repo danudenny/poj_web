@@ -19,7 +19,7 @@
                                                 v-model="selectedUnit"
                                                 :options="units"
                                                 :multiple="false"
-                                                label="name"
+                                                label="formatted_name"
                                                 track-by="relation_id"
                                                 placeholder="Select Unit"
                                                 @search-change="onUnitSearchName"
@@ -40,7 +40,7 @@
                                                 v-model="selectedWorkingUnit"
                                                 :options="workingUnits"
                                                 :multiple="false"
-                                                label="name"
+                                                label="formatted_name"
                                                 track-by="relation_id"
                                                 placeholder="Select Unit"
                                                 @search-change="onWorkingUnitSearchName"
@@ -192,7 +192,7 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="mt-2">
-                            <label for="date">Employee Name</label>
+                            <label for="date">Date</label>
                             <input type="date" name="date" id="date" class="form-control" v-model="this.payloadCreateTimesheet.date" required disabled>
                         </div>
                     </div>
@@ -220,8 +220,8 @@
                         <multiselect
                                 v-model="selectedUnitTarget"
                                 placeholder="Select Target Unit"
-                                label="name"
-                                track-by="name"
+                                label="formatted_name"
+                                track-by="relation_id"
                                 :options="unitTargets"
                                 :multiple="false"
                                 @select="onSelectedUnitTarget"

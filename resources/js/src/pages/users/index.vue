@@ -22,7 +22,7 @@
                                                     <multiselect
                                                         v-model="selectedUnit"
                                                         placeholder="Select Unit"
-                                                        label="name"
+                                                        label="formatted_name"
                                                         track-by="id"
                                                         :options="units"
                                                         :multiple="false"
@@ -208,7 +208,7 @@ export default {
                     },
                     {
                         title: 'Unit',
-                        field: 'employee.last_unit.name',
+                        field: 'employee.last_unit.formatted_name',
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerSort: 'false',
@@ -216,7 +216,7 @@ export default {
                             if (row.getData().employee.last_unit.name === null) {
                                 return `<span class='badge badge-danger '>No Unit</span>`;
                             } else {
-                                return row.getData().employee.last_unit.name;
+                                return row.getData().employee.last_unit.formatted_name;
                             }
                         }
                     },

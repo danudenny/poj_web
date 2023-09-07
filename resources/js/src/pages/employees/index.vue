@@ -98,7 +98,7 @@
                                             v-model="filterUnit"
                                             :options="units"
                                             :multiple="false"
-                                            label="name"
+                                            label="formatted_name"
                                             track-by="relation_id"
                                             placeholder="Select Employee Unit"
                                             @search-change="onUnitSearchName"
@@ -472,7 +472,7 @@ export default {
                     },
                     {
                         title: 'Kantor Wilayah',
-                        field: 'kanwil.name',
+                        field: 'kanwil.formatted_name',
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Kanwil",
@@ -483,7 +483,7 @@ export default {
                     },
                     {
                         title: 'Area',
-                        field: 'area.name',
+                        field: 'area.formatted_name',
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Area",
@@ -493,7 +493,7 @@ export default {
                     },
                     {
                         title: 'Cabang',
-                        field: 'cabang.name',
+                        field: 'cabang.formatted_name',
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Cabang",
@@ -503,7 +503,7 @@ export default {
                     },
                     {
                         title: 'Outlet',
-                        field: 'outlet.name',
+                        field: 'outlet.formatted_name',
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerFilterPlaceholder:"Select Outlet",

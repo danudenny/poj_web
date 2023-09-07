@@ -33,7 +33,7 @@
                 <div class="col-md-12">
                     <div class="mt-2">
                         <label for="name">Current Unit Job</label>
-                        <input type="text" class="form-control" v-model="selectedAssignedJob.unit.name" disabled required>
+                        <input type="text" class="form-control" v-model="selectedAssignedJob.unit.formatted_name" disabled required>
                     </div>
                     <div class="mt-2">
                         <label for="name">Curret Job Name</label>
@@ -48,7 +48,7 @@
                     <multiselect
                         v-model="selectedParentJobUnit"
                         placeholder="Select Unit Parent Job"
-                        label="name"
+                        label="formatted_name"
                         track-by="id"
                         :options="units"
                         :multiple="false"
@@ -294,7 +294,7 @@ export default {
                             },
                             {
                                 title:"Unit Name",
-                                field:"unit.name",
+                                field:"unit.formatted_name",
                                 headerFilter:"input",
                                 headerHozAlign:"center"
                             },
@@ -312,7 +312,7 @@ export default {
                             },
                             {
                                 title:"Unit Name",
-                                field:"parent.unit.name",
+                                field:"parent.unit.formatted_name",
                                 headerFilter:"input",
                                 headerHozAlign:"center"
                             },
