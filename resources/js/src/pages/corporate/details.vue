@@ -48,33 +48,27 @@
                                         <input class="form-control" type="text" v-model="item.name" disabled>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Latitude</label>
-                                        <input class="form-control" type="text" v-model="item.lat" :disabled="editing">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Early Tolerance (minutes)</label>
-                                        <input class="form-control" type="text" v-model="item.early_buffer" :disabled="editing">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Radius Buffer (meters)</label>
-                                        <input class="form-control" type="text" v-model="item.radius" :disabled="editing">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label class="form-label">Longitude</label>
-                                        <input class="form-control" type="text" v-model="item.long" :disabled="editing">
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Late Tolerance (minutes)</label>
-                                        <input class="form-control" type="text" v-model="item.late_buffer" :disabled="editing">
-                                    </div>
-                                </div>
-                                <div class="col-md-12" v-show="item.lat && item.long">
-                                    <div id="mapContainer" style="height: 400px; z-index: 1; width: 100%">
-                                    </div>
+                                <div class="col-md-12">
+	                                <div class="row">
+		                                <div class="col-md-4">
+			                                <div class="mb-3">
+				                                <label class="form-label">Early Tolerance (minutes)</label>
+				                                <input class="form-control" type="text" v-model="item.early_buffer" :disabled="editing">
+			                                </div>
+		                                </div>
+		                                <div class="col-md-4">
+			                                <div class="mb-3">
+				                                <label class="form-label">Late Tolerance (minutes)</label>
+				                                <input class="form-control" type="text" v-model="item.late_buffer" :disabled="editing">
+			                                </div>
+		                                </div>
+		                                <div class="col-md-4">
+			                                <div class="mb-3">
+				                                <label class="form-label">Radius Buffer (meters)</label>
+				                                <input class="form-control" type="text" v-model="item.radius" :disabled="editing">
+			                                </div>
+		                                </div>
+	                                </div>
                                 </div>
                             </div>
                         </div>
@@ -226,37 +220,8 @@ export default {
         await this.getJobs();
         this.initializeJobTable();
         await this.getReportingData();
-        if (this.item.lat && this.item.long && this.item.radius) {
-            this.initMap();
-        }
     },
     methods: {
-        initMap() {
-            document.getElementById('mapContainer').innerHTML = '';
-
-            console.log(this.item.lat, this.item.long, this.item.radius)
-            const centerLatLng = [this.item.lat, this.item.long];
-            this.map = L.map('mapContainer').setView(centerLatLng, 18);
-            this.map.scrollWheelZoom.disable();
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.map);
-            L.marker(centerLatLng, {icon: L.icon({
-		            iconUrl: '/marker-icon.png'
-	            })}).addTo(this.map);
-
-            const centerPoint = point([parseFloat(this.item.long), parseFloat(this.item.lat)]);
-            const buffered = buffer(centerPoint, parseInt(this.item.radius), { units: 'meters' });
-
-            if (buffered.geometry && buffered.geometry.type === 'Polygon') {
-                const bufferPolygon = L.geoJSON(buffered);
-                bufferPolygon.setStyle({ fillColor: 'blue', fillOpacity: 0.3 }).addTo(this.map);
-
-                const bufferBounds = bufferPolygon.getBounds();
-                this.map.fitBounds(bufferBounds);
-            } else {
-                console.warn('Buffer geometry is not valid or empty.');
-            }
-        },
         hideTableJob() {
             this.hideJob = !this.hideJob;
             this.initializeJobTable()
