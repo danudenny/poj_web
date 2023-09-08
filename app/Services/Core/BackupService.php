@@ -435,12 +435,6 @@ class BackupService extends ScheduleService
             $requestType = $request->input('request_type');
 
             if ($requestType == Backup::RequestTypeAssignment) {
-                if ($this->isRequestedRoleLevel(Role::RoleStaff)) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'You don\'t have access to do assignment',
-                    ], ResponseAlias::HTTP_BAD_REQUEST);
-                }
             } else {
                 $approvalUsers = $this->approvalService->getApprovalUser($requestorEmployee, ApprovalModule::ApprovalBackup);
 
