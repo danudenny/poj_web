@@ -55,9 +55,7 @@
                                             <label>Timesheet :</label>
                                             <select v-model="timesheet_id" class="form-control" >
                                                 <option value="null">Select Timesheet</option>
-                                                <option :value="item.id" v-for="item in timesheets">{{item.name}}
-                                                    ( {{item.start_time}} - {{item.end_time || 'Non Shift'}} )
-                                                </option>
+                                                <option :value="item.id" v-for="item in timesheets">{{item.formatted_name}}</option>
                                             </select>
                                         </div>
                                         <div class="col-md-4 mb-3">
@@ -258,7 +256,7 @@ export default {
         },
         async getTimesheet(id) {
             try {
-                await this.$axios.get(`api/v1/admin/employee-timesheet/${id}`)
+                await this.$axios.get(`api/v1/admin/employee-timesheet/${id}?is_with_corporate=1`)
                     .then(response => {
                         this.timesheets = response.data.data.data;
                     }).catch(error => {
@@ -411,6 +409,7 @@ export default {
                 period_id: this.period_id,
                 timesheet_id: timesheet.shift_type === 'shift' ? this.timesheet_id : timesheet.id,
                 date: queryPeriod.getDate(),
+	            unit_relation_id: this.selectedOptions.relation_id,
             }).then(response => {
                 localStorage.removeItem('selectedEmployees');
                 useToast().success(response.data.message , { position: 'bottom-right' });

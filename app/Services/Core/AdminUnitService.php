@@ -233,7 +233,8 @@ class AdminUnitService extends BaseService
             $activeAdminUnit = [];
             $activeAdminUnit[] = [
                 'unit_relation_id' => $employee->getLastUnit()->relation_id,
-                'name' => $employee->getLastUnit()->name . " (Default)"
+                'name' => $employee->getLastUnit()->name . " (Default)",
+                'formatted_name' => $employee->getLastUnit()->formatted_name
             ];
 
             /**
@@ -247,7 +248,8 @@ class AdminUnitService extends BaseService
             foreach ($adminUnits as $adminUnit) {
                 $activeAdminUnit[] = [
                     'unit_relation_id' => $adminUnit->unit_relation_id,
-                    'name' => $adminUnit->unit->name
+                    'name' => $adminUnit->unit->name,
+                    'formatted_name' => $adminUnit->unit->formatted_name
                 ];
             }
 

@@ -49,10 +49,18 @@ class Unit extends Model
         'is_active'
     ];
 
+    protected $appends = [
+        'formatted_name'
+    ];
+
     protected $casts = [
         'create_date'  => 'date:Y-m-d',
         'write_date'  => 'date:Y-m-d',
     ];
+
+    public function getFormattedNameAttribute() {
+        return sprintf("[%s] %s", $this->relation_id, $this->name);
+    }
 
     public function getTotalManagedOperatingUnitAttribute() {
         $total = OperatingUnitDetail::query()

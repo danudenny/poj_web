@@ -55,9 +55,7 @@
                       <label>Timesheet :</label>
                       <select v-model="timesheet_id" class="form-control" >
                         <option value="null">Select Timesheet</option>
-                        <option :value="item.id" v-for="item in timesheets">{{item.name}}
-                          ( {{item.start_time}} - {{item.end_time}} | {{ item.shift_type }} )
-                        </option>
+                        <option :value="item.id" v-for="item in timesheets">{{item.formatted_name}}</option>
                       </select>
                     </div>
                     <div class="col-md-4 mb-3">
@@ -308,7 +306,7 @@ export default {
     },
     async getTimesheet(id) {
       try {
-        await this.$axios.get(`api/v1/admin/employee-timesheet/${id}`)
+        await this.$axios.get(`api/v1/admin/employee-timesheet/${id}?is_with_corporate=1`)
             .then(response => {
               this.timesheets = this.processDataTimesheet(response.data.data.data);
             }).catch(error => {
@@ -339,6 +337,7 @@ export default {
                 start_time: day.start_time,
                 end_time: day.end_time,
                 shift_type: value.shift_type === 'non_shift' ? 'Non Shift' : 'Shift',
+	            formatted_name: value.formatted_name
               })
             }
           })
@@ -349,6 +348,7 @@ export default {
             start_time: value.start_time,
             end_time: value.end_time,
             shift_type: value.shift_type === 'non_shift' ? 'Non Shift' : 'Shift',
+	        formatted_name: value.formatted_name
           })
         }
       })
