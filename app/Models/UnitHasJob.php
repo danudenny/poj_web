@@ -36,7 +36,7 @@ class UnitHasJob extends Model
 
     public function getJobNameAttribute(): string
     {
-        return $this->job->name;
+        return sprintf("[%s] %s", $this->unit->name, $this->job->name);
     }
 
     public function unit(): BelongsTo

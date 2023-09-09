@@ -410,7 +410,7 @@ export default {
                 last_unit_relation_id: this.approval.approvers[index].selectedUnit.relation_id,
             }
 
-            this.$axios.get(`/api/v1/admin/unit-job?unit_relation_id=${employeeFilter.last_unit_relation_id}&append=job_name`)
+            this.$axios.get(`/api/v1/admin/unit-job?unit_relation_id=${employeeFilter.last_unit_relation_id}&append=job_name&is_corporate_job=1`)
                 .then(response => {
                     this.approval.approvers[index].jobs = response.data.data
 

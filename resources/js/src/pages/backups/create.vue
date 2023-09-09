@@ -267,7 +267,7 @@ export default {
                 return
             }
 
-            this.$axios.get(`/api/v1/admin/unit-job?unit_relation_id=${this.selectedUnit.relation_id}&append=job_name`)
+            this.$axios.get(`/api/v1/admin/unit-job?unit_relation_id=${this.selectedUnit.relation_id}&append=job_name&is_corporate_job=1`)
                 .then(response => {
                     this.jobs = response.data.data
                 })

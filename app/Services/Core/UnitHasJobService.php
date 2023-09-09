@@ -11,6 +11,7 @@ use App\Models\Unit;
 use App\Models\UnitHasJob;
 use App\Models\User;
 use App\Services\BaseService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,13 +33,19 @@ class UnitHasJobService extends BaseService
 
             $unitRelationIDTopBottom = $request->get('unit_relation_id_top_bottom');
             $odooJobIDTopBottom = $request->get('odoo_job_id_top_bottom');
+            $isCorporateJob = $request->get('is_corporate_job');
+            $unit_relation_id = $request->query('unit_relation_id');
 
             if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
 
             } else {
-                if (!$unitRelationIDTopBottom && !$odooJobIDTopBottom) {
-                    $unitRelationIDTopBottom = $user->employee->unit_id;
-                    $odooJobIDTopBottom = $user->employee->job_id;
+                if ($isCorporateJob === '1') {
+                    $unit_relation_id = $user->employee->unit_id;
+                } else {
+                    if (!$unitRelationIDTopBottom && !$odooJobIDTopBottom) {
+                        $unitRelationIDTopBottom = $user->employee->unit_id;
+                        $odooJobIDTopBottom = $user->employee->job_id;
+                    }
                 }
             }
 
@@ -59,8 +66,27 @@ class UnitHasJobService extends BaseService
 
             $query->join('units', 'units.relation_id', '=', 'unit_has_jobs.unit_relation_id');
 
-            if ($unit_relation_id = $request->query('unit_relation_id')) {
-                $query->where('unit_relation_id', '=', $unit_relation_id);
+            if ($unit_relation_id) {
+                $unitRelationID = [$unit_relation_id];
+
+                if ($isCorporateJob === '1') {
+                    /**
+                     * @var Builder $unitQuery
+                     */
+                    $unitQuery = Unit::query()->from('unit_data')
+                        ->withRecursiveExpression('unit_data', Unit::query()->whereRaw("relation_id = '$unit_relation_id'")->unionAll(
+                            Unit::query()->select(['units.*'])
+                                ->join('unit_data', function (JoinClause $query) {
+                                    $query->on('units.relation_id', '=', 'unit_data.parent_unit_id');
+                                })
+                        ));
+                    /**
+                     * @var Unit $corporateUnit
+                     */
+                    $corporateUnit = $unitQuery->where('unit_level', '=', Unit::UnitLevelCorporate)->first();
+                    $unitRelationID[] = $corporateUnit->relation_id;
+                }
+                $query->whereIn('unit_relation_id', $unitRelationID);
             }
 
             if ($unitName = $request->query('unit_name')) {
