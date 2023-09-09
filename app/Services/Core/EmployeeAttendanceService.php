@@ -1018,7 +1018,9 @@ class EmployeeAttendanceService extends BaseService
                 }
 
                 $activeSchedule['attendance']['overtime'] = [
+                    'minimum_start_time' => Carbon::parse($overtime->overtimeDate->start_time)->addMinutes(-$overtime->overtimeDate->overtime->unit->early_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'start_time' => Carbon::parse($overtime->overtimeDate->start_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
+                    'maximum_start_time' => Carbon::parse($overtime->overtimeDate->start_time)->addMinutes($overtime->overtimeDate->overtime->unit->late_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'end_time' => Carbon::parse($overtime->overtimeDate->end_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'check_in_time' => $overtime->check_in_time ? Carbon::parse($overtime->check_in_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
                     'check_out_time' => $overtime->check_out_time ? Carbon::parse($overtime->check_out_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
@@ -1062,7 +1064,9 @@ class EmployeeAttendanceService extends BaseService
                 }
 
                 $activeSchedule['attendance']['backup'] = [
+                    'minimum_start_time' => Carbon::parse($backup->backupTime->start_time)->addMinutes(-$backup->backupTime->backup->unit->early_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'start_time' => Carbon::parse($backup->backupTime->start_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
+                    'maximum_start_time' => Carbon::parse($backup->backupTime->start_time)->addMinutes($backup->backupTime->backup->unit->late_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'end_time' => Carbon::parse($backup->backupTime->end_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'check_in_time' => $backup->check_in_time ? Carbon::parse($backup->check_in_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
                     'check_out_time' => $backup->check_out_time ? Carbon::parse($backup->check_out_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
