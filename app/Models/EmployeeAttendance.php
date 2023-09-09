@@ -35,6 +35,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $notes
  * @property string $updated_at
  * @property int $early_check_out
+ * @property string $check_in_image_url
+ * @property string $check_out_image_url
+ * @property string $check_in_notes
  *
  * Relations:
  * @property-read Employee $employee

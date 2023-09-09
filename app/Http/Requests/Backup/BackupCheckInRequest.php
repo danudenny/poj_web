@@ -25,7 +25,8 @@ class BackupCheckInRequest extends FormRequest
     {
         return [
             'latitude' => ['required'],
-            'longitude' => ['required']
+            'longitude' => ['required'],
+            'image_url' => ['required']
         ];
     }
 }

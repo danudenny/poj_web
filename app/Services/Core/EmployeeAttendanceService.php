@@ -519,6 +519,7 @@ class EmployeeAttendanceService extends BaseService
             $maximumCheckInTime = Carbon::parse($employeeTimesheetSchedule->start_time)->addMinutes($employeeTimesheetSchedule->late_buffer);
 
             $lateDuration = 0;
+            $earlyDuration = 0;
             $attendanceStatus = "On Time";
             if ($currentTime->lessThan($minimumCheckInTime)) {
                 return response()->json([
@@ -527,14 +528,10 @@ class EmployeeAttendanceService extends BaseService
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             } else if ($currentTime->greaterThanOrEqualTo($minimumCheckInTime) && $currentTime->lessThan($checkInTime)) {
                 $attendanceStatus = "Early Check In";
+                $earlyDuration = $checkInTime->diffInMinutes($currentTime);
             } else if ($currentTime->greaterThan($maximumCheckInTime)) {
                 $attendanceStatus = "Late";
                 $lateDuration = $currentTime->diffInMinutes($maximumCheckInTime);
-            }
-
-            $earlyDuration = 0;
-            if ($currentTime->lessThan($minimumCheckInTime)) {
-                $earlyDuration = $minimumCheckInTime->diffInMinutes($currentTime);
             }
 
             $distance = calculateDistance($employeeTimesheetSchedule->latitude, $employeeTimesheetSchedule->longitude, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
@@ -560,6 +557,14 @@ class EmployeeAttendanceService extends BaseService
                 }
             }
 
+            $notes = $request->input('notes');
+            if ($approvalType === AttendanceApproval::TypeOffsite && !$notes) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Offsite check in, please input notes'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
             DB::beginTransaction();
 
             $checkIn = new EmployeeAttendance();
@@ -576,6 +581,8 @@ class EmployeeAttendanceService extends BaseService
             $checkIn->is_late = $lateDuration > 0;
             $checkIn->late_duration = $lateDuration;
             $checkIn->early_duration = $earlyDuration;
+            $checkIn->check_in_image_url = $request->input('image_url');
+            $checkIn->check_in_notes = $notes;
             $checkIn->save();
 
             $attendanceHistory = new EmployeeAttendanceHistory();

@@ -744,6 +744,7 @@ class OvertimeService extends ScheduleService
             $maximumCheckInTime = Carbon::parse($employeeOvertime->overtimeDate->start_time)->addMinutes($overtimeRequest->unit->late_buffer);
 
             $lateDuration = 0;
+            $earlyDuration = 0;
             $attendanceStatus = "On Time";
             if ($currentTime->lessThan($minimumCheckInTime)) {
                 return response()->json([
@@ -752,14 +753,10 @@ class OvertimeService extends ScheduleService
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             } else if ($currentTime->greaterThanOrEqualTo($minimumCheckInTime) && $currentTime->lessThan($checkInTime)) {
                 $attendanceStatus = "Early Check In";
+                $earlyDuration = $checkInTime->diffInMinutes($currentTime);
             } else if ($currentTime->greaterThan($maximumCheckInTime)) {
                 $attendanceStatus = "Late";
                 $lateDuration = $currentTime->diffInMinutes($maximumCheckInTime);
-            }
-
-            $earlyDuration = 0;
-            if ($currentTime->lessThan($minimumCheckInTime)) {
-                $earlyDuration = $minimumCheckInTime->diffInMinutes($currentTime);
             }
 
             $approvalEmployeeIDs = [];
@@ -774,6 +771,14 @@ class OvertimeService extends ScheduleService
                 if (count($approvalEmployeeIDs) == 0) {
                     $isNeedApproval = false;
                 }
+            }
+
+            $notes = $request->input('notes');
+            if ($approvalType === AttendanceApproval::TypeOffsite && !$notes) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Offsite check in, please input notes'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
             DB::beginTransaction();
@@ -804,6 +809,8 @@ class OvertimeService extends ScheduleService
             $checkIn->is_late = $lateDuration > 0;
             $checkIn->late_duration = $lateDuration;
             $checkIn->early_duration = $earlyDuration;
+            $checkIn->check_in_image_url = $request->input('image_url');
+            $checkIn->check_in_notes = $notes;
             $checkIn->save();
 
             $employeeOvertime->employee_attendance_id = $checkIn->id;
