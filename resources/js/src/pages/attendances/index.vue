@@ -140,6 +140,10 @@ export default {
                         }
                     },
                     {
+                        title: 'Unit Target',
+                        field: 'unit_target.formatted_name'
+                    },
+                    {
                         title: 'Attendance Type',
                         field: 'attendance_types',
                         formatter: function(cell) {

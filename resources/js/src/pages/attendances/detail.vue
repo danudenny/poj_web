@@ -16,6 +16,10 @@
                                         <label for="name">Attendance Type</label>
                                         <input type="text" class="form-control" v-model="attendance.attendance_types" disabled>
                                     </div>
+                                    <div class="mt-2">
+                                        <label for="name">Unit Target</label>
+                                        <input type="text" class="form-control" v-model="attendance.unit_target.formatted_name" disabled>
+                                    </div>
                                     <div class="form-group mb-0">
                                         <div class="checkbox p-0">
                                             <input id="is_need_approval" type="checkbox" v-model="attendance.is_need_approval" disabled>
@@ -247,7 +251,10 @@ export default {
                     name: null
                 },
                 employee_attendance_history: [],
-                attendance_approvals: []
+                attendance_approvals: [],
+                unit_target: {
+                    formatted_name: null
+                }
             },
             checkInMap: {
                 mapContainer: null,

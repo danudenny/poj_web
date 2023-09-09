@@ -22,6 +22,7 @@ use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
  * @property float $radius
  * @property int $early_buffer
  * @property int $late_buffer
+ * @property string $code
  *
  * Relations:
  * @property-read OperatingUnitCorporate[] $operatingUnitCorporates
@@ -59,7 +60,7 @@ class Unit extends Model
     ];
 
     public function getFormattedNameAttribute() {
-        return sprintf("[%s] %s", $this->relation_id, $this->name);
+        return sprintf("[%s] %s", $this->code, $this->name);
     }
 
     public function getTotalManagedOperatingUnitAttribute() {
