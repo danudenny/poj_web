@@ -738,6 +738,30 @@ class OvertimeService extends ScheduleService
                 $isNeedApproval = true;
             }
 
+            $currentTime = Carbon::now();
+            $checkInTime = Carbon::parse($employeeOvertime->overtimeDate->start_time);
+            $minimumCheckInTime = Carbon::parse($employeeOvertime->overtimeDate->start_time)->addMinutes(-$overtimeRequest->unit->early_buffer);
+            $maximumCheckInTime = Carbon::parse($employeeOvertime->overtimeDate->start_time)->addMinutes($overtimeRequest->unit->late_buffer);
+
+            $lateDuration = 0;
+            $attendanceStatus = "On Time";
+            if ($currentTime->lessThan($minimumCheckInTime)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => sprintf("Minimum check in at %s", $minimumCheckInTime->setTimezone($employeeTimezone)->format('H:i:s'))
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            } else if ($currentTime->greaterThanOrEqualTo($minimumCheckInTime) && $currentTime->lessThan($checkInTime)) {
+                $attendanceStatus = "Early Check In";
+            } else if ($currentTime->greaterThan($maximumCheckInTime)) {
+                $attendanceStatus = "Late";
+                $lateDuration = $currentTime->diffInMinutes($maximumCheckInTime);
+            }
+
+            $earlyDuration = 0;
+            if ($currentTime->lessThan($minimumCheckInTime)) {
+                $earlyDuration = $minimumCheckInTime->diffInMinutes($currentTime);
+            }
+
             $approvalEmployeeIDs = [];
             $approvalType = null;
             if ($isNeedApproval && $checkInType == EmployeeAttendance::TypeOffSite) {
@@ -756,7 +780,7 @@ class OvertimeService extends ScheduleService
 
             $employeeOvertime->check_in_lat = $dataLocation['latitude'];
             $employeeOvertime->check_in_long = $dataLocation['longitude'];
-            $employeeOvertime->check_in_time = Carbon::now();
+            $employeeOvertime->check_in_time = $currentTime;
             $employeeOvertime->check_in_timezone = $employeeTimezone;
             $employeeOvertime->save();
 
@@ -777,8 +801,9 @@ class OvertimeService extends ScheduleService
             $checkIn->checkin_real_radius = $distance;
             $checkIn->approved = !$isNeedApproval;
             $checkIn->check_in_tz = $employeeTimezone;
-            $checkIn->is_late = false;
-            $checkIn->late_duration = 0;
+            $checkIn->is_late = $lateDuration > 0;
+            $checkIn->late_duration = $lateDuration;
+            $checkIn->early_duration = $earlyDuration;
             $checkIn->save();
 
             $employeeOvertime->employee_attendance_id = $checkIn->id;
@@ -849,6 +874,14 @@ class OvertimeService extends ScheduleService
             $overtimeRequest = $employeeOvertime->overtimeDate->overtime;
             $distance = calculateDistance($overtimeRequest->location_lat, $overtimeRequest->location_long, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
 
+            $currentTime = Carbon::now();
+            $checkOutTime = Carbon::parse($employeeOvertime->overtimeDate->end_time, 'UTC');
+
+            $earlyDuration = 0;
+            if ($currentTime->lessThan($checkOutTime)) {
+                $earlyDuration = $checkOutTime->diffInMinutes($currentTime);
+            }
+
             $checkOutType = EmployeeAttendance::TypeOnSite;
             if ($distance > $workLocation->radius) {
                 $checkOutType = EmployeeAttendance::TypeOffSite;
@@ -860,7 +893,7 @@ class OvertimeService extends ScheduleService
 
             $employeeOvertime->check_out_lat = $dataLocation['latitude'];
             $employeeOvertime->check_out_long = $dataLocation['longitude'];
-            $employeeOvertime->check_out_time = Carbon::now();
+            $employeeOvertime->check_out_time = $currentTime;
             $employeeOvertime->check_out_timezone = $employeeTimezone;
             $employeeOvertime->save();
 
@@ -877,6 +910,7 @@ class OvertimeService extends ScheduleService
                 $checkInData->checkout_real_radius = $distance;
                 $checkInData->checkout_type = $checkOutType;
                 $checkInData->check_out_tz = $employeeOvertime->check_out_timezone;
+                $checkInData->early_check_out = $earlyDuration;
                 $checkInData->save();
             }
 
