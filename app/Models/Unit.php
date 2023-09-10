@@ -23,6 +23,8 @@ use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
  * @property int $early_buffer
  * @property int $late_buffer
  * @property string $code
+ * @property int $internal_overtime_limit
+ * @property int $outsource_overtime_limit
  *
  * Relations:
  * @property-read OperatingUnitCorporate[] $operatingUnitCorporates

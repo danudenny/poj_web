@@ -70,6 +70,22 @@
 		                                </div>
 	                                </div>
                                 </div>
+                                <div class="col-md-12">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Minimum Overtime Internal (minutes)</label>
+                                                <input class="form-control" type="text" v-model="item.internal_overtime_limit" :disabled="editing">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label">Minimum Overtime Outsource (minutes)</label>
+                                                <input class="form-control" type="text" v-model="item.outsource_overtime_limit" :disabled="editing">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="tab-pane fade" id="pills-iconprofile" role="tabpanel" aria-labelledby="pills-iconprofile-tab">
@@ -243,7 +259,9 @@ export default {
                     long: this.item.long,
                     early_buffer: this.item.early_buffer,
                     late_buffer: this.item.late_buffer,
-                    radius: this.item.radius
+                    radius: this.item.radius,
+	                internal_overtime_limit: this.item.internal_overtime_limit,
+	                outsource_overtime_limit: this.item.outsource_overtime_limit,
                 })
                 .then(() => {
                     this.editing = true;

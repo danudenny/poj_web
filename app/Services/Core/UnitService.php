@@ -257,6 +257,8 @@ class UnitService extends BaseService
                     'parent.radius',
                     'parent.early_buffer',
                     'parent.late_buffer',
+                    'parent.internal_overtime_limit',
+                    'parent.outsource_overtime_limit',
                     'child.id as child_id',
                     'child.name as child_name',
                     'child.unit_level as child_unit_level',
@@ -289,6 +291,8 @@ class UnitService extends BaseService
                         'radius' => $unit->radius,
                         'early_buffer' => $unit->early_buffer,
                         'late_buffer' => $unit->late_buffer,
+                        'internal_overtime_limit' => $unit->internal_overtime_limit,
+                        'outsource_overtime_limit' => $unit->outsource_overtime_limit,
                         'child' => []
                     ];
 
@@ -334,6 +338,8 @@ class UnitService extends BaseService
             $units->radius = $data->radius;
             $units->early_buffer = $data->early_buffer;
             $units->late_buffer = $data->late_buffer;
+            $units->internal_overtime_limit = $data->internal_overtime_limit;
+            $units->outsource_overtime_limit = $data->outsource_overtime_limit;
 
             if (!$units->save()) {
                 DB::rollBack();
