@@ -685,6 +685,7 @@ class EmployeeAttendanceService extends BaseService
             $employeeAttendance->check_out_tz = $employeeTimezone;
             $employeeAttendance->checkout_type = $attendanceType;
             $employeeAttendance->early_check_out = $earlyDuration;
+            $employeeAttendance->check_out_image_url = $request->input('image_url');
             $employeeAttendance->save();
 
             $attHistory = new EmployeeAttendanceHistory();

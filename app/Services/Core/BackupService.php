@@ -899,6 +899,7 @@ class BackupService extends ScheduleService
                 $checkInData->checkout_type = $checkOutType;
                 $checkInData->check_out_tz = $employeeBackup->check_out_timezone;
                 $checkInData->early_check_out = $earlyDuration;
+                $checkInData->check_out_image_url = $request->input('image_url');
                 $checkInData->save();
             }
 
