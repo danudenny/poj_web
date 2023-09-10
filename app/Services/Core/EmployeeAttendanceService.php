@@ -17,6 +17,7 @@ use App\Models\EmployeeTimesheetSchedule;
 use App\Models\LateCheckin;
 use App\Models\OvertimeEmployee;
 use App\Models\Role;
+use App\Models\Unit;
 use App\Models\UnitHasJob;
 use App\Models\UnitJob;
 use App\Models\User;
@@ -1007,23 +1008,7 @@ class EmployeeAttendanceService extends BaseService
 
             if ($overtime = $employee->getActiveOvertime($timezone)) {
                 $unit = $overtime->overtimeDate->overtime->unit;
-
-                $jobs = $unit->jobs;
-                $listJobs = [];
-
-                foreach ($jobs as $job) {
-                    if ($job->odoo_job_id === $employee->job_id) {
-                        $listJobs[] = [
-                            'is_camera' => $job->pivot->is_camera,
-                            'is_upload' => $job->pivot->is_upload,
-                            'is_reporting' => $job->pivot->is_mandatory_reporting,
-                            'total_reporting' => $job->pivot->total_normal,
-                            'total_normal' => $job->pivot->total_normal,
-                            'total_backup' => $job->pivot->total_backup,
-                            'total_overtime' => $job->pivot->total_overtime,
-                        ];
-                    }
-                }
+                $listJobs = $this->getWorkReporting($unit, $employee->job_id);
 
                 $activeSchedule['attendance']['overtime'] = [
                     'minimum_start_time' => Carbon::parse($overtime->overtimeDate->start_time)->addMinutes(-$overtime->overtimeDate->overtime->unit->early_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
@@ -1053,23 +1038,7 @@ class EmployeeAttendanceService extends BaseService
             if ($backup = $employee->getActiveBackup($timezone)) {
                 $unit = $backup->backupTime->backup->unit;
                 $backupJob = $backup->backupTime->backup->job;
-
-                $jobs = $unit->jobs;
-                $listJobs = [];
-
-                foreach ($jobs as $job) {
-                    if ($job->odoo_job_id === $backupJob->odoo_job_id) {
-                        $listJobs[] = [
-                            'is_camera' => $job->pivot->is_camera,
-                            'is_upload' => $job->pivot->is_upload,
-                            'is_reporting' => $job->pivot->is_mandatory_reporting,
-                            'total_reporting' => $job->pivot->total_normal,
-                            'total_normal' => $job->pivot->total_normal,
-                            'total_backup' => $job->pivot->total_backup,
-                            'total_overtime' => $job->pivot->total_overtime,
-                        ];
-                    }
-                }
+                $listJobs = $this->getWorkReporting($unit, $backupJob->odoo_job_id);
 
                 $activeSchedule['attendance']['backup'] = [
                     'minimum_start_time' => Carbon::parse($backup->backupTime->start_time)->addMinutes(-$backup->backupTime->backup->unit->early_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
@@ -1110,23 +1079,7 @@ class EmployeeAttendanceService extends BaseService
 
             if ($normal = $employee->getActiveNormalSchedule($timezone)) {
                 $unit = $normal->unit;
-
-                $jobs = $unit->jobs;
-                $listJobs = [];
-
-                foreach ($jobs as $job) {
-                    if ($job->odoo_job_id === $employee->job_id) {
-                        $listJobs[] = [
-                            'is_camera' => $job->pivot->is_camera,
-                            'is_upload' => $job->pivot->is_upload,
-                            'is_reporting' => $job->pivot->is_mandatory_reporting,
-                            'total_reporting' => $job->pivot->total_normal,
-                            'total_normal' => $job->pivot->total_normal,
-                            'total_backup' => $job->pivot->total_backup,
-                            'total_overtime' => $job->pivot->total_overtime,
-                        ];
-                    }
-                }
+                $listJobs = $this->getWorkReporting($unit, $employee->job_id);
 
                 $activeSchedule['attendance']['normal'] = [
                     'minimum_start_time' => Carbon::parse($normal->start_time)->addMinutes(-$normal->early_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
@@ -1300,5 +1253,60 @@ class EmployeeAttendanceService extends BaseService
             'message' => 'success',
             'data' => $this->list($query, $request)
         ]);
+    }
+
+    private function getWorkReporting(Unit $unit, int $odooJobID): array {
+        $jobs = $unit->jobs;
+        $listJobs = [];
+
+        foreach ($jobs as $job) {
+            if ($job->odoo_job_id === $odooJobID) {
+                $listJobs[] = [
+                    'is_camera' => $job->pivot->is_camera,
+                    'is_upload' => $job->pivot->is_upload,
+                    'is_reporting' => $job->pivot->is_mandatory_reporting,
+                    'total_reporting' => $job->pivot->total_normal,
+                    'total_normal' => $job->pivot->total_normal,
+                    'total_backup' => $job->pivot->total_backup,
+                    'total_overtime' => $job->pivot->total_overtime,
+                ];
+            }
+        }
+
+        if (count($listJobs) > 0) {
+            return $listJobs;
+        }
+
+        /**
+         * @var Builder $unitQuery
+         */
+        $unitQuery = Unit::query()->from('unit_data')
+            ->withRecursiveExpression('unit_data', Unit::query()->whereRaw("relation_id = '$unit->relation_id'")->unionAll(
+                Unit::query()->select(['units.*'])
+                    ->join('unit_data', function (JoinClause $query) {
+                        $query->on('units.relation_id', '=', 'unit_data.parent_unit_id');
+                    })
+            ));
+        /**
+         * @var Unit $corporateUnit
+         */
+        $corporateUnit = $unitQuery->where('unit_level', '=', Unit::UnitLevelCorporate)->first();
+        $jobs = $corporateUnit->jobs;
+
+        foreach ($jobs as $job) {
+            if ($job->odoo_job_id === $odooJobID) {
+                $listJobs[] = [
+                    'is_camera' => $job->pivot->is_camera,
+                    'is_upload' => $job->pivot->is_upload,
+                    'is_reporting' => $job->pivot->is_mandatory_reporting,
+                    'total_reporting' => $job->pivot->total_normal,
+                    'total_normal' => $job->pivot->total_normal,
+                    'total_backup' => $job->pivot->total_backup,
+                    'total_overtime' => $job->pivot->total_overtime,
+                ];
+            }
+        }
+
+        return $listJobs;
     }
 }

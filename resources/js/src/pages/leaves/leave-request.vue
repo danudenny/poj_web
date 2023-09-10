@@ -175,6 +175,22 @@ export default {
                         headerHozAlign: 'center',
                         headerSort: false,
                     },
+	                {
+		                title: 'Approval Notes',
+		                field: 'last_approver',
+		                hozAlign: 'center',
+		                headerHozAlign: 'center',
+		                headerSort: false,
+		                formatter: function (cell) {
+							let value = cell.getValue()
+
+			                if (value === null || (value != null && (value.notes === '' || value.notes === null))) {
+				                return '-'
+			                } else {
+				                return value.notes
+			                }
+		                }
+	                },
                     {
                         title: 'File',
                         field: 'file_url',

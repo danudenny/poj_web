@@ -110,6 +110,14 @@
                                             </div>
                                         </div>
                                     </div>
+	                                <div class="row">
+		                                <div class="col-md-12">
+			                                <div class="mt-3">
+				                                <label class="form-label">Employee Notes</label>
+				                                <textarea class="form-control" v-model="attendance.check_in_notes" required disabled></textarea>
+			                                </div>
+		                                </div>
+	                                </div>
 
                                     <hr/>
 
@@ -254,7 +262,8 @@ export default {
                 attendance_approvals: [],
                 unit_target: {
                     formatted_name: null
-                }
+                },
+	            check_in_notes: null
             },
             checkInMap: {
                 mapContainer: null,
