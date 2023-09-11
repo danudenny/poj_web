@@ -3,6 +3,7 @@
 namespace App\Services\Core;
 
 use App\Helpers\UnitHelper;
+use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Http\Resources\RoleResource;
 use App\Http\Resources\UserProfileCollection;
 use App\Http\Resources\UserResource;
@@ -23,6 +24,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class UserService extends BaseService
 {
@@ -489,5 +491,45 @@ class UserService extends BaseService
             'message' => 'User profile fetched successfully',
             'data' => UserRolePermissionResource::make($user)
         ], 200);
+    }
+
+    public function changePassword(ChangePasswordRequest $request) {
+        try {
+            $user = $request->user();
+
+            $data = [
+                'old_password' => $request->input('old_password'),
+                'new_password' => $request->input('new_password'),
+                'confirmation_password' => $request->input('confirmation_password')
+            ];
+
+            if ($data['new_password'] != $data['confirmation_password']) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Confirmation password not same'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            if (!Hash::check($data['old_password'], $user->password)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Old password invalid'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            $user->password = Hash::make($data['new_password']);
+            $user->authkey = Hash::make($user->email.'-'.$user->password);
+            $user->save();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success!'
+            ]);
+        } catch (\Throwable $exception) {
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

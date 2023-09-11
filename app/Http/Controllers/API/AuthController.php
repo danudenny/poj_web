@@ -3,10 +3,15 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\BaseController;
+use App\Http\Requests\Auth\ChangePasswordRequest;
+use App\Http\Requests\Auth\ForgetPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\Core\AuthService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Hash;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class AuthController extends BaseController
 {
@@ -87,7 +92,7 @@ class AuthController extends BaseController
      * @param Request $request
      * @return JsonResponse|\Illuminate\Http\Response
      */
-    public function forget_password(Request $request)
+    public function forget_password(ForgetPasswordRequest $request)
     {
         try {
             $data = $request->only('email');

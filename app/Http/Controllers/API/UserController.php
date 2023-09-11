@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\BaseController;
+use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Http\Requests\User\UserSaveRequest;
 use App\Http\Requests\User\UserUpdateRequest;
 use App\Services\Core\UserService;
@@ -184,4 +185,7 @@ class UserController extends BaseController
         return $this->userService->profile();
     }
 
+    public function changePassword(ChangePasswordRequest $request) {
+        return $this->userService->changePassword($request);
+    }
 }
