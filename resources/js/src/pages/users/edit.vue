@@ -19,7 +19,7 @@
                                 <label class="form-label">Working Unit</label>
                                 <input disabled class="form-control" type="text" placeholder="-" v-model="user.employee.last_unit.name">
                             </div>
-                            <div class="mb-3" v-if="false">
+                            <div class="mb-3">
                                 <div role="alert" class="text-danger">
                                     <strong><i class="fa fa-warning"></i> Kosongkan Password Jika Tidak Ingin Mengganti! </strong>
                                 </div>
