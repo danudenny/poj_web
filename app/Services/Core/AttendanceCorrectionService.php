@@ -2,6 +2,7 @@
 
 namespace App\Services\Core;
 
+use App\Helpers\Notification\NotificationScreen;
 use App\Http\Requests\AttendanceCorrection\ApprovalCorrectionRequest;
 use App\Http\Requests\AttendanceCorrection\CreateCorrectionRequest;
 use App\Models\ApprovalModule;
@@ -9,6 +10,7 @@ use App\Models\AttendanceCorrectionApproval;
 use App\Models\AttendanceCorrectionRequest;
 use App\Models\BackupEmployeeTime;
 use App\Models\EmployeeAttendance;
+use App\Models\EmployeeNotification;
 use App\Models\EmployeeTimesheetSchedule;
 use App\Models\OvertimeEmployee;
 use App\Models\Role;
@@ -290,6 +292,17 @@ class AttendanceCorrectionService extends BaseService
                 $attendanceCorrectionApproval->employee_id = $approvalEmployeeID;
                 $attendanceCorrectionApproval->status = AttendanceCorrectionApproval::StatusPending;
                 $attendanceCorrectionApproval->save();
+
+                $this->getNotificationService()->createNotification(
+                    $approvalEmployeeID,
+                    'Approval Koreksi Kehadiran',
+                    "Halo, anda memiliki daftar permintaan persetujuan koreksi kehadiran. Klik di sini untuk membuka halaman persetujuan koreksi kehadiran.",
+                    "Halo, anda memiliki daftar permintaan persetujuan koreksi kehadiran. Klik di sini untuk membuka halaman persetujuan koreksi kehadiran.",
+                    EmployeeNotification::ReferenceAttendanceCorrection,
+                    $attendanceCorrectionRequest->id
+                )->withMobileScreen(NotificationScreen::MobileTinjauanKehadiran, [
+                    'active_tab' => 2
+                ])->withSendPushNotification()->send();
             }
 
             if ($attendanceCorrectionRequest->status == AttendanceCorrectionApproval::StatusApproved) {
@@ -390,6 +403,32 @@ class AttendanceCorrectionService extends BaseService
             }
 
             $approvalCorrectionRequest->save();
+
+            if ($approvalCorrectionRequest->status == AttendanceCorrectionApproval::StatusApproved) {
+                $this->getNotificationService()->createNotification(
+                    $approvalCorrectionRequest->employee_id,
+                    'Koreksi Kehadiran Disetujui',
+                    "Halo, pengajuan koreksi kehadiran anda {$approvalCorrectionRequest->correction_date} telah disetujui. Klik di sini untuk melihat status persetujuan atas pengajuan koreksi kehadiran anda.",
+                    "Halo, pengajuan koreksi kehadiran anda {$approvalCorrectionRequest->correction_date} telah disetujui. Klik di sini untuk melihat status persetujuan atas pengajuan koreksi kehadiran anda.",
+                    EmployeeNotification::ReferenceAttendanceCorrection,
+                    $approvalCorrectionRequest->id
+                )->withMobileScreen(NotificationScreen::MobileTinjauanKehadiran, [
+                    'active_tab' => 2,
+                    'active_sub_tab' => 2
+                ])->withSendPushNotification()->send();
+            } else if ($approvalCorrectionRequest->status == AttendanceCorrectionApproval::StatusRejected) {
+                $this->getNotificationService()->createNotification(
+                    $approvalCorrectionRequest->employee_id,
+                    'Koreksi Kehadiran Ditolak',
+                    "Halo, pengajuan koreksi kehadiran anda {$approvalCorrectionRequest->correction_date} ditolak. Klik di sini untuk melihat status persetujuan atas pengajuan koreksi kehadiran anda.",
+                    "Halo, pengajuan koreksi kehadiran anda {$approvalCorrectionRequest->correction_date} ditolak. Klik di sini untuk melihat status persetujuan atas pengajuan koreksi kehadiran anda.",
+                    EmployeeNotification::ReferenceAttendanceCorrection,
+                    $approvalCorrectionRequest->id
+                )->withMobileScreen(NotificationScreen::MobileTinjauanKehadiran, [
+                    'active_tab' => 2,
+                    'active_sub_tab' => 1
+                ])->withSendPushNotification()->send();
+            }
 
             DB::commit();
 

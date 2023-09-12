@@ -2,6 +2,7 @@
 
 namespace App\Services\Core;
 
+use App\Helpers\Notification\NotificationScreen;
 use App\Helpers\UnitHelper;
 use App\Http\Requests\EmployeeAttendance\ApprovalEmployeeAttendance;
 use App\Http\Requests\EmployeeAttendance\CheckInAttendanceRequest;
@@ -13,6 +14,7 @@ use App\Models\BackupEmployeeTime;
 use App\Models\Employee;
 use App\Models\EmployeeAttendance;
 use App\Models\EmployeeAttendanceHistory;
+use App\Models\EmployeeNotification;
 use App\Models\EmployeeTimesheetSchedule;
 use App\Models\LateCheckin;
 use App\Models\OvertimeEmployee;
@@ -607,6 +609,18 @@ class EmployeeAttendanceService extends BaseService
                 $attendanceApproval->employee_id = $approvalEmployeeID;
                 $attendanceApproval->status = AttendanceApproval::StatusPending;
                 $attendanceApproval->save();
+
+                if ($attendanceType === EmployeeAttendance::TypeOffSite) {
+                    $this->getNotificationService()->createNotification(
+                        $user->employee_id,
+                        "Checkin Offsite Approval",
+                        "Halo, anda memiliki daftar permintaan persetujuan kehadiran. Klik di sini untuk membuka halaman persetujuan kehadiran.",
+                        "Halo, anda memiliki daftar permintaan persetujuan kehadiran. Klik di sini untuk membuka halaman persetujuan kehadiran.",
+                        EmployeeNotification::ReferenceTimesheet,
+                    )->withMobileScreen(NotificationScreen::MobileJadwalKehadiran, [
+                        'active_tab' => 1
+                    ])->withSendPushNotification()->send();
+                }
             }
 
             DB::commit();

@@ -2,6 +2,7 @@
 
 namespace App\Services\Core;
 
+use App\Helpers\Notification\NotificationScreen;
 use App\Http\Requests\Backup\BackupApprovalRequest;
 use App\Http\Requests\Backup\BackupCheckInRequest;
 use App\Http\Requests\Backup\BackupCheckOutRequest;
@@ -504,6 +505,17 @@ class BackupService extends ScheduleService
                     $backupApproval->backup_id = $backup->id;
                     $backupApproval->status = BackupApproval::StatusPending;
                     $backupApproval->save();
+
+                    $this->getNotificationService()->createNotification(
+                        $approvalUserID,
+                        'Approval Backup',
+                        "Halo, anda memiliki daftar permintaan persetujuan backup. Klik di sini untuk membuka halaman persetujuan backup.",
+                        "Halo, anda memiliki daftar permintaan persetujuan backup. Klik di sini untuk membuka halaman persetujuan backup.",
+                        EmployeeNotification::ReferenceBackup,
+                        $backup->id
+                    )->withMobileScreen(NotificationScreen::MobileBackupList, [
+                        'active_tab' => 3
+                    ])->withSendPushNotification()->send();
                 }
             }
 
@@ -532,11 +544,13 @@ class BackupService extends ScheduleService
                 $this->getNotificationService()->createNotification(
                     $employeeID,
                     'Pelaksanaan Backup',
-                    count($backupDates) == 0 ? $backupDate[0]['date'] : sprintf("%s - %s", $backupDates[0]['date'], $backupDates[count($backupDates) - 1]['date']),
-                    'Backup Pegawai',
+                    "Halo, anda memiliki jadwal backup terbaru. Klik di sini untuk membuka halaman jadwal backup.",
+                    "Halo, anda memiliki jadwal lembur terbaru. Klik di sini untuk membuka halaman jadwal lembur.",
                     EmployeeNotification::ReferenceBackup,
                     $backup->id
-                )->withSendPushNotification()->send();
+                )->withMobileScreen(NotificationScreen::MobileBackupList, [
+                    'active_tab' => 0
+                ])->withSendPushNotification()->send();
             }
 
             $backupHistory = new BackupHistory();
@@ -674,6 +688,36 @@ class BackupService extends ScheduleService
             }
 
             $backup->save();
+
+            if ($backup->status == BackupApproval::StatusRejected) {
+                foreach ($backup->backupTimes[0]->backupEmployees as $backupEmployee) {
+                    $this->getNotificationService()->createNotification(
+                        $backupEmployee->employee_id,
+                        'Backup Ditolak',
+                        "Halo, pengajuan backup anda {$backup->start_date} - {$backup->end_date} di Unit {$backup->unit->name} ditolak. Klik di sini untuk melihat status persetujuan atas pengajuan backup anda.",
+                        "Halo, pengajuan backup anda {$backup->start_date} - {$backup->end_date} di Unit {$backup->unit->name} ditolak. Klik di sini untuk melihat status persetujuan atas pengajuan backup anda.",
+                        EmployeeNotification::ReferenceBackup,
+                        $backup->id
+                    )->withMobileScreen(NotificationScreen::MobileBackupList, [
+                        'active_tab' => 3,
+                        'active_sub_tab' => 1
+                    ])->withSendPushNotification()->send();
+                }
+            } else if ($backup->status == BackupApproval::StatusApproved) {
+                foreach ($backup->backupTimes[0]->backupEmployees as $backupEmployee) {
+                    $this->getNotificationService()->createNotification(
+                        $backupEmployee->employee_id,
+                        'Backup Disetujui',
+                        "Halo, pengajuan backup anda {$backup->start_date} - {$backup->end_date} di Unit {$backup->unit->name} telah disetujui. Klik di sini untuk melihat status persetujuan atas pengajuan backup anda.",
+                        "Halo, pengajuan backup anda {$backup->start_date} - {$backup->end_date} di Unit {$backup->unit->name} telah disetujui. Klik di sini untuk melihat status persetujuan atas pengajuan backup anda.",
+                        EmployeeNotification::ReferenceBackup,
+                        $backup->id
+                    )->withMobileScreen(NotificationScreen::MobileBackupList, [
+                        'active_tab' => 3,
+                        'active_sub_tab' => 2
+                    ])->withSendPushNotification()->send();
+                }
+            }
 
             DB::commit();
             return response()->json([

@@ -2,10 +2,12 @@
 
 namespace App\Services\Core;
 
+use App\Helpers\Notification\NotificationScreen;
 use App\Http\Requests\LeaveRequest\ApprovalRequest;
 use App\Models\ApprovalModule;
 use App\Models\BackupEmployeeTime;
 use App\Models\Employee;
+use App\Models\EmployeeNotification;
 use App\Models\EmployeeTimesheetSchedule;
 use App\Models\LeaveRequest;
 use App\Models\LeaveRequestApproval;
@@ -292,6 +294,17 @@ class LeaveRequestService extends BaseService {
                 $leaveRequestApproval->employee_id = $approverEmployeeID;
                 $leaveRequestApproval->status = LeaveRequestApproval::StatusPending;
                 $leaveRequestApproval->save();
+
+                $this->getNotificationService()->createNotification(
+                    $approverEmployeeID,
+                    'Approval Izin/Cuti',
+                    "Halo, anda memiliki daftar permintaan persetujuan izin/ cuti. Klik di sini untuk membuka halaman persetujuan izin/ cuti.",
+                    "Halo, anda memiliki daftar permintaan persetujuan izin/ cuti. Klik di sini untuk membuka halaman persetujuan izin/ cuti.",
+                    EmployeeNotification::ReferenceLeave,
+                    $leaveRequest->id
+                )->withMobileScreen(NotificationScreen::MobileLeavePermissionLeave, [
+                    'active_tab' => 2
+                ])->withSendPushNotification()->send();
             }
 
             if($status === LeaveRequest::StatusApproved) {
@@ -389,6 +402,32 @@ class LeaveRequestService extends BaseService {
 
                     $this->removeSchedule($leaveRequest);
                 }
+            }
+
+            if ($leaveRequest->last_status == LeaveRequestApproval::StatusApproved) {
+                $this->getNotificationService()->createNotification(
+                    $leaveRequest->employee_id,
+                    'Izin/Cuti Disetujui',
+                    "Halo, pengajuan izin/ cuti anda {$leaveRequest->start_date} - {$leaveRequest->end_date} telah disetujui. Klik di sini untuk melihat status persetujuan atas pengajuan izin/ cuti anda.",
+                    "Halo, pengajuan izin/ cuti anda {$leaveRequest->start_date} - {$leaveRequest->end_date} telah disetujui. Klik di sini untuk melihat status persetujuan atas pengajuan izin/ cuti anda.",
+                    EmployeeNotification::ReferenceLeave,
+                    $leaveRequest->id
+                )->withMobileScreen(NotificationScreen::MobileLeavePermissionLeave, [
+                    'active_tab' => 2,
+                    'active_sub_tab' => 2
+                ])->withSendPushNotification()->send();
+            } else if ($leaveRequest->last_status == LeaveRequestApproval::StatusRejected) {
+                $this->getNotificationService()->createNotification(
+                    $leaveRequest->employee_id,
+                    'Izin/Cuti Ditolak',
+                    "Halo, pengajuan izin/ cuti anda {$leaveRequest->start_date} - {$leaveRequest->end_date} ditolak. Klik di sini untuk melihat status persetujuan atas pengajuan izin/ cuti anda.",
+                    "Halo, pengajuan izin/ cuti anda {$leaveRequest->start_date} - {$leaveRequest->end_date} ditolak. Klik di sini untuk melihat status persetujuan atas pengajuan izin/ cuti anda.",
+                    EmployeeNotification::ReferenceLeave,
+                    $leaveRequest->id
+                )->withMobileScreen(NotificationScreen::MobileLeavePermissionLeave, [
+                    'active_tab' => 2,
+                    'active_sub_tab' => 1
+                ])->withSendPushNotification()->send();
             }
 
             DB::commit();

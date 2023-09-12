@@ -2,6 +2,7 @@
 
 namespace App\Services\Core;
 
+use App\Helpers\Notification\NotificationScreen;
 use App\Models\EmployeeNotification;
 use App\Models\User;
 use App\Services\BaseService;
@@ -29,6 +30,8 @@ class NotificationService extends BaseService
      * @var User|null
      */
     private User|null $activeUser = null;
+
+    private NotificationScreen|null $mobileNotificationScreen = null;
 
     /**
      * @param int $employee_id
@@ -76,12 +79,20 @@ class NotificationService extends BaseService
         return $this;
     }
 
+    public function withMobileScreen(string $screenName, array $payload = []): NotificationService {
+        $this->mobileNotificationScreen = new NotificationScreen($screenName, $payload);
+        return $this;
+    }
+
     public function send() {
         if (is_null($this->currentEmployeeNotification)) {
             return;
         }
 
         if (!$this->isSilent) {
+            if ($this->mobileNotificationScreen) {
+                $this->currentEmployeeNotification->mobile_data = $this->mobileNotificationScreen->buildMobilePayload();
+            }
             $this->currentEmployeeNotification->save();
         }
         if ($this->isSendPushNotification) {
@@ -99,6 +110,11 @@ class NotificationService extends BaseService
             return;
         }
 
+        $data = null;
+        if (!is_null($this->mobileNotificationScreen)) {
+            $data = $this->mobileNotificationScreen->buildMobilePayload();
+        }
+
         fcm()
             ->to([$this->activeUser->fcm_token])
             ->priority('high')
@@ -107,6 +123,7 @@ class NotificationService extends BaseService
                 'title' => $title,
                 'body' => $body
             ])
+            ->data($data)
             ->enableResponseLog()
             ->send();
     }

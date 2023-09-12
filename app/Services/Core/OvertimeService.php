@@ -2,6 +2,7 @@
 
 namespace App\Services\Core;
 
+use App\Helpers\Notification\NotificationScreen;
 use App\Http\Requests\Overtime\OvertimeCheckInRequest;
 use App\Http\Requests\Overtime\CreateOvertimeRequest;
 use App\Http\Requests\Overtime\OvertimeApprovalRequest;
@@ -508,6 +509,17 @@ class OvertimeService extends ScheduleService
                     $backupEmployeeTime->employee_id = $employeeID;
                     $backupEmployeeTime->overtime_date_id = $overtimeDate->id;
                     $backupEmployeeTime->save();
+
+                    $this->getNotificationService()->createNotification(
+                        $employeeID,
+                        'Request Approval Lembur',
+                        "Halo, anda memiliki daftar permintaan persetujuan lembur. Klik di sini untuk membuka halaman persetujuan lembur.",
+                        "Halo, anda memiliki daftar permintaan persetujuan lembur. Klik di sini untuk membuka halaman persetujuan lembur.",
+                        EmployeeNotification::ReferenceOvertime,
+                        $overtime->id
+                    )->withMobileScreen(NotificationScreen::MobileOvertimeList, [
+                        'active_tab' => 3
+                    ])->withSendPushNotification()->send();
                 }
             }
 
@@ -521,11 +533,13 @@ class OvertimeService extends ScheduleService
                 $this->getNotificationService()->createNotification(
                     $employeeID,
                     'Pelaksanaan Lembur',
-                    count($overtimeDates) == 0 ? $overtimeDates[0]['date'] : sprintf("%s - %s", $overtimeDates[0]['date'], $overtimeDates[count($overtimeDates) - 1]['date']),
-                    'Lembur Pegawai',
+                    "Halo, anda memiliki jadwal lembur terbaru. Klik di sini untuk membuka halaman jadwal lembur.",
+                    "Halo, anda memiliki jadwal lembur terbaru. Klik di sini untuk membuka halaman jadwal lembur.",
                     EmployeeNotification::ReferenceOvertime,
                     $overtime->id
-                )->withSendPushNotification()->send();
+                )->withMobileScreen(NotificationScreen::MobileOvertimeList, [
+                    'active_tab' => 0
+                ])->withSendPushNotification()->send();
             }
 
             DB::commit();
@@ -682,6 +696,36 @@ class OvertimeService extends ScheduleService
             }
 
             $overtime->save();
+
+            if ($overtime->last_status === OvertimeApproval::StatusApproved) {
+                foreach ($overtime->overtimeDates[0]->overtimeEmployees as $overtimeEmployee) {
+                    $this->getNotificationService()->createNotification(
+                        $overtimeEmployee->employee_id,
+                        'Lembur Disetujui',
+                        "Halo, pengajuan lembur anda {$overtime->start_date} - {$overtime->end_date} di Unit {$overtime->unit->name} telah disetujui. Klik di sini untuk melihat status persetujuan atas pengajuan lembur anda.",
+                        "Halo, pengajuan lembur anda {$overtime->start_date} - {$overtime->end_date} di Unit {$overtime->unit->name} telah disetujui. Klik di sini untuk melihat status persetujuan atas pengajuan lembur anda.",
+                        EmployeeNotification::ReferenceOvertime,
+                        $overtime->id
+                    )->withMobileScreen(NotificationScreen::MobileOvertimeList, [
+                        'active_tab' => 1,
+                        'active_sub_tab' => 2
+                    ])->withSendPushNotification()->send();
+                }
+            } else if ($overtime->last_status === OvertimeApproval::StatusRejected) {
+                foreach ($overtime->overtimeDates[0]->overtimeEmployees as $overtimeEmployee) {
+                    $this->getNotificationService()->createNotification(
+                        $overtimeEmployee->employee_id,
+                        'Lembur Ditolak',
+                        "Halo, pengajuan lembur anda {$overtime->start_date} - {$overtime->end_date} di Unit {$overtime->unit->name} ditolak. Klik di sini untuk melihat status persetujuan atas pengajuan lembur anda.",
+                        "Halo, pengajuan lembur anda {$overtime->start_date} - {$overtime->end_date} di Unit {$overtime->unit->name} ditolak. Klik di sini untuk melihat status persetujuan atas pengajuan lembur anda.",
+                        EmployeeNotification::ReferenceOvertime,
+                        $overtime->id
+                    )->withMobileScreen(NotificationScreen::MobileOvertimeList, [
+                        'active_tab' => 1,
+                        'active_sub_tab' => 1
+                    ])->withSendPushNotification()->send();
+                }
+            }
 
             DB::commit();
 

@@ -2,9 +2,11 @@
 
 namespace App\Services\Core;
 
+use App\Helpers\Notification\NotificationScreen;
 use App\Http\Requests\EmployeeTimesheet\UpdateEmployeeTimesheetScheduleRequest;
 use App\Http\Requests\Timesheet\CreateTimesheetRequest;
 use App\Models\Employee;
+use App\Models\EmployeeNotification;
 use App\Models\EmployeeTimesheet;
 use App\Models\EmployeeTimesheetDay;
 use App\Models\EmployeeTimesheetSchedule;
@@ -350,6 +352,9 @@ class EmployeeTimesheetService extends ScheduleService {
         DB::beginTransaction();
         try {
             foreach ($employeeIds as $employeeId) {
+                /**
+                 * @var Employee $employeeExists
+                 */
                 $employeeExists = Employee::where('id', $employeeId)->get();
                 if (!$employeeExists) {
                     return response()->json([
@@ -459,6 +464,16 @@ class EmployeeTimesheetService extends ScheduleService {
                         'data' => $schedule
                     ], 500);
                 }
+
+                $this->getNotificationService()->createNotification(
+                    $employeeId,
+                    "Jadwal Kerja Baru",
+                    "Halo {$employeeExists->name}, anda memiliki jadwal kerja terbaru. Klik di sini untuk membuka halaman jadwal kerja.",
+                    "Halo {$employeeExists->name}, anda memiliki jadwal kerja terbaru. Klik di sini untuk membuka halaman jadwal kerja.",
+                    EmployeeNotification::ReferenceTimesheet,
+                )->withMobileScreen(NotificationScreen::MobileJadwalKehadiran, [
+                    'active_tab' => 0
+                ])->withSendPushNotification()->send();
             }
 
             DB::commit();
