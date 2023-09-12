@@ -247,7 +247,6 @@ export default {
         viewDetailsFormatter(cell) {
             const rowData = cell.getRow().getData();
             return `
-                <button class="button-icon button-success" data-action="view" data-row-id="${rowData.id}"><i data-action="view" class="fa fa-eye"></i> </button>
                 <button class="button-icon button-warning" data-action="edit" data-row-id="${rowData.id}"><i data-action="edit" class="fa fa-pencil"></i> </button>
              `;
         },
