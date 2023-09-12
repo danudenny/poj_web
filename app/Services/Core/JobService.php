@@ -93,7 +93,7 @@ class JobService extends BaseService
         $totalDataCount = count($data);
         $totalPages = ceil($totalDataCount / $perPage);
 
-        $paginatedData = array_slice($data, ($currentPage - 1) * $perPage, $perPage);
+        $paginatedData = $data;
 
         return response()->json([
             'status' => 'success',
