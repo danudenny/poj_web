@@ -437,6 +437,7 @@ export default {
         },
         onUnitSelected(val) {
             this.overtime.unit_relation_id = this.selectedUnit.relation_id
+	        this.selectedJob = null
             this.jobs = []
             this.overtime.employee_ids = [];
             this.getJobsData()

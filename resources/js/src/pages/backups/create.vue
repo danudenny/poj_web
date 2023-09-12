@@ -297,6 +297,7 @@ export default {
         },
         onUnitSelected(val) {
             this.backup.unit_relation_id = this.selectedUnit.relation_id
+	        this.selectedJob = null
             this.jobs = []
             this.getJobsData()
         },
