@@ -1026,6 +1026,17 @@ class OvertimeService extends ScheduleService
             $overtimeApproval->overtime_id = $overtime->id;
             $overtimeApproval->status = OvertimeApproval::StatusPending;
             $overtimeApproval->save();
+
+            $this->getNotificationService()->createNotification(
+                $approvalUserID,
+                'Request Approval Lembur',
+                "Halo, anda memiliki daftar permintaan persetujuan lembur. Klik di sini untuk membuka halaman persetujuan lembur.",
+                "Halo, anda memiliki daftar permintaan persetujuan lembur. Klik di sini untuk membuka halaman persetujuan lembur.",
+                EmployeeNotification::ReferenceOvertime,
+                $overtime->id
+            )->withMobileScreen(NotificationScreen::MobileOvertimeList, [
+                'active_tab' => 3
+            ])->withSendPushNotification()->send();
         }
 
         if (count($approvalUserIDs) == 0) {
