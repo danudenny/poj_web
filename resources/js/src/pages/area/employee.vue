@@ -65,15 +65,26 @@ export default {
 					}
 				},
 				ajaxURLGenerator: (url, config, params) => {
-					params.filter.map((item) => {
-						if (item.field === 'name') this.filterName = item.value
-						if (item.field === 'work_email') this.filterEmail = item.value
-						if (item.field === 'job.name') this.filterJob = item.value
-						if (item.field === 'cabang.name') this.filterCabang = item.value
-						if (item.field === 'outlet.name') this.filterOutlet = item.value
-					})
-					// return `${url}?page=${params.page}&per_page=${params.size}&name=${this.filterName}&email=${this.filterEmail}&cabang=${this.filterCabang}&outlet=${this.filterOutlet}&job=${this.filterJob}`
-					return `${url}?page=${params.page}&per_page=${params.size}&append=unit_outlet,unit_cabang,unit_area&unit_relation_id=${this.id}`
+                    let localFilter = {
+                        employeeName: '',
+                        jobName: '',
+                        workEmail: '',
+                        employeeCategory: '',
+                        outletName: '',
+                        cabangName: '',
+                        areaName: '',
+                    }
+                    params.filter.map((item) => {
+                        if (item.field === 'name') localFilter.employeeName = item.value
+                        if (item.field === 'job.name') localFilter.jobName = item.value
+                        if (item.field === 'work_email') localFilter.workEmail = item.value
+                        if (item.field === 'employee_category') localFilter.employeeCategory = item.value
+                        if (item.field === 'outlet.name') localFilter.outletName = item.value
+                        if (item.field === 'cabang.name') localFilter.cabangName = item.value
+                        if (item.field === 'area.name') localFilter.areaName = item.value
+                    })
+
+					return `${url}?page=${params.page}&per_page=${params.size}&append=unit_outlet,unit_cabang,unit_area&unit_relation_id=${this.id}&job_name=${localFilter.jobName}&employee_category=${localFilter.employeeCategory}&name=${localFilter.employeeName}&work_email=${localFilter.workEmail}&outlet_name=${localFilter.outletName}&cabang_name=${localFilter.cabangName}&area_name=${localFilter.areaName}`
 				},
 				layout: 'fitDataFill',
 				renderHorizontal:"virtual",
@@ -130,55 +141,31 @@ export default {
 					{
 						title: 'Area',
 						field: 'area.name',
-						headerFilter: "list",
 						hozAlign: 'center',
+                        headerFilter:"input",
 						headerHozAlign: 'center',
-						headerFilterPlaceholder:"Select Outlet",
 						formatter: function (cell, formatterParams, onRendered) {
 							return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
-						},
-						headerFilterParams: {
-							values: this.outlet.map((item) => {
-								return item.name
-							}),
-							clearable:true,
-							freetext:true
 						},
 					},
 					{
 						title: 'Cabang',
 						field: 'cabang.name',
-						headerFilter: "list",
 						hozAlign: 'center',
+                        headerFilter:"input",
 						headerHozAlign: 'center',
-						headerFilterPlaceholder:"Select Outlet",
 						formatter: function (cell, formatterParams, onRendered) {
 							return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
-						},
-						headerFilterParams: {
-							values: this.outlet.map((item) => {
-								return item.name
-							}),
-							clearable:true,
-							freetext:true
 						},
 					},
 					{
 						title: 'Outlet',
 						field: 'outlet.name',
-						headerFilter: "list",
 						hozAlign: 'center',
+                        headerFilter:"input",
 						headerHozAlign: 'center',
-						headerFilterPlaceholder:"Select Outlet",
 						formatter: function (cell, formatterParams, onRendered) {
 							return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
-						},
-						headerFilterParams: {
-							values: this.outlet.map((item) => {
-								return item.name
-							}),
-							clearable:true,
-							freetext:true
 						},
 					},
 					{

@@ -237,6 +237,7 @@ class EmployeeService extends BaseService
 
         try {
             $employees = Employee::query()->with(['department', 'operatingUnit', 'corporate', 'kanwil', 'area', 'cabang', 'outlet', 'job', 'units', 'partner', 'team']);
+            $employees->leftJoin('jobs', 'jobs.odoo_job_id', '=', 'employees.job_id');
 
             $lastUnitRelationID = $request->get('last_unit_relation_id');
             $unitRelationID = $request->get('unit_relation_id');
@@ -295,14 +296,26 @@ class EmployeeService extends BaseService
             }
 
             $employees->when($request->input('job_id'), function (Builder $builder) use ($request) {
-                $builder->leftJoin('jobs', 'jobs.odoo_job_id', '=', 'employees.job_id')
-                    ->where('jobs.id', '=', $request->input('job_id'));
+                $builder->where('jobs.id', '=', $request->input('job_id'));
             });
 
             if ($isOperatingUnitUser = $request->input('is_operating_unit_user')) {
                 if ($isOperatingUnitUser == '1') {
                     $employees->where('employees.default_operating_unit_id', '>', 0);
                 }
+            }
+
+            if ($email = $request->get('work_email')) {
+                $employees->where('employees.work_email', 'ILIKE', "%$email%");
+            }
+
+            if ($employeeCategory = $request->get('employee_category')) {
+                $employeeCategory = strtolower(str_replace(" ", "_", $employeeCategory));
+                $employees->where('employees.employee_category', 'ILIKE', "%$employeeCategory%");
+            }
+
+            if ($jobName = $request->get('job_name')) {
+                $employees->where('jobs.name', 'ILIKE', "%$jobName%");
             }
 
             if ($defaultOperatingUnit) {
@@ -346,10 +359,6 @@ class EmployeeService extends BaseService
 
             $employees->when($request->filled('team_id'), function(Builder $builder) use ($request) {
                 $builder->where('employees.team_id', '=', intval($request->input('team_id')));
-            });
-
-            $employees->when($request->filled('employee_category'), function(Builder $builder) use ($request) {
-                $builder->where('employees.employee_category', '=', $request->query('employee_category'));
             });
 
             $employees->when($request->filled('employee_type'), function(Builder $builder) use ($request) {

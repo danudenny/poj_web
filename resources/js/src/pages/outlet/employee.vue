@@ -62,7 +62,21 @@ export default {
 					return response.data.data
 				},
 				ajaxURLGenerator: (url, config, params) => {
-					return `${url}?page=${params.page}&per_page=${params.size}&append=unit_outlet&unit_relation_id=${this.id}`
+                    let localFilter = {
+                        employeeName: '',
+                        jobName: '',
+                        workEmail: '',
+                        employeeCategory: '',
+                        outletName: ''
+                    }
+                    params.filter.map((item) => {
+                        if (item.field === 'name') localFilter.employeeName = item.value
+                        if (item.field === 'job.name') localFilter.jobName = item.value
+                        if (item.field === 'work_email') localFilter.workEmail = item.value
+                        if (item.field === 'employee_category') localFilter.employeeCategory = item.value
+                        if (item.field === 'outlet.name') localFilter.outletName = item.value
+                    })
+					return `${url}?page=${params.page}&per_page=${params.size}&append=unit_outlet&unit_relation_id=${this.id}&job_name=${localFilter.jobName}&employee_category=${localFilter.employeeCategory}&name=${localFilter.employeeName}&work_email=${localFilter.workEmail}&outlet_name=${localFilter.outletName}`
 				},
 				layout: 'fitDataFill',
 				renderHorizontal:"virtual",
@@ -116,19 +130,11 @@ export default {
 					{
 						title: 'Outlet',
 						field: 'outlet.name',
-						headerFilter: "list",
 						hozAlign: 'center',
+                        headerFilter:"input",
 						headerHozAlign: 'center',
-						headerFilterPlaceholder:"Select Outlet",
 						formatter: function (cell, formatterParams, onRendered) {
 							return cell.getValue() ? cell.getValue() : '<i class="fa fa-times text-danger"></i>'
-						},
-						headerFilterParams: {
-							values: this.outlet.map((item) => {
-								return item.name
-							}),
-							clearable:true,
-							freetext:true
 						},
 					},
 					{
