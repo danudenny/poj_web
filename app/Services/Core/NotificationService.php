@@ -91,7 +91,7 @@ class NotificationService extends BaseService
 
         if (!$this->isSilent) {
             if ($this->mobileNotificationScreen) {
-                $this->currentEmployeeNotification->mobile_data = $this->mobileNotificationScreen->buildMobilePayload();
+                $this->currentEmployeeNotification->mobile_data = json_encode($this->mobileNotificationScreen->buildMobilePayload());
             }
             $this->currentEmployeeNotification->save();
         }
