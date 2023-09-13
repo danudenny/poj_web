@@ -56,7 +56,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-6" v-if="false">
+                        <div class="col-md-6" v-if="true">
                             <div class="mb-3" v-if="user.employee.department">
                                 <label class="form-label">Department</label>
                                 <input disabled class="form-control" type="text" placeholder="-" v-model="user.employee.department.name">
@@ -135,7 +135,6 @@ export default {
             this.selectedTeam = this.department.teams.find(team => team.id === e.id);
         },
         async getTeams() {
-            return
             await this.$axios.get(`/api/v1/admin/department/view/${this.$route.query.dept_id}/${this.$route.query.unit_id}`)
                 .then(res => {
                     this.department = res.data.data;

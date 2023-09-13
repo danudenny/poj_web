@@ -319,7 +319,7 @@ class UnitService extends BaseService
         }
     }
 
-    public function update($data, $id): JsonResponse
+    public function update(Request $data, $id): JsonResponse
     {
         DB::beginTransaction();
         try {
@@ -338,8 +338,8 @@ class UnitService extends BaseService
             $units->radius = $data->radius;
             $units->early_buffer = $data->early_buffer;
             $units->late_buffer = $data->late_buffer;
-            $units->internal_overtime_limit = $data->internal_overtime_limit;
-            $units->outsource_overtime_limit = $data->outsource_overtime_limit;
+            $units->internal_overtime_limit = $data->input('internal_overtime_limit', 0);
+            $units->outsource_overtime_limit = $data->input('outsource_overtime_limit', 0);
 
             if (!$units->save()) {
                 DB::rollBack();
