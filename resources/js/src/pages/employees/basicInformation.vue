@@ -87,6 +87,39 @@
                                 <input class="form-control" :value="employee.agama_id.toUpperCase()" readonly type="text">
                             </div>
                         </div>
+                        <div class="col-md-12">
+                            <div class="mt-3">
+                                <label>Batas Cuti</label>
+                            </div>
+                            <hr/>
+                        </div>
+                        <div class="col-md-3 col-sm-12">
+                            <div class="mb-3">
+                                <label>Hari Libur Nasional</label>
+                                <input class="form-control" :value="employee?.master_overtime_limit?.public_holiday" readonly type="text">
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-12">
+                            <div class="mb-3">
+                                <label>Sequence</label>
+                                <input class="form-control" :value="employee?.master_overtime_limit?.sequence" readonly type="text">
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-12">
+                            <div class="mb-3">
+                                <label>Hari Kerja</label>
+                                <input class="form-control" :value="employee?.master_overtime_limit?.daily_work" readonly type="text">
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-12">
+                            <div class="mb-3">
+                                <label>Hari Libur</label>
+                                <input class="form-control" :value="employee?.master_overtime_limit?.day_off" readonly type="text">
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <hr/>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -25,6 +25,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property int $department_id
  * @property int $team_id
  * @property int $job_id
+ * @property int $odoo_overtime_limit_id
  *
  * Relations:
  * @property-read User $user
@@ -40,6 +41,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property-read Job $job
  * @property-read Department $department
  * @property-read Unit $defaultOperatingUnit
+ * @property-read MasterOvertimeLimit $masterOvertimeLimit
  * @method static find($id)
  * @method static leftJoin(string $string, string $string1, string $string2, string $string3)
  * @method static chunk(int $chunkSize, \Closure $param)
@@ -321,6 +323,10 @@ class Employee extends Model
      */
     public function operatingUnit() {
         return $this->belongsTo(Unit::class, 'default_operating_unit_id', 'relation_id');
+    }
+
+    public function masterOvertimeLimit() {
+        return $this->belongsTo(MasterOvertimeLimit::class, 'odoo_overtime_limit_id', 'odoo_overtime_limit_id');
     }
 
     public function getActiveNormalSchedule(string $timezone = 'UTC'): EmployeeTimesheetSchedule|null {
