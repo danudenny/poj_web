@@ -2,18 +2,24 @@
 
 namespace App\Services\Core;
 
+use App\Helpers\Notification\MailNotification;
+use App\Http\Requests\Auth\ForgetPasswordRequest;
 use App\Http\Resources\UserRolePermissionResource;
 use App\Http\Resources\UserMobileResource;
 use App\Http\Resources\UserResource;
 use App\Jobs\PasswordResetMailJob;
+use App\Mail\PasswordResetMail;
 use App\Models\PasswordReset;
 use App\Models\User;
 use App\Services\BaseService;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class AuthService extends BaseService
 {
@@ -120,49 +126,44 @@ class AuthService extends BaseService
         }
     }
 
-    /**
-     * @param array $data
-     * @return true
-     * @throws \Exception
-     */
-    public function forget_password(array $data): bool
+    public function forget_password(ForgetPasswordRequest $data)
     {
-        DB::beginTransaction();
         try {
-            $this->validateData($data, [
-                'email' => 'required'
-            ]);
+            DB::beginTransaction();
 
-            $user = User::firstWhere('email', $data['email']);
+            /**
+             * @var User $user
+             */
+            $user = User::firstWhere('email', $data->input('email'));
             if (!$user) {
-                throw new \InvalidArgumentException(self::DATA_NOTFOUND, 401);
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User not found'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
-            $password_reset = [
-                'email' => $user->email,
-                'token' => Str::random(),
-                'created_at' => date('Y-m-d H:i:s'),
-            ];
-            PasswordReset::updateOrCreate(['email' => $user->email], $password_reset);
-
-            $baseUrl = config('app.url');
-            $templateData['email'] = $password_reset['email'];
-            $templateData['token'] = $password_reset['token'];
-            $templateData['markdown'] = 'emails.password-reset';
-            $templateData['link'] =  $baseUrl. '/auth/reset_password?token=' . $templateData['token'];
-            dispatch(new PasswordResetMailJob($templateData, $templateData['email']));
+            $newPassword = strtoupper(Str::random(6));
+            $user->password = Hash::make($newPassword);
+            $user->save();
 
             DB::commit();
-            return true;
 
-        }
-        catch (\InvalidArgumentException $e) {
+            MailNotification::SendMailable($user->email, new PasswordResetMail([
+                'fullname' => $user->name,
+                'email' => $user->email,
+                'new_password' => $newPassword,
+            ]));
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success',
+            ]);
+        } catch (\Throwable $e) {
             DB::rollBack();
-            throw new \InvalidArgumentException($e->getMessage());
-        }
-        catch (\Exception $e) {
-            DB::rollBack();
-            throw new \Exception(self::SOMETHING_WRONG . " : " . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

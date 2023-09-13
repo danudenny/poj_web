@@ -2,12 +2,14 @@
 
 namespace App\Services\Core;
 
+use App\Helpers\Notification\MailNotification;
 use App\Helpers\UnitHelper;
 use App\Http\Requests\Auth\ChangePasswordRequest;
 use App\Http\Resources\RoleResource;
 use App\Http\Resources\UserProfileCollection;
 use App\Http\Resources\UserResource;
 use App\Http\Resources\UserRolePermissionResource;
+use App\Mail\PasswordResetMail;
 use App\Models\Employee;
 use App\Models\Role;
 use App\Models\Unit;
@@ -23,6 +25,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
@@ -495,6 +498,9 @@ class UserService extends BaseService
 
     public function changePassword(ChangePasswordRequest $request) {
         try {
+            /**
+             * @var User $user
+             */
             $user = $request->user();
 
             $data = [
@@ -520,6 +526,12 @@ class UserService extends BaseService
             $user->password = Hash::make($data['new_password']);
             $user->authkey = Hash::make($user->email.'-'.$user->password);
             $user->save();
+
+            MailNotification::SendMailable($user->email, new PasswordResetMail([
+                'fullname' => $user->name,
+                'email' => $user->email,
+                'new_password' => $data['new_password'],
+            ]));
 
             return response()->json([
                 'status' => true,

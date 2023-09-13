@@ -11,14 +11,14 @@ use Illuminate\Queue\SerializesModels;
 class PasswordResetMail extends Mailable
 {
     use Queueable, SerializesModels;
-    public $data;
+    public array $data;
 
     /**
      * Create a new message instance.
      *
      * @return void
      */
-    public function __construct($data)
+    public function __construct(array $data)
     {
         $this->data = $data;
     }
@@ -31,7 +31,7 @@ class PasswordResetMail extends Mailable
     public function envelope()
     {
         return new Envelope(
-            subject: 'Password Reset Mail',
+            subject: 'Password Anda Berhasil Diubah!',
         );
     }
 
@@ -42,6 +42,6 @@ class PasswordResetMail extends Mailable
      */
     public function build()
     {
-        return $this->html("this is mail");
+        return $this->view('emails/password-reset', $this->data);
     }
 }

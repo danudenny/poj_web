@@ -88,22 +88,9 @@ class AuthController extends BaseController
         }
     }
 
-    /**
-     * @param Request $request
-     * @return JsonResponse|\Illuminate\Http\Response
-     */
     public function forget_password(ForgetPasswordRequest $request)
     {
-        try {
-            $data = $request->only('email');
-            $result = $this->authService->forget_password($data);
-
-            return $this->sendSuccess($result, 'Token ready');
-
-        }
-        catch (\InvalidArgumentException|\Exception $error) {
-            return $this->sendError($error->getMessage());
-        }
+        return $this->authService->forget_password($request);
     }
 
     /**
