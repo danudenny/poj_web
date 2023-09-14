@@ -86,7 +86,7 @@ export default {
                         if (item.field === 'kanwil.name') localFilter.kanwilName = item.value
                     })
 
-					return `${url}?page=${params.page}&per_page=${params.size}&append=unit_outlet,unit_cabang,unit_area,unit_kanwil&unit_relation_id=${this.id}&job_name=${localFilter.jobName}&employee_category=${localFilter.employeeCategory}&name=${localFilter.employeeName}&work_email=${localFilter.workEmail}&outlet_name=${localFilter.outletName}&cabang_name=${localFilter.cabangName}&area_name=${localFilter.areaName}$kanwil_name=${localFilter.kanwilName}`
+					return `${url}?page=${params.page}&per_page=${params.size}&append=unit_outlet,unit_cabang,unit_area,unit_kanwil&unit_relation_id=${this.id}&job_name=${localFilter.jobName}&employee_category=${localFilter.employeeCategory}&name=${localFilter.employeeName}&work_email=${localFilter.workEmail}&outlet_name=${localFilter.outletName}&cabang_name=${localFilter.cabangName}&area_name=${localFilter.areaName}&kanwil_name=${localFilter.kanwilName}`
 				},
 				layout: 'fitDataFill',
 				renderHorizontal:"virtual",
