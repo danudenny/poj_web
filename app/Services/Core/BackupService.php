@@ -699,7 +699,7 @@ class BackupService extends ScheduleService
                         EmployeeNotification::ReferenceBackup,
                         $backup->id
                     )->withMobileScreen(NotificationScreen::MobileBackupList, [
-                        'active_tab' => 3,
+                        'active_tab' => 1,
                         'active_sub_tab' => 1
                     ])->withSendPushNotification()->send();
                 }
@@ -713,7 +713,7 @@ class BackupService extends ScheduleService
                         EmployeeNotification::ReferenceBackup,
                         $backup->id
                     )->withMobileScreen(NotificationScreen::MobileBackupList, [
-                        'active_tab' => 3,
+                        'active_tab' => 1,
                         'active_sub_tab' => 2
                     ])->withSendPushNotification()->send();
                 }

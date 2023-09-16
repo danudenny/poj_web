@@ -413,7 +413,7 @@ class LeaveRequestService extends BaseService {
                     EmployeeNotification::ReferenceLeave,
                     $leaveRequest->id
                 )->withMobileScreen(NotificationScreen::MobileLeavePermissionLeave, [
-                    'active_tab' => 2,
+                    'active_tab' => 1,
                     'active_sub_tab' => 2
                 ])->withSendPushNotification()->send();
             } else if ($leaveRequest->last_status == LeaveRequestApproval::StatusRejected) {
@@ -425,7 +425,7 @@ class LeaveRequestService extends BaseService {
                     EmployeeNotification::ReferenceLeave,
                     $leaveRequest->id
                 )->withMobileScreen(NotificationScreen::MobileLeavePermissionLeave, [
-                    'active_tab' => 2,
+                    'active_tab' => 1,
                     'active_sub_tab' => 1
                 ])->withSendPushNotification()->send();
             }
