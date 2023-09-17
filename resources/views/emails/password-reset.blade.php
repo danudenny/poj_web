@@ -17,7 +17,7 @@
     <div style="padding-top: 10px">
         <p style="text-align: center; color: #353638;">Username:</p>
         <div style="background: #126850; border-radius: 10px; padding: 5px; color: #FFF; font-size: 20px">
-            <p style="text-align: center;color:white"><b><span>{{ $data['email'] }}</span></b></p>
+            <p style="text-align: center;color:white"><b><a href="#" style="color:white;text-decoration: none;">{{ $data['email'] }}</a> </b></p>
         </div>
     </div>
     <div style="padding-top: 10px">
