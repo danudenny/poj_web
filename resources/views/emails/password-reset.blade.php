@@ -5,7 +5,7 @@
 <body style="background: #F2F2F2; padding: 20px 10%">
 <div style="background: #FFFFFF; padding: 20px 0%; margin-top: 20px;border-radius: 5px">
     <p style="text-align: center">
-        <img src="http://alakad.optimajasa.co.id:9000/att-poj-bucket/64d8f8539ce0e_logo_main-b7587f52.png">
+        <img src="https://alakad.optimajasa.co.id:9000/att-poj-bucket/uploads/6506d33bba8f6_64d8f8539ce0e_logo_main-b7587f52.png">
     </p>
 </div>
 
@@ -17,7 +17,7 @@
     <div style="padding-top: 10px">
         <p style="text-align: center; color: #353638;">Username:</p>
         <div style="background: #126850; border-radius: 10px; padding: 5px; color: #FFF; font-size: 20px">
-            <p style="text-align: center"><b>{{ $data['email'] }}</b></p>
+            <p style="text-align: center;color:white"><b><span>{{ $data['email'] }}</span></b></p>
         </div>
     </div>
     <div style="padding-top: 10px">
