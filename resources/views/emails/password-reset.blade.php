@@ -11,7 +11,7 @@
 
 <div style="background: #FFFFFF; padding: 20px; font-family: tahoma, sans-serif; margin-top: 20px; align-items: center; justify-content: flex-start; border-radius: 5px">
     <div style="color: #353638; font-size: 15px">
-        <p><b>Halo {{ $data['full_name'] }},</b></p>
+        <p><b>Halo {{ $data['fullname'] }},</b></p>
         <p>Berikut ini merupakan akun terbaru anda untuk mengakses aplikasi ALAKAD.</p>
     </div>
     <div style="padding-top: 10px">
