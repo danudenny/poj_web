@@ -45,7 +45,7 @@ class SyncUser extends Command
                     ]);
                 }
 
-                if ($user->email == 'fahmi@koinworks.com') {
+                if ($user->email == 'fahmi@optimajasa.co.id') {
                     $user->assignRole('superadmin');
                 } else {
                     $user->assignRole('staff');
