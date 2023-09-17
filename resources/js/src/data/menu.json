@@ -270,7 +270,7 @@
             ]
         },
         {
-            "title": "Overtime Management",
+            "title": "Lembur Management",
             "icon": "copy",
             "iconf": "fill-copy",
             "type": "sub",
@@ -278,7 +278,7 @@
             "permission" : "overtime-read",
             "children": [
                 {
-                    "title": "Overtime Request",
+                    "title": "Lembur Request",
                     "icon": "clock",
                     "iconf": "clock",
                     "type": "link",
@@ -287,7 +287,7 @@
                     "permission" : "overtime-request-read"
                 },
                 {
-                    "title": "Approval Overtime",
+                    "title": "Approval Lembur",
                     "icon": "clock",
                     "iconf": "clock",
                     "type": "link",
@@ -296,7 +296,7 @@
                     "permission" : "overtime-approval-read"
                 },
                 {
-                    "title": "Jadwal Overtime",
+                    "title": "Jadwal Lembur",
                     "icon": "clock",
                     "iconf": "clock",
                     "type": "link",
