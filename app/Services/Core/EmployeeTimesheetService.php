@@ -355,7 +355,7 @@ class EmployeeTimesheetService extends ScheduleService {
                 /**
                  * @var Employee $employeeExists
                  */
-                $employeeExists = Employee::where('id', $employeeId)->get();
+                $employeeExists = Employee::where('id', $employeeId)->first();
                 if (!$employeeExists) {
                     return response()->json([
                         'status' => 'error',
