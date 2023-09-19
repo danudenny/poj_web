@@ -162,7 +162,11 @@ class EmployeeService extends BaseService
     public function view($id): Model|Builder
     {
         try {
-            $employee = Employee::with( ['partner', 'department', 'team', 'corporate', 'kanwil', 'area', 'cabang', 'outlet', 'job', 'timesheetSchedules', 'masterOvertimeLimit'])->find($id);
+            $employee = Employee::with([
+                'partner', 'department', 'team', 'corporate', 'kanwil', 'area', 'cabang',
+                'outlet', 'job', 'timesheetSchedules', 'masterOvertimeLimit',
+                'workingHour.workingHourDetails'
+            ])->find($id);
 
             if (!$employee) {
                 throw new \InvalidArgumentException(self::DATA_NOTFOUND, 400);

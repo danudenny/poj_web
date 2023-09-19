@@ -121,6 +121,19 @@
                             <hr/>
                         </div>
                     </div>
+                    <div class="col-md-12" v-if="employee.working_hour">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mt-3">
+                                    <label><b>Jam Kerja ({{ employee.working_hour.name }})</b></label>
+                                </div>
+                                <hr/>
+                            </div>
+                            <div class="col-md-12">
+                                <div ref="workingHourTable"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -128,12 +141,65 @@
 </template>
 
 <script>
+import {TabulatorFull as Tabulator} from "tabulator-tables";
+
 export default {
     props: {
         employee: {
             type: Object,
             required: true
         }
+    },
+    mounted() {
+        this.generateWorkingHourTable()
+    },
+    methods: {
+        generateWorkingHourTable() {
+            if (this.employee.working_hour === null) {
+                return
+            }
+
+            const table = new Tabulator(this.$refs.workingHourTable, {
+                data: this.employee.working_hour.working_hour_details,
+                layout: 'fitColumns',
+                columns: [
+                    {
+                        title: 'No',
+                        field: '',
+                        formatter: 'rownum',
+                        width: 40
+                    },
+                    {
+                        title: 'Nama',
+                        field: 'name',
+                    },
+                    {
+                        title: 'Hari',
+                        field: 'day_of_week_string',
+                    },
+                    {
+                        title: 'Periode',
+                        field: 'day_period',
+                    },
+                    {
+                        title: 'Jam Mulai',
+                        field: 'hour_from_string',
+                    },
+                    {
+                        title: 'Jam Selesai',
+                        field: 'hour_to_string',
+                    },
+                ],
+                pagination: 'local',
+                paginationSize: 10,
+                paginationSizeSelector: [10, 20, 50, 100],
+                headerFilter: true,
+                paginationInitialPage:1,
+                rowFormatter: (row) => {
+                    //
+                }
+            });
+        },
     }
 }
 </script>
