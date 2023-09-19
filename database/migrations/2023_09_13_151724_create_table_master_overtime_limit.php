@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('master_overtime_limit', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->integer('odoo_overtime_limit_id');
+            $table->integer('odoo_overtime_limit_id')->unique();
             $table->integer('daily_work')->default(0);
             $table->integer('public_holiday')->default(0);
             $table->integer('day_off')->default(0);
@@ -38,6 +38,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('table_master_overtime_limit');
+        Schema::dropIfExists('master_overtime_limit');
     }
 };
