@@ -296,7 +296,7 @@ class EmployeeTimesheetService extends ScheduleService {
         if (!$timesheetExists) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Timesheet id not found',
+                'message' => 'Jadwal Tidak Ditemukan',
                 'data' => ''
             ], 404);
         }
@@ -308,7 +308,7 @@ class EmployeeTimesheetService extends ScheduleService {
         if ($unit->lat == null || $unit->long == null) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Unit don\'t have latitude and longitude',
+                'message' => 'Lokasi Unit Belum Ditentukan',
                 'data' => ''
             ], ResponseAlias::HTTP_BAD_REQUEST);
         }
@@ -332,7 +332,7 @@ class EmployeeTimesheetService extends ScheduleService {
         if (!$periodsExists) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Period id not found',
+                'message' => 'Periode Tidak Ditemukan',
                 'data' => ''
             ], 404);
         }
@@ -345,6 +345,13 @@ class EmployeeTimesheetService extends ScheduleService {
             if ($parsedEndTime->lessThan($parsedStartTime)) {
                 $parsedEndTime->addDays();
             }
+        }
+
+        if(!$employeeIds) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Pegawai Yang Dipilih Kosong, Mohon Pilih Pegawai'
+            ], ResponseAlias::HTTP_BAD_REQUEST);
         }
 
         $schedule = null;
@@ -1070,7 +1077,7 @@ class EmployeeTimesheetService extends ScheduleService {
             }
 
             $dayAbbreviations[] = [
-                'name' => $date->dayName,
+                'name' => $date->locale('id')->dayName,
                 'public_holiday' => $publicHolidayExist,
             ];
             $daysOfMonthArr[] = $date->day;

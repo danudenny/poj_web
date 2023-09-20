@@ -1,5 +1,5 @@
 <template>
-  <Breadcrumbs main="Timesheet Assignment" />
+  <Breadcrumbs main="Ubah Jadwal" />
 
   <div class="container-fluid">
     <div class="email-wrap bookmark-wrap">
@@ -7,14 +7,14 @@
         <div class="col-md-12">
           <div class="card card-absolute">
             <div class="card-header bg-primary">
-              <h5>Timesheet Assignment</h5>
+              <h5>Ubah Jadwal</h5>
             </div>
             <div class="card-body">
               <div class="row">
                 <div class="col-md-12">
                   <div class="row">
                     <div class="col-md-12 mb-3">
-                      <label>Date :</label>
+                      <label>Tanggal :</label>
                       <Datepicker
                           :model-value="employeeTimesheet.real_date"
                           :enable-time-picker="false"
@@ -28,7 +28,7 @@
                       <label>Target Unit Level:</label>
                       <multiselect
                           v-model="selectedLevel"
-                          placeholder="Select Target Unit Level"
+                          placeholder="Pilih Target Unit Level"
                           label="name"
                           track-by="name"
                           :options="unitLevels"
@@ -41,7 +41,7 @@
                       <label>Target Unit :</label>
                       <multiselect
                           v-model="selectedOptions"
-                          placeholder="Select Target Unit"
+                          placeholder="Pilih Target Unit"
                           label="name"
                           track-by="name"
                           :options="units"
@@ -54,15 +54,15 @@
                     <div class="col-md-4 mb-3">
                       <label>Timesheet :</label>
                       <select v-model="timesheet_id" class="form-control" >
-                        <option value="null">Select Timesheet</option>
+                        <option value="null">Pilih Timesheet</option>
                         <option :value="item.id" v-for="item in timesheets">{{item.formatted_name}}</option>
                       </select>
                     </div>
                     <div class="col-md-4 mb-3">
-                      <label>Employee Unit Level:</label>
+                      <label>Unit Level Pegawai:</label>
                       <multiselect
                           v-model="selectedEmployeeLevel"
-                          placeholder="Select Employee Unit Level"
+                          placeholder="Pilih Unit Level Pegawai"
                           label="name"
                           track-by="name"
                           :options="unitLevels"
@@ -72,10 +72,10 @@
                       </multiselect>
                     </div>
                     <div class="col-md-4 mb-3">
-                      <label>Employee Unit :</label>
+                      <label>Unit Pegawai :</label>
                       <multiselect
                           v-model="selectedEmployeeOptions"
-                          placeholder="Select Employee Unit"
+                          placeholder="Pilih Unit Pegawai"
                           label="name"
                           track-by="name"
                           :options="unitsEmployee"
@@ -85,10 +85,10 @@
                       </multiselect>
                     </div>
                     <div class="col-md-4 mb-3">
-                      <label>Employee :</label>
+                      <label>Pegawai :</label>
                       <multiselect
                           v-model="selectedEmployee"
-                          placeholder="Selected Employee"
+                          placeholder="Pilih Pegawai"
                           label="name"
                           track-by="name"
                           :options="optionSelectedEmployees"
@@ -102,8 +102,8 @@
               </div>
             </div>
             <div class="card-footer text-start">
-              <button class="btn btn-secondary" @click="$router.push('/timesheet-assignment')"><i data-action="view" class="fa fa-arrow-left"></i> Back</button>&nbsp;
-              <button class="btn btn-primary m-r-10" @click="saveSchedule"> <i data-action="view" class="fa fa-save"></i> Save</button>
+              <button class="btn btn-secondary" @click="$router.push('/timesheet-assignment')"><i data-action="view" class="fa fa-arrow-left"></i> Kembali</button>&nbsp;
+              <button class="btn btn-primary m-r-10" @click="saveSchedule"> <i data-action="view" class="fa fa-save"></i> Simpan</button>
             </div>
           </div>
         </div>

@@ -7,14 +7,14 @@
                 <div class="col-md-12">
                     <div class="card card-absolute">
                         <div class="card-header bg-primary">
-                            <h5>Timesheet Assignment</h5>
+                            <h5>Assignment Jadwal</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="row">
                                         <div class="col-md-12 mb-3">
-                                            <label>Date :</label>
+                                            <label>Tanggal :</label>
                                             <Datepicker
                                                 :model-value="date"
                                                 :enable-time-picker="false"
@@ -25,10 +25,10 @@
                                             </Datepicker>
                                         </div>
                                         <div class="col-md-4 mb-3">
-                                            <label>Target Unit Level:</label>
+                                            <label>Target Level Unit:</label>
                                             <multiselect
                                                 v-model="selectedLevel"
-                                                placeholder="Select Target Unit Level"
+                                                placeholder="Pilih Level Unit Target"
                                                 label="name"
                                                 track-by="name"
                                                 :options="unitLevels"
@@ -41,7 +41,7 @@
 		                                    <label>Target Unit :</label>
 		                                    <multiselect
 			                                    v-model="selectedOptions"
-			                                    placeholder="Select Target Unit"
+			                                    placeholder="Pilih Target Unit"
 			                                    label="name"
 			                                    track-by="name"
 			                                    :options="units"
@@ -54,15 +54,15 @@
                                         <div class="col-md-4 mb-3">
                                             <label>Timesheet :</label>
                                             <select v-model="timesheet_id" class="form-control" >
-                                                <option value="null">Select Timesheet</option>
+                                                <option value="null">Pilih Timesheet</option>
                                                 <option :value="item.id" v-for="item in timesheets">{{item.formatted_name}}</option>
                                             </select>
                                         </div>
                                         <div class="col-md-4 mb-3">
-                                            <label>Employee Unit Level:</label>
+                                            <label>Unit Level Pegawai:</label>
                                             <multiselect
                                                 v-model="selectedEmployeeLevel"
-                                                placeholder="Select Employee Unit Level"
+                                                placeholder="Pilih Unit Level Pegawai"
                                                 label="name"
                                                 track-by="name"
                                                 :options="unitLevels"
@@ -72,10 +72,10 @@
                                             </multiselect>
                                         </div>
                                         <div class="col-md-4 mb-3">
-                                            <label>Employee Unit :</label>
+                                            <label>Unit Pegawai :</label>
                                             <multiselect
                                                 v-model="selectedEmployeeOptions"
-                                                placeholder="Select Employee Unit"
+                                                placeholder="Pilih Unit Pegawai"
                                                 label="name"
                                                 track-by="name"
                                                 :options="unitsEmployee"
@@ -86,7 +86,7 @@
                                             </multiselect>
                                         </div>
                                         <div class="col-md-12 mb-3">
-                                            <label>Assign To (Employees) :</label>
+                                            <label>Pilih Pegawai :</label>
                                             <div ref="employeeTable"></div>
                                         </div>
                                     </div>
@@ -94,11 +94,11 @@
                             </div>
                         </div>
                         <div class="card-footer text-start">
-                            <button class="btn btn-primary m-r-10" v-if="!isProcess" @click="saveSchedule">Save</button>
+                            <button class="btn btn-primary m-r-10" v-if="!isProcess" @click="saveSchedule">Simpan</button>
                             <div class="btn btn-primary m-r-10 disabled" v-else>
                                 ...
                             </div>
-                            <button class="btn btn-secondary" @click="$router.push('/timesheet-assignment')">Back</button>
+                            <button class="btn btn-secondary" @click="$router.push('/timesheet-assignment')">Kembali</button>
                         </div>
                     </div>
                 </div>
