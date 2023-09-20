@@ -188,7 +188,7 @@
         </div>
 
         <div class="modal fade" id="createTimesheet" ref="createTimesheet" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
-            <VerticalModal title="Create Timesheet" @save="onCreate()">
+            <VerticalModal title="Buat Jadwal" @save="onCreate()">
                 <div class="row">
                     <div class="col-md-12">
                         <div class="mt-2">
@@ -502,12 +502,12 @@ export default {
         onDeleteEmployeeTimesheet:function(id){
             this.$swal({
                 icon: 'warning',
-                title:"Delete Data?",
-                text:'Once deleted, you will not be able to recover the data!',
+                title:"Anda Yakin Ingin Menghapus Data?",
+                text:'Setelah Menghapus, Data Tidak Dapat Dikembalikan!',
                 showCancelButton: true,
-                confirmButtonText: 'Yes, delete it!',
+                confirmButtonText: 'Ya, Hapus!',
                 confirmButtonColor: '#e64942',
-                cancelButtonText: 'Cancel',
+                cancelButtonText: 'Batal',
                 cancelButtonColor: '#efefef',
             }).then((result)=>{
                 if(result.value){
@@ -614,12 +614,12 @@ export default {
 
             this.$swal({
                 icon: 'warning',
-                title:"Do you want to add schedule to this employee?",
-                text:'Please check the data before submit!',
+                title:"Apakah Anda Ingin Menambahkan Jadwal Kepada Pegawai?",
+                text:'Mohon Periksa Kembali Sebelum Menambakan!',
                 showCancelButton: true,
-                confirmButtonText: 'Yes!',
+                confirmButtonText: 'Ya!',
                 confirmButtonColor: '#126850',
-                cancelButtonText: 'Cancel',
+                cancelButtonText: 'Batal',
                 cancelButtonColor: '#efefef',
             }).then((result)=>{
                 if(result.value){
