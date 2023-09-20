@@ -1,15 +1,15 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs main="Create Overtime Request"/>
+        <Breadcrumbs main="Buat Lembur"/>
         <div class="col-sm-12">
             <form class="card" v-on:submit.prevent="onSubmitForm">
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <label for="name">Select Unit</label>
+                            <label for="name">Pilih Unit</label>
                             <multiselect
                                 v-model="selectedUnit"
-                                placeholder="Select Unit"
+                                placeholder="Pilih Unit"
                                 label="name"
                                 track-by="id"
                                 :options="units"
@@ -21,10 +21,10 @@
                             </multiselect>
                         </div>
                         <div class="col-md-6">
-                            <label for="name">Select Job</label>
+                            <label for="name">Pilih Pekerjaan</label>
                             <multiselect
                                 v-model="selectedJob"
-                                placeholder="Select Job"
+                                placeholder="Pilih Pekerjaan"
                                 label="job_name"
                                 track-by="id"
                                 :options="jobs"
@@ -107,7 +107,7 @@
                     <br/>
                     <div ref="employeeTable"></div>
                     <br/>
-	                <div class="btn btn-secondary" @click="$router.go(-1)"><i data-action="view" class="fa fa-arrow-left"></i> Back</div>&nbsp;
+	                <div class="btn btn-secondary" @click="$router.go(-1)"><i data-action="view" class="fa fa-arrow-left"></i> Kembali</div>&nbsp;
                     <button class="btn btn-primary" :disabled="this.isOnProcess">
                         <span v-if="this.isOnProcess">
                             ...

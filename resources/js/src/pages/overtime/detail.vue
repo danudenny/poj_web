@@ -7,7 +7,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mt-2">
-                                <label for="name">Requestor Name</label>
+                                <label for="name">Nama Requestor</label>
                                 <input type="text" class="form-control" v-model="overtime.requestor_employee.name" disabled>
                             </div>
                             <div class="mt-2">
@@ -33,7 +33,7 @@
                                 <textarea class="form-control" v-model="overtime.notes" required disabled>{{overtime.notes}}</textarea>
                             </div>
                             <div class="mt-2">
-                                <label for="name">Unit Name</label>
+                                <label for="name">Nama Unit</label>
                                 <input type="text" class="form-control" v-model="overtime.unit.name" disabled>
                             </div>
                             <hr/>
@@ -55,7 +55,7 @@
                                 </div>
                                 <div class="col-md-4">
 	                                <div class="mt-2">
-		                                <label for="name">Total Approved</label>
+		                                <label for="name">Total Disetujui</label>
 		                                <input type="text" class="form-control" v-model="item.total_overtime" disabled required>
 	                                </div>
                                 </div>
@@ -67,7 +67,7 @@
                                             data-bs-target="#detailOvertimeDate"
                                             @click="onSelectOvertimeDate(item)"
                                         >
-                                            Attendee
+                                            Pegawai
                                         </div>
                                     </div>
                                 </div>
@@ -76,7 +76,7 @@
                     </div>
                 </div>
                 <div class="card-footer text-end">
-                    <button class="btn btn-secondary" @click="$router.go(-1)">Back</button>&nbsp;
+                    <button class="btn btn-secondary" @click="$router.go(-1)">Kembali</button>&nbsp;
                     <div
                         class="btn btn-secondary button-info"
                         data-bs-toggle="modal"
@@ -260,7 +260,7 @@ export default {
                         width: 20
                     },
                     {
-                        title: 'Name',
+                        title: 'Nama',
                         field: 'employee.name',
                     },
                     {
@@ -283,7 +283,7 @@ export default {
                         }
                     },
                     {
-                        title: 'Notes',
+                        title: 'Catatan',
                         field: 'notes',
                     },
                 ],

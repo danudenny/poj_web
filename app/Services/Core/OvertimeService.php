@@ -186,7 +186,7 @@ class OvertimeService extends ScheduleService
         if (!$overtime) {
             return response()->json([
                 'status' => false,
-                'message' => "overtime Not Found"
+                'message' => "Lembur Tidak Ditemukan"
             ], Response::HTTP_BAD_REQUEST);
         }
 
@@ -400,7 +400,7 @@ class OvertimeService extends ScheduleService
             if (!$unit) {
                 return response()->json([
                     'status' => false,
-                    'message' => "Unit Not Found"
+                    'message' => "Unit Tidak Ditemukan"
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
@@ -411,14 +411,14 @@ class OvertimeService extends ScheduleService
             if (!$job) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Job not exist',
+                    'message' => 'Pekerjaan Tidak Ditemukan',
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
             if ($unit->lat == null || $unit->long == null) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Unit don\'t have latitude and longitude',
+                    'message' => 'Lokasi Unit Belum Ditentukan',
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
@@ -438,14 +438,14 @@ class OvertimeService extends ScheduleService
             if(count($employeeIDs) > 1) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Maximum selected employee is one'
+                    'message' => 'Maksimal Pegawai Yang Dipilih 1'
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
             $overtimeDates = $this->generateOvertimeDateData($request->input('dates'), $employeeIDs, $unitTimeZone);
             if (count($overtimeDates) == 0) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'There is no dates',
+                    'message' => 'Tanggal Kosong, Mohon Masukkan Tanggal',
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
@@ -455,7 +455,7 @@ class OvertimeService extends ScheduleService
                 if ($this->isRequestedRoleLevel(Role::RoleStaff)) {
                     return response()->json([
                         'status' => false,
-                        'message' => 'You don\'t have access to do assignment',
+                        'message' => 'Anda Tidak Memiliki Akses Melakukan Assignment',
                     ], ResponseAlias::HTTP_BAD_REQUEST);
                 }
             }
@@ -470,7 +470,7 @@ class OvertimeService extends ScheduleService
                         $employee = Employee::query()->where('id', '=', $employeeID)->first();
                         return response()->json([
                             'status' => false,
-                            'message' => sprintf("%s has active schedule at %s", $employee->name, $overtimeDateData['date']),
+                            'message' => sprintf("%s memiliki jadwal aktif pada %s", $employee->name, $overtimeDateData['date']),
                         ], ResponseAlias::HTTP_BAD_REQUEST);
                     }
                 }
@@ -614,7 +614,7 @@ class OvertimeService extends ScheduleService
             if (!$overtime) {
                 return response()->json([
                     'status' => false,
-                    'message' => "overtime Not Found"
+                    'message' => "Lembur Tidak Ditemukan"
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
@@ -628,7 +628,7 @@ class OvertimeService extends ScheduleService
             if(!$userApproval) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'You don\'t have access'
+                    'message' => 'Kamu Tidak Memiliki Akses'
                 ], ResponseAlias::HTTP_FORBIDDEN);
             }
 
@@ -640,7 +640,7 @@ class OvertimeService extends ScheduleService
                 if ($lastApproval) {
                     return response()->json([
                         'status' => false,
-                        'message' => 'Last approver not doing approval yet!'
+                        'message' => 'Menunggu Approval Sebelumn!'
                     ], ResponseAlias::HTTP_FORBIDDEN);
                 }
             }
@@ -821,7 +821,7 @@ class OvertimeService extends ScheduleService
             if ($approvalType === AttendanceApproval::TypeOffsite && !$notes) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Offsite check in, please input notes'
+                    'message' => 'Check In Diluar Jangkauan, Mohon Memasukkan Catatan'
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
