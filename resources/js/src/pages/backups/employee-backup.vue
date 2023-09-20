@@ -8,7 +8,7 @@
                     <div class="col-md-12">
                         <div class="card card-absolute">
                             <div class="card-header bg-primary">
-                                <h5>Employee Backup</h5>
+                                <h5>Backup Pegawai</h5>
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-2">
@@ -29,19 +29,19 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="mt-2">
-                            <label for="name">Employee Name</label>
+                            <label for="name">Nama</label>
                             <input type="text" class="form-control" v-model="selectedData.employee.name" disabled>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mt-2">
-                                    <label for="name">Start Time</label>
+                                    <label for="name">Jam Mulai</label>
                                     <input type="text" class="form-control" v-model="selectedData.backup_time.start_time_with_timezone" disabled>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mt-2">
-                                    <label for="name">End Time</label>
+                                    <label for="name">Jam Selesai</label>
                                     <input type="text" class="form-control" v-model="selectedData.backup_time.end_time_with_timezone" disabled>
                                 </div>
                             </div>
@@ -49,13 +49,13 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mt-2">
-                                    <label for="name">Check In Time</label>
+                                    <label for="name">Check In</label>
                                     <input type="text" class="form-control" v-model="selectedData.check_in_time_with_unit_timezone" disabled>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mt-2">
-                                    <label for="name">Check Out Time</label>
+                                    <label for="name">Check Out</label>
                                     <input type="text" class="form-control" v-model="selectedData.check_out_time_with_unit_timezone" disabled>
                                 </div>
                             </div>
@@ -63,23 +63,23 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mt-2">
-                                    <label for="name">Check In Time (In Employee Timezone)</label>
+                                    <label for="name">Check In (Zona Waktu Pegawai)</label>
                                     <input type="text" class="form-control" v-model="selectedData.check_in_time_with_employee_timezone" disabled>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mt-2">
-                                    <label for="name">Check Out Time (In Employee Timezone)</label>
+                                    <label for="name">Check Out (Zona Waktu Pegawai)</label>
                                     <input type="text" class="form-control" v-model="selectedData.check_out_time_with_employee_timezone" disabled>
                                 </div>
                             </div>
                         </div>
                         <div v-if="selectedData.check_in_lat != null && selectedData.check_in_long != null">
-                            <p>Check In Location</p>
+                            <p>Lokasi Check In</p>
                             <div id="mapCheckIn" class="mb-4"></div>
                         </div>
                         <div v-if="selectedData.check_out_lat != null && selectedData.check_out_long != null">
-                            <p>Check Out Location</p>
+                            <p>Lokasi Check Out</p>
                             <div id="mapCheckOut" class="mb-4"></div>
                         </div>
                     </div>
@@ -149,16 +149,16 @@ export default {
                         width: 100
                     },
                     {
-                        title: 'Employee Name',
+                        title: 'Nama',
                         field: 'employee.name',
                         headerFilter:"input"
                     },
                     {
-                        title: 'Start Time',
+                        title: 'Jam Mulai',
                         field: 'backup_time.start_time_with_timezone',
                     },
                     {
-                        title: 'End Time',
+                        title: 'Jam Selesai',
                         field: 'backup_time.end_time_with_timezone',
                     },
                     {
@@ -166,11 +166,11 @@ export default {
                         field: 'backup_time.total_backup_string',
                     },
                     {
-                        title: 'Check In Time',
+                        title: 'Check In',
                         field: 'check_in_time_with_unit_timezone',
                     },
                     {
-                        title: 'Check Out Time',
+                        title: 'Check Out',
                         field: 'check_out_time_with_unit_timezone',
                     },
                     {

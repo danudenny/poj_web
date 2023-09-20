@@ -7,11 +7,11 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mt-2">
-                                <label for="name">Unit Name</label>
+                                <label for="name">Nama Unit</label>
                                 <input type="text" class="form-control" v-model="backup.unit.name" disabled>
                             </div>
                             <div class="mt-2">
-                                <label for="name">Requestor Name</label>
+                                <label for="name">Nama Requestor</label>
                                 <input type="text" class="form-control" v-model="backup.requestor_employee.name" disabled>
                             </div>
                             <div class="mt-2">
@@ -21,13 +21,13 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mt-2">
-                                        <label for="name">Tanggal Mulai Lembur</label>
+                                        <label for="name">Tanggal Mulai Backup</label>
                                         <input type="date" class="form-control" v-model="backup.start_date" disabled>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mt-2">
-                                        <label for="name">Tanggal Selesai Lembur</label>
+                                        <label for="name">Tanggal Selesai Backup</label>
                                         <input type="date" class="form-control" v-model="backup.end_date" disabled>
                                     </div>
                                 </div>
@@ -75,7 +75,7 @@
                     </div>
                 </div>
                 <div class="card-footer text-end">
-                    <button class="btn btn-secondary" @click="$router.go(-1)">Back</button>&nbsp;
+                    <button class="btn btn-secondary" @click="$router.go(-1)">Kembali</button>&nbsp;
                     <div
                         class="btn btn-secondary button-info"
                         data-bs-toggle="modal"
@@ -95,7 +95,7 @@
             </div>
         </div>
         <div class="modal fade" id="approvalModal" ref="approvalModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
-            <VerticalModal title="Approval Modal" @save="backupApproval()">
+            <VerticalModal title="Approval" @save="backupApproval()">
                 <div class="row">
                     <div class="col-md-12">
                         <div class="mt-2">
@@ -106,7 +106,7 @@
                             </select>
                         </div>
                         <div class="mt-2" v-if="approval.status === 'rejected'">
-                            <label for="name">Note:</label>
+                            <label for="name">Catatan:</label>
                             <input type="text" class="form-control" id="reason" v-model="approval.notes" required>
                         </div>
                     </div>
@@ -230,7 +230,7 @@ export default {
                         width: 20
                     },
                     {
-                        title: 'Name',
+                        title: 'Nama',
                         field: 'employee.name',
                     },
                     {
@@ -279,15 +279,15 @@ export default {
                         width: 10
                     },
                     {
-                        title: 'Name',
+                        title: 'Nama',
                         field: 'employee.name',
                     },
                     {
-                        title: 'Check In Time',
+                        title: 'Waktu Check In',
                         field: 'check_in_time_with_unit_timezone',
                     },
                     {
-                        title: 'Check Out Time',
+                        title: 'Waktu Check Out',
                         field: 'check_out_time_with_unit_timezone',
                     },
                 ],
@@ -312,19 +312,19 @@ export default {
         backupApproval() {
             this.$swal({
                 icon: 'warning',
-                title:"Do you want to do approval?",
-                text:'Once you finished doing approval, you will not be able to revert the data!',
+                title:"Apakah Anda Yakin Ingin Melakukan Approval?",
+                text:'Setelah anda melakukan approval, data anda tidak dapat dikembalikan!',
                 showCancelButton: true,
-                confirmButtonText: 'Yes!',
+                confirmButtonText: 'Ya!',
                 confirmButtonColor: '#126850',
-                cancelButtonText: 'Cancel',
+                cancelButtonText: 'Batal',
                 cancelButtonColor: '#efefef',
             }).then((result)=>{
                 console.log("prep", result)
                 if(result.isConfirmed){
                     this.$axios.post(`/api/v1/admin/backup/approval/${this.$route.params.id}`, this.approval)
                         .then(response => {
-                            useToast().success("Success to update data", { position: 'bottom-right' });
+                            useToast().success("Sukses melakukan approval", { position: 'bottom-right' });
                             this.getDetailBackup()
                         })
                         .catch(error => {

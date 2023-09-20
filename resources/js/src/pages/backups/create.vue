@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs main="Create Backup"/>
+        <Breadcrumbs main="Buat Backup"/>
         <div class="col-sm-12">
             <form class="card">
                 <div class="card-body">
@@ -9,10 +9,10 @@
                             <form v-on:submit.prevent="onSubmitForm">
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <label for="name">Select Destination Unit</label>
+                                        <label for="name">Unit Tujuan</label>
                                         <multiselect
                                             v-model="selectedUnit"
-                                            placeholder="Select Unit"
+                                            placeholder="Pilih Unit Tujuan"
                                             label="name"
                                             track-by="id"
                                             :options="units"
@@ -24,10 +24,10 @@
                                         </multiselect>
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="name">Select Destination Job</label>
+                                        <label for="name">Tujuan Pekerjaan</label>
                                         <multiselect
                                             v-model="selectedJob"
-                                            placeholder="Select Job"
+                                            placeholder="Pilih Tujuan Pekerjaan"
                                             label="job_name"
                                             track-by="id"
                                             :options="jobs"
@@ -112,10 +112,10 @@
                                 <br/>
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <label for="name">Select Employee Unit</label>
+                                        <label for="name">Unit Pegawai</label>
                                         <multiselect
                                             v-model="selectedEmployeeUnit"
-                                            placeholder="Select Employee Unit"
+                                            placeholder="Pilih Unit Pegawai"
                                             label="name"
                                             track-by="id"
                                             :options="employeeUnits"
@@ -132,7 +132,7 @@
                                 <br/>
                                 <div ref="employeeTable"></div>
                                 <br/>
-                                <button class="btn btn-secondary" @click="$router.go(-1)"><i data-action="view" class="fa fa-arrow-left"></i> Back</button>&nbsp;
+                                <button class="btn btn-secondary" @click="$router.go(-1)"><i data-action="view" class="fa fa-arrow-left"></i> Kembali</button>&nbsp;
                                 <button class="btn btn-primary" :disabled="this.isOnProcess">
                                     <span v-if="this.isOnProcess">
                                         ...
@@ -315,19 +315,19 @@ export default {
                 layout: 'fitData',
                 columns: [
 	                {
-		                title: 'Timesheet',
+		                title: 'Nama',
 		                field: 'formatted_name',
 	                },
                     {
-                        title: 'From',
+                        title: 'Mulai',
                         field: 'start_time',
                     },
                     {
-                        title: 'To',
+                        title: 'Selesai',
                         field: 'end_time',
                     },
                     {
-                        title: 'Select',
+                        title: 'Pilih',
                         formatter: (cell, formatterParams, onRendered) => {
                             return `<button class="button-icon button-success" data-bs-dismiss="modal" data-id="${cell.getRow().getData().id}"><i class="fa fa-arrow-right"></i> </button>`;
                         },
@@ -462,20 +462,20 @@ export default {
                         },
                     },
                     {
-                        title: 'Employee Name',
+                        title: 'Nama',
                         field: 'name',
                         headerFilter:"input"
                     },
                     {
-                        title: 'Work Email',
+                        title: 'Email',
                         field: 'work_email'
                     },
                     {
-                        title: 'Current Unit',
+                        title: 'Unit',
                         field: 'last_unit.name'
                     },
                     {
-                        title: 'Job Name',
+                        title: 'Pekerjaan',
                         field: 'job.name'
                     }
                 ],
@@ -573,11 +573,11 @@ export default {
         onSubmitForm() {
             this.$swal({
                 icon: 'warning',
-                title:"Do you want to create backup?",
+                title:"Apakah anda ingin membuat backup?",
                 showCancelButton: true,
-                confirmButtonText: 'Yes!',
+                confirmButtonText: 'Ya!',
                 confirmButtonColor: '#126850',
-                cancelButtonText: 'Cancel',
+                cancelButtonText: 'Batal',
                 cancelButtonColor: '#f64545',
             }).then((result)=>{
                 if(result.isConfirmed){

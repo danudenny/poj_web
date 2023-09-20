@@ -399,7 +399,7 @@ class BackupService extends ScheduleService
             if (!$unit) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Unit not exist',
+                    'message' => 'Unit Tidak Ditemukan',
                 ], ResponseAlias::HTTP_BAD_REQUEST);
 	        }
 
@@ -410,14 +410,14 @@ class BackupService extends ScheduleService
             if (!$job) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Job not exist',
+                    'message' => 'Pekerjaan Tidak Ditemukan',
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
             if ($unit->lat == null || $unit->long == null) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Unit latitude or longitude is empty',
+                    'message' => 'Lokasi Unit Kosong',
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
@@ -428,7 +428,7 @@ class BackupService extends ScheduleService
             if (!$sourceUnit) {
                 return response()->json([
                     'status' => false,
-                    'message' => "Source unit not found!",
+                    'message' => "Unit Tujuan Tidak Ditemukan!",
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
@@ -467,7 +467,7 @@ class BackupService extends ScheduleService
                         $employee = Employee::query()->where('id', '=', $employeeID)->first();
                         return response()->json([
                             'status' => false,
-                            'message' => sprintf("%s has active schedule at %s", $employee->name, $backupDateData['date'])
+                            'message' => sprintf("%s memiliki jadwal pada %s", $employee->name, $backupDateData['date'])
                         ], ResponseAlias::HTTP_BAD_REQUEST);
                     }
                 }
@@ -563,7 +563,7 @@ class BackupService extends ScheduleService
 
             return response()->json([
                 'status' => true,
-                'message' => 'Success create backup',
+                'message' => 'Sukses',
                 'data' => [],
             ]);
         } catch (\Throwable $e) {
@@ -623,7 +623,7 @@ class BackupService extends ScheduleService
             if (!$backup) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Backup Not Found',
+                    'message' => 'Backup Tidak Ditemukan',
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
@@ -636,7 +636,7 @@ class BackupService extends ScheduleService
             if (!$userApproval) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'You don\'t have access to approve this request',
+                    'message' => 'Kamu Tidak Memiliki Akses!',
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
@@ -648,7 +648,7 @@ class BackupService extends ScheduleService
                 if ($beforeApproval) {
                     return response()->json([
                         'status' => false,
-                        'message' => 'Last approver not doing approval yet!',
+                        'message' => 'Menunggu Persetujuan Sebelumnya!',
                     ], ResponseAlias::HTTP_BAD_REQUEST);
                 }
             }
@@ -722,7 +722,7 @@ class BackupService extends ScheduleService
             DB::commit();
             return response()->json([
                 'status' => true,
-                'message' => 'Success approve backup',
+                'message' => 'Sukses!',
                 'data' => [],
             ]);
         } catch (\Throwable $e) {
@@ -1058,7 +1058,7 @@ class BackupService extends ScheduleService
         if ($backup->status == BackupApproval::StatusApproved) {
             return response()->json([
                 'status' => false,
-                'message' => 'Can not delete approved backup',
+                'message' => 'Tidak Dapat Menghapus Backup Yang Telah Disetujui',
             ], ResponseAlias::HTTP_BAD_REQUEST);
         }
 
