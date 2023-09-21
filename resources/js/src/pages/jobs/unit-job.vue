@@ -87,7 +87,7 @@
                     <multiselect
                         v-model="selectedJobUnit"
                         placeholder="Select Unit"
-                        label="name"
+                        label="formatted_name"
                         track-by="relation_id"
                         :options="jobUnits"
                         :multiple="false"

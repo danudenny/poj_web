@@ -42,8 +42,8 @@
 		                                    <multiselect
 			                                    v-model="selectedOptions"
 			                                    placeholder="Pilih Target Unit"
-			                                    label="name"
-			                                    track-by="name"
+			                                    label="formatted_name"
+			                                    track-by="relation_id"
 			                                    :options="units"
 			                                    :multiple="false"
 			                                    @select="selectedUnit"
@@ -76,8 +76,8 @@
                                             <multiselect
                                                 v-model="selectedEmployeeOptions"
                                                 placeholder="Pilih Unit Pegawai"
-                                                label="name"
-                                                track-by="name"
+                                                label="formatted_name"
+                                                track-by="relation_id"
                                                 :options="unitsEmployee"
                                                 :multiple="false"
                                                 @select="selectedUnitEmployee"
