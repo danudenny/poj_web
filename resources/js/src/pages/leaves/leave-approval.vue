@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs main="Leave Approval"/>
+        <Breadcrumbs main="Approval Izin/Cuti"/>
 
         <div class="container-fluid">
             <div class="email-wrap bookmark-wrap">
@@ -8,7 +8,7 @@
                     <div class="col-md-12">
                         <div class="card card-absolute">
                             <div class="card-header bg-primary">
-                                <h5>Leave Request Approval</h5>
+                                <h5>Approval Izin/Cuti</h5>
                             </div>
                             <div class="card-body">
                                 <div ref="leaveApprovalTable"></div>
@@ -20,18 +20,18 @@
         </div>
 
         <div class="modal fade" id="approvalModal" ref="approvalModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
-            <VerticalModal title="Approval Modal" @save="onApproval()">
+            <VerticalModal title="Approval" @save="onApproval()">
                 <div class="row">
                     <div class="col-md-12">
                         <div class="mt-2">
                             <label for="status">Status:</label>
                             <select id="status" name="status" class="form-select" v-model="approval.status" required disabled>
-                                <option value="approved" :selected="approval.status === 'approved' ? 'selected' : ''">Approve</option>
-                                <option value="rejected" :selected="approval.status === 'rejected' ? 'selected' : ''">Reject</option>
+                                <option value="approved" :selected="approval.status === 'approved' ? 'selected' : ''">Diterima</option>
+                                <option value="rejected" :selected="approval.status === 'rejected' ? 'selected' : ''">Ditolak</option>
                             </select>
                         </div>
                         <div class="mt-2" v-if="approval.status === 'rejected'">
-                            <label for="name">Note:</label>
+                            <label for="name">Catatan:</label>
                             <input type="text" class="form-control" id="reason" v-model="approval.notes" required>
                         </div>
                     </div>
@@ -112,7 +112,7 @@ export default {
                         frozen: true
                     },
                     {
-                        title: 'Employee Name',
+                        title: 'Nama Pegawai',
                         field: 'leave_request.employee.name',
                         headerHozAlign: 'center',
                         headerSort: false,
@@ -124,7 +124,7 @@ export default {
                         cellClick: (e, cell) => {}
                     },
                     {
-                        title: 'Approver Name',
+                        title: 'Nama Pemberi Persetujuan',
                         field: 'employee.name',
                         headerHozAlign: 'center',
                         headerSort: false,
@@ -136,12 +136,12 @@ export default {
                         headerSort: false,
                     },
                     {
-                        title: 'Date',
+                        title: 'Tanggal',
                         headerHozAlign: 'center',
                         headerSort: false,
                         columns: [
                             {
-                                title: 'Start Date',
+                                title: 'Tanggal Mulai',
                                 field: 'leave_request.start_date',
                                 hozAlign: 'center',
                                 headerHozAlign: 'center',
@@ -151,7 +151,7 @@ export default {
                                 }
                             },
                             {
-                                title: 'End Date',
+                                title: 'Tanggal Selesai',
                                 field: 'leave_request.end_date',
                                 hozAlign: 'center',
                                 headerHozAlign: 'center',
@@ -161,7 +161,7 @@ export default {
                                 }
                             },
                             {
-                                title: 'Days',
+                                title: 'Total Hari',
                                 field: 'leave_request.days',
                                 hozAlign: 'center',
                                 headerHozAlign: 'center',
@@ -173,13 +173,13 @@ export default {
                         ]
                     },
                     {
-                        title: 'Leave Category',
+                        title: 'Kategori',
                         field: 'leave_request.leave_type.leave_name',
                         headerHozAlign: 'center',
                         headerSort: false,
                     },
                     {
-                        title: 'Leave Type',
+                        title: 'Tipe',
                         field: 'leave_request.leave_type.leave_type',
                         hozAlign: 'center',
                         headerHozAlign: 'center',
@@ -193,7 +193,7 @@ export default {
                         }
                     },
                     {
-                        title: 'Reason',
+                        title: 'Alasan',
                         field: 'leave_request.reason',
                         hozAlign: 'center',
                         headerHozAlign: 'center',
@@ -223,11 +223,11 @@ export default {
                             if (cell.getValue() === 'pending') {
                                 return '<span class="badge badge-info">Pending</span>'
                             } else if (cell.getValue() === 'approved') {
-                                return '<span class="badge badge-success">Approved</span>'
+                                return '<span class="badge badge-success">Diterima</span>'
                             } else if (cell.getValue() === 'rejected') {
-                                return '<span class="badge badge-danger">Rejected</span>'
+                                return '<span class="badge badge-danger">Ditolak</span>'
                             } else {
-                                return '<span class="badge badge-warning">Waiting Last Approval</span>'
+                                return '<span class="badge badge-warning">Menunggu Persetujuan Sebelumnya</span>'
                             }
                         }
                     },
@@ -272,19 +272,19 @@ export default {
         onApproval() {
             this.$swal({
                 icon: 'warning',
-                title:"Are you sure want to do approval?",
-                text:'Once doing approval, you will not be able to revert the status!',
+                title:"Apakah Anda Ingin Melakukan Approval?",
+                text:'Setelah anda melakukan approval, status tidak dapat dikembalikan!',
                 showCancelButton: true,
-                confirmButtonText: 'Yes!',
+                confirmButtonText: 'Ya!',
                 confirmButtonColor: '#126850',
-                cancelButtonText: 'Cancel',
+                cancelButtonText: 'Batal',
                 cancelButtonColor: '#efefef',
             }).then((result)=>{
                 if(result.value){
                     this.$axios.post(`api/v1/admin/leave_request/approval/${this.approval.leave_request_id}`, this.approval)
                         .then(() => {
                             this.generateLeaveApprovalTable()
-                            useToast().success("Success to do approval!");
+                            useToast().success("Sukses melakukan approval!");
                         })
                         .catch(error => {
                             useToast().error(error.response.data.message);
