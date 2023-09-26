@@ -274,7 +274,9 @@ export default {
                 columns: [
                     {
                         formatter: "rowSelection",
-                        hozAlign: "center",
+                        titleFormatter: "rowSelection",
+                        headerHozAlign:"center",
+                        hozAlign:"center",
                         width: 100,
                         headerSort: false,
                         titleFormatterParams: {
@@ -345,7 +347,7 @@ export default {
                         last_page: response.data.last_page,
                     }
                 },
-                paginationSizeSelector: [10, 20, 50, 100],
+                paginationSizeSelector: [10, 20, 50, 100, 500, 1000],
                 headerFilter: true,
                 selectable: true,
                 rowFormatter: (row) => {
