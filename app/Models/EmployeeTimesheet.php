@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * Relations:
  * @property-read Unit $unit
+ * @property-read EmployeeTimesheetDay[] $timesheetDays
  * @method static create($timeshiftData)
  * @method static find($id)
  * @method static where(string $string, $timesheet_id)

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Attributes:
+ * @property-read int $id
  * @property string $year
  * @property string $month
  * @method static where(string $string, $period_id)

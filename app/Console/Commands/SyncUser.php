@@ -13,7 +13,7 @@ class SyncUser extends Command
      *
      * @var string
      */
-    protected $signature = 'command:name';
+    protected $signature = 'sync:user';
 
     /**
      * The console command description.

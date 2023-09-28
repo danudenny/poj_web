@@ -25,6 +25,7 @@ use Staudenmeir\LaravelCte\Eloquent\QueriesExpressions;
  * @property string $code
  * @property int $internal_overtime_limit
  * @property int $outsource_overtime_limit
+ * @property string $timezone
  *
  * Relations:
  * @property-read OperatingUnitCorporate[] $operatingUnitCorporates

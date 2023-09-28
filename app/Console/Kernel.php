@@ -15,7 +15,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command('telescope:prune --hours=48')->daily();
+        $schedule->command('telescope:prune --hours=48')->timezone(getClientTimezone())->daily();
+        $schedule->command('sync:non-shift-schedule')->timezone(getClientTimezone())->dailyAt('15:40');
     }
 
     /**
