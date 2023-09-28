@@ -188,6 +188,21 @@
                                                         </button>
                                                     </td>
                                                 </tr>
+                                                <tr class="text-center">
+                                                    <td>Non Shift Schedule</td>
+                                                    <td>Alakad Schedule</td>
+                                                    <td>Alakad Schedule</td>
+                                                    <td>
+                                                        <button class="btn btn-warning"  :disabled="syncNonShiftScheduleLoading" type="button" @click="syncNonShiftSchedule">
+                                                            <span v-if="syncNonShiftScheduleLoading">
+                                                                <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
+                                                            </span>
+                                                            <span v-else>
+                                                                <i class="fa fa-recycle"></i> &nbsp; Sync Data
+                                                            </span>
+                                                        </button>
+                                                    </td>
+                                                </tr>
                                             </tbody>
                                         </table>
                                     </div>
@@ -218,6 +233,7 @@ export default {
             syncDepartmentLoading: false,
             syncPartnerLoading: false,
             syncOperatingUnitLoading: false,
+            syncNonShiftScheduleLoading: false,
             countdown: 0,
             interval: null,
         }
@@ -528,6 +544,22 @@ export default {
                     useToast().error("Failed to Sync Data! Check connection.");
                 }).finally(() => {
                     this.syncOperatingUnitLoading = false;
+                    clearInterval(this.timerId);
+                });
+        },
+        async syncNonShiftSchedule() {
+            this.syncNonShiftScheduleLoading = true;
+            this.loading = true
+            this.startCountdown();
+
+            await this.$axios.post('/api/v1/admin/timesheet-schedule/sync-non-shift')
+                .then(async (response) => {
+                    useToast().success(response.data.message);
+                }).catch(() => {
+                    useToast().error("Failed to Sync Data! Check connection.");
+                }).finally(() => {
+                    this.syncNonShiftScheduleLoading = false;
+                    this.loading = false;
                     clearInterval(this.timerId);
                 });
         },

@@ -9,9 +9,13 @@ use App\Http\Requests\EmployeeTimesheet\UpdateEmployeeTimesheetScheduleRequest;
 use App\Http\Requests\Timesheet\CreateTimesheetRequest;
 use App\Services\Core\EmployeeTimesheetService;
 use App\Services\Core\PeriodService;
+use Carbon\Carbon;
 use Exception;
+use Illuminate\Console\Command;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Artisan;
 use Psr\Container\ContainerExceptionInterface;
 
 class EmployeeTimesheetController extends BaseController
@@ -134,5 +138,22 @@ class EmployeeTimesheetController extends BaseController
 
     public function updateEmployeeTimesheetSchedule(UpdateEmployeeTimesheetScheduleRequest $request, int $id) {
         return $this->employeeTimesheetService->updateEmployeeTimesheet($request, $id);
+    }
+
+    public function syncNonShiftSchedule(Request $request) {
+        $now = Carbon::now()->setTimezone(getClientTimezone());
+        $status = Artisan::call('sync:non-shift-schedule');
+
+        if ($status == Command::SUCCESS) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Sukses melakukan sync!'
+            ]);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'Gagal melakukan sync!'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

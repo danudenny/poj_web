@@ -155,6 +155,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::get('view-schedule', [EmployeeTimesheetController::class, 'showEmployeeSchedule']);
         Route::get('show-schedule', [EmployeeTimesheetController::class, 'scheduleById']);
         Route::get('schedules', [EmployeeTimesheetController::class, 'indexSchedule']);
+        Route::post('sync-non-shift', [EmployeeTimesheetController::class, 'syncNonShiftSchedule']);
     });
     Route::group(['prefix' => 'periods'], function() {
         Route::get('', [PeriodController::class, 'index']);
