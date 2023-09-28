@@ -166,7 +166,7 @@
             "permission" : "operating-unit-read"
         },
         {
-            "title": "Timesheet",
+            "title": "Jadwal",
             "icon": "calendar",
             "iconf": "fill-briefcase",
             "type": "link",

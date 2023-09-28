@@ -8,12 +8,12 @@
                     <div class="col-md-12">
                         <div class="card card-absolute">
                             <div class="card-header bg-primary">
-                                <h5>Backup List</h5>
+                                <h5>Daftar Backup</h5>
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-2">
                                     <button v-if="this.$store.state.permissions?.includes('backup-request-create')" class="btn btn-warning" type="button" @click="$router.push('/attendance/create-backup')">
-                                        <i class="fa fa-recycle" /> &nbsp; Assign Backup
+                                        <i class="fa fa-recycle" /> &nbsp; Buat Backup
                                     </button>
                                 </div>
                                 <div v-if="loading" class="text-center">
@@ -72,7 +72,7 @@ export default {
                         frozen: true,
                     },
                     {
-                        title: 'Requestor Name',
+                        title: 'Nama Requestor',
                         field: 'requestor_employee.name',
                         headerFilter:"input",
                         frozen: true,
@@ -90,22 +90,22 @@ export default {
                         headerFilter:"input"
                     },
                     {
-                        title: 'Request Type',
+                        title: 'Tipe Request',
                         field: 'request_type',
                         headerFilter:"input"
                     },
                     {
-                        title: 'Shift Type',
+                        title: 'Tipe Shift',
                         field: 'shift_type',
                         headerFilter:"input",
                         hozAlign:"center"
                     },
                     {
-                        title:"Assigned",
+                        title:"Unit",
                         headerHozAlign:"center",
                         columns:[
                             {
-                                title:"From",
+                                title:"Dari",
                                 field:"unit.name",
                                 headerHozAlign:"center",
                                 formatter: function (cell, formatterParams, onRendered) {
@@ -113,7 +113,7 @@ export default {
                                 },
                             },
                             {
-                                title:"To",
+                                title:"Ke",
                                 field:"source_unit.name",
                                 headerHozAlign:"center",
                                 formatter: function (cell, formatterParams, onRendered) {
@@ -123,14 +123,14 @@ export default {
                         ],
                     },
                     {
-                        title: 'Job',
+                        title: 'Pekerjaan',
                         field: 'job.name',
                         headerHozAlign:"center",
                         hozAlign:"center",
                         headerFilter:"input"
                     },
                     {
-                        title: 'Start Date',
+                        title: 'Tanggal Mulai',
                         field: 'start_date',
                         headerHozAlign:"center",
                         hozAlign:"center",
@@ -147,7 +147,7 @@ export default {
                         },
                     },
                     {
-                        title: 'End Date',
+                        title: 'Tanggal Selesai',
                         field: 'end_date',
                         headerHozAlign:"center",
                         hozAlign:"center",
@@ -164,12 +164,12 @@ export default {
                         },
                     },
                     {
-                        title: 'Duration',
+                        title: 'Durasi',
                         field: 'duration',
                         headerHozAlign:"center",
                         hozAlign:"center",
                         formatter: function (cell, formatterParams, onRendered) {
-                            return `<span>${cell.getValue()} days</span>`;
+                            return `<span>${cell.getValue()} hari</span>`;
                         },
                     },
                     {
@@ -198,7 +198,7 @@ export default {
                         },
                     },
                     {
-                        title: 'Created At',
+                        title: 'Dibuat Pada',
                         field: 'created_at',
                         headerFilter:"input",
                         formatter: function (cell, formatterParams, onRendered) {
@@ -276,12 +276,12 @@ export default {
         basic_warning_alert:function(id){
             this.$swal({
                 icon: 'warning',
-                title:"Delete Data?",
-                text:'Once deleted, you will not be able to recover the data!',
+                title:"Apakah Anda Yakin Ingin Menghapus?",
+                text:'Setelah data terhapus, data tidak dapat dikembalikan!',
                 showCancelButton: true,
-                confirmButtonText: 'Yes, delete it!',
+                confirmButtonText: 'Ya, Hapus!',
                 confirmButtonColor: '#e64942',
-                cancelButtonText: 'Cancel',
+                cancelButtonText: 'Batal',
                 cancelButtonColor: '#efefef',
             }).then((result)=>{
                 if(result.value){
@@ -292,7 +292,7 @@ export default {
                             this.table.setData(pluck);
                             this.redrawTable();
                             this.loading = false
-                            useToast().success("Data successfully deleted!");
+                            useToast().success("Data berhasil dihapus!");
                         })
                         .catch(error => {
                             useToast().error(error.response.data.message);

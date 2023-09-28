@@ -8,12 +8,12 @@
                     <div class="col-md-12">
                         <div class="card card-absolute">
                             <div class="card-header bg-primary">
-                                <h5>Employee Overtime Approval</h5>
+                                <h5>Approval Lembur</h5>
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-2">
                                     <button class="btn btn-primary" type="button" @click="$router.push('/attendance/overtime/create')">
-                                        <i class="fa fa-plus" /> &nbsp;Assign Overtime
+                                        <i class="fa fa-plus" /> &nbsp;Buat Lembur
                                     </button>
                                 </div>
                                 <div v-if="loading" class="text-center">
@@ -57,11 +57,11 @@ export default {
                         width: 100
                     },
                     {
-                        title: 'Requestor Name',
+                        title: 'Nama Requestor',
                         field: 'overtime.requestor_employee.name',
                     },
                     {
-                        title: 'Approver Name',
+                        title: 'Nama Pemberi Persetujuan',
                         field: 'employee.name',
                     },
                     {
@@ -71,26 +71,26 @@ export default {
                             let val = cell.getValue()
 
                             if (val === 'approved') {
-                                return `<span class="badge badge-success">Approved</span>`
+                                return `<span class="badge badge-success">Disetujui</span>`
                             } else if (val === 'rejected') {
-                                return `<span class="badge badge-danger">Rejected</span>`
+                                return `<span class="badge badge-danger">Ditolak</span>`
                             } else if (val === 'pending') {
-                                return `<span class="badge badge-info">Pending</span>`
+                                return `<span class="badge badge-info">Menunggu</span>`
                             } else {
-                                return `<span class="badge badge-warning">${val}</span>`
+                                return `<span class="badge badge-warning">Menunggu Persetujuan Sebelumnya</span>`
                             }
                         },
                     },
                     {
-                        title: 'Unit Name',
+                        title: 'Nama Unit',
                         field: 'overtime.unit.name',
                     },
                     {
-                        title: 'Start Time',
+                        title: 'Waktu Mulai',
                         field: 'overtime.start_date',
                     },
                     {
-                        title: 'End Time',
+                        title: 'Waktu Selesai',
                         field: 'overtime.end_date',
                     },
                     {

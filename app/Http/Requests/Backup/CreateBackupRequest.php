@@ -37,4 +37,16 @@ class CreateBackupRequest extends FormRequest
             'requestor_unit_id' => ['required']
         ];
     }
+
+    public function messages()
+    {
+        return [
+            'unit_relation_id.required' => 'Unit Kosong, Mohon Pilih Unit',
+            'job_id.required' => 'Pekerjaan Kosong, Mohon Pilih Pekerjaan',
+            'shift_type.required' => 'Tipe Shift, Mohon Pilih Tipe Shift',
+            'timesheet_id.required' => 'Timesheet Kosong, Mohon Pilih Timesheet',
+            'dates.required' => 'Tanggal Kosong, Mohon Masukkan Tanggal',
+            'employee_ids.required' => 'Pegawai Kosong, Mohon Pilih Pegawai',
+        ];
+    }
 }

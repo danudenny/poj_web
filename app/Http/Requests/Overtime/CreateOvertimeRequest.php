@@ -37,4 +37,15 @@ class CreateOvertimeRequest extends FormRequest
             'request_type' => ['required', Rule::in([Overtime::RequestTypeAssignment, Overtime::RequestTypeRequest])]
         ];
     }
+
+    public function messages()
+    {
+        return [
+            'unit_relation_id.required' => 'Unit Kosong, Mohon Pilih Unit',
+            'job_id.required' => 'Pekerjaan Kosong, Mohon Pilih Pekerjaan',
+            'dates.required' => 'Tanggal Kosong, Mohon Masukkan Tanggal',
+            'employee_ids.required' => 'Pegawai Kosong, Mohon Pilih Pegawai',
+            'notes.required' => 'Catatan Kosong, Mohon Masukkan Catatan',
+        ];
+    }
 }

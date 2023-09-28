@@ -8,12 +8,12 @@
                     <div class="col-md-12">
                         <div class="card card-absolute">
                             <div class="card-header bg-primary">
-                                <h5>Employee Overtime Request</h5>
+                                <h5>Lembur Pegawai</h5>
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-2">
                                     <button v-if="this.$store.state.permissions?.includes('overtime-request-create')" class="btn btn-primary" type="button" @click="$router.push('/attendance/overtime/create')">
-                                        <i class="fa fa-plus" /> &nbsp;Assign Overtime
+                                        <i class="fa fa-plus" /> &nbsp;Buat Lembur
                                     </button>
                                 </div>
                                 <div v-if="loading" class="text-center">
@@ -58,7 +58,7 @@ export default {
                         width: 100
                     },
                     {
-                        title: 'Requestor Name',
+                        title: 'Nama Requestor',
                         field: 'requestor_employee.name',
                         headerFilter:"input"
                     },
@@ -68,20 +68,20 @@ export default {
                         headerFilter:"input"
                     },
                     {
-                        title: 'Unit Name',
+                        title: 'Nama Unit',
                         field: 'unit.name',
                         headerFilter:"input"
                     },
                     {
-                        title: 'Start Time',
+                        title: 'Waktu Mulai',
                         field: 'start_date',
                     },
                     {
-                        title: 'End Time',
+                        title: 'Waktu Selesai',
                         field: 'end_date',
                     },
                     {
-                        title: 'File',
+                        title: 'Berkas',
                         formatter: (cell, formatterParams, onRendered) => {
                             if (cell.getRow().getData().image_url) {
                                 return `<a target="_blank" class="button-icon button-success p-2 mt-3" href="${cell.getRow().getData().image_url}"><i class="fa fa-file"></i> </a>`;
@@ -172,12 +172,12 @@ export default {
         basic_warning_alert:function(id){
             this.$swal({
                 icon: 'warning',
-                title:"Delete Data?",
-                text:'Once deleted, you will not be able to recover the data!',
+                title:"Apakah Anda Ingin Menghapus Data?",
+                text:'Setelah Anda Menghapus, Data Tidak Akan Bisa Dikembalikan!',
                 showCancelButton: true,
-                confirmButtonText: 'Yes, delete it!',
+                confirmButtonText: 'Ya, Hapus!',
                 confirmButtonColor: '#e64942',
-                cancelButtonText: 'Cancel',
+                cancelButtonText: 'Batal',
                 cancelButtonColor: '#efefef',
             }).then((result)=>{
                 if(result.value){

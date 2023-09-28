@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs main="Leave Request"/>
+        <Breadcrumbs main="Izin/Cuti"/>
 
         <div class="container-fluid">
             <div class="email-wrap bookmark-wrap">
@@ -8,7 +8,7 @@
                     <div class="col-md-12">
                         <div class="card card-absolute">
                             <div class="card-header bg-primary">
-                                <h5>Leave Request</h5>
+                                <h5>Izin/Cuti</h5>
                             </div>
                             <div class="card-body">
                                 <div ref="leaveMasterTable"></div>
@@ -82,7 +82,7 @@ export default {
                         frozen: true
                     },
                     {
-                        title: 'Employee Name',
+                        title: 'Nama',
                         field: 'employee.name',
                         headerHozAlign: 'center',
                         headerSort: false,
@@ -100,12 +100,12 @@ export default {
                         headerSort: false,
                     },
                     {
-                        title: 'Date',
+                        title: 'Tanggal',
                         headerHozAlign: 'center',
                         headerSort: false,
                         columns: [
                             {
-                                title: 'Start Date',
+                                title: 'Tanggal Mulai',
                                 field: 'start_date',
                                 hozAlign: 'center',
                                 headerHozAlign: 'center',
@@ -115,7 +115,7 @@ export default {
                                 }
                             },
                             {
-                                title: 'End Date',
+                                title: 'Tanggal Selesai',
                                 field: 'end_date',
                                 hozAlign: 'center',
                                 headerHozAlign: 'center',
@@ -125,7 +125,7 @@ export default {
                                 }
                             },
                             {
-                                title: 'Days',
+                                title: 'Total Hari',
                                 field: 'days',
                                 hozAlign: 'center',
                                 headerHozAlign: 'center',
@@ -134,13 +134,13 @@ export default {
                         ]
                     },
                     {
-                        title: 'Leave Category',
+                        title: 'Kategori',
                         field: 'leave_type.leave_name',
                         headerHozAlign: 'center',
                         headerSort: false,
                     },
                     {
-                        title: 'Leave Type',
+                        title: 'Tipe',
                         field: 'leave_type.leave_type',
                         hozAlign: 'center',
                         headerHozAlign: 'center',
@@ -162,21 +162,21 @@ export default {
                             if (cell.getValue() === 'on process') {
                                 return '<span class="badge badge-info">Pending</span>'
                             } else if (cell.getValue() === 'approved') {
-                                return '<span class="badge badge-success">Approved</span>'
+                                return '<span class="badge badge-success">Diterima</span>'
                             } else if (cell.getValue() === 'rejected') {
-                                return '<span class="badge badge-danger">Rejected</span>'
+                                return '<span class="badge badge-danger">Ditolak</span>'
                             }
                         }
                     },
                     {
-                        title: 'Reason',
+                        title: 'Alasan',
                         field: 'reason',
                         hozAlign: 'center',
                         headerHozAlign: 'center',
                         headerSort: false,
                     },
 	                {
-		                title: 'Approval Notes',
+		                title: 'Catatan',
 		                field: 'last_approver',
 		                hozAlign: 'center',
 		                headerHozAlign: 'center',

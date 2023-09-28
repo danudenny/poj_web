@@ -7,14 +7,14 @@
                 <div class="col-md-12">
                     <div class="card card-absolute">
                         <div class="card-header bg-primary">
-                            <h5>Timesheet Assignment List</h5>
+                            <h5>Daftar Jadwal Pegawai</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-10">
                                     <div class="row">
                                         <div class="col-md-4 mb-3">
-                                            <label>Employee Unit</label>
+                                            <label>Unit Pegawai</label>
                                             <multiselect
                                                 v-model="selectedUnit"
                                                 :options="units"
@@ -35,7 +35,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-4 mb-3">
-                                            <label>Working Unit</label>
+                                            <label>Unit Kerja</label>
                                             <multiselect
                                                 v-model="selectedWorkingUnit"
                                                 :options="workingUnits"
@@ -56,7 +56,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-4 mb-3">
-                                            <label>Month - Year :</label>
+                                            <label>Bulan - Tahun :</label>
                                             <Datepicker
                                                 :model-value="selectedMonth"
                                                 :enable-time-picker="false"
@@ -67,7 +67,7 @@
                                             </Datepicker>
                                         </div>
                                         <div class="col-md-4 mb-3">
-                                            <label>Shift Type :</label>
+                                            <label>Tipe Shift :</label>
                                             <select class="form-select digits" v-model="shiftType" @change="onChangeShiftType">
                                                 <option value=""> - </option>
                                                 <option value="shift">Shift</option>
@@ -75,11 +75,11 @@
                                             </select>
                                         </div>
                                         <div class="col-md-4 mb-3">
-                                            <label>Employee Name</label>
+                                            <label>Nama Pegawai</label>
                                             <input type="text" placeholder="Search Name" class="form-control" v-model="employeeName" @keyup="onChangeEmployeeName">
                                         </div>
                                         <div class="col-md-4 mb-3">
-                                            <label>Job</label>
+                                            <label>Pekerjaan</label>
                                             <multiselect
                                                 v-model="selectedJob"
                                                 :options="jobs"
@@ -105,7 +105,7 @@
                                         <div class="col-md-4 mb-3">
                                             <div class="mt-4">
                                                 <button class="btn btn-warning" @click="resetFilter">
-                                                    <i class="fa fa-rotate-left"></i>&nbsp;Reset Filter
+                                                    <i class="fa fa-rotate-left"></i>&nbsp;Hapus Filter
                                                 </button>
                                             </div>
                                         </div>
@@ -114,7 +114,7 @@
                                 <div class="col-md-2" v-if="this.$store.state.permissions?.includes('timesheet-update')">
                                     <div class="d-flex justify-content-end mb-2">
                                         <button class="btn btn-success" @click="createSchedule">
-                                            <i class="fa fa-plus"></i>&nbsp;Create Schedule
+                                            <i class="fa fa-plus"></i>&nbsp;Buat Schedule
                                         </button>
                                     </div>
                                 </div>
@@ -188,17 +188,17 @@
         </div>
 
         <div class="modal fade" id="createTimesheet" ref="createTimesheet" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenter" aria-hidden="true">
-            <VerticalModal title="Create Timesheet" @save="onCreate()">
+            <VerticalModal title="Buat Jadwal" @save="onCreate()">
                 <div class="row">
                     <div class="col-md-12">
                         <div class="mt-2">
-                            <label for="date">Date</label>
+                            <label for="date">Tanggal</label>
                             <input type="date" name="date" id="date" class="form-control" v-model="this.payloadCreateTimesheet.date" required disabled>
                         </div>
                     </div>
                     <div class="col-md-12">
                         <div class="mt-2">
-                            <label for="name">Employee Name</label>
+                            <label for="name">Nama Pegawai</label>
                             <input type="text" name="name" id="name" class="form-control" v-model="selectedEmployeeTimesheet.employee_name" required disabled>
                         </div>
                     </div>
@@ -206,7 +206,7 @@
                         <label>Target Unit Level:</label>
                         <multiselect
                                 v-model="selectedLevel"
-                                placeholder="Select Target Unit Level"
+                                placeholder="Pilih Target Unit Level"
                                 label="name"
                                 track-by="name"
                                 :options="unitLevels"
@@ -219,7 +219,7 @@
                         <label>Target Unit :</label>
                         <multiselect
                                 v-model="selectedUnitTarget"
-                                placeholder="Select Target Unit"
+                                placeholder="Pilih Target Unit"
                                 label="formatted_name"
                                 track-by="relation_id"
                                 :options="unitTargets"
@@ -232,7 +232,7 @@
                     <div class="col-md-12">
                         <label>Timesheet :</label>
                         <select v-model="timesheet_id" class="form-control" >
-                            <option value="null">Select Timesheet</option>
+                            <option value="null">Pilih Timesheet</option>
                             <option :value="item.id" v-for="item in timesheets">{{item.formatted_name}}</option>
                         </select>
                     </div>
@@ -502,12 +502,12 @@ export default {
         onDeleteEmployeeTimesheet:function(id){
             this.$swal({
                 icon: 'warning',
-                title:"Delete Data?",
-                text:'Once deleted, you will not be able to recover the data!',
+                title:"Anda Yakin Ingin Menghapus Data?",
+                text:'Setelah Menghapus, Data Tidak Dapat Dikembalikan!',
                 showCancelButton: true,
-                confirmButtonText: 'Yes, delete it!',
+                confirmButtonText: 'Ya, Hapus!',
                 confirmButtonColor: '#e64942',
-                cancelButtonText: 'Cancel',
+                cancelButtonText: 'Batal',
                 cancelButtonColor: '#efefef',
             }).then((result)=>{
                 if(result.value){
@@ -614,12 +614,12 @@ export default {
 
             this.$swal({
                 icon: 'warning',
-                title:"Do you want to add schedule to this employee?",
-                text:'Please check the data before submit!',
+                title:"Apakah Anda Ingin Menambahkan Jadwal Kepada Pegawai?",
+                text:'Mohon Periksa Kembali Sebelum Menambakan!',
                 showCancelButton: true,
-                confirmButtonText: 'Yes!',
+                confirmButtonText: 'Ya!',
                 confirmButtonColor: '#126850',
-                cancelButtonText: 'Cancel',
+                cancelButtonText: 'Batal',
                 cancelButtonColor: '#efefef',
             }).then((result)=>{
                 if(result.value){

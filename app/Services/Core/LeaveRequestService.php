@@ -340,7 +340,7 @@ class LeaveRequestService extends BaseService {
             if (!$leaveRequest) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Leave request data not found'
+                    'message' => 'Request Izin/Cuti Tidak Ditemukan'
                 ], 404);
             }
 
@@ -355,7 +355,7 @@ class LeaveRequestService extends BaseService {
             if (!$leaveRequestApproval) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'You don\'t have access to do approval!'
+                    'message' => 'Kamu tidak memiliki akses!'
                 ], ResponseAlias::HTTP_FORBIDDEN);
             }
 
@@ -367,7 +367,7 @@ class LeaveRequestService extends BaseService {
                 if ($beforeApprovalExist) {
                     return response()->json([
                         'status' => false,
-                        'message' => 'Last approver not doing approval yet!',
+                        'message' => 'Menunggu persetujuan sebelumya!',
                     ], ResponseAlias::HTTP_BAD_REQUEST);
                 }
             }
@@ -433,7 +433,7 @@ class LeaveRequestService extends BaseService {
             DB::commit();
             return response()->json([
                 'status' => true,
-                'message' => 'Successfully approve leave request data'
+                'message' => 'Sukses'
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();

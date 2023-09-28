@@ -87,7 +87,7 @@
                     <multiselect
                         v-model="selectedJobUnit"
                         placeholder="Select Unit"
-                        label="name"
+                        label="formatted_name"
                         track-by="relation_id"
                         :options="jobUnits"
                         :multiple="false"
@@ -214,7 +214,7 @@ export default {
                 });
         },
         async getJobUnitsData() {
-            this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.jobUnitPagination.pageSize}&page=${this.jobUnitPagination.currentPage}&name=${this.jobUnitPagination.name}`)
+            this.$axios.get(`/api/v1/admin/unit/paginated?per_page=${this.jobUnitPagination.pageSize}&page=${this.jobUnitPagination.currentPage}&name=${this.jobUnitPagination.name}&unit_level=4,5,6,7`)
                 .then(response => {
                     this.jobUnits = response.data.data.data
                     this.jobUnitPagination.onSearch = false

@@ -1,6 +1,6 @@
 <template>
     <div class="container-fluid">
-        <Breadcrumbs main="List Approval Backup"/>
+        <Breadcrumbs main="Daftar Approval Backup"/>
 
         <div class="container-fluid">
             <div class="email-wrap bookmark-wrap">
@@ -8,7 +8,7 @@
                     <div class="col-md-12">
                         <div class="card card-absolute">
                             <div class="card-header bg-primary">
-                                <h5>Backup List Approval</h5>
+                                <h5>Daftar Approval Backup</h5>
                             </div>
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-2">
@@ -64,12 +64,12 @@ export default {
                         width: 100
                     },
                     {
-                        title: 'Requestor Name',
+                        title: 'Nama Requestor',
                         field: 'backup.requestor_employee.name',
                         headerFilter:"input"
                     },
                     {
-                        title: 'Approver Name',
+                        title: 'Nama Approver',
                         field: 'employee.name',
                         headerFilter:"input"
                     },
@@ -81,9 +81,9 @@ export default {
                             let val = cell.getValue()
 
                             if (val === 'approved') {
-                                return `<span class="badge badge-success">Approved</span>`
+                                return `<span class="badge badge-success">Disetujui</span>`
                             } else if (val === 'rejected') {
-                                return `<span class="badge badge-danger">Rejected</span>`
+                                return `<span class="badge badge-danger">Ditolak</span>`
                             } else if (val === 'pending') {
                                 return `<span class="badge badge-info">Pending</span>`
                             } else {
@@ -92,21 +92,21 @@ export default {
                         },
                     },
                     {
-                        title: 'Request Type',
+                        title: 'Tipe Request',
                         field: 'backup.request_type',
                         headerFilter:"input"
                     },
                     {
-                        title: 'Shift Type',
+                        title: 'Tipe Shift',
                         field: 'backup.shift_type',
                         headerFilter:"input"
                     },
                     {
-                        title:"Assigned",
+                        title:"Unit",
                         headerHozAlign:"center",
                         columns:[
                             {
-                                title:"From",
+                                title:"Dari",
                                 field:"backup.source_unit.name",
                                 headerHozAlign:"center",
                                 formatter: function (cell, formatterParams, onRendered) {
@@ -114,7 +114,7 @@ export default {
                                 },
                             },
                             {
-                                title:"To",
+                                title:"Ke",
                                 field:"backup.unit.name",
                                 headerHozAlign:"center",
                                 formatter: function (cell, formatterParams, onRendered) {
@@ -124,26 +124,21 @@ export default {
                         ],
                     },
                     {
-                        title: 'Start Date',
+                        title: 'Tanggal Mulai',
                         field: 'backup.start_date',
                         headerFilter:"date"
                     },
                     {
-                        title: 'End Date',
+                        title: 'Tanggal Selesai',
                         field: 'backup.end_date',
                         headerFilter:"date"
                     },
                     {
-                        title: 'Duration (in Days)',
+                        title: 'Durasi',
                         field: 'backup.duration',
                         formatter: function (cell, formatterParams, onRendered) {
-                            return `<span class="badge badge-success">${cell.getValue()}</span>`;
+                            return `<span class="badge badge-success">${cell.getValue()} hari</span>`;
                         },
-                    },
-                    {
-                        title: 'Created At',
-                        field: 'backup.created_at',
-                        headerFilter:"input"
                     },
                     {
                         title: '',
