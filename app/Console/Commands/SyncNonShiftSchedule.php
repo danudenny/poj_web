@@ -155,8 +155,13 @@ class SyncNonShiftSchedule extends Command
 
                             $timesheet = $timesheetDays[$date->dayName];
 
+                            $now = Carbon::now();
                             $startTime = Carbon::parse($date->format('Y-m-d') . ' ' . $timesheet->start_time . ':00')->setTimezone('UTC');
                             $endTime = Carbon::parse($date->format('Y-m-d') . ' ' . $timesheet->end_time . ':00')->setTimezone('UTC');
+
+                            if ($startTime->lessThan($now)) {
+                                continue;
+                            }
 
                             if ($endTime->lessThan($startTime)) {
                                 $endTime->addDay();
@@ -185,9 +190,6 @@ class SyncNonShiftSchedule extends Command
                             ];
 
                             $insertArr[] = $param;
-                            if ($param['timesheet_id'] <= 0) {
-                                dd($param);
-                            }
                             $total['success'] += 1;
                         }
 
@@ -196,7 +198,9 @@ class SyncNonShiftSchedule extends Command
                     }
                 });
 
-            DB::table('employee_timesheet_schedules')->insert($insertArr);
+            if (count($insertArr) > 0) {
+                DB::table('employee_timesheet_schedules')->insert($insertArr);
+            }
             DB::commit();
 
             $outerTime = Carbon::now()->diffInSeconds($outerCheck);
