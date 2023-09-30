@@ -143,8 +143,7 @@ class EmployeeTimesheetController extends BaseController
     public function syncNonShiftSchedule(Request $request) {
         $now = Carbon::now()->setTimezone(getClientTimezone());
         $status = Artisan::call('sync:non-shift-schedule', [
-            'startDate' => '2023-10-01',
-//            'startDate' => $now->format('Y-m-d'),
+            'startDate' => $now->format('Y-m-d'),
         ]);
 
         if ($status == Command::SUCCESS) {
