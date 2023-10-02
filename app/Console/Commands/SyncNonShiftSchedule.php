@@ -156,8 +156,8 @@ class SyncNonShiftSchedule extends Command
                             $timesheet = $timesheetDays[$date->dayName];
 
                             $now = Carbon::now();
-                            $startTime = Carbon::parse($date->format('Y-m-d') . ' ' . $timesheet->start_time . ':00')->setTimezone('UTC');
-                            $endTime = Carbon::parse($date->format('Y-m-d') . ' ' . $timesheet->end_time . ':00')->setTimezone('UTC');
+                            $startTime = Carbon::parse($date->format('Y-m-d') . ' ' . $timesheet->start_time . ':00', $unit->timezone)->setTimezone('UTC');
+                            $endTime = Carbon::parse($date->format('Y-m-d') . ' ' . $timesheet->end_time . ':00', $unit->timezone)->setTimezone('UTC');
 
                             if ($startTime->lessThan($now)) {
                                 continue;
