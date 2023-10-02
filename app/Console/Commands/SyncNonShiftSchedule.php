@@ -167,7 +167,7 @@ class SyncNonShiftSchedule extends Command
                                 $endTime->addDay();
                             }
 
-                            if (isset($employeeUnavailableDate[$date->format('Y-m-d')])) {
+                            if (in_array($date->format('Y-m-d'), $employeeUnavailableDate)) {
                                 $total['failed'] += 1;
                                 continue;
                             }
