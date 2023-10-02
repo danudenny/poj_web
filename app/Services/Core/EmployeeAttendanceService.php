@@ -1214,8 +1214,8 @@ class EmployeeAttendanceService extends BaseService
                     od.start_time AS start_time,
                     od.end_time AS end_time,
                     o.timezone AS timezone,
-                    (od.start_time::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone') AS check_in_time_with_timezone,
-                    (od.end_time::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone') AS check_out_time_with_timezone,
+                    (od.start_time::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone') AS start_time_with_timezone,
+                    (od.end_time::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone') AS end_time_with_timezone,
                     overtime_employees.check_in_time AS check_in_time,
                     overtime_employees.check_out_time AS check_out_time,
                     (overtime_employees.check_in_time::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone') AS check_in_time_with_timezone,
@@ -1257,7 +1257,7 @@ class EmployeeAttendanceService extends BaseService
             $query->whereRaw("start_time_with_timezone::DATE >= '$startTime'");
         }
         if ($endTime = $request->query('end_time')) {
-            $query->whereRaw("end_time_with_timezone <= '$endTime'");
+            $query->whereRaw("end_time_with_timezone::DATE <= '$endTime'");
         }
 
         $query->orderBy('start_time_with_timezone', 'ASC');
