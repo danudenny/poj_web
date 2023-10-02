@@ -233,14 +233,24 @@ class LeaveRequestService extends BaseService {
             ], 404);
         }
 
-        $checkLeaveRequest = LeaveRequest::where('employee_id', $employee->id)
-            ->where('start_date', $request->start_date)
+        $checkLeaveRequest = LeaveRequest::query()
+            ->where('employee_id', $employee->id)
+            ->where(function(Builder $builder) use ($request) {
+                $builder->orWhere(function(Builder $builder) use ($request) {
+                    $builder->where( 'start_date', '<=', $request->start_date)
+                        ->where('end_date', '>=', $request->start_date);
+                })->orWhere(function(Builder $builder) use ($request) {
+                    $builder->where('start_date', '<=', $request->end_date)
+                        ->where('end_date', '>=', $request->end_date);
+                });
+            })
+            ->whereNot('last_status', LeaveRequest::StatusRejected)
             ->first();
 
         if ($checkLeaveRequest) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'You already have active leave request in the same start date'
+                'message' => 'Anda memiliki Request Izin/Cuti Yang Active Pada Tanggal Tersebut'
             ], 400);
         }
 
@@ -267,7 +277,7 @@ class LeaveRequestService extends BaseService {
             if ($endDate < $startDate) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'End date must be greater than start date'
+                    'message' => 'Tanggal Selesai Harus Lebih Besar Dari Tanggal Mulai'
                 ], 400);
             }
 
