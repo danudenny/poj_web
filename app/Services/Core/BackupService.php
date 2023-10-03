@@ -1030,8 +1030,8 @@ class BackupService extends ScheduleService
                         'full_attendance' => (clone $query)->whereNotNull('backup_employee_times.check_in_time')->whereNotNull('backup_employee_times.check_out_time')->count(),
                         'late_check_in' => (clone $query)->whereRaw('backup_employee_times.check_in_time > backup_times.start_time')->count(),
                         'not_check_out' => (clone $query)->whereNull('backup_employee_times.check_out_time')->count(),
-                        'early_check_out' => (clone $query)->whereRaw('backup_employee_times.check_out_time < backup_times.end_time')->count(),
-                        'not_attendance' => (clone $query)->whereNull('backup_employee_times.check_in_time')->whereNull('backup_employee_times.check_out_time')->count(),
+                        'early_check_out' => (clone $query)->whereRaw('backup_times.start_time < NOW()')->whereRaw('backup_employee_times.check_out_time < backup_times.end_time')->count(),
+                        'not_attendance' => (clone $query)->whereRaw('backup_times.start_time < NOW()')->whereNull('backup_employee_times.check_in_time')->whereNull('backup_employee_times.check_out_time')->count(),
                         'total_schedule' => (clone $query)->count()
                     ],
                     'data' => $this->list($query, $request)

@@ -1123,7 +1123,7 @@ class OvertimeService extends ScheduleService
                 ->join('overtimes', 'overtimes.id', '=', 'overtime_dates.overtime_id')
                 ->where('overtime_employees.employee_id', '=', $user->employee_id)
                 ->select(['overtime_employees.*'])
-                ->orderBy('overtimes.start_date', 'DESC')
+                ->orderBy('overtime_dates.start_time', 'DESC')
                 ->where('overtimes.last_status', '!=', OvertimeHistory::TypeRejected);
 
             if ($monthly = $request->query('monthly')) {
@@ -1138,8 +1138,8 @@ class OvertimeService extends ScheduleService
                         'full_attendance' => (clone $query)->whereNotNull('overtime_employees.check_in_time')->whereNotNull('overtime_employees.check_out_time')->count(),
                         'late_check_in' => (clone $query)->whereRaw('overtime_employees.check_in_time > overtime_dates.start_time')->count(),
                         'not_check_out' => (clone $query)->whereNull('overtime_employees.check_out_time')->count(),
-                        'early_check_out' => (clone $query)->whereRaw('overtime_employees.check_out_time < overtime_dates.end_time')->count(),
-                        'not_attendance' => (clone $query)->whereNull('overtime_employees.check_in_time')->whereNull('overtime_employees.check_out_time')->count(),
+                        'early_check_out' => (clone $query)->whereRaw('overtime_dates.start_time < NOW()')->whereRaw('overtime_employees.check_out_time < overtime_dates.end_time')->count(),
+                        'not_attendance' => (clone $query)->whereRaw('overtime_dates.start_time < NOW()')->whereNull('overtime_employees.check_in_time')->whereNull('overtime_employees.check_out_time')->count(),
                         'total_schedule' => (clone $query)->count()
                     ],
                     'data' => $this->list($query, $request)

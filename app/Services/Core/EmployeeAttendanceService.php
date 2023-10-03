@@ -1157,6 +1157,7 @@ class EmployeeAttendanceService extends BaseService
             $clientTimezone = getClientTimezone();
 
             $query = EmployeeTimesheetSchedule::query()->with(['unit', 'employeeAttendance'])
+                ->orderBy('employee_timesheet_schedules.start_time', 'ASC')
                 ->where('employee_timesheet_schedules.employee_id', '=', $user->employee_id);
 
             if ($monthly = $request->query('monthly')) {
@@ -1171,8 +1172,8 @@ class EmployeeAttendanceService extends BaseService
                         'full_attendance' => (clone $query)->whereNotNull('employee_timesheet_schedules.check_in_time')->whereNotNull('employee_timesheet_schedules.check_out_time')->count(),
                         'late_check_in' => (clone $query)->whereRaw('employee_timesheet_schedules.check_in_time > employee_timesheet_schedules.start_time')->count(),
                         'not_check_out' => (clone $query)->whereNull('employee_timesheet_schedules.check_out_time')->count(),
-                        'early_check_out' => (clone $query)->whereRaw('employee_timesheet_schedules.check_out_time < employee_timesheet_schedules.end_time')->count(),
-                        'not_attendance' => (clone $query)->whereNull('employee_timesheet_schedules.check_in_time')->whereNull('employee_timesheet_schedules.check_out_time')->count(),
+                        'early_check_out' => (clone $query)->whereRaw('employee_timesheet_schedules.start_time < NOW()')->whereRaw('employee_timesheet_schedules.check_out_time < employee_timesheet_schedules.end_time')->count(),
+                        'not_attendance' => (clone $query)->whereRaw('employee_timesheet_schedules.start_time < NOW()')->whereNull('employee_timesheet_schedules.check_in_time')->whereNull('employee_timesheet_schedules.check_out_time')->count(),
                         'total_schedule' => (clone $query)->count(),
                     ],
                     'data' => $this->list($query, $request)
