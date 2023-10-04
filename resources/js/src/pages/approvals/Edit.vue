@@ -206,7 +206,7 @@
                                     <hr/>
                                 </div>
                             </div>
-                            <div style="align-self: flex-end;" v-if="approval.approvers.length < 6 && approval.unit_relation_id > 0">
+                            <div style="align-self: flex-end;" v-if="approval.approvers.length < 6 && approval.unit_relation_id">
                                 <button class="btn btn-primary" @click="onAddApprover">
                                     <i class="fa fa-plus"></i>&nbsp;Add New Approver
                                 </button>
@@ -336,6 +336,7 @@ export default {
                     })
 
                     this.approval = approvalObj
+                    console.log("DEBUG", this.approval.unit_relation_id > 0)
 
                     this.approval.approvers.forEach((val, index) => {
                         this.getApproverUnit(index)
@@ -500,6 +501,12 @@ export default {
                 selectedUnit: null,
                 units: [],
                 selectedEmployee: null,
+                selectedJob: null,
+                jobs: [],
+                selectedDepartment: null,
+                departments: [],
+                selectedTeam: null,
+                teams: [],
                 employees: []
             })
         },
