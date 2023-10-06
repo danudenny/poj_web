@@ -38,6 +38,8 @@ class UserMobileResource extends JsonResource
             'email' => $this->email,
             'avatar' => $this->avatar,
             'is_new' => $this->is_new,
+            'is_password_changed' => $this->is_password_changed,
+            'is_policy_confirmed' => $this->is_policy_confirmed,
             'customer_id' => $this->employee->customer_id,
             'is_normal_checkin' => $this->is_normal_checkin,
             'is_event_checkin' => $this->is_event_checkin,
