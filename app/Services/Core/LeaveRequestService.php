@@ -141,6 +141,7 @@ class LeaveRequestService extends BaseService {
              */
             $user = $request->user();
 
+            $leaveRequestID = $request->get('leave_request_id');
             $unitRelationID = $request->get('unit_relation_id');
             $query = LeaveRequestApproval::query()->with(['leaveRequest', 'employee', 'leaveRequest.employee', 'leaveRequest.leaveType']);
             $query->join('leave_requests', 'leave_requests.id', '=', 'leave_request_approvals.leave_request_id');
@@ -160,7 +161,9 @@ class LeaveRequestService extends BaseService {
                     $unitRelationID = $defaultUnitRelationID;
                 }
             } else {
-                $query->where('leave_request_approvals.employee_id', '=', $user->employee_id);
+                if ($leaveRequestID == '' || $leaveRequestID == null) {
+                    $query->where('leave_request_approvals.employee_id', '=', $user->employee_id);
+                }
             }
 
             if ($unitRelationID) {
@@ -183,6 +186,10 @@ class LeaveRequestService extends BaseService {
 
             if ($status = $request->query('status')) {
                 $query->where('leave_request_approvals.status', '=', $status);
+            }
+
+            if ($leaveRequestID) {
+                $query->where('leave_request_approvals.leave_request_id', '=', $leaveRequestID);
             }
 
             $query->select(['leave_request_approvals.*']);

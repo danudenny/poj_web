@@ -5,6 +5,7 @@ namespace App\Services\Core;
 use App\Helpers\Notification\MailNotification;
 use App\Helpers\UnitHelper;
 use App\Http\Requests\Auth\ChangePasswordRequest;
+use App\Http\Requests\User\ChangeProfilePicture;
 use App\Http\Resources\RoleResource;
 use App\Http\Resources\UserProfileCollection;
 use App\Http\Resources\UserResource;
@@ -538,6 +539,31 @@ class UserService extends BaseService
                 'message' => 'Success!'
             ]);
         } catch (\Throwable $exception) {
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function changeProfilePicture(ChangeProfilePicture $request) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            DB::beginTransaction();
+            $user->avatar = $request->input('image_url');
+            $user->save();
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Sukses!'
+            ]);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
             return response()->json([
                 'status' => false,
                 'message' => $exception->getMessage()

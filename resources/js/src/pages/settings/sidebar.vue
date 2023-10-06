@@ -41,6 +41,17 @@
                                             </span>
                                         </a>
                                     </li>
+                                    <li>
+                                        <a class="pills-link" id="pills-policy-tab" data-bs-toggle="pill" href="#pills-policy" role="tab"
+                                           aria-controls="pills-policy" aria-selected="true">
+                                            <span class="title" @click="active('pills-policy-tab')">
+                                                <i data-feather="database">
+                                                    <vue-feather type="alert-triangle"></vue-feather>
+                                                </i>
+                                                Privacy & Policy
+                                            </span>
+                                        </a>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -57,6 +68,7 @@
                         <appSettings />
                         <storageSettings />
                         <mailSettings />
+                        <policy />
                     </div>
                 </div>
             </div>
@@ -67,11 +79,13 @@
 import storageSettings from './storageSetting.vue'
 import appSettings from './appSetting.vue'
 import mailSettings from './mailSetting.vue'
+import policy from './policy.vue'
 export default {
     components: {
         storageSettings,
         appSettings,
-        mailSettings
+        mailSettings,
+        policy
     },
     data() {
         return {

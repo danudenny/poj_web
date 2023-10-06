@@ -89,7 +89,7 @@
                         </div>
                         <div class="col-md-12">
                             <div class="mt-3">
-                                <label>Batas Cuti</label>
+                                <label>Batas Lembur</label>
                             </div>
                             <hr/>
                         </div>

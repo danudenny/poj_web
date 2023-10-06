@@ -25,6 +25,7 @@ use App\Http\Controllers\API\OutletController;
 use App\Http\Controllers\API\OvertimeController;
 use App\Http\Controllers\API\PeriodController;
 use App\Http\Controllers\API\PermissionController;
+use App\Http\Controllers\API\PolicyController;
 use App\Http\Controllers\API\PublicHolidayController;
 use App\Http\Controllers\API\RoleController;
 use App\Http\Controllers\API\SettingController;
@@ -43,13 +44,17 @@ Route::get('admin/employee/sync-to-users', [EmployeeController::class, 'syncToUs
 Route::group(['prefix' => 'admin/setting'], function () {
     Route::get('/', [SettingController::class, 'index']);
 });
-
+Route::group(['prefix' => 'admin/policy'], function () {
+    Route::get('/', [PolicyController::class, 'get']);
+    Route::post('/', [PolicyController::class, 'set'])->middleware('auth:sanctum');
+});
 Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'], function () {
     // Begin User
     Route::group(['prefix' => 'user'], function () {
         Route::get('/', [UserController::class, 'index']);
         Route::get('view', [UserController::class, 'view']);
         Route::get('profile', [UserController::class, 'profile']);
+        Route::get('profile-v2', [UserController::class, 'profileV2']);
         Route::get('/roles', [UserController::class, 'getRoles']);
         Route::post('save', [UserController::class, 'save']);
         Route::post('update', [UserController::class, 'update']);
@@ -60,6 +65,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::delete('destroy', [UserController::class, 'destroy']);
         Route::post('{id}/avatar', [UserController::class, 'updateAvatar']);
         Route::put('update-token/{id}', [UserController::class, 'updateToken']);
+        Route::post('change-profile-picture', [UserController::class, 'changeProfile']);
     });
     // End User
 

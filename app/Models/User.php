@@ -20,6 +20,7 @@ use Watson\Rememberable\Rememberable;
  * @property int $employee_id
  * @property string|null $fcm_token
  * @property string $email
+ * @property string $avatar
  *
  * Relations:
  * @property-read Employee $employee

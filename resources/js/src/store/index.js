@@ -92,6 +92,15 @@ export default createStore({
       getActiveUser: (state) => {
           let activeUser = JSON.parse(localStorage.getItem('USER_STORAGE_KEY'));
           state.user = activeUser
+      },
+      getCurrentProfile: async (state) => {
+          await axios.get('api/v1/admin/user/profile-v2').then(response => {
+              let user = response.data.data
+              localStorage.setItem('USER_STORAGE_KEY', JSON.stringify(user));
+              localStorage.setItem('USER_AVATAR', user.avatar);
+          }).catch(error => {
+              console.error(error);
+          });
       }
   },
   mutations: {

@@ -4,8 +4,10 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\BaseController;
 use App\Http\Requests\Auth\ChangePasswordRequest;
+use App\Http\Requests\User\ChangeProfilePicture;
 use App\Http\Requests\User\UserSaveRequest;
 use App\Http\Requests\User\UserUpdateRequest;
+use App\Http\Resources\UserMobileResource;
 use App\Services\Core\UserService;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\JsonResponse;
@@ -187,5 +189,19 @@ class UserController extends BaseController
 
     public function changePassword(ChangePasswordRequest $request) {
         return $this->userService->changePassword($request);
+    }
+
+    public function changeProfile(ChangeProfilePicture $request) {
+        return $this->userService->changeProfilePicture($request);
+    }
+
+    public function profileV2(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        return response()->json([
+            'status' => true,
+            'message' => 'Success',
+            'data' => UserMobileResource::make($user)
+        ]);
     }
 }

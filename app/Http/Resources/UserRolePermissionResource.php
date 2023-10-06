@@ -89,6 +89,8 @@ class UserRolePermissionResource extends JsonResource
             'email' => $this->email,
             'avatar' => $this->avatar,
             'is_new' => $this->is_new,
+            'is_password_changed' => $this->is_password_changed,
+            'is_policy_confirmed' => $this->is_policy_confirmed,
             'fcm_token' => $this->fcm_token,
             'availableRole' => $availableRole,
             'roles' => $role->name,
@@ -110,7 +112,7 @@ class UserRolePermissionResource extends JsonResource
             'misc' => $listJobs,
             'active_units' => $activeAdminUnit,
             'allowed_operating_units' => $this->allowedOperatingUnits,
-            'default_operating_unit' => $employee->defaultOperatingUnit
+            'default_operating_unit' => $employee->defaultOperatingUnit,
         ];
     }
 }

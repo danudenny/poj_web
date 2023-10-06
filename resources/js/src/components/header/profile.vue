@@ -1,7 +1,7 @@
 <template>
     <li class="profile-nav onhover-dropdown pe-0 py-0">
       <div class="media profile-media" style="width: 250px">
-        <img class="b-r-10 img-40" :src="avatars" alt="avatar" />
+        <img class="b-r-10 profile-picture" :src="avatars" alt="avatar" />
         <div class="media-body">
           <span style="font-size: 13px"><b>{{ user.name }}</b></span>
           <p class="mb-0 text-warning" style="font-size: 12px">
@@ -36,7 +36,8 @@
                 email: '',
                 last_units: {
                     name: '',
-                }
+                },
+                avatar: null
             },
             avatars: '',
             profileImg: '',
@@ -45,7 +46,10 @@
     async mounted() {
       await this.getUser;
       await this.getUserAvatar;
-      this.avatars = `https://ui-avatars.com/api/?name=${this.user.name}&background=0A5640&color=fff&length=2&rounded=false&size=32`
+      this.avatars = this.profileImg;
+      if (this.avatars === null) {
+          this.avatars = `https://ui-avatars.com/api/?name=${this.user.name}&background=0A5640&color=fff&length=2&rounded=false&size=32`
+      }
     },
     methods: {
         ...mapActions(['logout']),
@@ -61,7 +65,8 @@
 
     },
       computed: {
-          getUser() {
+          async getUser() {
+              await this.$store.getters.getCurrentProfile
               const getUser = localStorage.getItem('USER_STORAGE_KEY');
               this.user = JSON.parse(getUser)
               return this.user
@@ -73,3 +78,11 @@
       }
   };
   </script>
+
+<style>
+.profile-picture {
+    object-fit: cover;
+    width: 40px;
+    height: 40px;
+}
+</style>
