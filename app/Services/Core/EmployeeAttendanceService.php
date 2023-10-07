@@ -495,6 +495,13 @@ class EmployeeAttendanceService extends BaseService
              */
             $user = $request->user();
 
+            if($user->is_new) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Mohon melakukan inisialisasi wajah terlebih dahulu'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
             /**
              * @var EmployeeTimesheetSchedule $employeeTimesheetSchedule
              */

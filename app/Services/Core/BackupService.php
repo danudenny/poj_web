@@ -741,6 +741,13 @@ class BackupService extends ScheduleService
              */
             $user = $request->user();
 
+            if($user->is_new) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Mohon melakukan inisialisasi wajah terlebih dahulu'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
             $dataLocation = [
                 'latitude' => $request->input('latitude'),
                 'longitude' => $request->input('longitude')
