@@ -47,7 +47,7 @@
       await this.getUser;
       await this.getUserAvatar;
       this.avatars = this.profileImg;
-      if (this.avatars === null) {
+      if (this.avatars === "null") {
           this.avatars = `https://ui-avatars.com/api/?name=${this.user.name}&background=0A5640&color=fff&length=2&rounded=false&size=32`
       }
     },
