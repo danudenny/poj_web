@@ -59,6 +59,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::get('/roles', [UserController::class, 'getRoles']);
         Route::post('save', [UserController::class, 'save']);
         Route::post('update', [UserController::class, 'update']);
+        Route::post('reset_initial_face/{userID}', [UserController::class, 'resetInitialFace']);
         Route::post('change-password', [UserController::class, 'changePassword']);
         Route::post('toggle-status', [UserController::class, 'toggleRoleStatus']);
         Route::delete('delete', [UserController::class, 'delete']);

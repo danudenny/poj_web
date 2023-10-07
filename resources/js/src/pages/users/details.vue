@@ -19,8 +19,7 @@
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="mb-3">
-                                        <pre>{{item.avatar}}</pre>
-                                        <img :src="item.avatar" />
+                                        <img :src="item.avatar" class="b-r-10" style="width: 100%"/>
                                     </div>
                                 </div>
                                 <div class="col-md-5">
@@ -43,33 +42,14 @@
                                     </div>
                                     <div class="mb-3">
                                         <div class="mb-2">
-                                            <b class="text-danger w-700">Active Sessions</b>
-                                            <ul>
-                                                <li v-show="item.is_normal_checkin">
-                                                    <span class="badge badge-primary">Attendance Check-In</span>
-                                                </li>
-                                                <li v-show="item.is_backup_checkin">
-                                                    <span class="badge badge-primary">Backup Check-In</span>
-                                                </li>
-                                                <li v-show="item.is_event_checkin">
-                                                    <span class="badge badge-primary">Event Check-In</span>
-                                                </li>
-                                                <li v-show="item.is_overtime_checkin">
-                                                    <span class="badge badge-primary">Overtime Check-In</span>
-                                                </li>
-                                                <li v-show="item.is_longshift_checkin">
-                                                    <span class="badge badge-primary">Longshift Check-In</span>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <div class="mb-3">
-                                        <div class="mb-2">
                                             <label class="col-form-label">Allowed Operating Unit</label>
                                             <ul>
                                                 <li v-for="operatingUnit in item.allowed_operating_units" class="badge badge-primary">{{ operatingUnit.name }}</li>
                                             </ul>
                                         </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <button class="btn btn-secondary" @click="this.resetInitialFace"><i class="fa fa-cog"></i> Reset Initial Face</button>
                                     </div>
                                 </div>
                             </div>
@@ -102,6 +82,7 @@ import axios from 'axios';
 import { useRoute } from 'vue-router';
 import OperatingUnit from "./operating-unit.vue";
 import CentralUnit from "./central-unit.vue";
+import {useToast} from "vue-toastification";
 
 export default {
     components: {OperatingUnit, CentralUnit},
@@ -135,6 +116,28 @@ export default {
                 .catch(error => {
                     console.error(error);
                 });
+        },
+        resetInitialFace() {
+            this.$swal({
+                icon: 'warning',
+                title:"Apakah Anda Ingin Mereset Data Wajah?",
+                text:'Setelah proses reset berhasil, maka data tidak dapat dikembalikan!',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, reset!',
+                confirmButtonColor: '#126850',
+                cancelButtonText: 'Batal',
+                cancelButtonColor: '#efefef',
+            }).then((result)=>{
+                if(result.value){
+                    this.$axios.post(`api/v1/admin/user/reset_initial_face/${this.$route.params.id}`)
+                        .then(async (res) => {
+                            useToast().success('Sukses mereset data wajah' , {position: 'bottom-right'});
+                        })
+                        .catch(error => {
+                            useToast().error(error.response.data.message , { position: 'bottom-right' });
+                        });
+                }
+            });
         }
     }
 };

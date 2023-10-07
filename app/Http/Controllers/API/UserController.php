@@ -204,4 +204,8 @@ class UserController extends BaseController
             'data' => UserMobileResource::make($user)
         ]);
     }
+
+    public function resetInitialFace(Request $request, int $userID) {
+        return $this->userService->resetInitialFace($request, $userID);
+    }
 }

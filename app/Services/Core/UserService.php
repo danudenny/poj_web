@@ -571,4 +571,42 @@ class UserService extends BaseService
             ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    public function resetInitialFace(Request $request, int $userID) {
+        try {
+            if (!$this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Anda tidak memiliki akses!'
+                ], ResponseAlias::HTTP_FORBIDDEN);
+            }
+
+            /**
+             * @var User $user
+             */
+            $user = User::query()->where('id', '=', $userID)->first();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'User tidak ditemukan'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            DB::beginTransaction();
+            $user->is_new = true;
+            $user->save();
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Sukses!'
+            ]);
+        } catch (\Throwable $exception) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
 }
