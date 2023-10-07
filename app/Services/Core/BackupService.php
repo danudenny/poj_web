@@ -807,10 +807,11 @@ class BackupService extends ScheduleService
             }
 
             $notes = $request->input('notes');
-            if ($approvalType === AttendanceApproval::TypeOffsite && !$notes) {
+            $checkInAttachmentURL = $request->input('attachment_url');
+            if ($approvalType === AttendanceApproval::TypeOffsite && (!$notes && !$checkInAttachmentURL)) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Offsite check in, please input notes'
+                    'message' => 'Check In Diluar Jangkauan, Mohon Memasukkan Catatan'
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
@@ -838,6 +839,7 @@ class BackupService extends ScheduleService
             $checkIn->early_duration = $earlyDuration;
             $checkIn->check_in_image_url = $request->input('image_url');
             $checkIn->check_in_notes = $notes;
+            $checkIn->check_in_attachment_url = $checkInAttachmentURL;
             $checkIn->save();
 
             $employeeBackup->employee_attendance_id = $checkIn->id;

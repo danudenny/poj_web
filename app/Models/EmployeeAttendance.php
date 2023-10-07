@@ -38,6 +38,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $check_in_image_url
  * @property string $check_out_image_url
  * @property string $check_in_notes
+ * @property string $check_in_attachment_url
  *
  * Relations:
  * @property-read Employee $employee

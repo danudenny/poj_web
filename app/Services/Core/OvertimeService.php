@@ -818,7 +818,8 @@ class OvertimeService extends ScheduleService
             }
 
             $notes = $request->input('notes');
-            if ($approvalType === AttendanceApproval::TypeOffsite && !$notes) {
+            $checkInAttachmentURL = $request->input('attachment_url');
+            if ($approvalType === AttendanceApproval::TypeOffsite && (!$notes && !$checkInAttachmentURL)) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Check In Diluar Jangkauan, Mohon Memasukkan Catatan'
@@ -855,6 +856,7 @@ class OvertimeService extends ScheduleService
             $checkIn->early_duration = $earlyDuration;
             $checkIn->check_in_image_url = $request->input('image_url');
             $checkIn->check_in_notes = $notes;
+            $checkIn->check_in_attachment_url = $checkInAttachmentURL;
             $checkIn->save();
 
             $employeeOvertime->employee_attendance_id = $checkIn->id;
