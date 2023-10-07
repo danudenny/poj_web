@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Polict\CreatePolicyRequest;
 use App\Services\Core\PolicyService;
+use Illuminate\Http\Request;
 
 class PolicyController extends Controller
 {
@@ -21,5 +22,9 @@ class PolicyController extends Controller
 
     public function set(CreatePolicyRequest $request) {
         return $this->service->setPolicy($request);
+    }
+
+    public function confirmPolicy(Request $request) {
+        return $this->service->confirmPolicy($request);
     }
 }

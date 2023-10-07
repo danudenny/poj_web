@@ -21,6 +21,9 @@ use Watson\Rememberable\Rememberable;
  * @property string|null $fcm_token
  * @property string $email
  * @property string $avatar
+ * @property bool $is_new
+ * @property bool $is_password_changed
+ * @property bool $is_policy_confirmed
  *
  * Relations:
  * @property-read Employee $employee

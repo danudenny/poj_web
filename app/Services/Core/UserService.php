@@ -526,6 +526,7 @@ class UserService extends BaseService
 
             $user->password = Hash::make($data['new_password']);
             $user->authkey = Hash::make($user->email.'-'.$user->password);
+            $user->is_password_changed = true;
             $user->save();
 
             MailNotification::SendMailable($user->email, new PasswordResetMail([
