@@ -64,4 +64,8 @@ class LeaveRequestController extends Controller
     {
         return $this->leaveRequestService->listApprovals($request);
     }
+
+    public function evaluate(Request $request) {
+        return $this->leaveRequestService->evaluate($request);
+    }
 }

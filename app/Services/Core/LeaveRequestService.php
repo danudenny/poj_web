@@ -593,4 +593,42 @@ class LeaveRequestService extends BaseService {
             $item->delete();
         }
     }
+
+    public function evaluate(Request $request) {
+        /**
+         * @var User $user
+         */
+        $user = $request->user();
+
+        $query = LeaveRequest::query()
+            ->join('master_leaves', 'master_leaves.id', '=', 'leave_requests.leave_type_id')
+            ->where('leave_requests.last_status', '!=', LeaveRequest::StatusRejected)
+            ->where('leave_requests.employee_id', '=', 11126);
+
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        if ($startDate && $endDate) {
+            $query->where(function(Builder $builder) use ($startDate, $endDate) {
+                $builder->orWhere(function(Builder $builder) use ($startDate, $endDate) {
+                    $builder->where( 'leave_requests.start_date', '<=', $endDate)
+                        ->where('leave_requests.start_date', '>=', $startDate);
+                })->orWhere(function(Builder $builder) use ($startDate, $endDate) {
+                    $builder->where('leave_requests.end_date', '<=', $endDate)
+                        ->where('leave_requests.end_date', '>=', $startDate);
+                });
+            });
+        }
+
+
+        $result = [
+            'izin' => (clone $query)->where('master_leaves.leave_type', '=', 'permit')->count(),
+            'cuti' => (clone $query)->where('master_leaves.leave_type', '=', 'leave')->count(),
+        ];
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Sukses',
+            'data' => $result
+        ]);
+    }
 }
