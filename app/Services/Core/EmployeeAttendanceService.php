@@ -569,6 +569,12 @@ class EmployeeAttendanceService extends BaseService
 
             $notes = $request->input('notes');
             $checkInAttachmentURL = $request->input('attachment_url');
+            if ($approvalType === AttendanceApproval::TypeOffsite && (!$notes && !$checkInAttachmentURL)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Check In Diluar Jangkauan, Mohon Memasukkan Catatan'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
 
             DB::beginTransaction();
 
@@ -1099,9 +1105,9 @@ class EmployeeAttendanceService extends BaseService
                 $listJobs = $this->getWorkReporting($unit, $employee->job_id);
 
                 $activeSchedule['attendance']['normal'] = [
-                    'minimum_start_time' => Carbon::parse($normal->start_time)->addMinutes(-$unit->early_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
+                    'minimum_start_time' => Carbon::parse($normal->start_time)->addMinutes(-$normal->early_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'start_time' => Carbon::parse($normal->start_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
-                    'maximum_start_time' => Carbon::parse($normal->start_time)->addMinutes($unit->late_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
+                    'maximum_start_time' => Carbon::parse($normal->start_time)->addMinutes($normal->late_buffer)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'end_time' => Carbon::parse($normal->end_time)->setTimezone($timezone)->format('Y-m-d H:i:s'),
                     'check_in_time' => $normal->check_in_time ? Carbon::parse($normal->check_in_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,
                     'check_out_time' => $normal->check_out_time ? Carbon::parse($normal->check_out_time)->setTimezone($timezone)->format('Y-m-d H:i:s') : null,

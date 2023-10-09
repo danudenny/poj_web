@@ -815,6 +815,12 @@ class BackupService extends ScheduleService
 
             $notes = $request->input('notes');
             $checkInAttachmentURL = $request->input('attachment_url');
+            if ($approvalType === AttendanceApproval::TypeOffsite && (!$notes && !$checkInAttachmentURL)) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Check In Diluar Jangkauan, Mohon Memasukkan Catatan'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
 
             DB::beginTransaction();
 
