@@ -151,7 +151,6 @@ export default {
         }
     },
     mounted() {
-        this.generateWorkingHourTable()
     },
     methods: {
         generateWorkingHourTable() {
