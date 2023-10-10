@@ -602,7 +602,7 @@ class LeaveRequestService extends BaseService {
 
         $query = LeaveRequest::query()
             ->join('master_leaves', 'master_leaves.id', '=', 'leave_requests.leave_type_id')
-            ->where('leave_requests.last_status', '!=', LeaveRequest::StatusRejected)
+            ->where('leave_requests.last_status', '=', LeaveRequest::StatusApproved)
             ->where('leave_requests.employee_id', '=', $user->employee_id);
 
         $startDate = $request->get('start_date');
