@@ -28,7 +28,7 @@
                                                     <td>ERP</td>
                                                     <td>Alakad Employee</td>
                                                     <td>
-                                                        <button class="btn btn-warning"  :disabled="syncEmployeeLoading" type="button" @click="syncEmployeeAction">
+                                                        <button class="btn btn-warning"  :disabled="syncEmployeeLoading || loading" type="button" @click="syncEmployeeAction">
                                                             <span v-if="syncEmployeeLoading">
                                                                 <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
                                                             </span>
@@ -43,7 +43,7 @@
                                                     <td>Alakad Employee</td>
                                                     <td>Alakad User</td>
                                                     <td>
-                                                        <button class="btn btn-warning"  :disabled="syncUserLoading" type="button" @click="syncUserAction">
+                                                        <button class="btn btn-warning"  :disabled="syncUserLoading || loading" type="button" @click="syncUserAction">
                                                             <span v-if="syncUserLoading">
                                                                 <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
                                                             </span>
@@ -58,7 +58,7 @@
                                                     <td>ERP</td>
                                                     <td>Alakad Unit</td>
                                                     <td>
-                                                        <button class="btn btn-warning"  :disabled="syncOperatingUnitLoading" type="button" @click="syncOperatingUnitAction">
+                                                        <button class="btn btn-warning"  :disabled="syncOperatingUnitLoading || loading" type="button" @click="syncOperatingUnitAction">
                                                             <span v-if="syncOperatingUnitLoading">
                                                                 <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
                                                             </span>
@@ -73,7 +73,7 @@
                                                     <td>ERP</td>
                                                     <td>Alakad Unit</td>
                                                     <td>
-                                                        <button class="btn btn-warning"  :disabled="syncCorporateLoading" type="button" @click="syncCorporateAction">
+                                                        <button class="btn btn-warning"  :disabled="syncCorporateLoading || loading" type="button" @click="syncCorporateAction">
                                                             <span v-if="syncCorporateLoading">
                                                                 <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
                                                             </span>
@@ -88,7 +88,7 @@
                                                     <td>ERP</td>
                                                     <td>Alakad Unit</td>
                                                     <td>
-                                                        <button class="btn btn-warning"  :disabled="syncKantorWilayahLoading" type="button" @click="syncKantorWilayahAction">
+                                                        <button class="btn btn-warning"  :disabled="syncKantorWilayahLoading || loading" type="button" @click="syncKantorWilayahAction">
                                                             <span v-if="syncKantorWilayahLoading">
                                                                 <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
                                                             </span>
@@ -103,7 +103,7 @@
                                                     <td>ERP</td>
                                                     <td>Alakad Unit</td>
                                                     <td>
-                                                        <button class="btn btn-warning"  :disabled="syncAreaLoading" type="button" @click="syncAreaAction">
+                                                        <button class="btn btn-warning"  :disabled="syncAreaLoading || loading" type="button" @click="syncAreaAction">
                                                             <span v-if="syncAreaLoading">
                                                                 <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
                                                             </span>
@@ -118,7 +118,7 @@
                                                     <td>ERP</td>
                                                     <td>Alakad Unit</td>
                                                     <td>
-                                                        <button class="btn btn-warning"  :disabled="syncCabangLoading" type="button" @click="syncCabangAction">
+                                                        <button class="btn btn-warning"  :disabled="syncCabangLoading || loading" type="button" @click="syncCabangAction">
                                                             <span v-if="syncCabangLoading">
                                                                 <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
                                                             </span>
@@ -133,7 +133,7 @@
                                                     <td>ERP</td>
                                                     <td>Alakad Unit</td>
                                                     <td>
-                                                        <button class="btn btn-warning"  :disabled="syncOutletLoading" type="button" @click="syncOutletAction">
+                                                        <button class="btn btn-warning"  :disabled="syncOutletLoading || loading" type="button" @click="syncOutletAction">
                                                             <span v-if="syncOutletLoading">
                                                                 <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
                                                             </span>
@@ -148,7 +148,7 @@
                                                     <td>ERP</td>
                                                     <td>Alakad Job</td>
                                                     <td>
-                                                        <button class="btn btn-warning"  :disabled="syncJobLoading" type="button" @click="syncJobAction">
+                                                        <button class="btn btn-warning"  :disabled="syncJobLoading || loading" type="button" @click="syncJobAction">
                                                             <span v-if="syncJobLoading">
                                                                 <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
                                                             </span>
@@ -163,7 +163,7 @@
                                                     <td>ERP</td>
                                                     <td>Alakad Department</td>
                                                     <td>
-                                                        <button class="btn btn-warning"  :disabled="syncDepartmentLoading" type="button" @click="syncDepartmentAction">
+                                                        <button class="btn btn-warning"  :disabled="syncDepartmentLoading || loading" type="button" @click="syncDepartmentAction">
                                                             <span v-if="syncDepartmentLoading">
                                                                 <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
                                                             </span>
@@ -178,7 +178,7 @@
                                                     <td>ERP</td>
                                                     <td>Alakad Partner</td>
                                                     <td>
-                                                        <button class="btn btn-warning"  :disabled="syncPartnerLoading" type="button" @click="syncPartnerAction">
+                                                        <button class="btn btn-warning"  :disabled="syncPartnerLoading || loading" type="button" @click="syncPartnerAction">
                                                             <span v-if="syncPartnerLoading">
                                                                 <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
                                                             </span>
@@ -193,7 +193,7 @@
                                                     <td>Alakad Schedule</td>
                                                     <td>Alakad Schedule</td>
                                                     <td>
-                                                        <button class="btn btn-warning"  :disabled="syncNonShiftScheduleLoading" type="button" @click="syncNonShiftSchedule">
+                                                        <button class="btn btn-warning"  :disabled="syncNonShiftScheduleLoading || loading" type="button" @click="syncNonShiftSchedule">
                                                             <span v-if="syncNonShiftScheduleLoading">
                                                                 <i  class="fa fa-spinner fa-spin"></i> Processing ... ({{ countdown }}s)
                                                             </span>
@@ -236,6 +236,7 @@ export default {
             syncNonShiftScheduleLoading: false,
             countdown: 0,
             interval: null,
+            loading: false
         }
     },
     methods: {

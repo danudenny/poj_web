@@ -48,7 +48,7 @@
                                             </ul>
                                         </div>
                                     </div>
-                                    <div class="mb-3">
+                                    <div class="mb-3" v-if="this.$store.state.permissions?.includes('face-recognition-create')">
                                         <button class="btn btn-secondary" @click="this.resetInitialFace"><i class="fa fa-cog"></i> Reset Initial Face</button>
                                     </div>
                                 </div>

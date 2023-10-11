@@ -13,7 +13,7 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Email address</label>
-                                <input disabled class="form-control" type="email" placeholder="Email" v-model="user.email">
+                                <input :disabled="!this.$store.state.permissions?.includes('change-user-email-create')" class="form-control" type="email" placeholder="Email" v-model="user.email">
                             </div>
                             <div class="mb-3" v-if="user.employee.last_unit">
                                 <label class="form-label">Working Unit</label>

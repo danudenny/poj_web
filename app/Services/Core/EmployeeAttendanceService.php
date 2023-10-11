@@ -527,6 +527,7 @@ class EmployeeAttendanceService extends BaseService
             $checkInTime = Carbon::parse($employeeTimesheetSchedule->start_time);
             $minimumCheckInTime = Carbon::parse($employeeTimesheetSchedule->start_time)->addMinutes(-$employeeTimesheetSchedule->early_buffer);
             $maximumCheckInTime = Carbon::parse($employeeTimesheetSchedule->start_time)->addMinutes($employeeTimesheetSchedule->late_buffer);
+            $unit = $employeeTimesheetSchedule->unit;
 
             $lateDuration = 0;
             $earlyDuration = 0;
@@ -544,7 +545,7 @@ class EmployeeAttendanceService extends BaseService
                 $lateDuration = $currentTime->diffInMinutes($maximumCheckInTime);
             }
 
-            $distance = calculateDistance($employeeTimesheetSchedule->latitude, $employeeTimesheetSchedule->longitude, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
+            $distance = calculateDistance($unit->lat, $unit->long, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
 
             $attendanceType = EmployeeAttendance::TypeOnSite;
             $isNeedApproval = false;
@@ -569,7 +570,7 @@ class EmployeeAttendanceService extends BaseService
 
             $notes = $request->input('notes');
             $checkInAttachmentURL = $request->input('attachment_url');
-            if ($approvalType === AttendanceApproval::TypeOffsite && (!$notes && !$checkInAttachmentURL)) {
+            if ($attendanceType === AttendanceApproval::TypeOffsite && (!$notes && !$checkInAttachmentURL)) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Check In Diluar Jangkauan, Mohon Memasukkan Catatan'
@@ -684,9 +685,10 @@ class EmployeeAttendanceService extends BaseService
                 ], ResponseAlias::HTTP_BAD_REQUEST);
             }
 
+            $unit = $employeeTimesheetSchedule->unit;
             $employeeTimezone = getTimezoneV2(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
             $currentTime = Carbon::now();
-            $distance = calculateDistance($employeeTimesheetSchedule->latitude, $employeeTimesheetSchedule->longitude, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
+            $distance = calculateDistance($unit->lat, $unit->long, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
 
             $attendanceType = EmployeeAttendance::TypeOnSite;
             if ($distance > intval($employeeTimesheetSchedule->timesheet->unit->radius)) {
