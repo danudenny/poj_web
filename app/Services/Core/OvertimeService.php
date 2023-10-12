@@ -781,7 +781,7 @@ class OvertimeService extends ScheduleService
             $workLocation = $user->employee->getLastUnit();
             $overtimeRequest = $employeeOvertime->overtimeDate->overtime;
             $unit = $overtimeRequest->unit;
-            $distance = calculateDistance(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']), $unit->lat, $unit->long);
+            $distance = calculateDistanceV2(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']), $unit->lat, $unit->long);
 
             $isNeedApproval = false;
             $checkInType = EmployeeAttendance::TypeOnSite;
@@ -933,7 +933,7 @@ class OvertimeService extends ScheduleService
             $employeeTimezone = getTimezoneV2(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
             $workLocation = $employeeOvertime->overtimeDate->overtime->unit;
             $overtimeRequest = $employeeOvertime->overtimeDate->overtime;
-            $distance = calculateDistance(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']), $workLocation->lat, $workLocation->long);
+            $distance = calculateDistanceV2(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']), $workLocation->lat, $workLocation->long);
 
             $currentTime = Carbon::now();
             $checkOutTime = Carbon::parse($employeeOvertime->overtimeDate->end_time, 'UTC');

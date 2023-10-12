@@ -545,7 +545,7 @@ class EmployeeAttendanceService extends BaseService
                 $lateDuration = $currentTime->diffInMinutes($maximumCheckInTime);
             }
 
-            $distance = calculateDistance(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']), $unit->lat, $unit->long);
+            $distance = calculateDistanceV2(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']), $unit->lat, $unit->long);
 
             $attendanceType = EmployeeAttendance::TypeOnSite;
             $isNeedApproval = false;
@@ -688,7 +688,7 @@ class EmployeeAttendanceService extends BaseService
             $unit = $employeeTimesheetSchedule->unit;
             $employeeTimezone = getTimezoneV2(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
             $currentTime = Carbon::now();
-            $distance = calculateDistance(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']), $unit->lat, $unit->long);
+            $distance = calculateDistanceV2(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']), $unit->lat, $unit->long);
 
             $attendanceType = EmployeeAttendance::TypeOnSite;
             if ($distance > intval($unit->radius)) {
