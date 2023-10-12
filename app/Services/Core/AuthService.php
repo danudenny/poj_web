@@ -38,16 +38,16 @@ class AuthService extends BaseService
                 throw new \InvalidArgumentException(self::NOT_REGISTERED, 401);
             }
 
-//            $credentials['email'] = $user->email;
-//            $credentials['password'] = $data['password'];
-//
-//            if (!Auth::attempt($credentials)) {
-//                throw new \InvalidArgumentException(self::AUTH_FAILED, 401);
-//            }
-//
-//            if (!Hash::check($data['password'], $user->password, [])) {
-//                throw new \InvalidArgumentException("Email or password doesn't match", 400);
-//            }
+            $credentials['email'] = $user->email;
+            $credentials['password'] = $data['password'];
+
+            if (!Auth::attempt($credentials)) {
+                throw new \InvalidArgumentException(self::AUTH_FAILED, 401);
+            }
+
+            if (!Hash::check($data['password'], $user->password, [])) {
+                throw new \InvalidArgumentException("Email or password doesn't match", 400);
+            }
 
             $token = $user->createToken('authToken')->plainTextToken;
             if (!$data['mobile']) {
