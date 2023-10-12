@@ -770,11 +770,11 @@ class BackupService extends ScheduleService
             $backup = $employeeBackup->backupTime->backup;
             $unit = $backup->unit;
             $employeeTimezone = getTimezoneV2(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
-            $distance = calculateDistance($unit->lat, $unit->long, floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
+            $distance = calculateDistance(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']), $unit->lat, $unit->long);
 
             $isNeedApproval = false;
             $checkInType = EmployeeAttendance::TypeOnSite;
-            if ($distance > $backup->unit->radius) {
+            if ($distance > $unit->radius) {
                 $checkInType = EmployeeAttendance::TypeOffSite;
                 $isNeedApproval = true;
             }
@@ -921,10 +921,10 @@ class BackupService extends ScheduleService
             $backup = $employeeBackup->backupTime->backup;
             $unit = $backup->unit;
             $employeeTimezone = getTimezoneV2(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
-            $distance = calculateDistance($unit->lat, $unit->long,floatval($dataLocation['latitude']), floatval($dataLocation['longitude']));
+            $distance = calculateDistance(floatval($dataLocation['latitude']), floatval($dataLocation['longitude']), $unit->lat, $unit->long);
 
             $checkOutType = EmployeeAttendance::TypeOnSite;
-            if ($distance > $backup->unit->radius) {
+            if ($distance > $unit->radius) {
                 $checkOutType = EmployeeAttendance::TypeOffSite;
             }
 
