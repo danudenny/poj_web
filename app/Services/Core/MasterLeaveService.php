@@ -47,7 +47,7 @@ class MasterLeaveService extends BaseService
 
     public function save($request): JsonResponse
     {
-        $checkMasterLeave = MasterLeave::whereRaw("LOWER(leave_name) LIKE '%" . strtolower($request->leave_name) . "%'")->first();
+        $checkMasterLeave = MasterLeave::query()->where('leave_name', '=', $request->leave_name)->first();
         if ($checkMasterLeave) {
             return response()->json([
                 'status' => 'error',
