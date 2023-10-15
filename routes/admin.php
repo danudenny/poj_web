@@ -39,7 +39,12 @@ use App\Http\Controllers\API\WorkReportingController;
 use App\Http\Controllers\BackupController;
 use Illuminate\Support\Facades\Route;
 
-
+Route::get('health', function() {
+    return response()->json([
+        'status' => true,
+        'message' => 'Service Healthy!'
+    ]);
+});
 Route::get('admin/employee/sync-to-users', [EmployeeController::class, 'syncToUser']);
 Route::group(['prefix' => 'admin/setting'], function () {
     Route::get('/', [SettingController::class, 'index']);
