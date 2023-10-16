@@ -106,6 +106,10 @@ class AttendanceCorrectionService extends BaseService
             ->where('employee_id', '=', $user->employee_id)
             ->orderBy('id', 'DESC');
 
+        if ($attendanceCorrectionRequestID = $request->query('attendance_correction_request_id')) {
+            $query->where('attendance_correction_request_id', '=', $attendanceCorrectionRequestID);
+        }
+
         if ($status = $request->query('status')) {
             $query->where('status', '=', $status);
         }
