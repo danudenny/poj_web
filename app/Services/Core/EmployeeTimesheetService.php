@@ -372,6 +372,7 @@ class EmployeeTimesheetService extends ScheduleService {
                 }
 
                 $existingSchedule = EmployeeTimesheetSchedule::where('employee_id', $employeeId)
+                    ->where('period_id', $periodsExists->id)
                     ->where('date', $request->date)
                     ->first();
 
