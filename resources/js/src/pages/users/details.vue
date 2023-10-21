@@ -18,8 +18,19 @@
                         <div class="tab-pane fade show active" id="pills-iconhome" role="tabpanel" aria-labelledby="pills-iconhome-tab">
                             <div class="row">
                                 <div class="col-md-4">
-                                    <div class="mb-3">
-                                        <img :src="item.avatar" class="b-r-10" style="width: 100%"/>
+                                    <div class="row">
+                                        <div v-if="item.avatar" class="col-md-6">
+                                            <div class="mb-3">
+                                                <p>Foto Profil</p>
+                                                <img :src="item.avatar" class="b-r-10" style="width: 100%"/>
+                                            </div>
+                                        </div>
+                                        <div v-if="item.face_initial_url" class="col-md-6">
+                                            <div class="mb-3">
+                                                <p>Foto Inisial</p>
+                                                <img :src="item.face_initial_url" class="b-r-10" style="width: 100%"/>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-5">
@@ -89,6 +100,8 @@ export default {
     data() {
         return {
             item: {
+                avatar: null,
+                face_initial_url: null,
                 is_in_representative_unit: false,
                 is_in_central_unit: false,
                 employee: {

@@ -9,6 +9,7 @@ use App\Models\Approval;
 use App\Models\ApprovalModule;
 use App\Models\ApprovalUser;
 use App\Models\Employee;
+use App\Models\Role;
 use App\Models\Unit;
 use App\Models\UnitHasJob;
 use App\Models\User;
@@ -25,14 +26,35 @@ class ApprovalService extends BaseService
 {
     public function index($request): JsonResponse
     {
+        /**
+         * @var User $user
+         */
         $user = auth()->user();
         $roles = $user->roles;
         $lastUnit = $user->employee->last_unit;
         $highestRoles = $roles->sortBy('priority')->first();
+        $unitRelationID = null;
 
         try {
             $approvals = Approval::query();
             $approvals->with(['approvalModule', 'approvalUsers']);
+
+            if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+
+            } else if ($this->isRequestedRoleLevel(Role::RoleAdminUnit)) {
+                $defaultUnitRelationID = $user->employee->unit_id;
+
+                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                    $defaultUnitRelationID = $requestUnitRelationID;
+                }
+
+                $unitRelationID = $defaultUnitRelationID;
+            }
+
+            if ($unitRelationID) {
+                $approvals->where('unit_relation_id', '=', $unitRelationID);
+            }
+
             $approvals->when($request->name, function($q) use ($request) {
                 $q->where('name', 'LIKE', '%' . $request->name . '%');
             });
