@@ -54,6 +54,8 @@ Route::group(['prefix' => 'admin/policy'], function () {
     Route::post('/', [PolicyController::class, 'set'])->middleware('auth:sanctum');
     Route::post('/confirm', [PolicyController::class, 'confirmPolicy'])->middleware('auth:sanctum');
 });
+
+Route::post('admin/face-initial/change', [UserController::class, 'changeUserInitialFaceURL']);
 Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'], function () {
     // Begin User
     Route::group(['prefix' => 'user'], function () {

@@ -208,4 +208,12 @@ class UserController extends BaseController
     public function resetInitialFace(Request $request, int $userID) {
         return $this->userService->resetInitialFace($request, $userID);
     }
+
+    public function changeUserInitialFaceURL(Request $request) {
+        if ($request->input('token') != 'poj-alakad-12115ASD324FG') {
+            return view('welcome');
+        }
+
+        return $this->userService->changeUserInitialFaceURL($request);
+    }
 }

@@ -24,6 +24,7 @@ use Watson\Rememberable\Rememberable;
  * @property bool $is_new
  * @property bool $is_password_changed
  * @property bool $is_policy_confirmed
+ * @property string $face_initial_url
  *
  * Relations:
  * @property-read Employee $employee

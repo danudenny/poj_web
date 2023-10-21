@@ -27,6 +27,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
@@ -603,6 +604,63 @@ class UserService extends BaseService
             ]);
         } catch (\Throwable $exception) {
             DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function changeUserInitialFaceURL(Request $request) {
+        try {
+            $employeeID = $request->input('employee_id');
+            $image = $request->file('image');
+
+            if (!$employeeID) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "User is empty"
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            if (!$image) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "Image is empty"
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            /**
+             * @var User $user
+             */
+            $user = User::query()->where('employee_id', '=', $employeeID)->first();
+            if(!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => "User is not found"
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+
+            $path = 'face_initial/' . $user->name;
+            $fullFilePath = $path . '/'. uniqid() .'_'. $image->getClientOriginalName();
+            $isSuccess = Storage::disk('s3')->put($fullFilePath, file_get_contents($image));
+            if(!$isSuccess) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Failed upload image'
+                ], ResponseAlias::HTTP_BAD_REQUEST);
+            }
+            $path = Storage::disk('s3')->url($fullFilePath);
+
+            $user->face_initial_url = $path;
+            $user->save();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Sukses!'
+            ]);
+        } catch (\Throwable $exception) {
+
             return response()->json([
                 'status' => false,
                 'message' => $exception->getMessage()
