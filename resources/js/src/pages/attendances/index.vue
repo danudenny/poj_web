@@ -13,6 +13,16 @@
                             <div v-if="loading" class="text-center">
                                 <img src="../../assets/loader.gif" alt="loading" width="100">
                             </div>
+                            <div class="d-flex justify-content-end mb-2">
+                                <button :disabled="this.isProcessDownload" class="btn btn-success" type="button" @click="this.downloadFile">
+                                    <div v-if="!this.isProcessDownload">
+                                        <i class="fa fa-file" /> &nbsp;Download
+                                    </div>
+                                    <div v-else>
+                                        ...
+                                    </div>
+                                </button>
+                            </div>
                             <div ref="attendanceTable"></div>
                         </div>
                     </div>
@@ -47,6 +57,7 @@ export default {
             loading: false,
             currentPage: 1,
             pageSize: 10,
+            isProcessDownload: false
         }
     },
     mounted() {
@@ -190,6 +201,37 @@ export default {
         viewData(id) {
             this.$router.push({name: 'Detail Attendance', params: {id}});
         },
+        downloadFile() {
+            if (this.isProcessDownload) {
+                return
+            }
+
+            const ls = localStorage.getItem('my_app_token')
+            const role = JSON.parse(localStorage.getItem('USER_ROLES'))
+            fetch(
+                `/api/v1/admin/attendance/export-list-attendance`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${ls}`,
+                        "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? '',
+                        "X-Selected-Role": role
+                    },
+                },
+            ).then(async (response) => {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', 'attendance.xlsx');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                window.URL.revokeObjectURL(url);
+            })
+
+            this.isProcessDownload = false
+        }
     }
 }
 </script>

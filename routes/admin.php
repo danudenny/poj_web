@@ -204,6 +204,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::get('attendance-evaluate', [EmployeeAttendanceController::class, 'getMonthlyEvaluate']);
         Route::get('list-approval', [EmployeeAttendanceController::class, 'listApproval']);
         Route::get('all-schedules', [EmployeeAttendanceController::class, 'getAllSchedules']);
+        Route::get('export-list-attendance', [EmployeeAttendanceController::class, 'downloadEmployeeAttendance']);
     });
     // End employee attendance
 

@@ -83,4 +83,8 @@ class EmployeeAttendanceController extends BaseController
     public function getAllSchedules(Request $request) {
         return $this->employeeAttendanceService->getAllSchedules($request);
     }
+
+    public function downloadEmployeeAttendance(Request $request) {
+        return $this->employeeAttendanceService->downloadEmployeeAttendance($request);
+    }
 }

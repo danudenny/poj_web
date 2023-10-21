@@ -34,6 +34,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class EmployeeAttendanceService extends BaseService
@@ -44,41 +45,39 @@ class EmployeeAttendanceService extends BaseService
     {
         $this->approvalService = $approvalService;
     }
-    public function index(Request $request): JsonResponse
-    {
+
+    public function generateListQuery(Request $request) {
         /**
          * @var User $user
          */
         $user = $request->user();
 
-        try {
+        $unitRelationID = $request->get('unit_relation_id');
 
-            $unitRelationID = $request->get('unit_relation_id');
+        $attendances = EmployeeAttendance::query();
+        $attendances->with(['employee', 'employee.kanwil', 'employee.area', 'employee.cabang', 'employee.outlet', 'employee.employeeDetail', 'employee.employeeDetail.employeeTimesheet', 'employeeAttendanceHistory']);
+        $attendances->join('employees', 'employees.id', '=', 'employee_attendances.employee_id');
 
-            $attendances = EmployeeAttendance::query();
-            $attendances->with(['employee', 'employee.kanwil', 'employee.area', 'employee.cabang', 'employee.outlet', 'employee.employeeDetail', 'employee.employeeDetail.employeeTimesheet', 'employeeAttendanceHistory']);
-            $attendances->join('employees', 'employees.id', '=', 'employee_attendances.employee_id');
+        if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
 
-            if ($this->isRequestedRoleLevel(Role::RoleSuperAdministrator)) {
+        } else if ($this->isRequestedRoleLevel(Role::RoleAdminUnit)) {
+            if (!$unitRelationID) {
+                $defaultUnitRelationID = $user->employee->unit_id;
 
-            } else if ($this->isRequestedRoleLevel(Role::RoleAdminUnit)) {
-                if (!$unitRelationID) {
-                    $defaultUnitRelationID = $user->employee->unit_id;
-
-                    if ($requestUnitRelationID = $this->getRequestedUnitID()) {
-                        $defaultUnitRelationID = $requestUnitRelationID;
-                    }
-
-                    $unitRelationID = $defaultUnitRelationID;
+                if ($requestUnitRelationID = $this->getRequestedUnitID()) {
+                    $defaultUnitRelationID = $requestUnitRelationID;
                 }
 
-            } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
-                $attendances->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
-                $attendances->where(function (Builder $builder) use ($user) {
-                    $builder->orWhere('user_operating_units.user_id', '=', $user->id);
-                });
-            } else {
-                $subQuery = "(
+                $unitRelationID = $defaultUnitRelationID;
+            }
+
+        } else if ($this->isRequestedRoleLevel(Role::RoleAdmin)) {
+            $attendances->leftJoin('user_operating_units', 'user_operating_units.unit_relation_id', '=', 'employees.default_operating_unit_id');
+            $attendances->where(function (Builder $builder) use ($user) {
+                $builder->orWhere('user_operating_units.user_id', '=', $user->id);
+            });
+        } else {
+            $subQuery = "(
                             WITH RECURSIVE job_data AS (
                                 SELECT * FROM unit_has_jobs
                                 WHERE unit_relation_id = '{$user->employee->unit_id}' AND odoo_job_id = {$user->employee->job_id}
@@ -88,60 +87,172 @@ class EmployeeAttendanceService extends BaseService
                             )
                             SELECT * FROM job_data
                         ) relatedJob";
-                $attendances->join(DB::raw($subQuery), function (JoinClause $joinClause) {
-                    $joinClause->on(DB::raw("relatedJob.odoo_job_id"), '=', DB::raw('employees.job_id'))
-                        ->where(DB::raw("relatedJob.unit_relation_id"), '=', DB::raw('employees.unit_id'));
-                });
-
-                $attendances->where(function (Builder $builder) use ($user) {
-                    $builder->orWhere(function(Builder $builder) use ($user) {
-                        $builder->where('employees.job_id', '=', $user->employee->job_id)
-                            ->where('employees.unit_id', '=', $user->employee->unit_id)
-                            ->where('employees.id', '=', $user->employee_id);
-                    })->orWhere(function (Builder $builder) use ($user) {
-                        $builder->orWhere('employees.job_id', '!=', $user->employee->job_id)
-                            ->orWhere('employees.unit_id', '!=', $user->employee->unit_id);
-                    });
-                });
-            }
-
-            if ($unitRelationID) {
-                $attendances->where(function (Builder $builder) use ($unitRelationID) {
-                    $builder->orWhere(function(Builder $builder) use ($unitRelationID) {
-                        $builder->orWhere('employees.outlet_id', '=', $unitRelationID)
-                            ->orWhere('employees.cabang_id', '=', $unitRelationID)
-                            ->orWhere('employees.area_id', '=', $unitRelationID)
-                            ->orWhere('employees.kanwil_id', '=', $unitRelationID)
-                            ->orWhere('employees.corporate_id', '=', $unitRelationID);
-                    });
-                });
-            }
-
-            $attendances->when($request->name, function ($query) use ($request) {
-                $query->whereHas('employee', function (Builder $query) use ($request) {
-                    $query->whereRaw('LOWER(name) LIKE ?', [strtolower('%' . request()->query('name') . '%')]);
-                });
+            $attendances->join(DB::raw($subQuery), function (JoinClause $joinClause) {
+                $joinClause->on(DB::raw("relatedJob.odoo_job_id"), '=', DB::raw('employees.job_id'))
+                    ->where(DB::raw("relatedJob.unit_relation_id"), '=', DB::raw('employees.unit_id'));
             });
 
-            $clientTimezone = $this->getClientTimezone();
+            $attendances->where(function (Builder $builder) use ($user) {
+                $builder->orWhere(function (Builder $builder) use ($user) {
+                    $builder->where('employees.job_id', '=', $user->employee->job_id)
+                        ->where('employees.unit_id', '=', $user->employee->unit_id)
+                        ->where('employees.id', '=', $user->employee_id);
+                })->orWhere(function (Builder $builder) use ($user) {
+                    $builder->orWhere('employees.job_id', '!=', $user->employee->job_id)
+                        ->orWhere('employees.unit_id', '!=', $user->employee->unit_id);
+                });
+            });
+        }
 
-            if ($checkInDate = $request->get('check_in_date')) {
-                $attendances->whereRaw("(employee_attendances.real_check_in::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone')::DATE = '$checkInDate'::DATE");
-            }
+        if ($unitRelationID) {
+            $attendances->where(function (Builder $builder) use ($unitRelationID) {
+                $builder->orWhere(function (Builder $builder) use ($unitRelationID) {
+                    $builder->orWhere('employees.outlet_id', '=', $unitRelationID)
+                        ->orWhere('employees.cabang_id', '=', $unitRelationID)
+                        ->orWhere('employees.area_id', '=', $unitRelationID)
+                        ->orWhere('employees.kanwil_id', '=', $unitRelationID)
+                        ->orWhere('employees.corporate_id', '=', $unitRelationID);
+                });
+            });
+        }
 
-            if ($checkOutDate = $request->get('check_out_date')) {
-                $attendances->whereRaw("(employee_attendances.real_check_out::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone')::DATE = '$checkOutDate'::DATE");
-            }
+        $attendances->when($request->name, function ($query) use ($request) {
+            $query->whereHas('employee', function (Builder $query) use ($request) {
+                $query->whereRaw('LOWER(name) LIKE ?', [strtolower('%' . request()->query('name') . '%')]);
+            });
+        });
 
-            $attendances->groupBy('employee_attendances.id')
-                ->select(['employee_attendances.*'])
-                ->orderBy('employee_attendances.id', 'DESC');
+        $clientTimezone = $this->getClientTimezone();
+
+        if ($checkInDate = $request->get('check_in_date')) {
+            $attendances->whereRaw("(employee_attendances.real_check_in::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone')::DATE = '$checkInDate'::DATE");
+        }
+
+        if ($checkOutDate = $request->get('check_out_date')) {
+            $attendances->whereRaw("(employee_attendances.real_check_out::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone')::DATE = '$checkOutDate'::DATE");
+        }
+
+        $attendances->groupBy('employee_attendances.id')
+            ->select(['employee_attendances.*'])
+            ->orderBy('employee_attendances.id', 'DESC');
+
+        return $attendances;
+    }
+    public function index(Request $request): JsonResponse
+    {
+        try {
+            $attendances = $this->generateListQuery($request);
 
             return response()->json([
                 'status' => true,
                 'message' => 'Success get data!',
                 'data' => $this->list($attendances, $request)
             ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => self::SOMETHING_WRONG . ' : ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function downloadEmployeeAttendance(Request $request) {
+        try {
+            $query = $this->generateListQuery($request);
+            $query->select([
+                'employee_attendances.id', 'employee_attendances.id', 'employee_attendances.attendance_types',
+                'employee_attendances.real_check_in', 'employee_attendances.check_in_tz', 'employee_attendances.checkin_real_radius', 'employee_attendances.checkin_type',
+                'employee_attendances.real_check_out', 'employee_attendances.check_out_tz', 'employee_attendances.checkout_real_radius', 'employee_attendances.checkout_type',
+                'employee_attendances.is_need_approval', 'employee_attendances.approved',
+                'employees.name AS employeeName', DB::raw("(
+                CASE
+                    WHEN employee_attendances.attendance_types = 'normal'
+                        THEN (
+                            SELECT
+                                u.name
+                            FROM employee_timesheet_schedules ets
+                            JOIN units u ON u.relation_id = ets.unit_relation_id
+                            WHERE
+                                ets.employee_attendance_id = employee_attendances.id
+                            LIMIT 1
+                        )
+                    WHEN employee_attendances.attendance_types = 'overtime'
+                        THEN (
+                            SELECT
+                                u.name
+                            FROM overtime_employees oe
+                            JOIN overtime_dates od ON od.id = oe.overtime_date_id
+                            JOIN overtimes o ON o.id = od.overtime_id
+                            JOIN units u ON u.relation_id = o.unit_relation_id
+                            WHERE
+                                oe.employee_attendance_id = employee_attendances.id
+                            LIMIT 1
+                        )
+                    WHEN employee_attendances.attendance_types = 'backup'
+                        THEN (
+                            SELECT
+                                u.name
+                            FROM backup_employee_times bet
+                            JOIN backup_times bt ON bet.backup_time_id = bt.id
+                            JOIN backups b ON b.id = bt.backup_id
+                            JOIN units u ON u.relation_id = b.unit_id
+                            WHERE
+                                bet.employee_attendance_id = employee_attendances.id
+                            LIMIT 1
+                        )
+                    ELSE '-'
+                END
+            ) AS unitName")
+            ])->groupBy('employee_attendances.id', 'employees.name');
+
+            $spreadsheet = IOFactory::load(resource_path('template/attendance.xlsx'));
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $indexSheet = 2;
+            $query->chunk(1000, function ($attendances) use ($indexSheet, $sheet) {
+                /**
+                 * @var EmployeeAttendance $attendance
+                 */
+                foreach ($attendances as $idx => $attendance) {
+                    $sheet->setCellValue('A' . $indexSheet, $attendance->id);
+                    $sheet->setCellValue('B' . $indexSheet, $attendance->employeeName);
+
+                    if($attendance->real_check_in != "") {
+                        $checkInTime = Carbon::parse($attendance->real_check_in, 'UTC')->setTimezone($attendance->check_in_tz);
+                        $sheet->setCellValue('C' . $indexSheet, $checkInTime->format('Y-m-d H:i:s'));
+                        $sheet->setCellValue('D' . $indexSheet, number_format((float) $attendance->checkin_real_radius, 3, ".", "") . " m");
+                        $sheet->setCellValue('E' . $indexSheet, $attendance->checkin_type);
+                    } else {
+                        $sheet->setCellValue('C' . $indexSheet, "-");
+                        $sheet->setCellValue('D' . $indexSheet, "-");
+                        $sheet->setCellValue('E' . $indexSheet, "-");
+                    }
+
+                    if($attendance->real_check_out != "") {
+                        $checkOutTime = Carbon::parse($attendance->real_check_out, 'UTC')->setTimezone($attendance->check_out_tz);
+                        $sheet->setCellValue('F' . $indexSheet, $checkOutTime->format('Y-m-d H:i:s'));
+                        $sheet->setCellValue('G' . $indexSheet, number_format((float) $attendance->checkout_real_radius, 3, ".", "") . " m");
+                        $sheet->setCellValue('H' . $indexSheet, $attendance->checkout_type);
+                    } else {
+                        $checkOutTime = Carbon::parse($attendance->real_check_out, 'UTC')->setTimezone($attendance->check_out_tz);
+                        $sheet->setCellValue('F' . $indexSheet, "-");
+                        $sheet->setCellValue('G' . $indexSheet, "-");
+                        $sheet->setCellValue('H' . $indexSheet, "-");
+                    }
+
+                    $sheet->setCellValue('I' . $indexSheet, $attendance->getFormattedStatusAttribute());
+                    $sheet->setCellValue('J' . $indexSheet, $attendance->unitname);
+
+                    $sheet->setCellValue('K' . $indexSheet, $attendance->attendance_types);
+                    $indexSheet += 1;
+                }
+            });
+
+            $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+            $temp = sys_get_temp_dir() . "/attendance.xlsx";
+            $writer->save($temp);
+
+            return response()->download($temp, 'attendance.xlsx', [], 'attachment')->deleteFileAfterSend();
         } catch (Exception $e) {
             return response()->json([
                 'status' => false,

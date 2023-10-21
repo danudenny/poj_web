@@ -80,6 +80,18 @@ class EmployeeAttendance extends Model
         'unit_target'
     ];
 
+    public function getFormattedStatusAttribute() {
+        if ($this->is_need_approval) {
+            return "Menunggu Persetujuan";
+        } else {
+            if ($this->approved) {
+                return "Disetujui";
+            } else {
+                return "Ditolak";
+            }
+        }
+    }
+
     public function getUnitTargetAttribute() {
         if ($this->attendance_types == self::AttendanceTypeOvertime) {
             /**
