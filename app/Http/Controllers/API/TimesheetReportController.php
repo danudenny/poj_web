@@ -43,4 +43,8 @@ class TimesheetReportController extends Controller
     public function delete(Request $request, int $id) {
         return $this->service->deleteTimesheetReport($request, $id);
     }
+
+    public function employeeAutoReport(Request $request) {
+        return $this->service->employeeAutoReport($request);
+    }
 }

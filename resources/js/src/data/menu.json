@@ -355,10 +355,25 @@
             "title": "Timesheet Reporting",
             "icon": "shopping-bag",
             "iconf": "shopping-bag",
-            "type": "link",
+            "type": "sub",
             "active": false,
-            "path": "/timesheet-reporting",
-            "permission" : "timesheet-reporting-read"
+            "permission" : "timesheet-reporting-read",
+            "children": [
+                {
+                    "title": "Timesheet Reporting",
+                    "type": "link",
+                    "active": false,
+                    "path": "/timesheet-reporting",
+                    "permission" : "timesheet-reporting-read"
+                },
+                {
+                    "title": "Timesheet Reporting Saya",
+                    "type": "link",
+                    "active": false,
+                    "path": "/timesheet-reporting/my",
+                    "permission" : "timesheet-reporting-read"
+                }
+            ]
         },
         {
             "title": "Incident Reporting",

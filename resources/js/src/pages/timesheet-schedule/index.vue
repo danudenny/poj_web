@@ -565,7 +565,6 @@ export default {
         },
         onMonthSelected(val) {
             this.selectedMonth = val
-            console.log("DEBUGGER::SELECTED_DATE", new Date(this.selectedMonth.year, this.selectedMonth.month + 1, 0))
             this.fetchTimesheetData()
         },
         onChangeShiftType() {

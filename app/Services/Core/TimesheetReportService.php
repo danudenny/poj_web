@@ -333,6 +333,84 @@ class TimesheetReportService extends BaseService
         }
     }
 
+    public function employeeAutoReport(Request $request) {
+        try {
+            $month = $request->get('month');
+
+            if (!$month) {
+                $month = Carbon::now()->format('Y-m');
+            }
+
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            $employees = Employee::query()->with(['department', 'operatingUnit', 'corporate', 'kanwil', 'area', 'cabang', 'outlet', 'job', 'units', 'partner', 'team']);
+            $employees->leftJoin('jobs', 'jobs.odoo_job_id', '=', 'employees.job_id');
+
+            $subQuery = "(
+                            WITH RECURSIVE job_data AS (
+                                SELECT * FROM unit_has_jobs
+                                WHERE unit_relation_id = '{$user->employee->unit_id}' AND odoo_job_id = {$user->employee->job_id}
+                                UNION ALL
+                                SELECT uj.* FROM unit_has_jobs uj
+                                INNER JOIN job_data jd ON jd.id = uj.parent_unit_job_id
+                            )
+                            SELECT * FROM job_data
+                        ) relatedJob";
+            $employees->join(DB::raw($subQuery), function (JoinClause $joinClause) {
+                $joinClause->on(DB::raw("relatedJob.odoo_job_id"), '=', DB::raw('employees.job_id'))
+                    ->where(DB::raw("relatedJob.unit_relation_id"), '=', DB::raw('employees.unit_id'));
+            });
+
+            $employees->where(function (Builder $builder) use ($user) {
+                $builder->orWhere(function(Builder $builder) use ($user) {
+                    $builder->where('employees.job_id', '=', $user->employee->job_id)
+                        ->where('employees.unit_id', '=', $user->employee->unit_id)
+                        ->where('employees.id', '=', $user->employee_id);
+                })->orWhere(function (Builder $builder) use ($user) {
+                    $builder->orWhere('employees.job_id', '!=', $user->employee->job_id)
+                        ->orWhere('employees.unit_id', '!=', $user->employee->unit_id);
+                });
+            });
+
+            $employees->select(['employees.*']);
+            $employees->groupBy(['employees.id']);
+
+            $date = Carbon::parse($month . '-1');
+            $startDate = $date->format('Y-m-d');
+            $endDate = $date->endOfMonth()->format('Y-m-d');
+            $results = [];
+
+            /**
+             * @var Employee $employee
+             */
+            foreach ($employees->get() as $employee) {
+                $data = $this->generateDataReport($employee, $startDate, $endDate);
+                $data['employee_name'] = $employee->name;
+                $data['work_from_home_days'] = 0;
+                $data['total_work_day_off'] = 0;
+                $data['total_overtime_day_off_first'] = 0;
+                $data['total_overtime_day_off_second'] = 0;
+                $data['total_overtime_day_off_third'] = 0;
+                $data['total_extended_day_off'] = 0;
+
+                $results[] = $data;
+            }
+
+            return response()->json([
+                'status' => true,
+                'data' => $results
+            ]);
+        } catch (\Throwable $exception) {
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     public function syncTimesheetReport(Request $request, int $id) {
         try {
             /**

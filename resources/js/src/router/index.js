@@ -131,6 +131,7 @@ import PublicHoliday from "../pages/public-holiday/index.vue";
 import TimesheetReportingIndex from "../pages/timesheet-reporting/index.vue";
 import TimesheetReportingDetail from "../pages/timesheet-reporting/detail.vue";
 import TimesheetReportingCreate from "../pages/timesheet-reporting/create.vue";
+import EmployeeTimesheetReporting from "../pages/timesheet-reporting/employee.vue";
 
 //Error page
 import Error from  '../components/error.vue';
@@ -1014,6 +1015,16 @@ const routes =[
                 component: TimesheetReportingCreate,
                 meta: {
                     title: 'POJ - Create Timesheet Reporting',
+                    requiresAuth: true,
+                    permission: 'timesheet-reporting-create',
+                },
+            },
+            {
+                path: 'my',
+                name: 'Timesheet Reporting Saya',
+                component: EmployeeTimesheetReporting,
+                meta: {
+                    title: 'POJ - Timesheet Reporting Saya',
                     requiresAuth: true,
                     permission: 'timesheet-reporting-create',
                 },
