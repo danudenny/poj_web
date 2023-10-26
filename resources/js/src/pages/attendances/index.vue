@@ -57,7 +57,8 @@ export default {
             loading: false,
             currentPage: 1,
             pageSize: 10,
-            isProcessDownload: false
+            isProcessDownload: false,
+            query: null,
         }
     },
     mounted() {
@@ -109,7 +110,8 @@ export default {
                         if (item.field === 'employee.name') localFilter.name = item.value
                     })
 
-                    return `${url}?page=${params.page}&per_page=${params.size}&name=${localFilter.name}&check_in_date=${localFilter.realCheckIn}&check_out_date=${localFilter.realCheckOut}`
+                    this.query = `page=${params.page}&per_page=${params.size}&name=${localFilter.name}&check_in_date=${localFilter.realCheckIn}&check_out_date=${localFilter.realCheckOut}`
+                    return `${url}?` + this.query
                 },
                 layout: 'fitColumns',
                 columns: [
@@ -209,7 +211,7 @@ export default {
             const ls = localStorage.getItem('my_app_token')
             const role = JSON.parse(localStorage.getItem('USER_ROLES'))
             fetch(
-                `/api/v1/admin/attendance/export-list-attendance`,
+                `/api/v1/admin/attendance/export-list-attendance?${this.query}`,
                 {
                     headers: {
                         Authorization: `Bearer ${ls}`,

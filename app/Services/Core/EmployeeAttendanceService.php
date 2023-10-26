@@ -208,8 +208,8 @@ class EmployeeAttendanceService extends BaseService
             $spreadsheet = IOFactory::load(resource_path('template/attendance.xlsx'));
             $sheet = $spreadsheet->getActiveSheet();
 
-            $indexSheet = 2;
-            $query->chunk(1000, function ($attendances) use ($indexSheet, $sheet) {
+            $query->chunk(1000, function ($attendances, $page) use ($sheet) {
+                $indexSheet = ((1000 * $page) - 1000) + 2;
                 /**
                  * @var EmployeeAttendance $attendance
                  */
