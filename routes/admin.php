@@ -398,6 +398,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
         Route::post('approval/{id}', [LeaveRequestController::class, 'approval']);
         Route::post('upload', [LeaveRequestController::class, 'upload']);
         Route::get('evaluate', [LeaveRequestController::class, 'evaluate']);
+        Route::get('download', [LeaveRequestController::class, 'download']);
     });
     // End Leave Request
 

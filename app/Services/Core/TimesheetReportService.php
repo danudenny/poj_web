@@ -560,7 +560,6 @@ class TimesheetReportService extends BaseService
                     ->whereRaw(DB::raw("(employee_timesheet_schedules.end_time::timestamp without time zone at time zone 'UTC' at time zone '{$this->getClientTimezone()}')::DATE <= '$end_date'"));
             })
             ->whereNotNull('employee_timesheet_schedules.check_in_time')
-            ->whereNotNull('employee_timesheet_schedules.check_out_time')
             ->count();
     }
 

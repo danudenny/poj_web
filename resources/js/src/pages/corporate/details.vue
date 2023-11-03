@@ -102,7 +102,7 @@
                                         </thead>
                                         <tbody>
                                         <tr v-for="(it, index) in item.child" :key="it" v-if="item.child && item.child.length > 0">
-                                            <td>{{ it.name }}</td>
+                                            <td>{{ it.formatted_name }}</td>
                                         </tr>
                                         <tr v-else>
                                             <td><span>No Data Available</span></td>

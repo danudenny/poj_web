@@ -89,7 +89,7 @@ export default {
                     },
                     {
                         title: 'Name',
-                        field: 'name',
+                        field: 'formatted_name',
                         headerFilter: "input"
                     },
                     {

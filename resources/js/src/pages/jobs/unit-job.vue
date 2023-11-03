@@ -263,11 +263,13 @@ export default {
                         parentUnitName: ''
                     }
 
+					console.log(params)
+
                     params.filter.map((item) => {
-                        if (item.field === 'unit.name') localFilter.unitName = item.value
+                        if (item.field === 'unit.formatted_name') localFilter.unitName = item.value
                         if (item.field === 'job.name') localFilter.jobName = item.value
                         if (item.field === 'parent.job.name') localFilter.parentJobName = item.value
-                        if (item.field === 'parent.unit.name') localFilter.parentUnitName = item.value
+                        if (item.field === 'parent.unit.formatted_name') localFilter.parentUnitName = item.value
                     })
 
                     return `${url}?page=${params.page}&per_page=${params.size}&unit_name=${localFilter.unitName}&job_name=${localFilter.jobName}&parent_unit_name=${localFilter.parentUnitName}&parent_job_name=${localFilter.parentJobName}`

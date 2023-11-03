@@ -103,7 +103,7 @@
             "permission" : "public-holiday-read"
         },
         {
-            "title": "Struktur Jabatan",
+            "title": "Organization List",
             "icon": "tool",
             "iconf": "fill-tool",
             "type": "link",

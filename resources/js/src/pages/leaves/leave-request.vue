@@ -11,6 +11,49 @@
                                 <h5>Izin/Cuti</h5>
                             </div>
                             <div class="card-body">
+	                            <div class="row">
+		                            <div class="col-md-3 mb-3">
+			                            <label>Nama Pegawai</label>
+			                            <input type="text" placeholder="Cari Nama Pegawai" class="form-control" v-model="filter.employee_name" @change="onSearchEmployeeName">
+		                            </div>
+		                            <div class="col-md-3 mb-3">
+			                            <label>Tanggal</label>
+			                            <Datepicker
+				                            v-model="filter.leave_date"
+				                            :enable-time-picker="false"
+				                            range
+				                            multi-calendars
+				                            auto-apply
+				                            @update:model-value="onCheckInDateChange"
+			                            >
+			                            </Datepicker>
+		                            </div>
+		                            <div class="col-md-3 mb-3">
+			                            <label>Jenis</label>
+			                            <multiselect
+				                            v-model="selectedType"
+				                            :options="types"
+				                            :multiple="false"
+				                            label="leave_name"
+				                            track-by="id"
+				                            placeholder="Pilih Jenis Izin/Cuti"
+				                            @select="onSelectedType"
+			                            ></multiselect>
+		                            </div>
+	                            </div>
+	                            <div class="d-flex justify-content-end mb-2">
+		                            <button class="btn btn-danger" type="button" @click="this.onResetFilter">
+			                            <i class="fa fa-filter" /> &nbsp;Reset Filter
+		                            </button> &nbsp;
+		                            <button :disabled="this.isProcessDownload" class="btn btn-success" type="button" @click="this.downloadFile">
+			                            <div v-if="!this.isProcessDownload">
+				                            <i class="fa fa-file" /> &nbsp;Download
+			                            </div>
+			                            <div v-else>
+				                            ...
+			                            </div>
+		                            </button>
+	                            </div>
                                 <div ref="leaveMasterTable"></div>
                             </div>
                         </div>
@@ -23,22 +66,49 @@
 <script>
 import {TabulatorFull as Tabulator} from 'tabulator-tables';
 import moment from "moment";
+import Datepicker from '@vuepic/vue-datepicker';
 
 export default {
+	components: {
+		Datepicker
+	},
     data() {
         return {
             table: null,
             filterName: '',
             filterType: '',
             currentPage: 1,
-            pageSize: 10
+            pageSize: 10,
+	        filter: {
+				employee_name: '',
+		        leave_date: null
+	        },
+	        selectedType: null,
+	        types: [],
+	        queryFilter: '',
+	        isProcessDownload: false
         }
     },
     mounted() {
-        this.masterLeaveTable();
+		this.getMasterLeave()
+        this.initializeLeaveRequest();
     },
     methods: {
-        masterLeaveTable() {
+	    getMasterLeave() {
+		    const ls = localStorage.getItem('USER_ROLES')
+		    this.$axios.get(`/api/v1/admin/master_leave`, {
+			    headers: {
+				    'X-Selected-Role': ls
+			    }
+		    })
+			    .then(response => {
+				    this.types = response.data.data.data
+			    })
+			    .catch(error => {
+				    console.error(error);
+			    });
+	    },
+        initializeLeaveRequest() {
             const ls = localStorage.getItem('my_app_token');
             this.table = new Tabulator(this.$refs.leaveMasterTable ,{
                 paginationCounter:"rows",
@@ -61,11 +131,27 @@ export default {
                     }
                 },
                 ajaxURLGenerator: (url, config, params) => {
-                    params.filter.map((item) => {
-                        if (item.field === 'leave_name') this.filterName = item.value
-                        if (item.field === 'leave_type') this.filterType = item.value
-                    })
-                    return `${url}?page=${params.page}&per_page=${params.size}&leave_name=${this.filterName}&leave_type=${this.filterType}`
+					let localFilter = {
+						employeeName: this.filter.employee_name,
+						startDate: '',
+						endDate: '',
+						leaveTypeID: ''
+					}
+
+					if (this.filter.leave_date != null) {
+						const startDate = this.filter.leave_date[0]
+						const endDate = this.filter.leave_date[1]
+						localFilter.startDate = startDate.getFullYear() + "-" + ("0" + (startDate.getMonth() + 1)).slice(-2) + "-" + ("0" + (startDate.getDate())).slice(-2)
+						localFilter.endDate = endDate.getFullYear() + "-" + ("0" + (endDate.getMonth() + 1)).slice(-2) + "-" + ("0" + (endDate.getDate())).slice(-2)
+					}
+
+					if (this.selectedType != null) {
+						localFilter.leaveTypeID = this.selectedType.id
+					}
+
+					this.queryFilter = `employee_name=${localFilter.employeeName}&start_date=${localFilter.startDate}&end_date=${localFilter.endDate}&leave_type_id=${localFilter.leaveTypeID}`
+
+                    return `${url}?page=${params.page}&per_page=${params.size}&${this.queryFilter}`
                 },
                 layout: 'fitColumns',
                 renderHorizontal:"virtual",
@@ -217,6 +303,52 @@ export default {
                 paginationInitialPage:1,
             })
         },
+	    onSearchEmployeeName() {
+		    this.table.setFilter('refresh', '=', 'refresh');
+	    },
+	    onCheckInDateChange() {
+		    this.table.setFilter('refresh', '=', 'refresh');
+	    },
+	    onSelectedType() {
+		    this.table.setFilter('refresh', '=', 'refresh');
+	    },
+	    onResetFilter() {
+			this.filter.employee_name = ''
+		    this.filter.leave_date = null
+		    this.selectedType = null
+		    this.table.setFilter('refresh', '=', 'refresh');
+	    },
+	    downloadFile() {
+		    if (this.isProcessDownload) {
+			    return
+		    }
+
+		    const ls = localStorage.getItem('my_app_token')
+		    const role = JSON.parse(localStorage.getItem('USER_ROLES'))
+		    fetch(
+			    `/api/v1/admin/leave_request/download?${this.queryFilter}`,
+			    {
+				    headers: {
+					    Authorization: `Bearer ${ls}`,
+					    "X-Unit-Relation-ID": this.$store.state.activeAdminUnit?.unit_relation_id ?? '',
+					    "X-Selected-Role": role
+				    },
+			    },
+		    ).then(async (response) => {
+			    const blob = await response.blob();
+			    const url = window.URL.createObjectURL(blob);
+			    const link = document.createElement('a');
+			    link.href = url;
+			    link.setAttribute('download', 'leave.xlsx');
+			    document.body.appendChild(link);
+			    link.click();
+			    document.body.removeChild(link);
+
+			    window.URL.revokeObjectURL(url);
+		    })
+
+		    this.isProcessDownload = false
+	    }
     }
 }
 </script>

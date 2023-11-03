@@ -128,8 +128,28 @@ class EmployeeAttendanceService extends BaseService
             $attendances->whereRaw("(employee_attendances.real_check_in::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone')::DATE = '$checkInDate'::DATE");
         }
 
+        if ($startCheckInDate = $request->get('start_check_in_date')) {
+            $attendances->whereRaw("(employee_attendances.real_check_in::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone')::DATE >= '$startCheckInDate'::DATE");
+        }
+
+        if ($endCheckInDate = $request->get('end_check_in_date')) {
+            $attendances->whereRaw("(employee_attendances.real_check_in::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone')::DATE <= '$endCheckInDate'::DATE");
+        }
+
         if ($checkOutDate = $request->get('check_out_date')) {
             $attendances->whereRaw("(employee_attendances.real_check_out::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone')::DATE = '$checkOutDate'::DATE");
+        }
+
+        if ($startCheckOutDate = $request->get('start_check_out_date')) {
+            $attendances->whereRaw("(employee_attendances.real_check_out::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone')::DATE >= '$startCheckOutDate'::DATE");
+        }
+
+        if ($endCheckOutDate = $request->get('end_check_out_date')) {
+            $attendances->whereRaw("(employee_attendances.real_check_out::timestamp without time zone at time zone 'UTC' at time zone '$clientTimezone')::DATE <= '$endCheckOutDate'::DATE");
+        }
+
+        if ($attendanceType = $request->get('attendance_type')) {
+            $attendances->where('employee_attendances.attendance_types', '=', $attendanceType);
         }
 
         $attendances->groupBy('employee_attendances.id')

@@ -26,6 +26,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class LeaveRequestService extends BaseService {
@@ -39,8 +40,7 @@ class LeaveRequestService extends BaseService {
         $this->approvalService = new ApprovalService();
     }
 
-    public function index(Request $request): JsonResponse
-    {
+    public function generateListQuery(Request $request) {
         /**
          * @var User $user
          */
@@ -114,24 +114,90 @@ class LeaveRequestService extends BaseService {
             $query->where('leave_requests.leave_type_id', $request->leave_type_id);
         });
         $leaveRequest->when($request->start_date, function ($query) use ($request) {
-            $query->where('leave_requests.start_date', $request->start_date);
+            $query->where('leave_requests.end_date', '>=', $request->start_date);
         });
         $leaveRequest->when($request->end_date, function ($query) use ($request) {
-            $query->where('leave_requests.end_date', $request->end_date);
+            $query->where('leave_requests.start_date', '<=', $request->end_date);
         });
         $leaveRequest->when($request->last_status, function ($query) use ($request) {
             $query->where('leave_requests.last_status', $request->last_status);
         });
+        if ($employeeName = $request->get('employee_name')) {
+             $leaveRequest->where('employees.name', 'ILIKE', '%' . $employeeName . '%');
+        }
 
         $leaveRequest->select(['leave_requests.*'])
             ->groupBy('leave_requests.id')
             ->orderBy('leave_requests.id', 'DESC');
+
+        return $leaveRequest;
+    }
+
+    public function index(Request $request): JsonResponse
+    {
+        $leaveRequest = $this->generateListQuery($request);
 
         return response()->json([
             'status' => 'success',
             'message' => 'Successfully get leave request data',
             'data' => $this->list($leaveRequest, $request)
         ]);
+    }
+
+    public function download(Request $request) {
+        try {
+            $query = $this->generateListQuery($request);
+            $query->join('master_leaves', 'master_leaves.id', '=', 'leave_requests.leave_type_id');
+            $query->join('units', 'units.relation_id', '=', 'employees.unit_id');
+
+            $query->select([
+                'leave_requests.id',
+                'employees.name AS employeeName',
+                'units.name AS unitName',
+                'leave_requests.start_date',
+                'leave_requests.end_date',
+                'leave_requests.days',
+                'master_leaves.leave_name',
+                'master_leaves.leave_type',
+                'leave_requests.last_status',
+                'leave_requests.reason'
+            ])->groupBy(['leave_requests.id', 'employees.name', 'units.name', 'master_leaves.leave_name', 'master_leaves.leave_type']);
+
+            $spreadsheet = IOFactory::load(resource_path('template/leave.xlsx'));
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $query->chunk(1000, function ($leaves, $page) use ($sheet) {
+                $indexSheet = ((1000 * $page) - 1000) + 3;
+
+                /**
+                 * @var LeaveRequest $leave
+                 */
+                foreach ($leaves as $leave) {
+                    $sheet->setCellValue('A' . $indexSheet, $leave->id);
+                    $sheet->setCellValue('B' . $indexSheet, $leave->employeeName);
+                    $sheet->setCellValue('C' . $indexSheet, $leave->unitName);
+                    $sheet->setCellValue('D' . $indexSheet, $leave->start_date);
+                    $sheet->setCellValue('E' . $indexSheet, $leave->end_date);
+                    $sheet->setCellValue('F' . $indexSheet, $leave->days);
+                    $sheet->setCellValue('G' . $indexSheet, $leave->leave_name);
+                    $sheet->setCellValue('H' . $indexSheet, $leave->leave_type == 'leave' ? 'Cuti' : 'Izin');
+                    $sheet->setCellValue('I' . $indexSheet, $leave->last_status);
+                    $sheet->setCellValue('I' . $indexSheet, $leave->reason);
+                    $indexSheet += 1;
+                }
+            });
+
+            $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+            $temp = sys_get_temp_dir() . "/leave.xlsx";
+            $writer->save($temp);
+
+            return response()->download($temp, 'attendance.xlsx', [], 'attachment')->deleteFileAfterSend();
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => self::SOMETHING_WRONG . ' : ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function listApprovals(Request $request) {

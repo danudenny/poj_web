@@ -68,4 +68,8 @@ class LeaveRequestController extends Controller
     public function evaluate(Request $request) {
         return $this->leaveRequestService->evaluate($request);
     }
+
+    public function download(Request $request) {
+        return $this->leaveRequestService->download($request);
+    }
 }

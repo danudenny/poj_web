@@ -87,10 +87,12 @@ class UnitService extends BaseService
                         'parent.name as parent_name',
                         'parent.unit_level as parent_unit_level',
                         'parent.parent_unit_id as parent_parent_unit_id',
+                        'parent.code as parent_code',
                         'child.id as child_id',
                         'child.name as child_name',
                         'child.unit_level as child_unit_level',
                         'child.parent_unit_id as child_parent_unit_id',
+                        'child.code as child_code',
                     )
                     ->where('parent.unit_level', $parentLevel)
                     ->whereIn('parent.parent_unit_id', $relationIds)
@@ -263,6 +265,7 @@ class UnitService extends BaseService
                     'child.name as child_name',
                     'child.unit_level as child_unit_level',
                     'child.parent_unit_id as child_parent_unit_id',
+                    'child.code as child_code'
                 )
                 ->where('parent.unit_level', $parentLevel)
                 ->where('parent.id', $id)
@@ -278,6 +281,7 @@ class UnitService extends BaseService
                     'name' => $unit->child_name,
                     'unit_level' => $unit->child_unit_level,
                     'parent_unit_id' => $unit->child_parent_unit_id,
+                    'formatted_name' => sprintf("[%s] %s", $unit->child_code, $unit->child_name)
                 ];
 
                 if (!isset($nestedUnits[$unit->parent_id])) {
