@@ -366,6 +366,7 @@ Route::group(['prefix' => 'admin', 'middleware' => 'auth:sanctum, switch_role'],
     // Begin Notification
     Route::group(['prefix' => 'notification'], function() {
         Route::get('', [NotificationController::class, 'index']);
+        Route::post('read', [NotificationController::class, 'readNotification']);
     });
     // End Notificataion
 

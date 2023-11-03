@@ -3,10 +3,12 @@
 namespace App\Services\Core;
 
 use App\Helpers\Notification\NotificationScreen;
+use App\Http\Requests\Notification\ReadNotificationRequest;
 use App\Models\EmployeeNotification;
 use App\Models\User;
 use App\Services\BaseService;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 
 class NotificationService extends BaseService
@@ -143,5 +145,36 @@ class NotificationService extends BaseService
             'message' => 'Success',
             'data' => $this->list($query, $request)
         ], ResponseAlias::HTTP_OK);
+    }
+
+    public function readNotification(ReadNotificationRequest $request) {
+        try {
+            /**
+             * @var User $user
+             */
+            $user = $request->user();
+
+            $query = EmployeeNotification::query()
+                ->where('employee_id', '=', $user->employee_id);
+
+            $notificationIDs = $request->input('notification_ids');
+            if (count($notificationIDs) > 0) {
+                $query->whereIn('id', $notificationIDs);
+            }
+
+            $query->update([
+                'is_read' => true
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Success'
+            ]);
+        } catch (\Throwable $exception) {
+            return response()->json([
+                'status' => false,
+                'message' => $exception->getMessage()
+            ], ResponseAlias::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }
