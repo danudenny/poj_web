@@ -327,6 +327,9 @@ class LeaveRequestService extends BaseService {
             ], 400);
         }
 
+        /**
+         * @var MasterLeave $leaveType
+         */
         $leaveType = MasterLeave::find($request->leave_type_id);
         if (!$leaveType) {
             return response()->json([
@@ -335,8 +338,18 @@ class LeaveRequestService extends BaseService {
             ], 404);
         }
 
+        $approvalModule = null;
+
+        if ($leaveType->leave_code === MasterLeave::CodeSickNonSKD) {
+            $approvalModule = ApprovalModule::ApprovalSickLeave;
+        } else if ($leaveType->leave_type === MasterLeave::TypeLeave) {
+            $approvalModule = ApprovalModule::ApprovalPaidLeave;
+        } else {
+            $approvalModule = ApprovalModule::ApprovalLeave;
+        }
+
         $approverEmployeeIDs = [];
-        $approverEmployees = $this->approvalService->getApprovalUser($employee, ApprovalModule::ApprovalLeave);
+        $approverEmployees = $this->approvalService->getApprovalUser($employee, $approvalModule);
         foreach ($approverEmployees as $approverEmployee) {
             $approverEmployeeIDs[] = $approverEmployee->employee_id;
         }

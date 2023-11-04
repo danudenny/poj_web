@@ -17,6 +17,8 @@ class ApprovalModule extends Model
     const ApprovalLeave = "Leave";
     const ApprovalOffsiteAttendance = "Offsite Attendance";
     const ApprovalAttendanceCorrection = "Attendance Correction";
+    const ApprovalPaidLeave = "Paid Leave";
+    const ApprovalSickLeave = "Sick Leave";
 
     protected $table = 'approval_modules';
 
