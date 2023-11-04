@@ -52,6 +52,17 @@
                                             </span>
                                         </a>
                                     </li>
+                                    <li>
+                                        <a class="pills-link" id="pills-face-tab" data-bs-toggle="pill" href="#pills-face" role="tab"
+                                           aria-controls="pills-face" aria-selected="true">
+                                            <span class="title" @click="active('pills-face-tab')">
+                                                <i data-feather="database">
+                                                    <vue-feather type="smile"></vue-feather>
+                                                </i>
+                                                Face Recognition
+                                            </span>
+                                        </a>
+                                    </li>
                                 </ul>
                             </div>
                         </div>
@@ -69,6 +80,7 @@
                         <storageSettings />
                         <mailSettings />
                         <policy />
+                        <faceRecognition/>
                     </div>
                 </div>
             </div>
@@ -80,12 +92,14 @@ import storageSettings from './storageSetting.vue'
 import appSettings from './appSetting.vue'
 import mailSettings from './mailSetting.vue'
 import policy from './policy.vue'
+import faceRecognition from './faceRecognition.vue'
 export default {
     components: {
         storageSettings,
         appSettings,
         mailSettings,
-        policy
+        policy,
+        faceRecognition
     },
     data() {
         return {
