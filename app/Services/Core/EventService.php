@@ -1114,7 +1114,7 @@ class EventService extends BaseService
                 'message' => 'Succcess fetch data',
                 'data' => [
                     'meta' => [
-                        'full_attendance' => (clone $query)->whereNotNull('employee_events.check_in_time')->whereNotNull('employee_events.check_out_time')->count(),
+                        'full_attendance' => (clone $query)->whereNotNull('employee_events.check_in_time')->count(),
                         'late_check_in' => (clone $query)->whereRaw('employee_events.check_in_time > employee_events.event_datetime')->count(),
                         'not_check_out' => (clone $query)->whereNull('employee_events.check_out_time')->count(),
                         'early_check_out' => 0,

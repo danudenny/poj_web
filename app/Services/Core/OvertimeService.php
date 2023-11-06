@@ -1145,7 +1145,7 @@ class OvertimeService extends ScheduleService
                 'message' => 'Succcess fetch data',
                 'data' => [
                     'meta' => [
-                        'full_attendance' => (clone $query)->whereNotNull('overtime_employees.check_in_time')->whereNotNull('overtime_employees.check_out_time')->count(),
+                        'full_attendance' => (clone $query)->whereNotNull('overtime_employees.check_in_time')->count(),
                         'late_check_in' => (clone $query)->whereRaw('overtime_employees.check_in_time > overtime_dates.start_time')->count(),
                         'not_check_out' => (clone $query)->whereNull('overtime_employees.check_out_time')->count(),
                         'early_check_out' => (clone $query)->whereRaw('overtime_dates.start_time < NOW()')->whereRaw('overtime_employees.check_out_time < overtime_dates.end_time')->count(),

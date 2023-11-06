@@ -1311,7 +1311,7 @@ class EmployeeAttendanceService extends BaseService
                 'message' => 'Succcess fetch data',
                 'data' => [
                     'meta' => [
-                        'full_attendance' => (clone $query)->whereNotNull('employee_timesheet_schedules.check_in_time')->whereNotNull('employee_timesheet_schedules.check_out_time')->count(),
+                        'full_attendance' => (clone $query)->whereNotNull('employee_timesheet_schedules.check_in_time')->count(),
                         'late_check_in' => (clone $query)->whereRaw('employee_timesheet_schedules.check_in_time > employee_timesheet_schedules.start_time')->count(),
                         'not_check_out' => (clone $query)->whereNull('employee_timesheet_schedules.check_out_time')->count(),
                         'early_check_out' => (clone $query)->whereRaw('employee_timesheet_schedules.start_time < NOW()')->whereRaw('employee_timesheet_schedules.check_out_time < employee_timesheet_schedules.end_time')->count(),

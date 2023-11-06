@@ -1038,7 +1038,7 @@ class BackupService extends ScheduleService
                 'message' => 'Succcess fetch data',
                 'data' => [
                     'meta' => [
-                        'full_attendance' => (clone $query)->whereNotNull('backup_employee_times.check_in_time')->whereNotNull('backup_employee_times.check_out_time')->count(),
+                        'full_attendance' => (clone $query)->whereNotNull('backup_employee_times.check_in_time')->count(),
                         'late_check_in' => (clone $query)->whereRaw('backup_employee_times.check_in_time > backup_times.start_time')->count(),
                         'not_check_out' => (clone $query)->whereNull('backup_employee_times.check_out_time')->count(),
                         'early_check_out' => (clone $query)->whereRaw('backup_times.start_time < NOW()')->whereRaw('backup_employee_times.check_out_time < backup_times.end_time')->count(),
