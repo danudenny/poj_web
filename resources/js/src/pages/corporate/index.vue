@@ -81,7 +81,7 @@ export default {
 	                }
 
 	                params.filter.map((item) => {
-		                if (item.field === 'name') localFilter.name = item.value
+		                if (item.field === 'formatted_name') localFilter.name = item.value
 	                })
 
 	                return `${url}?page=${params.page}&per_page=${params.size}&append=total_child&unit_level=3&name=${localFilter.name}`
