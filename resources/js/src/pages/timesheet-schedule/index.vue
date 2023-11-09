@@ -327,7 +327,8 @@ export default {
                 employee_ids: [],
                 date: null,
                 timesheet_id: null
-            }
+            },
+            isActivePage: true
         }
     },
     async mounted() {
@@ -338,6 +339,9 @@ export default {
         this.getJobsData()
         this.getOperatingUnit()
         this.dateRange()
+    },
+    unmounted() {
+        this.isActivePage = false
     },
     methods: {
         getCurrentUnit() {
@@ -377,6 +381,10 @@ export default {
         },
         processFetchingData() {
             try {
+                if (!this.isActivePage) {
+                    return
+                }
+
                 let localFilter = {
                     unit_relation_id: this.selectedUnit?.relation_id ?? '',
                     monthly_year: this.selectedMonth.year + "-" + ("0" + (this.selectedMonth.month + 1)).slice(-2),

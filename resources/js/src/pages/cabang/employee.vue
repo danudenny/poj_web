@@ -41,6 +41,10 @@ export default {
     async mounted() {
         this.initializeEmployeesTable();
     },
+    unmounted() {
+        this.table.destroy()
+        this.table = null
+    },
     methods: {
         initializeEmployeesTable() {
             const ls = localStorage.getItem('my_app_token')
