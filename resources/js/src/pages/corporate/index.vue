@@ -46,6 +46,10 @@ export default {
     async mounted() {
         this.initializeCorporateTable();
     },
+    unmounted() {
+        this.table.destroy()
+        this.table = null
+    },
     methods: {
         startCountdown() {
             this.countdown = 1;
