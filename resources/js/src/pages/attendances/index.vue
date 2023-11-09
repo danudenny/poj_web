@@ -191,7 +191,7 @@ export default {
                     page: this.currentPage,
                     size: this.pageSize,
                 },
-                ajaxResponse: function (url, params, response) {
+                ajaxResponse: (url, params, response) => {
 					this.isOnSearch = false
                     return {
                         data: response.data.data,
