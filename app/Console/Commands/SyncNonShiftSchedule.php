@@ -72,13 +72,14 @@ class SyncNonShiftSchedule extends Command
             $totalInsertedEmployee = 0;
             $employeeTimesheet = [];
             $dataUnits = [];
-            $insertArr = [];
 
             Employee::query()
                 ->join('working_hours', 'working_hours.odoo_working_hour_id', '=', 'employees.odoo_working_hour_id')
                 ->where('working_hours.name', '=', 'NON SHIFT')
                 ->select(['employees.*'])
-                ->chunk(1000, function(Collection $employees) use ($startDate, $endDate, &$totalInsertedEmployee, $period, &$employeeTimesheet, &$dataUnits, &$insertArr, $holidayDates) {
+                ->chunk(1000, function(Collection $employees) use ($startDate, $endDate, &$totalInsertedEmployee, $period, &$employeeTimesheet, &$dataUnits, $holidayDates) {
+                    $insertArr = [];
+
                     /**
                      * @var Employee $employee
                      */
@@ -207,12 +208,13 @@ class SyncNonShiftSchedule extends Command
 
                         $totalCheckInSeconds = Carbon::now()->diffInMilliseconds($startCheck);
                         $this->info("✅️ $employee->name [Success: {$total['success']} , Failed: {$total['failed']}]. (Time to Process {$totalCheckInSeconds} ms)");
+
+                        if (count($insertArr) > 0) {
+                            DB::table('employee_timesheet_schedules')->insert($insertArr);
+                        }
                     }
                 });
 
-            if (count($insertArr) > 0) {
-                DB::table('employee_timesheet_schedules')->insert($insertArr);
-            }
             DB::commit();
 
             $outerTime = Carbon::now()->diffInSeconds($outerCheck);
