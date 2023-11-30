@@ -10,6 +10,7 @@ use App\Models\EmployeeTimesheetSchedule;
 use App\Models\OvertimeEmployee;
 use App\Models\OvertimeHistory;
 use App\Models\Period;
+use App\Models\PublicHoliday;
 use App\Models\Unit;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -50,6 +51,14 @@ class SyncNonShiftSchedule extends Command
             $outerCheck = Carbon::now();
             $startDate = Carbon::parse($argStartDate);
             $endDate = $startDate->copy()->endOfMonth();
+            $yearMonth = $startDate->format('Y-m');
+
+            $holidayDates = [];
+            $holidayDatesObjs = PublicHoliday::query()->whereRaw("TO_CHAR(holiday_date, 'YYYY-mm') = '$yearMonth'")->get();
+
+            foreach ($holidayDatesObjs as $holidayDatesObj) {
+                $holidayDates[] = $holidayDatesObj->holiday_date;
+            }
 
             DB::beginTransaction();
 
@@ -69,7 +78,7 @@ class SyncNonShiftSchedule extends Command
                 ->join('working_hours', 'working_hours.odoo_working_hour_id', '=', 'employees.odoo_working_hour_id')
                 ->where('working_hours.name', '=', 'NON SHIFT')
                 ->select(['employees.*'])
-                ->chunk(1000, function(Collection $employees) use ($startDate, $endDate, &$totalInsertedEmployee, $period, &$employeeTimesheet, &$dataUnits, &$insertArr) {
+                ->chunk(1000, function(Collection $employees) use ($startDate, $endDate, &$totalInsertedEmployee, $period, &$employeeTimesheet, &$dataUnits, &$insertArr, $holidayDates) {
                     /**
                      * @var Employee $employee
                      */
@@ -150,6 +159,9 @@ class SyncNonShiftSchedule extends Command
 
                         for($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
                             if (!isset($timesheetDays[$date->dayName])) {
+                                continue;
+                            }
+                            if(in_array($date->format('Y-m-d'), $holidayDates)) {
                                 continue;
                             }
 
