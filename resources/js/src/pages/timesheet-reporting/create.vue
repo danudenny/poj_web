@@ -91,7 +91,7 @@ export default {
     },
     methods: {
         getUnits() {
-            this.$axios.get(`api/v1/admin/unit/paginated?per_page=${this.unitPagination.limit}&name=${this.unitPagination.name}&unit_level=4,5,6,7&append=name_with_corporate`)
+            this.$axios.get(`api/v1/admin/unit/paginated?per_page=${this.unitPagination.limit}&name=${this.unitPagination.name}&unit_level=3,4,5,6,7&append=name_with_corporate`)
                 .then(response => {
                     this.units = response.data.data.data;
                     this.unitPagination.isOnSearch = false
